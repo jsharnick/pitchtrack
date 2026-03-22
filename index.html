@@ -731,54 +731,43 @@ th.sorted{color:var(--accent);}
   .hs-tag    { font-size:7.5px; }
   .hs-cta    { font-size:13px; padding:9px 0; }
 
-  /* ── panel-wrap stops above tab bar ── */
-  #panel-wrap { bottom:56px; overflow:hidden; }
+  /* ── panel-wrap: fixed box between nav (44px) and tab bar (56px) ── */
+  #panel-wrap { top:44px !important; bottom:56px !important; overflow:hidden !important; }
 
-  /* ── panel-tracker: override app-panel overflow:auto, use flex ── */
+  /* ── panel-tracker fills panel-wrap exactly ── */
   #panel-tracker {
-    overflow:hidden !important; /* override .app-panel overflow:auto */
-    display:flex !important;
-    flex-direction:column;
+    position:absolute !important; inset:0 !important;
+    overflow:hidden !important; display:flex !important; flex-direction:column !important;
   }
 
-  /* ── Scorebug: flex-shrink:0 so it takes its natural height ── */
-  #scorebug { flex-shrink:0; }
+  /* ── Scorebug never shrinks ── */
+  #scorebug { flex-shrink:0 !important; }
 
-  /* ── TRACKER: #main — kill desktop 3-col grid and fixed height ── */
+  /* ── #main: flex column filling space after scorebug ── */
   #main {
-    display:flex !important;
-    grid-template-columns:unset !important;
+    display:flex !important; grid-template-columns:unset !important;
     flex-direction:column !important;
-    height:auto !important;
-    flex:1 !important;
-    min-height:0 !important;
-    overflow:hidden !important;
-    position:relative;
+    flex:1 !important; min-height:0 !important; height:0 !important;
+    overflow:hidden !important; position:relative;
   }
   #panel-left  { display:none !important; }
   #panel-right { display:none !important; }
-  #panel-center{
-    display:flex !important;
-    flex-direction:column !important;
-    flex:1 !important;
-    min-height:0 !important;
-    height:auto !important;
+
+  /* ── panel-center fills #main ── */
+  #panel-center {
+    display:flex !important; flex-direction:column !important;
+    flex:1 !important; min-height:0 !important; height:0 !important;
     overflow:hidden !important;
   }
 
-  /* Zone container: scrollable column — overrides desktop flex-wrap:wrap */
+  /* ── zone-container: the ONE scrollable region ── */
   #zone-container {
-    display:flex !important;
-    flex-direction:column !important;
-    flex-wrap:nowrap !important;
-    align-items:center !important;
-    flex:1 !important;
-    min-height:0;
-    overflow-y:auto;
-    overflow-x:hidden;
+    display:flex !important; flex-direction:column !important;
+    flex-wrap:nowrap !important; align-items:center !important;
+    flex:1 !important; min-height:0 !important; height:0 !important;
+    overflow-y:scroll !important; overflow-x:hidden !important;
     -webkit-overflow-scrolling:touch;
-    padding:10px 10px 72px; /* 72px bottom = 56px tab bar + 16px breathing room */
-    gap:10px;
+    padding:10px 10px 80px; gap:10px;
   }
 
   /* Hide play blurb and AB strip on mobile — space is too tight */
