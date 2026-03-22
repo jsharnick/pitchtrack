@@ -741,23 +741,28 @@ th.sorted{color:var(--accent);}
   #panel-left  { display:none; }
   #panel-right { display:none; }
   #panel-center{
-    flex:1; overflow-y:auto; overflow-x:hidden;
-    display:flex; flex-direction:column;
-    -webkit-overflow-scrolling:touch;
+    flex:1;
+    overflow:hidden;
+    display:flex;
+    flex-direction:column;
   }
 
-  /* Zone container: natural height, no internal scroll */
+  /* Zone container: scrollable — contains ALL controls incl. commit/undo */
   #zone-container {
-    overflow:visible;
-    padding:10px; gap:10px;
-    flex-wrap:nowrap; flex-direction:column;
+    flex:1;
+    overflow-y:auto;
+    overflow-x:hidden;
+    -webkit-overflow-scrolling:touch;
+    padding:10px 10px 16px;
+    gap:10px;
+    flex-wrap:nowrap;
+    flex-direction:column;
     align-items:center;
-    flex-shrink:0;
   }
 
-  /* Play blurb and AB strip scroll with content, not pinned */
-  #play-blurb-wrap { flex-shrink:0; }
-  #ab-strip        { flex-shrink:0; min-height:44px; max-height:44px; }
+  /* Hide play blurb and AB strip on mobile — space is too tight */
+  #play-blurb-wrap { display:none; }
+  #ab-strip        { display:none; }
 
   /* ── Scorebug compact — NO horizontal scroll ── */
   #scorebug {
