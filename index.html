@@ -836,16 +836,16 @@ th.sorted{color:var(--accent);}
   /* ── Shift panel-wrap bottom to make room for tab bar ── */
   #panel-wrap { bottom:56px; }
 
+  /* ── Re-show mobile-only elements (overrides desktop hide) ── */
+  #mob-tabs  { display:flex !important; }
+  #hub-mobile-bar { display:flex !important; }
+
   /* ── Mobile overlay panels ── */
   /* panel-tracker needs relative positioning for mob panels to overlay correctly */
   #panel-tracker { position:relative; }
 
-  .mob-panel {
-    display:none; position:absolute;
-    top:0; left:0; right:0; bottom:0;
-    background:var(--bg); overflow-y:auto; z-index:10;
-  }
-  .mob-panel.on { display:block; }
+  .mob-panel { display:none !important; position:absolute; top:0; left:0; right:0; bottom:0; background:var(--bg); overflow-y:auto; z-index:10; }
+  .mob-panel.on { display:block !important; }
 
   /* ── Score panel ── */
   #mob-score-panel { padding:14px; }
@@ -874,8 +874,7 @@ th.sorted{color:var(--accent);}
   .mob-pb-stats { font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--text2); }
 
   /* ── Log panel ── */
-  #mob-log-panel { display:none; }
-  #mob-log-panel.on{ display:flex; flex-direction:column; }
+  #mob-log-panel.on{ display:flex !important; flex-direction:column; }
 
   /* ── Lineup panel ── */
   #mob-lineup-panel { padding:0; }
@@ -981,8 +980,11 @@ th.sorted{color:var(--accent);}
 #hub-mobile-bar { display:none; }
 /* Hub layout */
 #hub-app { display:grid; grid-template-columns:260px 1fr; min-height:calc(100vh - 44px); }
-/* mob-tabs always hidden on desktop */
-#mob-tabs { display:none; }
+
+/* ── Desktop: hide ALL mobile-only components ── */
+#mob-tabs    { display:none !important; }
+.mob-panel   { display:none !important; }
+#hub-mobile-bar { display:none !important; }
 
 </style>
 </head>
