@@ -731,10 +731,26 @@ th.sorted{color:var(--accent);}
   .hs-tag    { font-size:7.5px; }
   .hs-cta    { font-size:13px; padding:9px 0; }
 
-  /* ── TRACKER: kill 3-col grid, go single column ── */
+  /* ── panel-wrap stops above tab bar ── */
+  #panel-wrap { bottom:56px; overflow:hidden; }
+
+  /* ── panel-tracker: flex column fills panel-wrap ── */
+  #panel-tracker {
+    display:flex !important;
+    flex-direction:column;
+    position:absolute;
+    inset:0;
+    overflow:hidden;
+  }
+
+  /* ── Scorebug: flex-shrink:0 so it takes its natural height ── */
+  #scorebug { flex-shrink:0; }
+
+  /* ── TRACKER: #main fills remaining space below scorebug ── */
   #main {
     display:flex; flex-direction:column;
-    height:100%;
+    flex:1;
+    min-height:0; /* critical for flex children to not overflow */
     overflow:hidden;
     position:relative;
   }
@@ -742,6 +758,7 @@ th.sorted{color:var(--accent);}
   #panel-right { display:none; }
   #panel-center{
     flex:1;
+    min-height:0;
     overflow:hidden;
     display:flex;
     flex-direction:column;
@@ -750,6 +767,7 @@ th.sorted{color:var(--accent);}
   /* Zone container: scrollable — contains ALL controls incl. commit/undo */
   #zone-container {
     flex:1;
+    min-height:0;
     overflow-y:auto;
     overflow-x:hidden;
     -webkit-overflow-scrolling:touch;
@@ -1294,22 +1312,6 @@ th.sorted{color:var(--accent);}
 
   <div id="ab-strip">
     <div class="ab-strip-label" id="ab-strip-batter">AT BAT</div>
-  </div>
-</div>
-
-<!-- MOBILE BOTTOM TABS -->
-<div id="mob-tabs">
-  <div class="mob-tab on" id="mobtab-zone"   onclick="mobTab('zone')">
-    Zone
-  </div>
-  <div class="mob-tab" id="mobtab-score"  onclick="mobTab('score')">
-    Score
-  </div>
-  <div class="mob-tab" id="mobtab-lineup" onclick="mobTab('lineup')">
-    Lineup
-  </div>
-  <div class="mob-tab" id="mobtab-log"    onclick="mobTab('log')">
-    Log
   </div>
 </div>
 
@@ -5179,5 +5181,21 @@ async function hubBoot(){
   };
 })();
 </script>
+<!-- MOBILE BOTTOM TABS -->
+<div id="mob-tabs">
+  <div class="mob-tab on" id="mobtab-zone"   onclick="mobTab('zone')">
+    Zone
+  </div>
+  <div class="mob-tab" id="mobtab-score"  onclick="mobTab('score')">
+    Score
+  </div>
+  <div class="mob-tab" id="mobtab-lineup" onclick="mobTab('lineup')">
+    Lineup
+  </div>
+  <div class="mob-tab" id="mobtab-log"    onclick="mobTab('log')">
+    Log
+  </div>
+</div>
+
 </body>
 </html>
