@@ -734,16 +734,30 @@ th.sorted{color:var(--accent);}
   /* ── TRACKER: kill 3-col grid, go single column ── */
   #main {
     display:flex; flex-direction:column;
-    height:calc(100vh - 44px);
+    height:calc(100vh - 44px - 56px); /* minus nav AND tab bar */
     overflow:hidden;
-    position:relative; /* needed for mob-panel absolute positioning */
+    position:relative;
   }
-  #panel-left  { display:none; } /* moved into Score tab */
-  #panel-right { display:none; } /* moved into Log tab   */
+  #panel-left  { display:none; }
+  #panel-right { display:none; }
   #panel-center{
     flex:1; height:auto; overflow:hidden;
     display:flex; flex-direction:column;
   }
+
+  /* Zone container: scrollable so commit/undo/reset are reachable */
+  #zone-container {
+    flex:1; overflow-y:auto; overflow-x:hidden;
+    padding:10px; gap:10px;
+    flex-wrap:nowrap; flex-direction:column;
+    align-items:center;
+    /* extra bottom padding so last button clears the ab-strip */
+    padding-bottom:20px;
+  }
+
+  /* Play blurb and AB strip pinned at bottom of panel-center */
+  #play-blurb-wrap { flex-shrink:0; }
+  #ab-strip        { flex-shrink:0; }
 
   /* ── Scorebug compact — NO horizontal scroll ── */
   #scorebug {
@@ -833,8 +847,8 @@ th.sorted{color:var(--accent);}
   .mob-tab.on { color:#fff; border-top-color:#cc1a1a; }
   .mob-tab-icon{ font-size:20px; line-height:1; }
 
-  /* ── Shift panel-wrap bottom to make room for tab bar ── */
-  #panel-wrap { bottom:56px; }
+  /* ── panel-wrap: full height between nav and tab bar ── */
+  #panel-wrap { bottom:56px; overflow:hidden; }
 
   /* ── Re-show mobile-only elements (overrides desktop hide) ── */
   #mob-tabs  { display:flex !important; }
