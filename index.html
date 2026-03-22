@@ -709,6 +709,225 @@ th.sorted{color:var(--accent);}
 /* Loading spinner */
 #loading{display:flex;align-items:center;justify-content:center;height:200px;color:var(--text3);font-family:'Barlow Condensed',sans-serif;font-size:16px;letter-spacing:1px;gap:10px;}
 
+/* ═══════════════════════════════════════════════════
+   MOBILE RESPONSIVE  ≤ 768px
+   ═══════════════════════════════════════════════════ */
+@media (max-width: 768px) {
+
+  /* ── Shell nav ── */
+  #shell-nav { padding:0 10px; gap:0; height:44px; }
+  .sn-logo   { font-size:14px; padding-right:10px; margin-right:0; }
+  .sn-tab    { padding:0 10px; font-size:10px; letter-spacing:1px; }
+  .sn-save, #sn-resume-btn { font-size:11px; padding:4px 9px; }
+
+  /* ── Home screen ── */
+  .hs-logo   { font-size:clamp(32px,9vw,52px); gap:10px; }
+  .hs-tagline{ font-size:11px; letter-spacing:3px; margin-bottom:32px; }
+  .hs-cards  { grid-template-columns:1fr; gap:14px; }
+  .hs-card   { padding:24px 20px; }
+  .hs-card-title{ font-size:22px; }
+  .hs-card-desc { font-size:12px; }
+  .hs-tags   { gap:4px; }
+  .hs-tag    { font-size:7.5px; }
+  .hs-cta    { font-size:13px; padding:9px 0; }
+
+  /* ── TRACKER: kill 3-col grid, go single column ── */
+  #main {
+    display:flex; flex-direction:column;
+    height:calc(100vh - 44px);
+    overflow:hidden;
+    position:relative; /* needed for mob-panel absolute positioning */
+  }
+  #panel-left  { display:none; } /* moved into Score tab */
+  #panel-right { display:none; } /* moved into Log tab   */
+  #panel-center{
+    flex:1; height:auto; overflow:hidden;
+    display:flex; flex-direction:column;
+  }
+
+  /* ── Scorebug compact ── */
+  #scorebug {
+    padding:6px 10px; gap:0;
+    flex-wrap:nowrap; overflow-x:auto;
+    justify-content:flex-start;
+  }
+  .bug-logo  { font-size:14px; padding-right:10px; margin-right:8px; }
+  .bug-inning{ padding:0 8px; margin-right:8px; }
+  .inning-num{ font-size:17px; }
+  .bug-teams { gap:10px; flex:0 0 auto; justify-content:flex-start; margin-right:8px; }
+  .bug-team-name{ font-size:14px; min-width:52px; }
+  .bug-score { font-size:26px; min-width:22px; }
+  .bug-count { gap:8px; padding:0 8px; }
+  .count-dot { width:10px; height:10px; }
+  .bug-outs  { padding:0 8px; }
+  .out-dot   { width:9px; height:9px; }
+  .bug-bases { padding:0 8px; }
+  .bases-diamond{ width:48px; height:48px; }
+  .base-sq   { width:13px; height:13px; }
+  .base-second{top:2px;left:17px;} .base-third{top:17px;left:2px;} .base-first{top:17px;left:32px;} .base-home{top:32px;left:17px;}
+  .bug-pitcher,.bug-batter{ display:none; } /* hidden on mobile — shown in Score tab */
+  #save-game-btn{ display:none !important; } /* use nav save button */
+
+  /* ── Zone container: scrollable column ── */
+  #zone-container {
+    flex:1; overflow-y:auto; overflow-x:hidden;
+    padding:10px; gap:10px;
+    flex-wrap:nowrap; flex-direction:column;
+    align-items:center;
+  }
+
+  /* ── Strike zone: scale to fill width ── */
+  .zone-wrap { width:100%; align-items:center; }
+  #strike-zone {
+    width:min(300px, calc(100vw - 20px)) !important;
+    height:min(340px, calc((100vw - 20px) * 1.133)) !important;
+  }
+
+  /* ── Zone controls: full width ── */
+  .zone-controls {
+    width:100%; min-width:unset;
+    max-width:min(480px, 100%);
+  }
+  .outcome-grid{ grid-template-columns:1fr 1fr; gap:5px; }
+  .outcome-btn { padding:10px 6px; font-size:15px; }
+
+  /* ── Velocity / pitch type row ── */
+  .velocity-row{ flex-wrap:wrap; }
+  .vel-wrap    { flex-shrink:0; }
+
+  /* ── Pitch type buttons ── */
+  .pitch-type-btn{ padding:9px 4px; font-size:15px; }
+
+  /* ── Commit + action buttons ── */
+  #commit-pitch { padding:14px; font-size:16px; }
+  .clear-btn    { font-size:11px; padding:7px 8px; }
+
+  /* ── Play blurb ── */
+  #play-blurb-wrap { padding:6px 12px; min-height:28px; }
+  #play-blurb-inner{ font-size:13px; }
+
+  /* ── AB strip ── */
+  #ab-strip { min-height:44px; max-height:44px; padding:4px 10px; }
+
+  /* ── Mobile bottom tab bar ── */
+  #mob-tabs {
+    display:flex !important;
+    position:fixed; bottom:0; left:0; right:0; z-index:200;
+    background:#111318; border-top:1px solid rgba(255,255,255,.1);
+    height:56px;
+  }
+  .mob-tab {
+    flex:1; display:flex; flex-direction:column; align-items:center;
+    justify-content:center; gap:3px; cursor:pointer;
+    font-family:'Barlow Condensed',sans-serif; font-weight:700;
+    font-size:9px; letter-spacing:1px; text-transform:uppercase;
+    color:rgba(255,255,255,.4); transition:all .15s;
+    border-top:2.5px solid transparent; padding-top:2px;
+  }
+  .mob-tab.on { color:#fff; border-top-color:#cc1a1a; }
+  .mob-tab-icon{ font-size:20px; line-height:1; }
+
+  /* ── Shift panel-wrap bottom to make room for tab bar ── */
+  #panel-wrap { bottom:56px; }
+
+  /* ── Mobile overlay panels ── */
+  /* panel-tracker needs relative positioning for mob panels to overlay correctly */
+  #panel-tracker { position:relative; }
+
+  .mob-panel {
+    display:none; position:absolute;
+    top:0; left:0; right:0; bottom:0;
+    background:var(--bg); overflow-y:auto; z-index:10;
+  }
+  .mob-panel.on { display:block; }
+
+  /* ── Score panel ── */
+  #mob-score-panel { padding:14px; }
+  .mob-section-title{
+    font-family:'Barlow Condensed',sans-serif;font-weight:700;
+    font-size:9px;letter-spacing:3px;text-transform:uppercase;
+    color:var(--text3);margin-bottom:10px;
+  }
+  .mob-score-grid { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:14px; }
+  .mob-score-card {
+    background:#fff; border:1px solid var(--border); border-radius:10px;
+    padding:12px; text-align:center;
+  }
+  .mob-score-val { font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:36px;color:var(--text); }
+  .mob-score-lbl { font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--text3);margin-top:2px; }
+  .mob-score-btns{ display:flex;gap:6px;justify-content:center;margin-top:6px; }
+
+  /* pitcher/batter info row */
+  .mob-pb-row {
+    background:#fff;border:1px solid var(--border);border-radius:10px;
+    padding:12px 14px;display:flex;justify-content:space-between;
+    align-items:center;margin-bottom:10px;
+  }
+  .mob-pb-label { font-size:8px;letter-spacing:2px;text-transform:uppercase;color:var(--text3); }
+  .mob-pb-name  { font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:16px;color:var(--text); }
+  .mob-pb-stats { font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--text2); }
+
+  /* ── Log panel ── */
+  #mob-log-panel { display:none; }
+  #mob-log-panel.on{ display:flex; flex-direction:column; }
+
+  /* ── Lineup panel ── */
+  #mob-lineup-panel { padding:0; }
+
+  /* ── Hub responsive ── */
+  #hub-app { display:flex !important; flex-direction:column; min-height:100%; }
+  #hub-sidebar { display:none; }
+  #hub-main    { padding:12px; flex:1; overflow-y:auto; }
+  /* Mobile hub header: show team selector inline */
+  #hub-mobile-bar {
+    display:flex !important;
+    align-items:center; gap:8px; padding:8px 12px;
+    background:#fff; border-bottom:1px solid var(--border);
+    flex-shrink:0; overflow-x:auto;
+  }
+  .hub-mob-team-btn {
+    flex-shrink:0; padding:5px 12px;
+    background:var(--surface2); border:1.5px solid var(--border);
+    border-radius:20px; font-family:'Barlow Condensed',sans-serif;
+    font-weight:700; font-size:13px; color:var(--text2); cursor:pointer;
+    white-space:nowrap; transition:all .14s;
+  }
+  .hub-mob-team-btn.active { background:rgba(204,26,26,.08); border-color:var(--accent); color:var(--accent); }
+  .hub-mob-team-btn.all    { border-style:dashed; }
+  .stat-cards  { grid-template-columns:repeat(3,1fr); gap:7px; }
+  .stat-card   { padding:10px 8px; }
+  .stat-card-val{ font-size:20px; }
+  .player-detail-header { flex-wrap:wrap; gap:10px; }
+  .player-detail-header > div:last-child { width:100%; justify-content:space-between; }
+  .player-info-name{ font-size:22px; }
+  .player-number{ font-size:36px; }
+  .tab-row{ overflow-x:auto; -webkit-overflow-scrolling:touch; flex-wrap:nowrap; }
+  .tab { white-space:nowrap; font-size:11px; padding:8px 12px; }
+  #ptab-spray > div,
+  #ptab-zone  > div { grid-template-columns:1fr !important; }
+  .data-table { font-size:10px; }
+  .data-table th, .data-table td { padding:6px 6px; }
+  .page-header{ flex-direction:column; gap:8px; }
+  .page-title { font-size:24px; }
+
+  /* ── Modals: full screen on mobile ── */
+  .modal-box { min-width:unset; width:calc(100vw - 24px); max-width:unset; padding:18px; border-radius:12px; }
+  #spray-modal > div { padding:12px; gap:12px; flex-direction:column !important; }
+  #spray-modal > div > div:first-child { max-height:none; overflow:visible; }
+  #spray-field { width:100% !important; max-height:55vw; }
+  .sm-box { width:calc(100vw - 24px); padding:22px 18px; }
+  #save-modal { align-items:flex-end; }
+  .sm-box { border-radius:16px 16px 0 0; }
+
+} /* end @media mobile */
+
+/* Hub mobile bar — always hidden on desktop */
+#hub-mobile-bar { display:none; }
+/* Hub layout */
+#hub-app { display:grid; grid-template-columns:260px 1fr; min-height:calc(100vh - 44px); }
+/* mob-tabs always hidden on desktop */
+#mob-tabs { display:none; }
+
 </style>
 </head>
 <body>
@@ -1001,7 +1220,23 @@ th.sorted{color:var(--accent);}
   </div>
 </div>
 
-<!-- RIGHT PANEL -->
+<!-- MOBILE BOTTOM TABS -->
+<div id="mob-tabs">
+  <div class="mob-tab on" id="mobtab-zone"   onclick="mobTab('zone')">
+    <span class="mob-tab-icon">🎯</span>Zone
+  </div>
+  <div class="mob-tab" id="mobtab-score"  onclick="mobTab('score')">
+    <span class="mob-tab-icon">⚾</span>Score
+  </div>
+  <div class="mob-tab" id="mobtab-lineup" onclick="mobTab('lineup')">
+    <span class="mob-tab-icon">👤</span>Lineup
+  </div>
+  <div class="mob-tab" id="mobtab-log"    onclick="mobTab('log')">
+    <span class="mob-tab-icon">📋</span>Log
+  </div>
+</div>
+
+<!-- RIGHT PANEL (desktop) -->
 <div id="panel-right">
   <div class="right-tabs">
     <div class="right-tab active" id="tab-log"       onclick="switchTab('log')">Pitch Log</div>
@@ -1038,6 +1273,96 @@ th.sorted{color:var(--accent);}
     <div id="game-log-list"></div>
   </div>
 </div>
+
+
+<div class="mob-panel" id="mob-score-panel">
+  <div style="padding:14px">
+    <div class="mob-section-title">Score</div>
+    <div class="mob-score-grid">
+      <div class="mob-score-card">
+        <div class="mob-score-lbl" id="mob-away-lbl">AWAY</div>
+        <div class="mob-score-val" id="mob-away-val">0</div>
+        <div class="mob-score-btns">
+          <button class="score-btn" onclick="changeScore('away',-1)">−</button>
+          <button class="score-btn" onclick="changeScore('away',+1)">+</button>
+        </div>
+      </div>
+      <div class="mob-score-card">
+        <div class="mob-score-lbl" id="mob-home-lbl">HOME</div>
+        <div class="mob-score-val" id="mob-home-val">0</div>
+        <div class="mob-score-btns">
+          <button class="score-btn" onclick="changeScore('home',-1)">−</button>
+          <button class="score-btn" onclick="changeScore('home',+1)">+</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="mob-section-title">Inning</div>
+    <div style="background:#fff;border:1px solid var(--border);border-radius:10px;padding:12px 14px;margin-bottom:14px">
+      <div class="inning-ctrl" style="justify-content:space-between">
+        <button class="inning-btn" onclick="changeInning(-1)">◀</button>
+        <div class="inning-display" id="mob-inning-display">1<small id="mob-inning-half">TOP</small></div>
+        <button class="inning-btn" onclick="changeInning(+1)">▶</button>
+      </div>
+      <div class="half-toggle" style="margin-top:10px">
+        <div class="half-btn active" id="mob-half-top" onclick="setHalf('top')">TOP</div>
+        <div class="half-btn" id="mob-half-bot" onclick="setHalf('bottom')">BOTTOM</div>
+      </div>
+    </div>
+
+    <div class="mob-section-title">Outs</div>
+    <div style="background:#fff;border:1px solid var(--border);border-radius:10px;padding:12px 14px;margin-bottom:14px;display:flex;gap:10px;justify-content:center">
+      <button onclick="if(S.outs>0){S.outs--;updateScoreBug()}" style="padding:8px 16px;background:var(--surface2);border:1px solid var(--border);border-radius:6px;font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:15px;color:var(--text);cursor:pointer">−</button>
+      <div style="font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:28px;min-width:40px;text-align:center" id="mob-outs-val">0</div>
+      <button onclick="if(S.outs<3){S.outs++;updateScoreBug()}" style="padding:8px 16px;background:var(--surface2);border:1px solid var(--border);border-radius:6px;font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:15px;color:var(--text);cursor:pointer">+</button>
+    </div>
+
+    <div class="mob-section-title">Pitcher & Batter</div>
+    <div class="mob-pb-row">
+      <div>
+        <div class="mob-pb-label">Pitcher</div>
+        <div class="mob-pb-name" id="mob-pitcher-name">—</div>
+        <div class="mob-pb-stats" id="mob-pitcher-stats">0P · 0K · 0BB</div>
+      </div>
+    </div>
+    <div class="mob-pb-row">
+      <div>
+        <div class="mob-pb-label">At Bat</div>
+        <div class="mob-pb-name" id="mob-batter-name">—</div>
+        <div class="mob-pb-stats" id="mob-batter-stats">0-0 · 0BB</div>
+      </div>
+    </div>
+
+    <div class="mob-section-title" style="margin-top:4px">Teams</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px">
+      <div class="setup-field">
+        <label class="setup-field" style="font-size:8px;letter-spacing:2px;color:var(--text3);text-transform:uppercase;font-weight:600">Away Team</label>
+        <input class="setup-input" id="mob-away-name-input" placeholder="AWAY" oninput="document.getElementById('away-name-input').value=this.value;updateTeamNames()">
+      </div>
+      <div class="setup-field">
+        <label class="setup-field" style="font-size:8px;letter-spacing:2px;color:var(--text3);text-transform:uppercase;font-weight:600">Home Team</label>
+        <input class="setup-input" id="mob-home-name-input" placeholder="HOME" oninput="document.getElementById('home-name-input').value=this.value;updateTeamNames()">
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MOBILE: Lineup Panel -->
+<div class="mob-panel" id="mob-lineup-panel">
+  <div id="mob-lineup-content" style="padding:14px"></div>
+</div>
+
+<!-- MOBILE: Log Panel -->
+<div class="mob-panel" id="mob-log-panel">
+  <div class="right-tabs" style="flex-shrink:0">
+    <div class="right-tab active" id="mob-tab-pitchlog" onclick="mobLogTab('pitchlog')">Pitches</div>
+    <div class="right-tab"       id="mob-tab-boxscore"  onclick="mobLogTab('boxscore')">Box</div>
+    <div class="right-tab"       id="mob-tab-pitchmix"  onclick="mobLogTab('pitchmix')">Mix</div>
+    <div class="right-tab"       id="mob-tab-gamelog"   onclick="mobLogTab('gamelog')">Log</div>
+  </div>
+  <div id="mob-log-content" style="flex:1;overflow-y:auto"></div>
+</div>
+
 
 </div><!-- #main -->
 
@@ -1432,6 +1757,13 @@ th.sorted{color:var(--accent);}
 </div>
 
 <div id="hub-app">
+
+  <!-- Mobile team nav bar (hidden on desktop via CSS) -->
+  <div id="hub-mobile-bar" style="display:none">
+    <button class="hub-mob-team-btn all active" id="hub-mob-all" onclick="hubMobNav('games')">📋 All Games</button>
+    <div id="hub-mob-teams" style="display:contents"></div>
+  </div>
+
   <div id="hub-sidebar">
     <span class="sidebar-label">Teams</span>
     <div id="hub-team-list"><div class="sidebar-empty">No teams yet — save a game first</div></div>
@@ -1715,6 +2047,8 @@ function updateScoreBug(){
   qs('away-label-ctrl').textContent=an; qs('home-label-ctrl').textContent=hn;
   // Pitcher team label
   qs('pitcher-team-label').textContent = S.isTop ? `(${hn})` : `(${an})`;
+  // Sync mobile score panel
+  try { updateMobScore(); } catch(e){}
 }
 
 // ===================== ZONE =====================
@@ -2324,6 +2658,8 @@ function renderPitchLog(){
     `;
     log.appendChild(d);
   });
+  // sync mobile log panel
+  try{ if(typeof _currentMobTab!=='undefined'&&_currentMobTab==='log'&&_mobLogTab==='pitchlog') renderMobLog('pitchlog'); }catch(e){}
 }
 function clearLog(){ S.pitchLog=[]; renderPitchLog(); }
 
@@ -2387,6 +2723,7 @@ function renderBatterStats(){
       <tbody>${mk(false,S.lineupHome)}</tbody></table>
     </div>
   `;
+  try{ if(typeof _currentMobTab!=='undefined'&&_currentMobTab==='log'&&_mobLogTab==='boxscore') renderMobLog('boxscore'); }catch(e){}
 }
 
 // ===================== PITCH MIX =====================
@@ -2464,6 +2801,7 @@ function renderPitchMix(){
   }
 
   wrap.innerHTML=html;
+  try{ if(typeof _currentMobTab!=='undefined'&&_currentMobTab==='log'&&_mobLogTab==='pitchmix') renderMobLog('pitchmix'); }catch(e){}
 }
 
 // ===================== TABS =====================
@@ -2681,6 +3019,7 @@ function renderGameLog(){
     el.appendChild(div);
   });
   el.scrollTop=0;
+  try{ if(typeof _currentMobTab!=='undefined'&&_currentMobTab==='log'&&_mobLogTab==='gamelog') renderMobLog('gamelog'); }catch(e){}
 }
 function clearGameLog(){ S.gameLog=[]; renderGameLog(); }
 
@@ -3577,6 +3916,90 @@ async function resumeGame(gameId){
 }
 
 let toastTimer;
+// ===================== MOBILE UI =====================
+let _currentMobTab = 'zone';
+let _mobLogTab = 'pitchlog';
+
+function isMobile(){ return window.innerWidth <= 768; }
+
+function mobTab(tab){
+  _currentMobTab = tab;
+  ['zone','score','lineup','log'].forEach(t=>{
+    const el = document.getElementById('mobtab-'+t);
+    if(el) el.classList.toggle('on', t===tab);
+  });
+  const panelCenter = document.getElementById('panel-center');
+  const scoreP  = document.getElementById('mob-score-panel');
+  const lineupP = document.getElementById('mob-lineup-panel');
+  const logP    = document.getElementById('mob-log-panel');
+  if(panelCenter) panelCenter.style.display = tab==='zone' ? 'flex' : 'none';
+  if(scoreP)  scoreP.classList.toggle('on',  tab==='score');
+  if(lineupP) lineupP.classList.toggle('on', tab==='lineup');
+  if(logP)    logP.classList.toggle('on',    tab==='log');
+  if(tab==='lineup') renderMobLineup();
+  if(tab==='log')    renderMobLog(_mobLogTab);
+  if(tab==='score')  updateMobScore();
+}
+
+function mobLogTab(t){
+  _mobLogTab = t;
+  ['pitchlog','boxscore','pitchmix','gamelog'].forEach(id=>{
+    const el = document.getElementById('mob-tab-'+id);
+    if(el) el.classList.toggle('active', id===t);
+  });
+  renderMobLog(t);
+}
+
+function renderMobLog(t){
+  const wrap = document.getElementById('mob-log-content');
+  if(!wrap) return;
+  const srcMap = {
+    pitchlog:'pitch-log',
+    boxscore:'content-boxscore',
+    pitchmix:'content-pitchstats',
+    gamelog:'game-log-list'
+  };
+  const src = document.getElementById(srcMap[t]);
+  wrap.innerHTML = src ? src.innerHTML : '<div style="padding:20px;text-align:center;color:var(--text3);font-size:12px">No data yet.</div>';
+}
+
+function renderMobLineup(){
+  const wrap = document.getElementById('mob-lineup-content');
+  if(!wrap) return;
+  const lp = document.getElementById('panel-left');
+  if(lp) wrap.innerHTML = lp.innerHTML;
+}
+
+function updateMobScore(){
+  const an = awayName();
+  const hn = homeName();
+  const setEl = (id,v) => { const e=document.getElementById(id); if(e) e.textContent=v; };
+  setEl('mob-away-lbl', an); setEl('mob-home-lbl', hn);
+  setEl('mob-away-val', S.awayScore); setEl('mob-home-val', S.homeScore);
+  setEl('mob-outs-val', S.outs);
+  const inEl = document.getElementById('mob-inning-display');
+  if(inEl) inEl.innerHTML = S.inning + `<small style="display:block;font-size:9px;font-weight:600;color:var(--text3);letter-spacing:2px;text-transform:uppercase">${S.isTop?'TOP':'BOT'}</small>`;
+  const topBtn=document.getElementById('mob-half-top'), botBtn=document.getElementById('mob-half-bot');
+  if(topBtn) topBtn.classList.toggle('active', S.isTop);
+  if(botBtn) botBtn.classList.toggle('active', !S.isTop);
+  const p = activePitcher();
+  setEl('mob-pitcher-name',  p?`#${p.num} ${p.name}`:'—');
+  setEl('mob-pitcher-stats', p?`${p.pitches}P · ${p.k}K · ${p.bb}BB`:'');
+  const b=currentBatter(), bs=getBatterStats(currentBatterKey());
+  setEl('mob-batter-name',  b?`#${b.num||''} ${b.name}`:'—');
+  setEl('mob-batter-stats', `${bs.hits}-${bs.ab} · ${bs.bb}BB`);
+  // Sync team name inputs both ways
+  const maw=document.getElementById('mob-away-name-input'), aw=document.getElementById('away-name-input');
+  const mhw=document.getElementById('mob-home-name-input'), hw=document.getElementById('home-name-input');
+  if(maw&&aw&&maw!==document.activeElement) maw.value=aw.value;
+  if(mhw&&hw&&mhw!==document.activeElement) mhw.value=hw.value;
+}
+
+// Mirror pitch log / game log updates to mobile log tab when visible
+window.addEventListener('pitchtrack:render', ()=>{
+  if(_currentMobTab==='log') renderMobLog(_mobLogTab);
+});
+
 function toast(msg){
   const el=qs('toast');
   el.textContent=msg;
@@ -3683,6 +4106,25 @@ function renderSidebar(){
       </div>
     </button>`;
   }).join('');
+
+  // Also render mobile team nav bar
+  const mobTeams = document.getElementById('hub-mob-teams');
+  if(mobTeams){
+    mobTeams.innerHTML = allTeams.map(t=>{
+      const isActive = currentView?.type==='team' && currentView?.data===t;
+      return `<button class="hub-mob-team-btn${isActive?' active':''}" onclick="hubMobNav('team','${escHtml(t)}')">${teamEmoji(t)} ${escHtml(t)}</button>`;
+    }).join('');
+  }
+  // Sync all-games button active state
+  const allBtn = document.getElementById('hub-mob-all');
+  if(allBtn) allBtn.classList.toggle('active', currentView?.type==='games' || !currentView?.type);
+}
+
+function hubMobNav(type, data){
+  showView(type, data);
+  // Scroll mobile bar to show active button
+  const bar = document.getElementById('hub-mobile-bar');
+  if(bar){ const active = bar.querySelector('.active'); if(active) active.scrollIntoView({behavior:'smooth',block:'nearest',inline:'center'}); }
 }
 
 // ===== VIEWS =====
