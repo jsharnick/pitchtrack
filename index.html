@@ -744,22 +744,26 @@ th.sorted{color:var(--accent);}
   /* ── Scorebug: flex-shrink:0 so it takes its natural height ── */
   #scorebug { flex-shrink:0; }
 
-  /* ── TRACKER: #main fills remaining space below scorebug ── */
+  /* ── TRACKER: #main — kill desktop 3-col grid and fixed height ── */
   #main {
-    display:flex; flex-direction:column;
-    flex:1;
-    min-height:0;
-    overflow:hidden;
+    display:flex !important;
+    grid-template-columns:unset !important;
+    flex-direction:column !important;
+    height:auto !important;
+    flex:1 !important;
+    min-height:0 !important;
+    overflow:hidden !important;
     position:relative;
   }
-  #panel-left  { display:none; }
-  #panel-right { display:none; }
+  #panel-left  { display:none !important; }
+  #panel-right { display:none !important; }
   #panel-center{
-    flex:1;
-    min-height:0;
-    overflow:hidden;
-    display:flex;
-    flex-direction:column;
+    display:flex !important;
+    flex-direction:column !important;
+    flex:1 !important;
+    min-height:0 !important;
+    height:auto !important;
+    overflow:hidden !important;
   }
 
   /* Zone container: scrollable column — overrides desktop flex-wrap:wrap */
