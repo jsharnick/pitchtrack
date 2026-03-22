@@ -912,9 +912,54 @@ th.sorted{color:var(--accent);}
 
   /* ── Modals: full screen on mobile ── */
   .modal-box { min-width:unset; width:calc(100vw - 24px); max-width:unset; padding:18px; border-radius:12px; }
-  #spray-modal > div { padding:12px; gap:12px; flex-direction:column !important; }
-  #spray-modal > div > div:first-child { max-height:none; overflow:visible; }
-  #spray-field { width:100% !important; max-height:55vw; }
+
+  /* ── Spray modal: stacked column, field large at bottom ── */
+  #spray-modal {
+    padding:0 !important;
+    align-items:stretch !important;
+    overflow-y:auto !important;
+  }
+  #spray-modal > div {
+    width:100% !important;
+    max-width:100% !important;
+    min-height:100%;
+    border-radius:0 !important;
+    margin:0 !important;
+    padding:12px 12px 20px !important;
+    display:flex !important;
+    flex-direction:column !important;
+    gap:10px !important;
+  }
+  /* Inner two-col → single column */
+  #spray-modal > div > div[style*="display:flex"] {
+    flex-direction:column !important;
+  }
+  /* Controls panel: fixed width → full width */
+  #spray-modal > div > div[style*="flex:0 0 180px"] {
+    flex:none !important;
+    width:100% !important;
+  }
+  /* Ball type buttons: 2×3 grid for easier tapping */
+  #ball-type-grid {
+    display:grid !important;
+    grid-template-columns:1fr 1fr !important;
+    gap:7px !important;
+  }
+  .spray-type-btn {
+    padding:12px 8px !important;
+    font-size:14px !important;
+  }
+  /* Field: full width, tall enough to tap precisely */
+  #spray-field {
+    width:100% !important;
+    height:auto !important;
+    max-height:none !important;
+    aspect-ratio:560 / 510 !important;
+    display:block !important;
+    border-radius:10px !important;
+  }
+  #spray-field-hint { display:none !important; }
+
   .sm-box { width:calc(100vw - 24px); padding:22px 18px; }
   #save-modal { align-items:flex-end; }
   .sm-box { border-radius:16px 16px 0 0; }
@@ -1331,6 +1376,26 @@ th.sorted{color:var(--accent);}
         <div class="mob-pb-name" id="mob-batter-name">—</div>
         <div class="mob-pb-stats" id="mob-batter-stats">0-0 · 0BB</div>
       </div>
+    </div>
+
+    <div class="mob-section-title" style="margin-top:4px">Base Runners</div>
+    <div style="background:#fff;border:1px solid var(--border);border-radius:10px;padding:16px 14px;margin-bottom:14px;display:flex;flex-direction:column;align-items:center;gap:10px">
+      <div style="position:relative;width:120px;height:120px;flex-shrink:0">
+        <svg width="120" height="120" style="position:absolute;top:0;left:0;pointer-events:none">
+          <line x1="60" y1="8"  x2="8"  y2="60" stroke="rgba(0,0,0,.15)" stroke-width="1.5"/>
+          <line x1="8"  y1="60" x2="60" y2="112" stroke="rgba(0,0,0,.15)" stroke-width="1.5"/>
+          <line x1="60" y1="112" x2="112" y2="60" stroke="rgba(0,0,0,.15)" stroke-width="1.5"/>
+          <line x1="112" y1="60" x2="60" y2="8" stroke="rgba(0,0,0,.15)" stroke-width="1.5"/>
+        </svg>
+        <div onclick="handleBaseClick('2nd')" id="mob-base-2nd"
+          style="position:absolute;top:0;left:44px;width:32px;height:32px;border:2.5px solid #bfc4cf;background:transparent;transform:rotate(45deg);border-radius:3px;cursor:pointer;transition:all .18s;-webkit-tap-highlight-color:transparent"></div>
+        <div onclick="handleBaseClick('3rd')" id="mob-base-3rd"
+          style="position:absolute;top:44px;left:0;width:32px;height:32px;border:2.5px solid #bfc4cf;background:transparent;transform:rotate(45deg);border-radius:3px;cursor:pointer;transition:all .18s;-webkit-tap-highlight-color:transparent"></div>
+        <div onclick="handleBaseClick('1st')" id="mob-base-1st"
+          style="position:absolute;top:44px;left:88px;width:32px;height:32px;border:2.5px solid #bfc4cf;background:transparent;transform:rotate(45deg);border-radius:3px;cursor:pointer;transition:all .18s;-webkit-tap-highlight-color:transparent"></div>
+        <div style="position:absolute;top:88px;left:44px;width:32px;height:32px;border:2px solid rgba(0,0,0,.2);background:rgba(0,0,0,.06);transform:rotate(45deg);border-radius:3px"></div>
+      </div>
+      <div style="font-size:11px;color:var(--text3);text-align:center">Tap base to place / manage runner</div>
     </div>
 
     <div class="mob-section-title" style="margin-top:4px">Teams</div>
@@ -2294,6 +2359,7 @@ function resetPitchControls(clearZone=true){
   qsa('.pitch-type-btn').forEach(b=>b.classList.remove('selected'));
   qs('commit-pitch').disabled=true;
   qs('zone-hint').textContent='Click zone to place pitch'; qs('zone-hint').className='';
+  const velEl=qs('vel-input'); if(velEl) velEl.value='';
   if(clearZone){
     qs('pitch-dots').innerHTML='';
     qsa('#ab-strip .ab-pitch-chip').forEach(c=>c.remove());
@@ -2309,6 +2375,7 @@ function resetAfterPitch(){
   qsa('.outcome-btn').forEach(b=>b.classList.remove('selected'));
   qsa('.pitch-type-btn').forEach(b=>b.classList.remove('selected'));
   qs('commit-pitch').disabled=true;
+  const velEl=qs('vel-input'); if(velEl) velEl.value='';
   // Close in-play panel after a contact/in-play outcome was committed
   if(inPlayOpen && wasContact){
     inPlayOpen=false; qs('inplay-grid').style.display='none'; qs('inplay-toggle-btn').classList.remove('open');
@@ -3988,8 +4055,15 @@ function updateMobScore(){
   const b=currentBatter(), bs=getBatterStats(currentBatterKey());
   setEl('mob-batter-name',  b?`#${b.num||''} ${b.name}`:'—');
   setEl('mob-batter-stats', `${bs.hits}-${bs.ab} · ${bs.bb}BB`);
-  // Sync team name inputs both ways
-  const maw=document.getElementById('mob-away-name-input'), aw=document.getElementById('away-name-input');
+  // Sync mobile base diamonds
+  ['1st','2nd','3rd'].forEach(b=>{
+    const el = document.getElementById('mob-base-'+b);
+    if(!el) return;
+    const occ = !!S.bases[b];
+    el.style.background   = occ ? '#cc1a1a' : 'transparent';
+    el.style.borderColor  = occ ? '#cc1a1a' : '#bfc4cf';
+    el.style.boxShadow    = occ ? '0 0 10px rgba(204,26,26,.4)' : 'none';
+  });
   const mhw=document.getElementById('mob-home-name-input'), hw=document.getElementById('home-name-input');
   if(maw&&aw&&maw!==document.activeElement) maw.value=aw.value;
   if(mhw&&hw&&mhw!==document.activeElement) mhw.value=hw.value;
