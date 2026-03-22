@@ -734,13 +734,11 @@ th.sorted{color:var(--accent);}
   /* ── panel-wrap stops above tab bar ── */
   #panel-wrap { bottom:56px; overflow:hidden; }
 
-  /* ── panel-tracker: flex column fills panel-wrap ── */
+  /* ── panel-tracker: override app-panel overflow:auto, use flex ── */
   #panel-tracker {
+    overflow:hidden !important; /* override .app-panel overflow:auto */
     display:flex !important;
     flex-direction:column;
-    position:absolute;
-    inset:0;
-    overflow:hidden;
   }
 
   /* ── Scorebug: flex-shrink:0 so it takes its natural height ── */
@@ -750,7 +748,7 @@ th.sorted{color:var(--accent);}
   #main {
     display:flex; flex-direction:column;
     flex:1;
-    min-height:0; /* critical for flex children to not overflow */
+    min-height:0;
     overflow:hidden;
     position:relative;
   }
@@ -764,8 +762,12 @@ th.sorted{color:var(--accent);}
     flex-direction:column;
   }
 
-  /* Zone container: scrollable — contains ALL controls incl. commit/undo */
+  /* Zone container: scrollable column — overrides desktop flex-wrap:wrap */
   #zone-container {
+    display:flex !important;
+    flex-direction:column !important;
+    flex-wrap:nowrap !important;
+    align-items:center !important;
     flex:1;
     min-height:0;
     overflow-y:auto;
@@ -773,9 +775,6 @@ th.sorted{color:var(--accent);}
     -webkit-overflow-scrolling:touch;
     padding:10px 10px 16px;
     gap:10px;
-    flex-wrap:nowrap;
-    flex-direction:column;
-    align-items:center;
   }
 
   /* Hide play blurb and AB strip on mobile — space is too tight */
