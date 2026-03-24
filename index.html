@@ -1209,8 +1209,8 @@ th.sorted{color:var(--accent);}
     <div class="zone-wrap">
       <div class="zone-title">Strike Zone</div>
       <div id="strike-zone" onclick="handleZoneClick(event)">
-        <div class="zone-bg-label zone-lbl-left">IN</div>
-        <div class="zone-bg-label zone-lbl-right">OUT</div>
+        <div class="zone-bg-label zone-lbl-left" id="zone-lbl-in">IN</div>
+        <div class="zone-bg-label zone-lbl-right" id="zone-lbl-out">OUT</div>
         <div class="zone-bg-label zone-lbl-top">HIGH</div>
         <div class="zone-bg-label zone-lbl-bot">LOW</div>
         <div class="zone-strike-box"></div>
@@ -2132,6 +2132,8 @@ function updateScoreBug(){
   qs('away-label-ctrl').textContent=an; qs('home-label-ctrl').textContent=hn;
   // Pitcher team label
   qs('pitcher-team-label').textContent = S.isTop ? `(${hn})` : `(${an})`;
+  // Update IN/OUT zone labels based on batter handedness
+  try { updateZoneHandednessLabels(); } catch(e){}
   // Sync mobile score panel
   try { updateMobScore(); } catch(e){}
 }
@@ -2363,20 +2365,40 @@ function commitPitch(){
   }
 }
 
+function currentBatterHand(){
+  const b = currentBatter();
+  return b?.hand || 'R';
+}
+
+// Update the IN/OUT visual labels on the zone canvas based on batter handedness
+function updateZoneHandednessLabels(){
+  const isLefty = currentBatterHand() === 'L';
+  const inEl  = qs('zone-lbl-in');
+  const outEl = qs('zone-lbl-out');
+  if(!inEl||!outEl) return;
+  // Canvas left side = inside for RHH, outside for LHH
+  inEl.textContent  = isLefty ? 'OUT' : 'IN';
+  outEl.textContent = isLefty ? 'IN'  : 'OUT';
+}
+
 function zoneLabel(px,py){
   const inZ = isInZone(px,py);
+  // For LHH, left side of canvas is outside (they stand on the right of plate)
+  const isLefty = currentBatterHand() === 'L';
+  const insideCol  = isLefty ? 'Outside' : 'Inside';
+  const outsideCol = isLefty ? 'Inside'  : 'Outside';
   if(inZ){
     // 3×3 grid inside box (31–69%), thirds at ~44% and 56%
-    const col = px < 44  ? 'Inside'  : px > 56  ? 'Outside' : 'Middle';
-    const row = py < 44  ? 'High'    : py > 56   ? 'Low'     : 'Middle';
+    const col = px < 44  ? insideCol  : px > 56  ? outsideCol : 'Middle';
+    const row = py < 44  ? 'High'     : py > 56  ? 'Low'      : 'Middle';
     if(row==='Middle'&&col==='Middle') return 'Heart';
     if(row==='Middle') return col;
     if(col==='Middle') return row;
     return `${row} ${col}`;
   }
   // Outside zone — describe chase area by quadrant
-  const col = px < 31  ? 'Inside'  : px > 69  ? 'Outside' : 'Middle';
-  const row = py < 30.9? 'High'    : py > 69.1 ? 'Low'     : 'Middle';
+  const col = px < 31  ? insideCol  : px > 69  ? outsideCol : 'Middle';
+  const row = py < 30.9? 'High'     : py > 69.1 ? 'Low'     : 'Middle';
   const way = (px < 15 || px > 85 || py < 15 || py > 85);
   const prefix = way ? 'Way ' : 'Chase ';
   if(row==='Middle'&&col==='Middle') return prefix+'Edge';
@@ -2430,7 +2452,7 @@ function resetAfterPitch(){
     inPlayOpen=false; qs('inplay-grid').style.display='none'; qs('inplay-toggle-btn').classList.remove('open');
   }
 }
-function clearAtBat(){ S.balls=0; S.strikes=0; resetPitchControls(true); clearPlayBlurb(); updateScoreBug(); }
+function clearAtBat(){ S.balls=0; S.strikes=0; resetPitchControls(true); clearPlayBlurb(); updateScoreBug(); renderLineup(); }
 function clearZoneOnly(){
   qs('pitch-dots').innerHTML='';
   if(placeholderEl){placeholderEl.remove();placeholderEl=null;}
@@ -2690,6 +2712,7 @@ function changeInning(d){
 function setHalf(half){
   S.isTop=(half==='top');
   clearAtBat(); renderLineup(); renderPitcherList(); updateScoreBug();
+  try { updateZoneHandednessLabels(); } catch(e){}
 }
 
 // ===================== BATTER FLOW =====================
