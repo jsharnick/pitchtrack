@@ -1861,9 +1861,9 @@ th.sorted{color:var(--accent);}
     <div id="hub-app">
 
   <!-- Mobile team nav bar (hidden on desktop via CSS) -->
-  <div id="hub-mobile-bar" style="display:none">
+  <div id="hub-mobile-bar">
     <button class="hub-mob-team-btn all active" id="hub-mob-all" onclick="hubMobNav('games')">All Games</button>
-    <div id="hub-mob-teams" style="display:contents"></div>
+    <div id="hub-mob-teams" style="display:flex;gap:8px;flex-shrink:0"></div>
   </div>
 
   <div id="hub-sidebar">
@@ -4537,6 +4537,19 @@ async function hubRefreshAll(){
 
 function renderSidebar(){
   const list = document.getElementById('hub-team-list');
+
+  // Always render mobile bar regardless of team count
+  const mobTeams = document.getElementById('hub-mob-teams');
+  if(mobTeams){
+    mobTeams.innerHTML = allTeams.map(t=>{
+      const isActive = currentView?.type==='team' && currentView?.data===t;
+      return `<button class="hub-mob-team-btn${isActive?' active':''}" data-team="${escAttr(t)}" onclick="hubMobNav('team',this.getAttribute('data-team'))">${teamEmoji(t)} ${escHtml(t)}</button>`;
+    }).join('');
+  }
+  const allBtn = document.getElementById('hub-mob-all');
+  if(allBtn) allBtn.classList.toggle('active', currentView?.type==='games' || !currentView?.type);
+
+  // Desktop sidebar
   if(!allTeams.length){ list.innerHTML='<div class="sidebar-empty">No teams yet</div>'; return; }
   list.innerHTML = allTeams.map(t=>{
     const games = getTeamGames(t);
@@ -4549,18 +4562,6 @@ function renderSidebar(){
       </div>
     </button>`;
   }).join('');
-
-  // Also render mobile team nav bar
-  const mobTeams = document.getElementById('hub-mob-teams');
-  if(mobTeams){
-    mobTeams.innerHTML = allTeams.map(t=>{
-      const isActive = currentView?.type==='team' && currentView?.data===t;
-      return `<button class="hub-mob-team-btn${isActive?' active':''}" data-team="${escAttr(t)}" onclick="hubMobNav('team',this.getAttribute('data-team'))">${teamEmoji(t)} ${escHtml(t)}</button>`;
-    }).join('');
-  }
-  // Sync all-games button active state
-  const allBtn = document.getElementById('hub-mob-all');
-  if(allBtn) allBtn.classList.toggle('active', currentView?.type==='games' || !currentView?.type);
 }
 
 function hubMobNav(type, data){
