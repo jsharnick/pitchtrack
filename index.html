@@ -902,15 +902,29 @@ th.sorted{color:var(--accent);}
   #mob-lineup-panel { padding:0; }
 
   /* ── Hub responsive ── */
-  #hub-app { display:flex !important; flex-direction:column; min-height:100%; }
-  #hub-sidebar { display:none; }
-  #hub-main    { padding:12px; flex:1; overflow-y:auto; }
-  /* Mobile hub header: show team selector inline */
+  /* panel-hub fills panel-wrap exactly like panel-tracker */
+  #panel-hub {
+    position:absolute !important; inset:0 !important;
+    display:flex !important; flex-direction:column !important;
+    overflow:hidden !important;
+  }
+  #hub-app {
+    display:flex !important; flex-direction:column !important;
+    flex:1 !important; min-height:0 !important; height:0 !important;
+    overflow:hidden !important;
+  }
+  #hub-sidebar { display:none !important; }
+  #hub-main {
+    flex:1 !important; min-height:0 !important; height:0 !important;
+    overflow-y:scroll !important; -webkit-overflow-scrolling:touch;
+    padding:12px;
+  }
+  /* Mobile hub header: team pill selector */
   #hub-mobile-bar {
-    display:flex !important;
+    display:flex !important; flex-shrink:0 !important;
     align-items:center; gap:8px; padding:8px 12px;
     background:#fff; border-bottom:1px solid var(--border);
-    flex-shrink:0; overflow-x:auto;
+    overflow-x:auto; -webkit-overflow-scrolling:touch;
   }
   .hub-mob-team-btn {
     flex-shrink:0; padding:5px 12px;
@@ -930,12 +944,26 @@ th.sorted{color:var(--accent);}
   .player-number{ font-size:36px; }
   .tab-row{ overflow-x:auto; -webkit-overflow-scrolling:touch; flex-wrap:nowrap; }
   .tab { white-space:nowrap; font-size:11px; padding:8px 12px; }
+  /* Collapse all two-column grids in player/pitcher detail to single column */
   #ptab-spray > div,
-  #ptab-zone  > div { grid-template-columns:1fr !important; }
+  #ptab-zone  > div,
+  #ptab-breakdown > div,
+  #ptab-p-zone > div,
+  #ptab-p-mix > div  { grid-template-columns:1fr !important; }
+  /* Data tables: horizontal scroll on mobile */
   .data-table { font-size:10px; }
-  .data-table th, .data-table td { padding:6px 6px; }
+  .data-table th, .data-table td { padding:5px 5px; }
+  /* Wrap data table in scrollable container */
+  table.data-table { display:block; overflow-x:auto; -webkit-overflow-scrolling:touch; width:100%; }
   .page-header{ flex-direction:column; gap:8px; }
   .page-title { font-size:24px; }
+  /* Player detail header: stack stats below name */
+  .player-detail-header { flex-direction:column; gap:10px; }
+  .player-detail-header > div:last-child { width:100%; justify-content:flex-start; flex-wrap:wrap; gap:12px; }
+  /* Stat cards: 3 per row on mobile */
+  .stat-cards { grid-template-columns:repeat(3,1fr) !important; }
+  /* Zone SVG: constrain width on mobile */
+  #ptab-zone svg, #ptab-p-zone svg { max-width:100%; height:auto; }
 
   /* ── Modals: full screen on mobile ── */
   .modal-box { min-width:unset; width:calc(100vw - 24px); max-width:unset; padding:18px; border-radius:12px; }
@@ -2509,6 +2537,32 @@ function showRunnerModal(){
     btn.onclick=()=>{S.runnerMoves[runner]=dest;S.currentQueueIdx++;showRunnerModal();};
     qEl.appendChild(btn);
   });
+  // "Thrown out" options — runner tried to advance but was retired
+  // Show thrown out at the base BEYOND each reachable destination
+  const thrownOutBases = [];
+  dests.forEach(dest=>{
+    const beyondMap = {'1st':'2nd','2nd':'3rd','3rd':'home','home':null};
+    // Offer "thrown out at" for each destination they could attempt
+    // e.g. runner on 1st on a double: could be thrown out at 3rd or home
+    if(dest==='3rd') thrownOutBases.push('3rd');
+    if(dest==='home') thrownOutBases.push('home');
+  });
+  // Deduplicate and only show bases beyond their starting point
+  const shownTO = new Set();
+  thrownOutBases.forEach(toBase=>{
+    if(shownTO.has(toBase)) return;
+    shownTO.add(toBase);
+    const btn=document.createElement('button');
+    btn.className='runner-move-btn';
+    btn.style.cssText='border-color:rgba(204,26,26,.3);color:var(--red)';
+    btn.innerHTML=`✕ Thrown out at ${toBase==='home'?'home plate':toBase}`;
+    btn.onclick=()=>{
+      S.runnerMoves[runner]='out:'+toBase;
+      S.currentQueueIdx++;
+      showRunnerModal();
+    };
+    qEl.appendChild(btn);
+  });
   qs('baserun-modal').classList.add('active');
 }
 function getDestOpts(from,hitType){
@@ -2526,11 +2580,27 @@ function applyRunnerMoves(){
   qs('baserun-modal').classList.remove('active');
   const hit=S.modalHit; if(!hit)return;
   const newBases={'1st':false,'2nd':false,'3rd':false};
-  let runs=0;
-  for(const[,to] of Object.entries(S.runnerMoves)){ if(to==='home')runs++; else newBases[to]=true; }
+  let runs=0, thrownOut=0;
+  for(const[from,to] of Object.entries(S.runnerMoves)){
+    if(to==='home') runs++;
+    else if(to.startsWith('out:')){
+      // Runner was thrown out — add an out, log where
+      thrownOut++;
+      S.outs++;
+      const atBase = to.split(':')[1];
+      logEvent('🏷️',`Thrown out at ${atBase==='home'?'home plate':atBase}`,`Runner from ${from} retired`);
+    } else {
+      newBases[to]=true;
+    }
+  }
   newBases[hit.newBase]=true;
   S.bases=newBases;
   for(let i=0;i<runs;i++) addRun();
+  // Check if thrown out ended the inning before proceeding
+  if(thrownOut>0 && S.outs>=3){
+    S.modalHit=null; S.runnerQueue=[]; S.runnerMoves={};
+    handleThreeOuts(); return;
+  }
   if(runs>0){
     toast(` ${runs} run${runs>1?'s':''} score!`);
     logEvent('',`${runs} run${runs>1?'s':''} score`,`${hit.hitType} by ${currentBatter()?.name||'?'} · ${awayName()} ${S.awayScore}, ${homeName()} ${S.homeScore}`);
@@ -2626,8 +2696,20 @@ function _showNextRunnerAdvance(){
   // From 1st can also reach 3rd on a long fly
   if(base === '1st') addBtn(`→ Advances to 3rd`, '3rd');
   addBtn(` Scores — +1 Run`, 'home', 'score-btn');
-  // Out on the bases (thrown out, FC, etc.)
-  addBtn(`✕ Out on the bases`, 'out');
+  // Thrown out options — show which base they were retired at
+  const nextBases = {'1st':['2nd','3rd','home'],'2nd':['3rd','home'],'3rd':['home']};
+  (nextBases[base]||[]).forEach(atBase=>{
+    const btn2=document.createElement('button');
+    btn2.className='runner-move-btn';
+    btn2.style.cssText='border-color:rgba(204,26,26,.3);color:var(--red)';
+    btn2.innerHTML=`✕ Thrown out at ${atBase==='home'?'home plate':atBase}`;
+    btn2.onclick=()=>{
+      S._raMoves[base]='out:'+atBase;
+      S._raIdx++;
+      _showNextRunnerAdvance();
+    };
+    qEl.appendChild(btn2);
+  });
 
   qs('baserun-modal').classList.add('active');
 }
@@ -2645,7 +2727,13 @@ function _applyRunnerAdvance(){
 
   for(const [from, to] of Object.entries(S._raMoves)){
     if(to === 'home')   { runs++; }
-    else if(to === 'out') { basesOut++; S.outs++; }
+    else if(to === 'out' || to.startsWith('out:')) {
+      basesOut++; S.outs++;
+      if(to.startsWith('out:')){
+        const atBase = to.split(':')[1];
+        logEvent('🏷️',`Thrown out at ${atBase==='home'?'home plate':atBase}`,`Runner from ${from} retired`);
+      }
+    }
     else if(to === 'stays') { newBases[from] = true; }
     else { newBases[to] = true; } // advanced to a base
   }
