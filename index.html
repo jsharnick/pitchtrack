@@ -1182,7 +1182,7 @@ th.sorted{color:var(--accent);}
         <input class="setup-input num-in" id="new-p-num"  placeholder="#"    style="width:38px;flex-shrink:0">
         <input class="setup-input"        id="new-p-name" placeholder="Name..." style="flex:1">
         <button class="add-p-btn"    onclick="addPitcher()">Add</button>
-        <button class="cancel-p-btn" onclick="toggleAddPitcherForm()"></button>
+        <button class="cancel-p-btn" onclick="toggleAddPitcherForm()" style="display:flex;align-items:center;justify-content:center"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="1" y1="1" x2="11" y2="11"/><line x1="11" y1="1" x2="1" y2="11"/></svg></button>
       </div>
     </div>
     <div id="pitcher-list"></div>
@@ -1460,7 +1460,7 @@ th.sorted{color:var(--accent);}
         <div style="font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:22px;color:var(--text)" id="lineup-modal-title">Edit Lineup</div>
         <div style="font-size:11px;color:var(--text3);margin-top:2px">Edit both lineups — changes apply immediately</div>
       </div>
-      <button onclick="closeLineupModal()" style="background:none;border:1px solid var(--border);border-radius:6px;color:var(--text3);font-size:14px;padding:4px 10px;cursor:pointer;transition:all .14s" onmouseover="this.style.borderColor='var(--red)';this.style.color='var(--red)'" onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--text3)'"> Close</button>
+      <button onclick="closeLineupModal()" style="background:none;border:1px solid var(--border);border-radius:6px;color:var(--text3);font-size:14px;padding:4px 10px;cursor:pointer;transition:all .14s" onmouseover="this.style.borderColor='var(--red)';this.style.color='var(--red)'" onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--text3)'"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="1" y1="1" x2="11" y2="11"/><line x1="11" y1="1" x2="1" y2="11"/></svg></button>
     </div>
 
     <!-- Team tabs -->
@@ -1498,7 +1498,7 @@ th.sorted{color:var(--accent);}
         <div style="font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:22px;color:var(--text);line-height:1" id="spray-title">Spray Chart</div>
         <div style="font-size:11px;color:var(--text3);margin-top:3px" id="spray-sub">Click the field to mark landing spot</div>
       </div>
-      <button onclick="skipSpray()" style="background:none;border:1px solid var(--border);border-radius:6px;color:var(--text3);font-size:12px;padding:5px 12px;cursor:pointer;transition:all .14s;font-family:'Barlow Condensed',sans-serif;font-weight:700;letter-spacing:1px" onmouseover="this.style.color='var(--text)';this.style.borderColor='var(--text2)'" onmouseout="this.style.color='var(--text3)';this.style.borderColor='var(--border)'">Skip ↩</button>
+      <button onclick="skipSpray()" style="background:none;border:1px solid var(--border);border-radius:6px;color:var(--text3);font-size:12px;padding:5px 12px;cursor:pointer;transition:all .14s;font-family:'Barlow Condensed',sans-serif;font-weight:700;letter-spacing:1px" onmouseover="this.style.color='var(--text)';this.style.borderColor='var(--text2)'" onmouseout="this.style.color='var(--text3)';this.style.borderColor='var(--border)'"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="1" y1="1" x2="11" y2="11"/><line x1="11" y1="1" x2="1" y2="11"/></svg></button>
     </div>
 
     <!-- Two-column layout: controls left, field right -->
@@ -1607,7 +1607,7 @@ th.sorted{color:var(--accent);}
         <div style="font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:22px;color:var(--text)" id="ram-title">Runner on 1st</div>
         <div style="font-size:11px;color:var(--text3);margin-top:2px" id="ram-sub">Select an action for this runner</div>
       </div>
-      <button onclick="closeRunnerActionModal()" style="background:none;border:1px solid var(--border);border-radius:6px;color:var(--text3);font-size:14px;padding:4px 10px;cursor:pointer;transition:all .14s" onmouseover="this.style.borderColor='var(--red)';this.style.color='var(--red)'" onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--text3)'"></button>
+      <button onclick="closeRunnerActionModal()" style="background:none;border:1px solid var(--border);border-radius:6px;color:var(--text3);padding:6px 8px;cursor:pointer;transition:all .14s;display:flex;align-items:center;justify-content:center" onmouseover="this.style.borderColor='var(--red)';this.style.color='var(--red)'" onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--text3)'"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="1" y1="1" x2="11" y2="11"/><line x1="11" y1="1" x2="1" y2="11"/></svg></button>
     </div>
 
     <!-- Mini diamond showing current runner position -->
@@ -1703,9 +1703,9 @@ th.sorted{color:var(--accent);}
         <div style="font-size:11px;color:#8a909e;margin-top:2px">Pick up where you left off</div>
       </div>
       <button onclick="document.getElementById('resume-modal').style.display='none'"
-        style="background:none;border:1px solid #d4d8e0;border-radius:6px;color:#8a909e;font-size:14px;padding:4px 10px;cursor:pointer;transition:all .14s"
+        style="background:none;border:1px solid #d4d8e0;border-radius:6px;color:#8a909e;padding:6px 8px;cursor:pointer;transition:all .14s;display:flex;align-items:center;justify-content:center"
         onmouseover="this.style.borderColor='#cc1a1a';this.style.color='#cc1a1a'"
-        onmouseout="this.style.borderColor='#d4d8e0';this.style.color='#8a909e'"></button>
+        onmouseout="this.style.borderColor='#d4d8e0';this.style.color='#8a909e'"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="1" y1="1" x2="11" y2="11"/><line x1="11" y1="1" x2="1" y2="11"/></svg></button>
     </div>
     <div id="resume-game-list" style="overflow-y:auto;flex:1;padding-right:4px"></div>
   </div>
@@ -2079,7 +2079,7 @@ function activePitcherList(){ return S.isTop ? S.pitchersHome : S.pitchersAway; 
 function activePitcher()    { const l=activePitcherList(); return l.find(p=>p.active)||l[l.length-1]; }
 function awayName(){ return qs('away-name-input').value||'AWAY'; }
 function homeName(){ return qs('home-name-input').value||'HOME'; }
-function isContactOutcome(o){ return ['single','double','triple','homerun','groundout','flyout','lineout','sacfly','sacbunt','error'].includes(o); }
+function isContactOutcome(o){ return ['single','double','triple','homerun','groundout','flyout','lineout','sacfly','sacbunt','error','fc'].includes(o); }
 function isHitOutcome(o)    { return ['single','double','triple','homerun'].includes(o); }
 function isFieldOut(o)      { return ['groundout','flyout','lineout'].includes(o); }
 function pitchTypeFamily(t){
@@ -2304,22 +2304,16 @@ function commitPitch(){
     if(S.outs>=3){handleThreeOuts();return;}
     nextBatter();
   } else if(isFieldOut(outcome)){
-    S.outs++;
-    toast(`Out! (${logLabel})`);
-    logEvent('🟤',`${logLabel} — Out`,`${currentBatter()?.name||'Batter'} · ${S.outs} out${S.outs>1?'s':''} this inning`);
-    recordAtBatResult('O',logLabel); abEnded=true;
+    abEnded=true;
     openSprayModal(outcome, entry, ()=>{
-      updatePlayBlurb(outcome, pitchType, velocity, zoneLabel(px,py), entry.spray||null, 0, S.bases, _blurbCount);
-      // Check for double play, then offer runner advancement if runners still on
-      checkForDoublePlay(outcome, pitchType, velocity, zoneLabel(px,py), entry.spray||null, ()=>{
-        if(S.outs>=3){handleThreeOuts();return;}
-        const runnersOn = ['1st','2nd','3rd'].some(b=>S.bases[b]);
-        if(runnersOn){
-          showRunnerAdvanceOnOut(outcome, ()=>{ if(S.outs>=3){handleThreeOuts();return;} nextBatter(); });
-        } else {
-          nextBatter();
-        }
-      });
+      // For ground outs with runners on base, ask who was retired
+      const runnersOn = ['1st','2nd','3rd'].filter(b=>S.bases[b]);
+      if(outcome==='groundout' && runnersOn.length>0){
+        showForceOutQuestion(outcome, entry, pitchType, velocity, px, py);
+      } else {
+        // Normal fly out / line out — batter is always the one out
+        commitBatterOut(outcome, logLabel, entry, pitchType, velocity, px, py);
+      }
     });
   } else if(outcome==='sacfly'){
     S.outs++;
@@ -2794,7 +2788,7 @@ function renderPitcherList(){
         <input class="setup-input num-in" id="edit-p-num-${i}"  value="${p.num||''}"  placeholder="#"    style="width:38px;flex-shrink:0;padding:5px 4px;text-align:center;font-size:13px">
         <input class="setup-input"        id="edit-p-name-${i}" value="${p.name||''}" placeholder="Name..." style="flex:1;font-size:13px">
         <button onclick="savePitcherEdit(${i})" style="background:var(--accent);border:none;border-radius:5px;color:var(--bg);font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:13px;padding:5px 10px;cursor:pointer;flex-shrink:0">✓</button>
-        <button onclick="cancelPitcherEdit()" style="background:none;border:1px solid var(--border);border-radius:5px;color:var(--text3);font-size:12px;padding:5px 8px;cursor:pointer;flex-shrink:0">✕</button>
+        <button onclick="cancelPitcherEdit()" style="background:none;border:1px solid var(--border);border-radius:5px;color:var(--text3);padding:6px 7px;cursor:pointer;flex-shrink:0;display:flex;align-items:center;justify-content:center"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="1" y1="1" x2="11" y2="11"/><line x1="11" y1="1" x2="1" y2="11"/></svg></button>
       `;
       setTimeout(()=>{ const n=qs(`edit-p-name-${i}`); if(n){n.focus();n.select();} },30);
     } else {
@@ -2857,7 +2851,7 @@ function renderLineup(){
             <option value="S"${b.hand==='S'?' selected':''}>S</option>
           </select>
           <button class="lineup-edit-save"   onclick="saveLineupSlot(${i})">✓</button>
-          <button class="lineup-edit-cancel" onclick="cancelEdit()">✕</button>
+          <button class="lineup-edit-cancel" onclick="cancelEdit()" style="display:flex;align-items:center;justify-content:center;padding:4px 7px"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="1" y1="1" x2="11" y2="11"/><line x1="11" y1="1" x2="1" y2="11"/></svg></button>
         </div>
       `;
       setTimeout(()=>{ const n=qs(`edit-name-${i}`); if(n){n.focus();n.select();} },30);
@@ -3887,6 +3881,108 @@ function updatePlayBlurb(outcome, pitchType, velocity, loc, spray, runsScored, r
 let dpCallback = null; // called after DP modal resolves
 
 // Called after spray modal closes for a field out — check if DP is possible
+
+// ===================== FORCE OUT / FIELDER'S CHOICE =====================
+
+// Normal out where batter is retired — shared by fly outs, line outs, and GO where batter is out
+function commitBatterOut(outcome, logLabel, entry, pitchType, velocity, px, py){
+  S.outs++;
+  const batter = currentBatter()?.name||'Batter';
+  toast(`Out! (${logLabel})`);
+  logEvent('🟤',`${logLabel} — Out`,`${batter} · ${S.outs} out${S.outs>1?'s':''} this inning`);
+  recordAtBatResult('O', logLabel);
+  updatePlayBlurb(outcome, pitchType, velocity, zoneLabel(px,py), entry.spray||null, 0, S.bases, {balls:S.balls,strikes:S.strikes});
+  checkForDoublePlay(outcome, pitchType, velocity, zoneLabel(px,py), entry.spray||null, ()=>{
+    if(S.outs>=3){handleThreeOuts();return;}
+    const runnersOn = ['1st','2nd','3rd'].some(b=>S.bases[b]);
+    if(runnersOn){
+      showRunnerAdvanceOnOut(outcome, ()=>{ if(S.outs>=3){handleThreeOuts();return;} nextBatter(); });
+    } else {
+      nextBatter();
+    }
+  });
+}
+
+// After spray on a ground out with runners: ask who was put out
+function showForceOutQuestion(outcome, entry, pitchType, velocity, px, py){
+  const batter  = currentBatter()?.name || 'Batter';
+  const runners = ['1st','2nd','3rd'].filter(b=>S.bases[b]);
+
+  qs('modal-title').textContent = 'Who was retired?';
+  qs('modal-sub').textContent   = `Ground ball — ${batter}. Select who was put out on the play.`;
+
+  // Reset base highlights
+  ['1st','2nd','3rd','home'].forEach(b=>{
+    const el=qs('modal-'+b);
+    if(el) el.className='baserun-base baserun-'+(b==='2nd'?'second':b==='3rd'?'third':b==='1st'?'first':'home');
+  });
+
+  const qEl = qs('runner-queue'); qEl.innerHTML='';
+
+  // Helper to build a button
+  const addBtn = (label, onClick) => {
+    const btn = document.createElement('button');
+    btn.className = 'runner-move-btn';
+    btn.innerHTML = label;
+    btn.onclick = onClick;
+    qEl.appendChild(btn);
+  };
+
+  // Option 1: Batter is out (normal GO)
+  addBtn(`🟤 Batter out — Ground Out (GO)`, ()=>{
+    qs('baserun-modal').classList.remove('active');
+    commitBatterOut(outcome, 'GO', entry, pitchType, velocity, px, py);
+  });
+
+  // Option 2+: A runner is out (FC / force out) — batter reaches 1st
+  runners.forEach(base=>{
+    const forceLabels = {
+      '1st': 'Runner on 1st retired — Fielder's Choice (FC)',
+      '2nd': 'Runner on 2nd retired — Force Out / FC',
+      '3rd': 'Runner on 3rd retired — Force Out / FC',
+    };
+    addBtn(`🟤 ${forceLabels[base]}`, ()=>{
+      qs('baserun-modal').classList.remove('active');
+      commitFieldersChoice(base, entry, pitchType, velocity, px, py);
+    });
+  });
+
+  qs('baserun-modal').classList.add('active');
+}
+
+// Fielder's choice: a runner is retired, batter reaches 1st
+function commitFieldersChoice(retiredBase, entry, pitchType, velocity, px, py){
+  const batter = currentBatter()?.name || 'Batter';
+
+  S.outs++;
+  // Remove the retired runner
+  S.bases[retiredBase] = false;
+  // Batter reaches 1st (force — batter always goes to 1st on a FC groundball)
+  // If 1st is occupied by a runner who wasn't retired, they may have advanced
+  // We'll handle that via the runner advance modal afterward
+  const had1st = S.bases['1st'];
+  S.bases['1st'] = true; // batter reaches
+
+  // FC: charges an AB, no hit
+  recordAtBatResult('O', 'FC');
+
+  toast(`Fielder's Choice — ${batter} reaches 1st, runner on ${retiredBase} out`);
+  logEvent('🟤', `Fielder's Choice`, `${batter} reaches 1st · runner retired at ${retiredBase==='1st'?'2nd':retiredBase==='2nd'?'3rd':'home'} · ${S.outs} out`);
+  updatePlayBlurb('groundout', pitchType, velocity, zoneLabel(px,py), entry.spray||null, 0, S.bases, {balls:S.balls,strikes:S.strikes});
+
+  if(S.outs>=3){handleThreeOuts();return;}
+
+  // Ask about remaining runners — they may have been forced to advance or stayed
+  const runnersStillOn = ['1st','2nd','3rd'].filter(b=>S.bases[b]&&b!=='1st'); // exclude batter who just arrived
+  // Actually include all bases since we need to know what each runner did
+  const anyRunners = ['2nd','3rd'].some(b=>S.bases[b]) || had1st;
+  if(anyRunners){
+    showRunnerAdvanceOnOut('groundout', ()=>{ if(S.outs>=3){handleThreeOuts();return;} nextBatter(); });
+  } else {
+    nextBatter();
+  }
+}
+
 function checkForDoublePlay(outcome, pitchType, velocity, locStr, spray, afterCallback){
   const runners = ['1st','2nd','3rd'].filter(b=>S.bases[b]);
 
@@ -4433,7 +4529,7 @@ function renderAllGames(){
       <div class="game-teams">${escHtml(g.awayTeam)} <span style="color:var(--text3);font-weight:400">vs</span> ${escHtml(g.homeTeam)}</div>
       <div style="flex:1;font-size:11px;color:var(--text3)">${g.totalPitches||0} pitches · ${g.innings} inn</div>
       <div class="game-score">${g.awayScore}–${g.homeScore}</div>
-      <button class="del-btn" onclick="event.stopPropagation();promptDeleteGame('${g.id}','${escHtml(g.awayTeam)} vs ${escHtml(g.homeTeam)} (${g.date})')">Del</button>
+      <button class="del-btn" onclick="event.stopPropagation();promptDeleteGame('${g.id}','${escHtml(g.awayTeam)} vs ${escHtml(g.homeTeam)} (${g.date})')"><svg xmlns="http://www.w3.org/2000/svg" width="13" height="14" viewBox="0 0 13 14" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><polyline points="1,3 12,3"/><path d="M4,3V2a1,1,0,0,1,1-1h3a1,1,0,0,1,1,1V3"/><path d="M2,3l.7,8.5A1,1,0,0,0,3.7,12.5h5.6a1,1,0,0,0,1-.99L11,3"/><line x1="5" y1="6" x2="5" y2="10"/><line x1="8" y1="6" x2="8" y2="10"/></svg></button>
     `;
     div.onclick=()=>showView('game', g.id);
     gl.appendChild(div);
@@ -4587,7 +4683,7 @@ function buildTeamGamesList(games, teamName){
         <div class="game-teams">${isHome?'vs':'@'} ${escHtml(opp)}</div>
         <div class="game-score">${tf}–${ta}</div>
         <div class="game-pitches">${g.totalPitches||0}P</div>
-        <button class="del-btn" onclick="event.stopPropagation();promptDeleteGame('${g.id}','${escHtml(isHome?opp+' @ '+teamName:teamName+' @ '+opp)} (${g.date})')">Del</button>
+        <button class="del-btn" onclick="event.stopPropagation();promptDeleteGame('${g.id}','${escHtml(isHome?opp+' @ '+teamName:teamName+' @ '+opp)} (${g.date})')"><svg xmlns="http://www.w3.org/2000/svg" width="13" height="14" viewBox="0 0 13 14" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><polyline points="1,3 12,3"/><path d="M4,3V2a1,1,0,0,1,1-1h3a1,1,0,0,1,1,1V3"/><path d="M2,3l.7,8.5A1,1,0,0,0,3.7,12.5h5.6a1,1,0,0,0,1-.99L11,3"/><line x1="5" y1="6" x2="5" y2="10"/><line x1="8" y1="6" x2="8" y2="10"/></svg></button>
       </div>`;
     }).join('');
 }
@@ -5214,7 +5310,7 @@ function renderGame(gameId){
         <button onclick="promptDeleteGame('${g.id}','${escHtml(g.awayTeam)} vs ${escHtml(g.homeTeam)} (${g.date})')"
           style="padding:7px 14px;background:transparent;border:1.5px solid #d4d8e0;border-radius:8px;color:#8a909e;font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:13px;cursor:pointer;transition:all .14s;white-space:nowrap"
           onmouseover="this.style.borderColor='#cc1a1a';this.style.color='#cc1a1a';this.style.background='rgba(204,26,26,.05)'"
-          onmouseout="this.style.borderColor='#d4d8e0';this.style.color='#8a909e';this.style.background='transparent'">🗑 Delete Game</button>
+          onmouseout="this.style.borderColor='#d4d8e0';this.style.color='#8a909e';this.style.background='transparent'"style="display:inline-flex;align-items:center;gap:6px"><svg xmlns="http://www.w3.org/2000/svg" width="13" height="14" viewBox="0 0 13 14" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><polyline points="1,3 12,3"/><path d="M4,3V2a1,1,0,0,1,1-1h3a1,1,0,0,1,1,1V3"/><path d="M2,3l.7,8.5A1,1,0,0,0,3.7,12.5h5.6a1,1,0,0,0,1-.99L11,3"/><line x1="5" y1="6" x2="5" y2="10"/><line x1="8" y1="6" x2="8" y2="10"/></svg> Delete Game</button>
       </div>
     </div>
 
