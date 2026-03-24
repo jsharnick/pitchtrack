@@ -2072,7 +2072,7 @@ function setBatterIdx(i)    { if(S.isTop) S.awayBatterIdx=i; else S.homeBatterId
 function currentBatter()    { const l=currentLineup(); return l[currentBatterIdx()%l.length]; }
 function getBatterKey(isAway,i){ return `${isAway?'a':'h'}_${i}`; }
 function currentBatterKey() { return getBatterKey(S.isTop, currentBatterIdx()%currentLineup().length); }
-function getBatterStats(k)  { if(!S.batterStats[k]) S.batterStats[k]={ab:0,hits:0,bb:0,k:0}; return S.batterStats[k]; }
+function getBatterStats(k)  { if(!S.batterStats[k]) S.batterStats[k]={ab:0,pa:0,hits:0,bb:0,k:0,hbp:0,ci:0}; return S.batterStats[k]; }
 
 // Active pitcher: during top half, home team pitches; during bottom half, away team pitches
 function activePitcherList(){ return S.isTop ? S.pitchersHome : S.pitchersAway; }
@@ -2125,7 +2125,7 @@ function updateScoreBug(){
   qs('bug-pitcher-stats').textContent = p?`${p.pitches}P · ${p.k}K · ${p.bb}BB`:'';
   const b=currentBatter(), bs=getBatterStats(currentBatterKey());
   qs('bug-batter-name').textContent  = b?`#${b.num||''} ${b.name}`:'—';
-  qs('bug-batter-stats').textContent = `${bs.hits}-${bs.ab} · ${bs.bb}BB`;
+  qs('bug-batter-stats').textContent = `${bs.hits}-${bs.ab} · ${bs.bb}BB · ${bs.pa||0}PA`;
   qs('ab-strip-batter').textContent  = (b?b.name.toUpperCase():'AT BAT')+` — ${S.balls}-${S.strikes}`;
   const an=awayName(), hn=homeName();
   qs('bug-away-name').textContent=an; qs('bug-home-name').textContent=hn;
@@ -2272,12 +2272,12 @@ function commitPitch(){
     toast('HBP — Batter takes first!');
     logEvent('⚡','HBP',`${currentBatter()?.name||'Batter'} hit by pitch`);
     updatePlayBlurb('hbp', pitchType, velocity, zoneLabel(px,py), null, 0, S.bases, _blurbCount);
-    recordAtBatResult('BB','HBP'); advanceOnWalk(); abEnded=true;
+    recordAtBatResult('HBP','HBP'); advanceOnWalk(); abEnded=true;
   } else if(outcome==='ci'){
     toast('🧤 Catcher\'s Interference — Batter takes first!');
     logEvent('🧤','Catcher\'s Interference',`${currentBatter()?.name||'Batter'} reaches on CI`);
     updatePlayBlurb('ci', pitchType, velocity, zoneLabel(px,py), null, 0, S.bases, _blurbCount);
-    recordAtBatResult('BB','CI'); advanceOnWalk(); abEnded=true;
+    recordAtBatResult('CI','CI'); advanceOnWalk(); abEnded=true;
   } else if(outcome==='error'){
     // Show base selection modal — game logic continues in commitError()
     S.pendingErrorEntry = entry;
@@ -2715,10 +2715,13 @@ function handleThreeOuts(){
 function recordAtBatResult(type,label){
   const key=currentBatterKey();
   const bs=getBatterStats(key);
-  if(type!=='BB') bs.ab++;
-  if(type==='H')  bs.hits++;
-  if(type==='BB') bs.bb++;
-  if(type==='K')  bs.k++;
+  bs.pa++;                          // every result is a plate appearance
+  if(type!=='BB'&&type!=='HBP'&&type!=='CI') bs.ab++;
+  if(type==='H')   bs.hits++;
+  if(type==='BB')  bs.bb++;
+  if(type==='K')   bs.k++;
+  if(type==='HBP') bs.hbp++;
+  if(type==='CI')  bs.ci++;
   if(!S.lineupResults[key]) S.lineupResults[key]=[];
   S.lineupResults[key].push({type,label});
 }
@@ -2940,18 +2943,20 @@ function renderBoxScore(){
 function renderBatterStats(){
   const mk=(isAway,lineup)=> lineup.map((b,i)=>{
     const bs=getBatterStats(getBatterKey(isAway,i));
+    const pa=bs.pa||0;
     const avg=bs.ab>0?'.'+(bs.hits/bs.ab*1000|0).toString().padStart(3,'0'):'—';
-    return `<tr><td>#${b.num||'—'} ${b.name}</td><td>${bs.ab}</td><td>${bs.hits}</td><td>${bs.bb}</td><td>${bs.k}</td><td>${avg}</td></tr>`;
+    const obp=pa>0?'.'+(((bs.hits+(bs.bb||0)+(bs.hbp||0)+(bs.ci||0))/pa)*1000|0).toString().padStart(3,'0'):'—';
+    return `<tr><td>#${b.num||'—'} ${b.name}</td><td>${pa}</td><td>${bs.ab}</td><td>${bs.hits}</td><td>${bs.bb||0}</td><td>${bs.hbp||0}</td><td>${bs.k}</td><td>${avg}</td><td>${obp}</td></tr>`;
   }).join('');
   qs('batter-stats-wrap').innerHTML=`
     <div class="section-label" style="margin-top:6px">${awayName()} Batters</div>
     <div style="overflow-x:auto;padding:0 10px">
-      <table class="batter-table"><thead><tr><th>Batter</th><th>AB</th><th>H</th><th>BB</th><th>K</th><th>AVG</th></tr></thead>
+      <table class="batter-table"><thead><tr><th>Batter</th><th>PA</th><th>AB</th><th>H</th><th>BB</th><th>HBP</th><th>K</th><th>AVG</th><th>OBP</th></tr></thead>
       <tbody>${mk(true,S.lineupAway)}</tbody></table>
     </div>
     <div class="section-label" style="margin-top:8px">${homeName()} Batters</div>
     <div style="overflow-x:auto;padding:0 10px">
-      <table class="batter-table"><thead><tr><th>Batter</th><th>AB</th><th>H</th><th>BB</th><th>K</th><th>AVG</th></tr></thead>
+      <table class="batter-table"><thead><tr><th>Batter</th><th>PA</th><th>AB</th><th>H</th><th>BB</th><th>HBP</th><th>K</th><th>AVG</th><th>OBP</th></tr></thead>
       <tbody>${mk(false,S.lineupHome)}</tbody></table>
     </div>
   `;
@@ -3962,14 +3967,17 @@ async function saveGame(){
     lineup.map((p,i)=>{
       const bs = getBatterStats(getBatterKey(isAway, i));
       const results = S.lineupResults[getBatterKey(isAway,i)] || [];
+      // Count pitches seen — filter by batter name AND which team was batting
+      // isAway=true means away team bats, which is S.isTop=true in the pitch log
+      const pitchesSeen = S.pitchLog.filter(e=>e.batter===p.name && e.isTop===isAway).length;
       return {
         name: p.name, num: p.num, pos: p.pos, hand: p.hand,
-        ab: bs.ab, hits: bs.hits, bb: bs.bb, k: bs.k,
+        pa: bs.pa, ab: bs.ab, hits: bs.hits, bb: bs.bb, k: bs.k, hbp: bs.hbp||0, ci: bs.ci||0,
+        pitchesSeen,
         doubles: results.filter(r=>r.label==='2B').length,
         triples:  results.filter(r=>r.label==='3B').length,
         hr:       results.filter(r=>r.label==='HR').length,
-        hbp:      results.filter(r=>r.label==='HBP'||r.label==='CI').length,
-        sb:       0, // tracked via game log but not per-player yet
+        sb:       0,
         results:  results.map(r=>r.label),
       };
     });
@@ -4219,7 +4227,7 @@ function updateMobScore(){
   setEl('mob-pitcher-stats', p?`${p.pitches}P · ${p.k}K · ${p.bb}BB`:'');
   const b=currentBatter(), bs=getBatterStats(currentBatterKey());
   setEl('mob-batter-name',  b?`#${b.num||''} ${b.name}`:'—');
-  setEl('mob-batter-stats', `${bs.hits}-${bs.ab} · ${bs.bb}BB`);
+  setEl('mob-batter-stats', `${bs.hits}-${bs.ab} · ${bs.bb}BB · ${bs.pa||0}PA`);
   // Sync mobile base diamonds
   ['1st','2nd','3rd'].forEach(b=>{
     const el = document.getElementById('mob-base-'+b);
@@ -4464,7 +4472,7 @@ function buildBatterTable(players, teamName){
     <div class="section-title">Batting Stats</div>
     <table class="data-table">
       <thead><tr>
-        <th>Player</th><th>#</th><th>Pos</th><th>G</th><th>AB</th><th>H</th>
+        <th>Player</th><th>#</th><th>Pos</th><th>G</th><th>PA</th><th>AB</th><th>H</th>
         <th>2B</th><th>3B</th><th>HR</th><th>BB</th><th>K</th><th>HBP</th>
         <th class="${sortCol==='avg'?'sorted':''}">AVG</th>
         <th class="${sortCol==='obp'?'sorted':''}">OBP</th>
@@ -4472,9 +4480,9 @@ function buildBatterTable(players, teamName){
         <th class="${sortCol==='ops'?'sorted':''}">OPS</th>
       </tr></thead>
       <tbody>${sorted.map(p=>{
+        const pa  = p.pa!=null ? p.pa : (p.ab+p.bb+(p.hbp||0));
         const avg = p.ab>0 ? (p.hits/p.ab) : 0;
-        const obpDen = p.ab+p.bb+p.hbp;
-        const obp = obpDen>0 ? ((p.hits+p.bb+p.hbp)/obpDen) : 0;
+        const obp = pa>0 ? ((p.hits+(p.bb||0)+(p.hbp||0)+(p.ci||0))/pa) : 0;
         const slg = p.ab>0 ? ((p.hits-p.doubles-p.triples-p.hr + p.doubles*2 + p.triples*3 + p.hr*4)/p.ab) : 0;
         const ops = obp+slg;
         const fmtAvg = n => n===0?'.000':'.'+Math.round(n*1000).toString().padStart(3,'0');
@@ -4484,6 +4492,7 @@ function buildBatterTable(players, teamName){
           <td class="dim">${p.num||'—'}</td>
           <td class="dim">${p.pos||'—'}</td>
           <td>${p.games}</td>
+          <td>${pa}</td>
           <td>${p.ab}</td>
           <td>${p.hits}</td>
           <td>${p.doubles}</td>
@@ -4491,7 +4500,7 @@ function buildBatterTable(players, teamName){
           <td class="${p.hr>0?'highlight':''}">${p.hr}</td>
           <td>${p.bb}</td>
           <td>${p.k}</td>
-          <td>${p.hbp}</td>
+          <td>${p.hbp||0}</td>
           <td class="${avgClass}">${fmtAvg(avg)}</td>
           <td>${fmtAvg(obp)}</td>
           <td>${fmtAvg(slg)}</td>
@@ -4926,11 +4935,11 @@ function renderPlayer(teamName, playerName){
   const allPitches = getPlayerPitches(teamName, playerName, games);
 
   const c = document.getElementById('hub-content');
+  const pa  = stats.pa!=null ? stats.pa : (stats.ab+stats.bb+(stats.hbp||0));
   const avg = stats.ab>0?(stats.hits/stats.ab):0;
-  const obpDen=stats.ab+stats.bb+stats.hbp;
-  const obp=obpDen>0?((stats.hits+stats.bb+stats.hbp)/obpDen):0;
-  const tb = stats.hits-stats.doubles-stats.triples-stats.hr + stats.doubles*2+stats.triples*3+stats.hr*4;
-  const slg=stats.ab>0?tb/stats.ab:0;
+  const obp = pa>0?((stats.hits+(stats.bb||0)+(stats.hbp||0)+(stats.ci||0))/pa):0;
+  const tb  = stats.hits-stats.doubles-stats.triples-stats.hr + stats.doubles*2+stats.triples*3+stats.hr*4;
+  const slg = stats.ab>0?tb/stats.ab:0;
   const fmt=n=>n===0?'.000':'.'+Math.round(n*1000).toString().padStart(3,'0');
 
   c.innerHTML=`
@@ -4944,7 +4953,7 @@ function renderPlayer(teamName, playerName){
       <div class="player-number">#${stats.num||'—'}</div>
       <div>
         <div class="player-info-name">${escHtml(playerName)}</div>
-        <div class="player-info-meta">${stats.pos||'—'} · ${stats.hand||'R'}HH · ${escHtml(teamName)} · ${stats.games} game${stats.games!==1?'s':''} · ${allPitches.length} pitches seen</div>
+        <div class="player-info-meta">${stats.pos||'—'} · ${stats.hand||'R'}HH · ${escHtml(teamName)} · ${stats.games} game${stats.games!==1?'s':''} · ${stats.pitchesSeen||allPitches.length} pitches seen</div>
       </div>
       <div style="margin-left:auto;display:flex;gap:16px;align-items:center">
         <div style="text-align:center"><div style="font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:32px;color:var(--accent)">${fmt(avg)}</div><div style="font-size:9px;letter-spacing:2px;color:var(--text3);text-transform:uppercase">AVG</div></div>
@@ -4955,6 +4964,7 @@ function renderPlayer(teamName, playerName){
     </div>
 
     <div class="stat-cards">
+      <div class="stat-card"><div class="stat-card-val">${pa}</div><div class="stat-card-lbl">Plate App.</div></div>
       <div class="stat-card"><div class="stat-card-val">${stats.ab}</div><div class="stat-card-lbl">At Bats</div></div>
       <div class="stat-card"><div class="stat-card-val">${stats.hits}</div><div class="stat-card-lbl">Hits</div></div>
       <div class="stat-card"><div class="stat-card-val">${stats.doubles}</div><div class="stat-card-lbl">Doubles</div></div>
@@ -4962,8 +4972,9 @@ function renderPlayer(teamName, playerName){
       <div class="stat-card accent"><div class="stat-card-val">${stats.hr}</div><div class="stat-card-lbl">Home Runs</div></div>
       <div class="stat-card"><div class="stat-card-val">${tb}</div><div class="stat-card-lbl">Total Bases</div></div>
       <div class="stat-card"><div class="stat-card-val">${stats.bb}</div><div class="stat-card-lbl">Walks</div></div>
+      <div class="stat-card"><div class="stat-card-val">${stats.hbp||0}</div><div class="stat-card-lbl">HBP</div></div>
       <div class="stat-card"><div class="stat-card-val">${stats.k}</div><div class="stat-card-lbl">Strikeouts</div></div>
-      <div class="stat-card"><div class="stat-card-val">${allPitches.length}</div><div class="stat-card-lbl">Pitches Seen</div></div>
+      <div class="stat-card"><div class="stat-card-val">${stats.pitchesSeen||allPitches.length}</div><div class="stat-card-lbl">Pitches Seen</div></div>
     </div>
 
     <!-- Analysis Tabs -->
@@ -5140,19 +5151,21 @@ function buildPlayerGameLog(teamName, playerName, games){
     if(!p||(p.ab||0)+(p.bb||0)+(p.hbp||0)===0) return;
     const avg=p.ab>0?'.'+Math.round(p.hits/p.ab*1000).toString().padStart(3,'0'):'.---';
     const opp = isHome?g.awayTeam:g.homeTeam;
+    const gpa = p.pa!=null ? p.pa : (p.ab+(p.bb||0)+(p.hbp||0));
     rows.push(`<tr>
       <td>${g.date}</td>
       <td>${escHtml(opp)}</td>
-      <td>${p.ab}</td><td>${p.hits}</td><td>${p.doubles}</td><td>${p.triples}</td>
+      <td>${gpa}</td><td>${p.ab}</td><td>${p.hits}</td><td>${p.doubles}</td><td>${p.triples}</td>
       <td class="${p.hr>0?'highlight':''}">${p.hr}</td>
-      <td>${p.bb}</td><td>${p.k}</td>
+      <td>${p.bb||0}</td><td>${p.hbp||0}</td><td>${p.k}</td>
+      <td>${p.pitchesSeen||'—'}</td>
       <td>${avg}</td>
       <td style="font-size:10px;color:var(--text3)">${(p.results||[]).join(' ')}</td>
     </tr>`);
   });
   if(!rows.length) return '<div class="empty-state">No at-bat data found</div>';
   return `<table class="data-table">
-    <thead><tr><th>Date</th><th>Opp</th><th>AB</th><th>H</th><th>2B</th><th>3B</th><th>HR</th><th>BB</th><th>K</th><th>AVG</th><th>Results</th></tr></thead>
+    <thead><tr><th>Date</th><th>Opp</th><th>PA</th><th>AB</th><th>H</th><th>2B</th><th>3B</th><th>HR</th><th>BB</th><th>HBP</th><th>K</th><th>P/PA</th><th>AVG</th><th>Results</th></tr></thead>
     <tbody>${rows.join('')}</tbody>
   </table>`;
 }
@@ -5243,20 +5256,17 @@ function getTeamRoster(teamName, games){
     const batters=isHome?g.homeBatters:g.awayBatters;
     (batters||[]).forEach(p=>{
       if(!p.name) return;
-      // Use lineup slot key (name + num) to handle duplicate names across games
       const key = p.name+(p.num||'');
-      if(!playerMap[key]) playerMap[key]={name:p.name,num:p.num,pos:p.pos,hand:p.hand,games:0,ab:0,hits:0,doubles:0,triples:0,hr:0,bb:0,k:0,hbp:0};
+      if(!playerMap[key]) playerMap[key]={name:p.name,num:p.num,pos:p.pos,hand:p.hand,games:0,pa:0,ab:0,hits:0,doubles:0,triples:0,hr:0,bb:0,k:0,hbp:0,ci:0,pitchesSeen:0};
       const m=playerMap[key];
-      // Count a game if they had any plate appearance
-      const pa = (p.ab||0)+(p.bb||0)+(p.hbp||0);
+      const pa = p.pa!=null ? (p.pa||0) : (p.ab||0)+(p.bb||0)+(p.hbp||0); // backwards compat
       if(pa>0) m.games++;
-      m.ab+=p.ab||0; m.hits+=p.hits||0; m.doubles+=p.doubles||0;
+      m.pa+=pa; m.ab+=p.ab||0; m.hits+=p.hits||0; m.doubles+=p.doubles||0;
       m.triples+=p.triples||0; m.hr+=p.hr||0; m.bb+=p.bb||0;
-      m.k+=p.k||0; m.hbp+=p.hbp||0;
+      m.k+=p.k||0; m.hbp+=p.hbp||0; m.ci+=(p.ci||0); m.pitchesSeen+=(p.pitchesSeen||0);
     });
   });
-  // Show anyone with at least 1 plate appearance
-  return Object.values(playerMap).filter(p=>(p.ab+p.bb+p.hbp)>0);
+  return Object.values(playerMap).filter(p=>p.pa>0);
 }
 
 function getTeamPitchers(teamName, games){
@@ -5278,18 +5288,18 @@ function getTeamPitchers(teamName, games){
 }
 
 function getPlayerCareerStats(teamName, playerName, games){
-  const base={name:playerName,num:'—',pos:'—',hand:'R',games:0,ab:0,hits:0,doubles:0,triples:0,hr:0,bb:0,k:0,hbp:0};
+  const base={name:playerName,num:'—',pos:'—',hand:'R',games:0,pa:0,ab:0,hits:0,doubles:0,triples:0,hr:0,bb:0,k:0,hbp:0,ci:0,pitchesSeen:0};
   games.forEach(g=>{
     const isHome=g.homeTeam===teamName;
     const batters=isHome?g.homeBatters:g.awayBatters;
     const p=batters?.find(b=>b.name===playerName);
     if(!p) return;
     base.num=p.num||base.num; base.pos=p.pos||base.pos; base.hand=p.hand||base.hand;
-    const pa=(p.ab||0)+(p.bb||0)+(p.hbp||0);
+    const pa = p.pa!=null ? (p.pa||0) : (p.ab||0)+(p.bb||0)+(p.hbp||0);
     if(pa>0) base.games++;
-    base.ab+=p.ab||0; base.hits+=p.hits||0; base.doubles+=p.doubles||0;
+    base.pa+=pa; base.ab+=p.ab||0; base.hits+=p.hits||0; base.doubles+=p.doubles||0;
     base.triples+=p.triples||0; base.hr+=p.hr||0; base.bb+=p.bb||0;
-    base.k+=p.k||0; base.hbp+=p.hbp||0;
+    base.k+=p.k||0; base.hbp+=p.hbp||0; base.ci+=(p.ci||0); base.pitchesSeen+=(p.pitchesSeen||0);
   });
   return base;
 }
