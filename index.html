@@ -3937,9 +3937,9 @@ function showForceOutQuestion(outcome, entry, pitchType, velocity, px, py){
   // Option 2+: A runner is out (FC / force out) — batter reaches 1st
   runners.forEach(base=>{
     const forceLabels = {
-      '1st': 'Runner on 1st retired — Fielder's Choice (FC)',
-      '2nd': 'Runner on 2nd retired — Force Out / FC',
-      '3rd': 'Runner on 3rd retired — Force Out / FC',
+      '1st': "Runner on 1st retired — Fielder's Choice (FC)",
+      '2nd': "Runner on 2nd retired — Force Out / FC",
+      '3rd': "Runner on 3rd retired — Force Out / FC",
     };
     addBtn(`🟤 ${forceLabels[base]}`, ()=>{
       qs('baserun-modal').classList.remove('active');
@@ -3966,8 +3966,8 @@ function commitFieldersChoice(retiredBase, entry, pitchType, velocity, px, py){
   // FC: charges an AB, no hit
   recordAtBatResult('O', 'FC');
 
-  toast(`Fielder's Choice — ${batter} reaches 1st, runner on ${retiredBase} out`);
-  logEvent('🟤', `Fielder's Choice`, `${batter} reaches 1st · runner retired at ${retiredBase==='1st'?'2nd':retiredBase==='2nd'?'3rd':'home'} · ${S.outs} out`);
+  toast(`Fielder\'s Choice — ${batter} reaches 1st, runner on ${retiredBase} out`);
+  logEvent('🟤', "Fielder\'s Choice", `${batter} reaches 1st · runner retired at ${retiredBase==='1st'?'2nd':retiredBase==='2nd'?'3rd':'home'} · ${S.outs} out`);
   updatePlayBlurb('groundout', pitchType, velocity, zoneLabel(px,py), entry.spray||null, 0, S.bases, {balls:S.balls,strikes:S.strikes});
 
   if(S.outs>=3){handleThreeOuts();return;}
