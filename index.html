@@ -1026,15 +1026,16 @@ th.sorted{color:var(--accent);}
 
 } /* end @media mobile */
 
-/* Hub mobile bar — always hidden on desktop */
-#hub-mobile-bar { display:none; }
-/* Hub layout */
-#hub-app { display:grid; grid-template-columns:260px 1fr; min-height:calc(100vh - 44px); }
-
-/* ── Desktop: hide ALL mobile-only components ── */
-#mob-tabs    { display:none !important; }
-.mob-panel   { display:none !important; }
-#hub-mobile-bar { display:none !important; }
+/* ── Desktop-only rules (769px and up) ── */
+@media (min-width: 769px) {
+  /* Hub mobile bar — hidden on desktop */
+  #hub-mobile-bar { display:none !important; }
+  /* Hub layout — sidebar grid */
+  #hub-app { display:grid; grid-template-columns:260px 1fr; min-height:calc(100vh - 44px); }
+  /* Hide mobile-only components */
+  #mob-tabs  { display:none !important; }
+  .mob-panel { display:none !important; }
+}
 
 </style>
 </head>
