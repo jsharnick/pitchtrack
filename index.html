@@ -735,11 +735,13 @@ th.sorted{color:var(--accent);}
   .hs-cta    { font-size:13px; padding:9px 0; }
 
   /* ── panel-wrap: fixed box between nav (44px) and tab bar (56px) ── */
-  #panel-wrap { top:44px !important; bottom:calc(56px + env(safe-area-inset-bottom, 0px)) !important; overflow:hidden !important; }
+  #panel-wrap { top:44px !important; bottom:0 !important; overflow:hidden !important; }
 
   /* ── panel-tracker fills panel-wrap exactly ── */
   #panel-tracker {
-    position:absolute !important; inset:0 !important;
+    position:absolute !important;
+    top:0 !important; left:0 !important; right:0 !important;
+    bottom:56px !important;
     overflow:hidden !important; display:flex !important; flex-direction:column !important;
   }
 
@@ -843,12 +845,10 @@ th.sorted{color:var(--accent);}
   /* ── Mobile bottom tab bar ── */
   #mob-tabs {
     display:flex !important;
-    position:fixed; bottom:0; left:0; right:0; z-index:99999;
+    position:absolute; bottom:0; left:0; right:0; z-index:500;
     background:#111318; border-top:1px solid rgba(255,255,255,.1);
     height:56px;
     padding-bottom: env(safe-area-inset-bottom, 0px);
-    -webkit-transform: translateZ(0);
-    -webkit-backface-visibility: hidden;
   }
   .mob-tab {
     flex:1; display:flex; flex-direction:column; align-items:center;
@@ -862,7 +862,7 @@ th.sorted{color:var(--accent);}
   .mob-tab-icon{ font-size:20px; line-height:1; }
 
   /* ── panel-wrap: full height between nav and tab bar ── */
-  #panel-wrap { bottom:calc(56px + env(safe-area-inset-bottom, 0px)); overflow:hidden; }
+  #panel-wrap { bottom:0; overflow:hidden; }
 
   /* ── Re-show mobile-only elements (overrides desktop hide) ── */
   #mob-tabs  { display:flex !important; }
@@ -910,7 +910,9 @@ th.sorted{color:var(--accent);}
   /* ── Hub responsive ── */
   /* panel-hub fills panel-wrap exactly like panel-tracker */
   #panel-hub {
-    position:absolute !important; inset:0 !important;
+    position:absolute !important;
+    top:0 !important; left:0 !important; right:0 !important;
+    bottom:56px !important;
     display:flex !important; flex-direction:column !important;
     overflow:hidden !important;
   }
@@ -1094,6 +1096,14 @@ th.sorted{color:var(--accent);}
   <button class="sn-save" id="sn-save-btn" onclick="navSave()" style="display:none">Save</button>
 </div>
 <div id="panel-wrap">
+  <!-- MOBILE BOTTOM TABS — inside panel-wrap so they're in the fixed layer -->
+  <div id="mob-tabs">
+    <div class="mob-tab on" id="mobtab-zone"     onclick="mobTab('zone')">Zone</div>
+    <div class="mob-tab"    id="mobtab-score"    onclick="mobTab('score')">Score</div>
+    <div class="mob-tab"    id="mobtab-lineup"   onclick="mobTab('lineup')">Lineup</div>
+    <div class="mob-tab"    id="mobtab-pitchers" onclick="mobTab('pitchers')">Pitchers</div>
+    <div class="mob-tab"    id="mobtab-log"      onclick="mobTab('log')">Log</div>
+  </div>
   <div class="app-panel" id="panel-tracker">
 
 <!-- SCOREBUG -->
@@ -6168,14 +6178,6 @@ async function hubBoot(){
   };
 })();
 </script>
-<!-- MOBILE BOTTOM TABS -->
-<div id="mob-tabs">
-  <div class="mob-tab on" id="mobtab-zone"     onclick="mobTab('zone')">Zone</div>
-  <div class="mob-tab"    id="mobtab-score"    onclick="mobTab('score')">Score</div>
-  <div class="mob-tab"    id="mobtab-lineup"   onclick="mobTab('lineup')">Lineup</div>
-  <div class="mob-tab"    id="mobtab-pitchers" onclick="mobTab('pitchers')">Pitchers</div>
-  <div class="mob-tab"    id="mobtab-log"      onclick="mobTab('log')">Log</div>
-</div>
 
 </body>
 </html>
