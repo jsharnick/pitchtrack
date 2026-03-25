@@ -1274,6 +1274,26 @@ th.sorted{color:var(--accent);}
     <div class="zone-controls">
 
       <div>
+        <div class="outcome-label" style="margin-bottom:5px">Velocity &amp; Pitch Type</div>
+        <div style="display:flex;gap:8px;align-items:stretch;">
+          <div class="vel-wrap" style="flex-direction:column;align-items:center;justify-content:center;gap:2px;padding:8px 12px;">
+            <label style="font-size:9px;letter-spacing:1px;color:var(--text3);text-transform:uppercase;font-weight:600;">MPH</label>
+            <input class="vel-input" id="vel-input" type="number" min="40" max="110" placeholder="—" style="font-size:22px;width:52px;text-align:center;">
+          </div>
+          <div style="flex:1;display:grid;grid-template-columns:repeat(4,1fr);gap:4px;">
+            <button class="pitch-type-btn" data-type="FB" onclick="selectPitchType('FB')">FB</button>
+            <button class="pitch-type-btn" data-type="CB" onclick="selectPitchType('CB')">CB</button>
+            <button class="pitch-type-btn" data-type="SL" onclick="selectPitchType('SL')">SL</button>
+            <button class="pitch-type-btn" data-type="CH" onclick="selectPitchType('CH')">CH</button>
+            <button class="pitch-type-btn" data-type="CT" onclick="selectPitchType('CT')">CT</button>
+            <button class="pitch-type-btn" data-type="SP" onclick="selectPitchType('SP')">SP</button>
+            <button class="pitch-type-btn" data-type="SI" onclick="selectPitchType('SI')">SI</button>
+            <button class="pitch-type-btn" data-type="KN" onclick="selectPitchType('KN')">KN</button>
+          </div>
+        </div>
+      </div>
+
+      <div>
         <div class="outcome-label">Outcome</div>
         <div class="outcome-grid">
           <button class="outcome-btn" data-outcome="strike-swinging" onclick="selectOutcome('strike-swinging')" data-hotkey="S">Swinging K<span class="outcome-sub">bat misses</span><span class="outcome-hotkey">S</span></button>
@@ -1282,7 +1302,7 @@ th.sorted{color:var(--accent);}
           <button class="outcome-btn" data-outcome="foul"            onclick="selectOutcome('foul')"            data-hotkey="F">Foul<span class="outcome-sub">2-strike cap</span><span class="outcome-hotkey">F</span></button>
           <button class="outcome-btn" data-outcome="hbp"             onclick="selectOutcome('hbp')"             data-hotkey="H">HBP<span class="outcome-sub">hit by pitch</span><span class="outcome-hotkey">H</span></button>
           <button class="outcome-btn" data-outcome="ci"              onclick="selectOutcome('ci')"              data-hotkey="I">CI<span class="outcome-sub">catcher's interference</span><span class="outcome-hotkey">I</span></button>
-          <button class="outcome-btn inplay-toggle" data-outcome="inplay" onclick="toggleInPlay()" id="inplay-toggle-btn" data-hotkey="P">In Play <span class="outcome-sub">hit or out</span><span class="outcome-hotkey">P</span></button>
+          <button class="outcome-btn inplay-toggle" data-outcome="inplay" onclick="toggleInPlay()" id="inplay-toggle-btn" data-hotkey="P" style="grid-column:span 2">In Play <span class="outcome-sub">hit or out</span><span class="outcome-hotkey">P</span></button>
         </div>
         <div id="inplay-grid" style="display:none;margin-top:5px">
           <div class="inplay-header">
@@ -1300,26 +1320,6 @@ th.sorted{color:var(--accent);}
             <button class="outcome-btn" data-outcome="sacfly"    onclick="selectOutcome('sacfly')"    data-hotkey="">Sac Fly<span class="outcome-sub">SF · runner scores</span></button>
             <button class="outcome-btn" data-outcome="sacbunt"   onclick="selectOutcome('sacbunt')"   data-hotkey="">Sac Bunt<span class="outcome-sub">SB · batter out</span></button>
             <button class="outcome-btn" data-outcome="error"     onclick="selectOutcome('error')"     data-hotkey="E">Error<span class="outcome-sub">fielding error</span><span class="outcome-hotkey">E</span></button>
-          </div>
-        </div>
-      </div>
-
-      <div>
-        <div class="outcome-label" style="margin-bottom:5px">Velocity &amp; Pitch Type</div>
-        <div style="display:flex;gap:8px;align-items:stretch;">
-          <div class="vel-wrap" style="flex-direction:column;align-items:center;justify-content:center;gap:2px;padding:8px 12px;">
-            <label style="font-size:9px;letter-spacing:1px;color:var(--text3);text-transform:uppercase;font-weight:600;">MPH</label>
-            <input class="vel-input" id="vel-input" type="number" min="40" max="110" placeholder="—" style="font-size:22px;width:52px;text-align:center;">
-          </div>
-          <div style="flex:1;display:grid;grid-template-columns:repeat(4,1fr);gap:4px;">
-            <button class="pitch-type-btn" data-type="FB" onclick="selectPitchType('FB')">FB</button>
-            <button class="pitch-type-btn" data-type="CB" onclick="selectPitchType('CB')">CB</button>
-            <button class="pitch-type-btn" data-type="SL" onclick="selectPitchType('SL')">SL</button>
-            <button class="pitch-type-btn" data-type="CH" onclick="selectPitchType('CH')">CH</button>
-            <button class="pitch-type-btn" data-type="CT" onclick="selectPitchType('CT')">CT</button>
-            <button class="pitch-type-btn" data-type="SP" onclick="selectPitchType('SP')">SP</button>
-            <button class="pitch-type-btn" data-type="SI" onclick="selectPitchType('SI')">SI</button>
-            <button class="pitch-type-btn" data-type="KN" onclick="selectPitchType('KN')">KN</button>
           </div>
         </div>
       </div>
@@ -3100,77 +3100,101 @@ function renderBatterStats(){
 
 // ===================== PITCH MIX =====================
 function renderPitchMix(){
-  const total=S.pitchLog.length;
   const wrap=qs('pitch-mix-wrap');
-  if(!total){wrap.innerHTML='<div style="padding:20px;text-align:center;color:var(--text3);font-size:12px">No pitches yet.</div>';return;}
+  if(!S.pitchLog.length){wrap.innerHTML='<div style="padding:20px;text-align:center;color:var(--text3);font-size:12px">No pitches yet.</div>';return;}
 
-  const types={};
-  const outs={swing:0,look:0,ball:0,foul:0,contact:0};
-  S.pitchLog.forEach(e=>{
-    if(e.pitchType&&e.pitchType!=='—') types[e.pitchType]=(types[e.pitchType]||0)+1;
-    if(e.outcome==='strike-swinging') outs.swing++;
-    else if(e.outcome==='strike-looking') outs.look++;
-    else if(e.outcome==='ball') outs.ball++;
-    else if(e.outcome==='foul') outs.foul++;
-    else if(isContactOutcome(e.outcome)) outs.contact++;
-  });
+  // Build per-pitcher sections for both teams
+  const awayName = qs('away-name-input')?.value||'AWAY';
+  const homeName = qs('home-name-input')?.value||'HOME';
 
-  let html=`<div class="section-label">Pitch Usage (${total} total)</div>`;
-  const sortedTypes=Object.entries(types).sort((a,b)=>b[1]-a[1]);
-  if(sortedTypes.length){
-    sortedTypes.forEach(([t,c])=>{
+  // Group pitchers by team — away pitchers threw when isTop=false (home batting), home when isTop=true
+  // S.pitchersAway = away team's pitching staff (pitched when home team batted, isTop=false... wait)
+  // Actually: isTop=true means AWAY is batting → HOME pitcher is pitching
+  //           isTop=false means HOME is batting → AWAY pitcher is pitching
+  // So: away pitchers appear in pitchLog when isTop=false (away team pitching to home batters) -- NO
+  // Away pitchers pitch TO home batters → home team bats → isTop=false
+  // Home pitchers pitch TO away batters → away team bats → isTop=true
+  const awayPitcherNames = [...new Set(S.pitchLog.filter(e=>e.isTop===false&&e.pitcher&&e.pitcher!=='—').map(e=>e.pitcher))];
+  const homePitcherNames = [...new Set(S.pitchLog.filter(e=>e.isTop===true&&e.pitcher&&e.pitcher!=='—').map(e=>e.pitcher))];
+
+  // Fallback: use pitchersList if no pitcher field stored
+  const awayPList = S.pitchersAway.filter(p=>p.pitches>0);
+  const homePList = S.pitchersHome.filter(p=>p.pitches>0);
+
+  let html = '';
+
+  const buildPitcherSection = (pitcherName, pitcherNum, pitches) => {
+    if(!pitches.length) return '';
+    const total = pitches.length;
+    const types={};
+    const outs={swing:0,look:0,ball:0,foul:0,contact:0};
+    pitches.forEach(e=>{
+      if(e.pitchType&&e.pitchType!=='—') types[e.pitchType]=(types[e.pitchType]||0)+1;
+      if(e.outcome==='strike-swinging') outs.swing++;
+      else if(e.outcome==='strike-looking') outs.look++;
+      else if(e.outcome==='ball') outs.ball++;
+      else if(e.outcome==='foul') outs.foul++;
+      else if(isContactOutcome(e.outcome)) outs.contact++;
+    });
+    const vels=pitches.map(e=>parseFloat(e.velocity)).filter(v=>!isNaN(v)&&v>0);
+    const avgV=vels.length?(vels.reduce((a,b)=>a+b,0)/vels.length).toFixed(1):'—';
+    const maxV=vels.length?Math.max(...vels):'—';
+
+    let s=`<div style="background:var(--surface2);border-radius:8px;padding:10px 12px;margin-bottom:10px">`;
+    s+=`<div style="font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:13px;letter-spacing:1px;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center">
+      <span>#${pitcherNum||'?'} ${pitcherName}</span>
+      <span style="font-weight:400;font-size:11px;color:var(--text3)">${total}P · ${avgV} avg · ${maxV} max</span>
+    </div>`;
+
+    // Pitch usage bars
+    const sortedTypes=Object.entries(types).sort((a,b)=>b[1]-a[1]);
+    if(sortedTypes.length){
+      sortedTypes.forEach(([t,c])=>{
+        const pct=Math.round(c/total*100);
+        s+=`<div class="stat-bar-wrap"><div class="stat-bar-lbl"><span class="stat-bar-name">${t}</span><span class="stat-bar-val">${c} · ${pct}%</span></div><div class="stat-bar"><div class="stat-bar-fill" style="width:${pct}%"></div></div></div>`;
+      });
+    }
+
+    // Outcome breakdown
+    const outcomeMap={swing:['Swinging K','#3a7fd5'],look:['Called K','#85c0f5'],ball:['Ball','rgba(100,120,160,.5)'],foul:['Foul','var(--foul)'],contact:['In Play','var(--accent)']};
+    s+=`<div style="margin-top:6px">`;
+    Object.entries(outs).forEach(([k,c])=>{
+      if(!c) return;
+      const[lbl,clr]=outcomeMap[k];
       const pct=Math.round(c/total*100);
-      html+=`<div class="stat-bar-wrap"><div class="stat-bar-lbl"><span class="stat-bar-name">${t}</span><span class="stat-bar-val">${c} · ${pct}%</span></div><div class="stat-bar"><div class="stat-bar-fill" style="width:${pct}%"></div></div></div>`;
+      s+=`<div class="stat-bar-wrap"><div class="stat-bar-lbl"><span class="stat-bar-name" style="color:${clr}">${lbl}</span><span class="stat-bar-val">${c} · ${pct}%</span></div><div class="stat-bar"><div class="stat-bar-fill" style="width:${pct}%;background:${clr}"></div></div></div>`;
     });
-  } else { html+=`<div style="padding:6px 11px;font-size:11px;color:var(--text3)">No pitch types selected yet.</div>`; }
+    s+=`</div></div>`;
+    return s;
+  };
 
-  html+=`<div class="section-label" style="margin-top:8px">Outcome Breakdown</div>`;
-  const outcomeMap={swing:['Swinging K','#3a7fd5'],look:['Called K','#85c0f5'],ball:['Ball','rgba(255,255,255,.35)'],foul:['Foul','var(--foul)'],contact:['In Play','var(--accent)']};
-  Object.entries(outs).forEach(([k,c])=>{
-    const[lbl,clr]=outcomeMap[k];
-    const pct=Math.round(c/total*100);
-    html+=`<div class="stat-bar-wrap"><div class="stat-bar-lbl"><span class="stat-bar-name" style="color:${clr}">${lbl}</span><span class="stat-bar-val">${c} · ${pct}%</span></div><div class="stat-bar"><div class="stat-bar-fill" style="width:${pct}%;background:${clr}"></div></div></div>`;
-  });
-
-  const vels=S.pitchLog.map(e=>parseFloat(e.velocity)).filter(v=>!isNaN(v)&&v>0);
-  if(vels.length){
-    const avg=(vels.reduce((a,b)=>a+b,0)/vels.length).toFixed(1);
-    const max=Math.max(...vels), min=Math.min(...vels);
-    html+=`<div class="section-label" style="margin-top:8px">Velocity</div>
-    <div class="vel-stat-grid">
-      <div class="vel-stat-card"><div class="vel-stat-val" style="color:var(--accent)">${avg}</div><div class="vel-stat-lbl">AVG mph</div></div>
-      <div class="vel-stat-card"><div class="vel-stat-val" style="color:var(--hit)">${max}</div><div class="vel-stat-lbl">MAX mph</div></div>
-      <div class="vel-stat-card"><div class="vel-stat-val" style="color:var(--text2)">${min}</div><div class="vel-stat-lbl">MIN mph</div></div>
-    </div>`;
-  }
-
-  // Pitcher breakdown
-  const allPitchers=[...S.pitchersAway,...S.pitchersHome].filter(p=>p.pitches>0);
-  if(allPitchers.length){
-    html+=`<div class="section-label" style="margin-top:8px">Pitcher Lines</div>
-    <div style="overflow-x:auto;padding:0 10px 10px">
-      <table class="batter-table"><thead><tr><th>Pitcher</th><th>P</th><th>K</th><th>BB</th><th>H</th><th>Str%</th></tr></thead><tbody>
-      ${allPitchers.map(p=>{
-        const sp=p.pitches>0?Math.round(p.strikes/p.pitches*100)+'%':'—';
-        return `<tr><td>#${p.num||'?'} ${p.name}</td><td>${p.pitches}</td><td>${p.k}</td><td>${p.bb}</td><td>${p.hits}</td><td>${sp}</td></tr>`;
-      }).join('')}
-      </tbody></table>
-    </div>`;
-  }
-
-  // Zone location breakdown
-  const zones={};
-  S.pitchLog.forEach(e=>{ if(e.loc) zones[e.loc]=(zones[e.loc]||0)+1; });
-  const sortedZones=Object.entries(zones).sort((a,b)=>b[1]-a[1]).slice(0,8);
-  if(sortedZones.length){
-    html+=`<div class="section-label" style="margin-top:8px">Zone Locations</div>`;
-    sortedZones.forEach(([loc,count])=>{
-      const pct=Math.round(count/total*100);
-      const isInside=loc.includes('Inside')||loc==='Heart'||loc.includes('High')||loc.includes('Low')||loc.includes('Middle');
-      const clr=isInside?'var(--strike)':'var(--ball)';
-      html+=`<div class="stat-bar-wrap"><div class="stat-bar-lbl"><span class="stat-bar-name" style="color:${clr}">${loc}</span><span class="stat-bar-val">${count} · ${pct}%</span></div><div class="stat-bar"><div class="stat-bar-fill" style="width:${pct}%;background:${clr}"></div></div></div>`;
+  // Away team pitchers section
+  if(awayPList.length){
+    html+=`<div class="section-label">${awayName} Pitching</div>`;
+    awayPList.forEach(p=>{
+      // Get pitches thrown by this pitcher (isTop=false = away pitching, home batting)
+      const pitches = S.pitchLog.filter(e=>
+        e.pitcher===p.name && e.isTop===false
+      );
+      // Fallback: if no pitcher field, show all away pitches divided by count
+      const usePitches = pitches.length ? pitches : S.pitchLog.filter(e=>!e.isTop).slice(0, p.pitches);
+      html += buildPitcherSection(p.name, p.num, usePitches);
     });
   }
+
+  // Home team pitchers section
+  if(homePList.length){
+    html+=`<div class="section-label" style="margin-top:4px">${homeName} Pitching</div>`;
+    homePList.forEach(p=>{
+      const pitches = S.pitchLog.filter(e=>
+        e.pitcher===p.name && e.isTop===true
+      );
+      const usePitches = pitches.length ? pitches : S.pitchLog.filter(e=>e.isTop).slice(0, p.pitches);
+      html += buildPitcherSection(p.name, p.num, usePitches);
+    });
+  }
+
+  if(!html) html='<div style="padding:20px;text-align:center;color:var(--text3);font-size:12px">No pitcher data yet.</div>';
 
   wrap.innerHTML=html;
   try{ if(typeof _currentMobTab!=='undefined'&&_currentMobTab==='log'&&_mobLogTab==='pitchmix') renderMobLog('pitchmix'); }catch(e){}
@@ -5019,6 +5043,218 @@ function buildPitchZoneSVG(pitches, width=320, height=300){
 }
 
 // ===== PITCH BREAKDOWN CHARTS =====
+
+// ===== PIE CHART BUILDER =====
+function buildPieChart(slices, size=120){
+  // slices: [{label, value, color}]
+  const total = slices.reduce((a,s)=>a+s.value,0);
+  if(!total) return '<div style="color:var(--text3);font-size:11px">No data</div>';
+  let cumAngle = -Math.PI/2; // start at top
+  const cx=size/2, cy=size/2, r=size/2-2;
+  let paths='';
+  slices.filter(s=>s.value>0).forEach(s=>{
+    const angle = (s.value/total)*Math.PI*2;
+    const x1=cx+r*Math.cos(cumAngle), y1=cy+r*Math.sin(cumAngle);
+    cumAngle+=angle;
+    const x2=cx+r*Math.cos(cumAngle), y2=cy+r*Math.sin(cumAngle);
+    const large=angle>Math.PI?1:0;
+    paths+=`<path d="M${cx},${cy} L${x1},${y1} A${r},${r} 0 ${large},1 ${x2},${y2} Z"
+      fill="${s.color}" stroke="white" stroke-width="1.5" opacity="0.9">
+      <title>${s.label}: ${s.value} (${Math.round(s.value/total*100)}%)</title></path>`;
+  });
+  // Legend
+  const legend = slices.filter(s=>s.value>0).map(s=>`
+    <div style="display:flex;align-items:center;gap:5px;font-size:10px;color:var(--text2)">
+      <div style="width:8px;height:8px;border-radius:2px;background:${s.color};flex-shrink:0"></div>
+      <span>${s.label}</span>
+      <span style="color:var(--text3);margin-left:auto">${Math.round(s.value/total*100)}%</span>
+    </div>`).join('');
+  return `<div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap">
+    <svg width="${size}" height="${size}" viewBox="0 0 ${size} ${size}" style="flex-shrink:0">${paths}</svg>
+    <div style="display:flex;flex-direction:column;gap:4px;flex:1">${legend}</div>
+  </div>`;
+}
+
+// ===== PER-PITCH-TYPE DETAILED BREAKDOWN =====
+function buildPitchTypeDetail(pitches){
+  // For each pitch type: count, avg/max/min velo, outcomes, BA against
+  const typeColors={FB:'#5baef5',CT:'#5baef5',SI:'#5baef5',CB:'#f57a7a',SL:'#f57a7a',SP:'#f57a7a',CH:'#6ae87a',KN:'#6ae87a'};
+  const byType={};
+  pitches.forEach(p=>{
+    const t=p.pitchType||'—'; if(t==='—') return;
+    if(!byType[t]) byType[t]={count:0,vels:[],hits:0,ab:0,swings:0,whiffs:0,balls:0};
+    byType[t].count++;
+    const v=parseFloat(p.velocity); if(!isNaN(v)&&v>0) byType[t].vels.push(v);
+    const o=p.outcome;
+    if(['single','double','triple','homerun'].includes(o)){byType[t].hits++;byType[t].ab++;}
+    else if(['groundout','flyout','lineout','sacfly','sacbunt','error'].includes(o)){byType[t].ab++;}
+    else if(o==='strike-swinging'){byType[t].swings++;byType[t].whiffs++;}
+    else if(o==='foul'){byType[t].swings++;}
+    else if(o==='ball'){byType[t].balls++;}
+  });
+
+  const total=pitches.length;
+  const rows = Object.entries(byType).sort((a,b)=>b[1].count-a[1].count).map(([t,d])=>{
+    const pct=Math.round(d.count/total*100);
+    const avgV=d.vels.length?(d.vels.reduce((a,b)=>a+b,0)/d.vels.length).toFixed(1):'—';
+    const maxV=d.vels.length?Math.max(...d.vels).toFixed(1):'—';
+    const ba=d.ab>0?'.'+Math.round(d.hits/d.ab*1000).toString().padStart(3,'0'):'.---';
+    const whiffPct=d.swings>0?Math.round(d.whiffs/d.swings*100)+'%':'—';
+    const color=typeColors[t]||'#8a909e';
+    return `
+      <div style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:10px 12px;margin-bottom:8px">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+          <div style="width:10px;height:10px;border-radius:50%;background:${color};flex-shrink:0"></div>
+          <div style="font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:14px;letter-spacing:1px">${t}</div>
+          <div style="margin-left:auto;font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--text3)">${d.count} pitches · ${pct}%</div>
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:6px">
+          <div style="text-align:center;background:var(--surface2);border-radius:6px;padding:6px 4px">
+            <div style="font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:16px;color:var(--accent)">${avgV}</div>
+            <div style="font-size:8px;letter-spacing:1px;color:var(--text3);text-transform:uppercase">Avg MPH</div>
+          </div>
+          <div style="text-align:center;background:var(--surface2);border-radius:6px;padding:6px 4px">
+            <div style="font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:16px">${maxV}</div>
+            <div style="font-size:8px;letter-spacing:1px;color:var(--text3);text-transform:uppercase">Max MPH</div>
+          </div>
+          <div style="text-align:center;background:var(--surface2);border-radius:6px;padding:6px 4px">
+            <div style="font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:16px;color:${parseFloat(ba)>=.300?'#cc1a1a':parseFloat(ba)<.200?'#4a90d9':'var(--text)'}">${ba}</div>
+            <div style="font-size:8px;letter-spacing:1px;color:var(--text3);text-transform:uppercase">BA Against</div>
+          </div>
+          <div style="text-align:center;background:var(--surface2);border-radius:6px;padding:6px 4px">
+            <div style="font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:16px">${whiffPct}</div>
+            <div style="font-size:8px;letter-spacing:1px;color:var(--text3);text-transform:uppercase">Whiff%</div>
+          </div>
+        </div>
+        <div style="margin-top:8px;background:var(--surface3);border-radius:4px;height:6px;overflow:hidden">
+          <div style="width:${pct}%;height:100%;background:${color};border-radius:4px"></div>
+        </div>
+      </div>`;
+  }).join('');
+
+  return rows || '<div class="empty-state">No pitch type data</div>';
+}
+
+// ===== HOT/COLD ZONE MAP =====
+// SVG-based, matching buildPitchZoneSVG layout exactly
+function buildHotColdZone(pitches, perspective='pitcher'){
+  const W=280, H=260;
+  const ZX1=W*0.28, ZX2=W*0.72, ZY1=H*0.25, ZY2=H*0.75;
+  const ZW=ZX2-ZX1, ZH=ZY2-ZY1;
+
+  // 9 zone cells using same loc strings as zoneLabel()
+  // Grid: row 0=High, row 1=Mid, row 2=Low  |  col 0=Inside, col 1=Middle, col 2=Outside
+  const zoneNames=[
+    ['High Inside','High Middle','High Outside'],
+    ['Inside',     'Heart',      'Outside'     ],
+    ['Low Inside', 'Low Middle', 'Low Outside' ],
+  ];
+  // Also track chase zones (outside strike box) - simplified 8 zones
+  const chaseNames=[
+    'Chase High','Chase High Inside','Chase High Outside',
+    'Chase Inside','Chase Outside',
+    'Chase Low','Chase Low Inside','Chase Low Outside',
+    'Way High','Way High Inside','Way High Outside',
+    'Way Inside','Way Outside',
+    'Way Low','Way Low Inside','Way Low Outside',
+  ];
+
+  const allZones={};
+  [...zoneNames.flat(),...chaseNames].forEach(n=>{allZones[n]={pitches:0,ab:0,hits:0};});
+
+  pitches.forEach(p=>{
+    const loc=p.loc; if(!loc||!allZones[loc]) return;
+    allZones[loc].pitches++;
+    const o=p.outcome;
+    if(['single','double','triple','homerun'].includes(o)){allZones[loc].hits++;allZones[loc].ab++;}
+    else if(['groundout','flyout','lineout','sacfly','sacbunt','error','fc'].includes(o)){allZones[loc].ab++;}
+  });
+
+  const cellColor=(ab,hits)=>{
+    if(ab===0) return 'rgba(0,0,0,0)';
+    const ba=hits/ab;
+    if(ba>=.400) return 'rgba(204,26,26,0.82)';
+    if(ba>=.300) return 'rgba(204,26,26,0.58)';
+    if(ba>=.250) return 'rgba(220,90,40,0.50)';
+    if(ba>=.200) return 'rgba(200,160,40,0.40)';
+    if(ba>=.150) return 'rgba(74,144,217,0.38)';
+    if(ba>=.100) return 'rgba(74,144,217,0.58)';
+    return 'rgba(74,144,217,0.80)';
+  };
+  const textColor=(ab,hits)=>{
+    if(ab===0) return '#aaa';
+    const ba=hits/ab;
+    return (ba>=.200||ba<.150)?'white':'#222';
+  };
+  const fmtBA=(ab,hits)=>{
+    if(ab===0) return '';
+    return '.'+Math.round(hits/ab*1000).toString().padStart(3,'0');
+  };
+
+  // Draw 9 inner zone cells
+  let cells='';
+  zoneNames.forEach((row,ri)=>{
+    row.forEach((name,ci)=>{
+      const d=allZones[name];
+      const x=ZX1+(ci*(ZW/3)), y=ZY1+(ri*(ZH/3));
+      const cw=ZW/3, ch=ZH/3;
+      const fill=cellColor(d.ab,d.hits);
+      const tc=textColor(d.ab,d.hits);
+      const ba=fmtBA(d.ab,d.hits);
+      cells+=`<rect x="${x}" y="${y}" width="${cw}" height="${ch}" fill="${fill}"/>`;
+      if(ba){
+        cells+=`<text x="${x+cw/2}" y="${y+ch/2+1}" text-anchor="middle" dominant-baseline="middle"
+          font-family="Barlow Condensed,sans-serif" font-weight="900" font-size="11" fill="${tc}">${ba}</text>`;
+      }
+      if(d.pitches>0 && !ba){
+        cells+=`<text x="${x+cw/2}" y="${y+ch/2+1}" text-anchor="middle" dominant-baseline="middle"
+          font-family="Share Tech Mono,monospace" font-size="7" fill="#aaa">${d.pitches}</text>`;
+      }
+    });
+  });
+
+  // Grid lines
+  const gridLines=`
+    <line x1="${ZX1+ZW/3}" y1="${ZY1}" x2="${ZX1+ZW/3}" y2="${ZY2}" stroke="rgba(0,0,0,.2)" stroke-width="1"/>
+    <line x1="${ZX1+ZW*2/3}" y1="${ZY1}" x2="${ZX1+ZW*2/3}" y2="${ZY2}" stroke="rgba(0,0,0,.2)" stroke-width="1"/>
+    <line x1="${ZX1}" y1="${ZY1+ZH/3}" x2="${ZX2}" y2="${ZY1+ZH/3}" stroke="rgba(0,0,0,.2)" stroke-width="1"/>
+    <line x1="${ZX1}" y1="${ZY1+ZH*2/3}" x2="${ZX2}" y2="${ZY1+ZH*2/3}" stroke="rgba(0,0,0,.2)" stroke-width="1"/>`;
+
+  const plotted=pitches.filter(p=>p.loc&&allZones[p.loc]).length;
+  const legend=['rgba(74,144,217,0.80)','rgba(74,144,217,0.58)','rgba(74,144,217,0.38)','rgba(200,160,40,0.40)','rgba(220,90,40,0.50)','rgba(204,26,26,0.58)','rgba(204,26,26,0.82)']
+    .map((c,i)=>`<rect x="${10+i*18}" y="0" width="14" height="14" rx="2" fill="${c}"/>`).join('');
+
+  return `<svg viewBox="0 0 ${W} ${H+40}" xmlns="http://www.w3.org/2000/svg"
+    style="width:100%;max-width:${W}px;background:#f8f9fb;border-radius:10px;border:1.5px solid #bfc4cf">
+    <!-- Background -->
+    <rect width="${W}" height="${H}" fill="#f8f9fb"/>
+    <!-- Chase zone -->
+    <rect x="${W*0.12}" y="${H*0.1}" width="${W*0.76}" height="${H*0.8}" rx="4"
+      fill="rgba(0,0,0,.02)" stroke="rgba(0,0,0,.06)" stroke-width="1"/>
+    <!-- Zone cells (filled) -->
+    ${cells}
+    <!-- Strike zone border -->
+    <rect x="${ZX1}" y="${ZY1}" width="${ZW}" height="${ZH}"
+      fill="none" stroke="rgba(0,0,0,.3)" stroke-width="2"/>
+    <!-- Grid lines -->
+    ${gridLines}
+    <!-- Labels -->
+    <text x="${W/2}" y="${H*0.08}" text-anchor="middle" font-family="Share Tech Mono" font-size="9" fill="#8a909e" letter-spacing="1">HIGH</text>
+    <text x="${W/2}" y="${H*0.97}" text-anchor="middle" font-family="Share Tech Mono" font-size="9" fill="#8a909e" letter-spacing="1">LOW</text>
+    <text x="${W*0.04}" y="${H/2}" text-anchor="middle" font-family="Share Tech Mono" font-size="9" fill="#8a909e" letter-spacing="1" transform="rotate(-90,${W*0.04},${H/2})">IN</text>
+    <text x="${W*0.97}" y="${H/2}" text-anchor="middle" font-family="Share Tech Mono" font-size="9" fill="#8a909e" letter-spacing="1" transform="rotate(90,${W*0.97},${H/2})">OUT</text>
+    <!-- Home plate -->
+    <circle cx="${W/2}" cy="${H*0.93}" r="4" fill="#111318" opacity="0.35"/>
+    <!-- Legend -->
+    <g transform="translate(0,${H+8})">
+      <text x="10" y="10" font-family="Share Tech Mono" font-size="8" fill="#8a909e">COLD</text>
+      ${legend}
+      <text x="${10+7*18+4}" y="10" font-family="Share Tech Mono" font-size="8" fill="#8a909e">HOT</text>
+      <text x="${W/2}" y="28" text-anchor="middle" font-family="Share Tech Mono" font-size="7" fill="#aaa">${plotted} pitches · BA per zone</text>
+    </g>
+  </svg>`;
+}
+
 function buildPitchBreakdown(pitches){
   if(!pitches.length) return '<div class="empty-state">No pitch data</div>';
 
@@ -5085,6 +5321,10 @@ function buildPitchBreakdown(pitches){
   const swings = pitches.filter(p=>['strike-swinging','foul'].includes(p.outcome)||(['single','double','triple','homerun','groundout','flyout','lineout','sacfly','sacbunt','error'].includes(p.outcome))).length;
   const swingPct = total>0 ? Math.round(swings/total*100) : 0;
 
+  // Pie chart slices
+  const typeSlices = Object.entries(typeMap).filter(([,n])=>n>0).map(([t,n])=>({label:t,value:n,color:typeColors[t]||'#8a909e'}));
+  const outcomeSlices = Object.entries(outcomeMap).filter(([,n])=>n>0).map(([o,n])=>({label:outLabels[o]||o,value:n,color:outColors[o]||'#8a909e'}));
+
   return `
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">
       <div style="background:#fff;border:1px solid #d4d8e0;border-radius:8px;padding:10px 14px;text-align:center">
@@ -5104,15 +5344,60 @@ function buildPitchBreakdown(pitches){
         <div style="font-size:8px;letter-spacing:2px;color:#8a909e;text-transform:uppercase">Swing%</div>
       </div>
     </div>
-    <div style="margin-bottom:16px">
-      <div style="font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:9px;letter-spacing:3px;text-transform:uppercase;color:#8a909e;margin-bottom:8px">Pitch Types · ${total} total</div>
-      ${typeRows||'<div style="color:#8a909e;font-size:12px">No pitch type data</div>'}
+
+    <!-- Chart type toggle -->
+    <div style="display:flex;gap:6px;margin-bottom:12px">
+      <button onclick="toggleChartView(this,'bars')" class="chart-toggle-btn active" data-view="bars" style="flex:1;padding:5px;background:var(--accent);color:white;border:none;border-radius:6px;font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:11px;letter-spacing:1px;cursor:pointer">BAR</button>
+      <button onclick="toggleChartView(this,'pie')" class="chart-toggle-btn" data-view="pie" style="flex:1;padding:5px;background:var(--surface3);color:var(--text2);border:1px solid var(--border);border-radius:6px;font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:11px;letter-spacing:1px;cursor:pointer">PIE</button>
+      <button onclick="toggleChartView(this,'detail')" class="chart-toggle-btn" data-view="detail" style="flex:1;padding:5px;background:var(--surface3);color:var(--text2);border:1px solid var(--border);border-radius:6px;font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:11px;letter-spacing:1px;cursor:pointer">DETAIL</button>
     </div>
-    <div>
-      <div style="font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:9px;letter-spacing:3px;text-transform:uppercase;color:#8a909e;margin-bottom:8px">Outcome Breakdown</div>
-      ${outcomeRows}
+
+    <!-- BAR VIEW -->
+    <div data-chart-view="bars">
+      <div style="margin-bottom:16px">
+        <div style="font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:9px;letter-spacing:3px;text-transform:uppercase;color:#8a909e;margin-bottom:8px">Pitch Types · ${total} total</div>
+        ${typeRows||'<div style="color:#8a909e;font-size:12px">No pitch type data</div>'}
+      </div>
+      <div>
+        <div style="font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:9px;letter-spacing:3px;text-transform:uppercase;color:#8a909e;margin-bottom:8px">Outcome Breakdown</div>
+        ${outcomeRows}
+      </div>
+    </div>
+
+    <!-- PIE VIEW (hidden by default) -->
+    <div data-chart-view="pie" style="display:none">
+      <div style="font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:9px;letter-spacing:3px;text-transform:uppercase;color:#8a909e;margin-bottom:10px">Pitch Mix</div>
+      ${buildPieChart(typeSlices, 130)}
+      <div style="font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:9px;letter-spacing:3px;text-transform:uppercase;color:#8a909e;margin:14px 0 10px">Outcomes</div>
+      ${buildPieChart(outcomeSlices, 130)}
+    </div>
+
+    <!-- DETAIL VIEW (hidden by default) -->
+    <div data-chart-view="detail" style="display:none">
+      <div style="font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:9px;letter-spacing:3px;text-transform:uppercase;color:#8a909e;margin-bottom:10px">Per Pitch Type · Velo + BA Against</div>
+      ${buildPitchTypeDetail(pitches)}
     </div>
   `;
+}
+
+function toggleChartView(btn, view){
+  // Button row is inside the container; chart-view divs are siblings of the button row
+  // Walk up to find the wrapper that contains both the buttons and the chart-view divs
+  let container = btn.parentElement; // the flex button row
+  // Go up one more level to the section wrapper that holds buttons + chart divs
+  if(container && !container.querySelector('[data-chart-view]')){
+    container = container.parentElement;
+  }
+  if(!container) return;
+  container.querySelectorAll('.chart-toggle-btn').forEach(b=>{
+    const active = b.getAttribute('data-view')===view;
+    b.style.background = active ? 'var(--accent)' : 'var(--surface3)';
+    b.style.color = active ? 'white' : 'var(--text2)';
+    b.style.border = active ? 'none' : '1px solid var(--border)';
+  });
+  container.querySelectorAll('[data-chart-view]').forEach(el=>{
+    el.style.display = el.getAttribute('data-chart-view')===view ? 'block' : 'none';
+  });
 }
 
 // ===== SPRAY CHART LEGEND =====
@@ -5247,6 +5532,10 @@ function renderPlayer(teamName, playerName){
         <div>
           <div class="section-title" style="margin-bottom:8px">Zone Tendencies</div>
           ${buildZoneTendencies(allPitches)}
+          <div style="margin-top:16px">
+            <div class="section-title" style="margin-bottom:8px">Hot / Cold Zone</div>
+            ${buildHotColdZone(allPitches,'batter')}
+          </div>
         </div>
       </div>
     </div>
@@ -5623,6 +5912,10 @@ function renderPitcher(teamName, pitcherName){
         <div>
           <div class="section-title" style="margin-bottom:8px">Zone Command</div>
           ${buildZoneTendencies(allPitches)}
+          <div style="margin-top:16px">
+            <div class="section-title" style="margin-bottom:8px">Hot / Cold Zone</div>
+            ${buildHotColdZone(allPitches,'pitcher')}
+          </div>
         </div>
       </div>
     </div>
