@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>PitchTrack Pro</title>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:ital,wght@0,300;0,400;0,600;0,700;0,800;0,900;1,700&family=Barlow:wght@300;400;500;600&family=Share+Tech+Mono&display=swap');
@@ -12,7 +12,7 @@
 html,body{height:100%;overflow:hidden;font-family:'Barlow',sans-serif;}
 
 #home-screen {
-  position:fixed;inset:0;z-index:9999;
+  position:fixed;inset:0;z-index:9998;
   display:flex;flex-direction:column;align-items:center;justify-content:center;
   background:linear-gradient(150deg,#0a0d12 0%,#180808 45%,#8a1010 100%);
   transition:opacity .45s ease,transform .45s ease;
@@ -843,11 +843,12 @@ th.sorted{color:var(--accent);}
   /* ── Mobile bottom tab bar ── */
   #mob-tabs {
     display:flex !important;
-    position:fixed; bottom:0; left:0; right:0; z-index:9999;
+    position:fixed; bottom:0; left:0; right:0; z-index:99999;
     background:#111318; border-top:1px solid rgba(255,255,255,.1);
     height:56px;
     padding-bottom: env(safe-area-inset-bottom, 0px);
-    -webkit-transform: translateZ(0); /* force GPU layer on iOS */
+    -webkit-transform: translateZ(0);
+    -webkit-backface-visibility: hidden;
   }
   .mob-tab {
     flex:1; display:flex; flex-direction:column; align-items:center;
@@ -871,7 +872,7 @@ th.sorted{color:var(--accent);}
   /* panel-tracker needs relative positioning for mob panels to overlay correctly */
   #panel-tracker { position:relative; }
 
-  .mob-panel { display:none !important; position:absolute; top:0; left:0; right:0; bottom:0; background:var(--bg); overflow-y:auto; z-index:10; }
+  .mob-panel { display:none !important; position:absolute; top:0; left:0; right:0; bottom:0; background:var(--bg); overflow-y:auto; z-index:50; }
   .mob-panel.on { display:block !important; }
 
   /* ── Score panel ── */
