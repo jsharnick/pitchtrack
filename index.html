@@ -5049,7 +5049,7 @@ function buildPitchTypeFilterBar(pitches, svgContainerId){
   const types = [...new Set(pitches.map(p=>p.pitchType).filter(t=>t&&t!=='—'))].sort((a,b)=>pitches.filter(p=>p.pitchType===b).length-pitches.filter(p=>p.pitchType===a).length);
   if(!types.length) return '';
 
-  const typeColors = {FB:'#1a5fa8',CT:'#0a4a8a',SI:'#1a7ab0',CB:'#a81a1a',SL:'#c44010',SP:'#8a1a6a',CH:'#1a8a2a',KN:'#6a6a00'};
+  const typeColors = {FB:'#2878d4',CT:'#0a3a6a',SI:'#4a9ec8',CB:'#d42828',SL:'#e05c10',SP:'#6a0a5a',CH:'#28a83a',KN:'#8a8a00'};
   const counts = {};
   types.forEach(t=>{ counts[t]=pitches.filter(p=>p.pitchType===t).length; });
 
@@ -5211,7 +5211,7 @@ function buildPitchZoneSVG(pitches, width=320, height=300){
 
 // ===== OUTCOME BREAKDOWN RENDERER (called on pitch type filter change) =====
 function renderOutcomeBreakdown(containerId, pitches){
-  const typeColors={FB:'#1a5fa8',CT:'#0a4a8a',SI:'#1a7ab0',CB:'#a81a1a',SL:'#c44010',SP:'#8a1a6a',CH:'#1a8a2a',KN:'#6a6a00'};
+  const typeColors={FB:'#2878d4',CT:'#0a3a6a',SI:'#4a9ec8',CB:'#d42828',SL:'#e05c10',SP:'#6a0a5a',CH:'#28a83a',KN:'#8a8a00'};
   const outLabels={'ball':'Ball','strike-swinging':'Swing K','strike-looking':'Called K','foul':'Foul','ip-hit':'In Play (Hit)','ip-out':'In Play (Out)'};
   const outColors={'ball':'#1a6abf','strike-swinging':'#8a0000','strike-looking':'#c01a1a','foul':'#8a4a00','ip-hit':'#9a7a00','ip-out':'#6a1ab0'};
 
@@ -5327,7 +5327,7 @@ function buildPieChart(slices, size=130){
     if(pct >= 8){
       const lx = (cx + rLabel*Math.cos(midAngle)).toFixed(1);
       const ly = (cy + rLabel*Math.sin(midAngle)).toFixed(1);
-      const isLight = s.color==='#9a7a00'||s.color==='#1a8a2a'||s.color==='#6a6a00'||s.color==='#1a7ab0';
+      const isLight = s.color==='#9a7a00'||s.color==='#4a9ec8'||s.color==='#8a8a00'||s.color==='#28a83a';
       const textColor = isLight ? '#111' : 'white';
       const outlineColor = isLight ? 'white' : '#111';
       const fs = pct>=15?11:9;
@@ -5422,7 +5422,7 @@ function buildPitchTypeDetail(pitches){
 // ===== ZONE TENDENCIES WITH PITCH TYPE FILTER =====
 function buildZoneTendenciesFiltered(pitches, containerId){
   const pitchTypes = [...new Set(pitches.map(p=>p.pitchType).filter(t=>t&&t!=='—'))].sort((a,b)=>pitches.filter(p=>p.pitchType===b).length-pitches.filter(p=>p.pitchType===a).length);
-  const typeColors2={FB:'#1a5fa8',CT:'#0a4a8a',SI:'#1a7ab0',CB:'#a81a1a',SL:'#c44010',SP:'#8a1a6a',CH:'#1a8a2a',KN:'#6a6a00'};
+  const typeColors2={FB:'#2878d4',CT:'#0a3a6a',SI:'#4a9ec8',CB:'#d42828',SL:'#e05c10',SP:'#6a0a5a',CH:'#28a83a',KN:'#8a8a00'};
   const pitchesJson = JSON.stringify(pitches.map(p=>({pitchType:p.pitchType,outcome:p.outcome,pitchX:p.pitchX,pitchY:p.pitchY})));
 
   const filterBar = pitchTypes.length > 1 ? `
@@ -5490,7 +5490,7 @@ function applyZtFilter(containerId){
 // ===== HOT/COLD ZONE WITH PITCH TYPE FILTER =====
 function buildHotColdZoneFiltered(pitches, perspective, containerId){
   const pitchTypes = [...new Set(pitches.map(p=>p.pitchType).filter(t=>t&&t!=='—'))].sort((a,b)=>pitches.filter(p=>p.pitchType===b).length-pitches.filter(p=>p.pitchType===a).length);
-  const typeColors2={FB:'#1a5fa8',CT:'#0a4a8a',SI:'#1a7ab0',CB:'#a81a1a',SL:'#c44010',SP:'#8a1a6a',CH:'#1a8a2a',KN:'#6a6a00'};
+  const typeColors2={FB:'#2878d4',CT:'#0a3a6a',SI:'#4a9ec8',CB:'#d42828',SL:'#e05c10',SP:'#6a0a5a',CH:'#28a83a',KN:'#8a8a00'};
   const pitchesJson = JSON.stringify(pitches.map(p=>({pitchType:p.pitchType,outcome:p.outcome,pitchX:p.pitchX,pitchY:p.pitchY,loc:p.loc})));
 
   const filterBar = pitchTypes.length > 1 ? `
@@ -5683,7 +5683,7 @@ function buildPitchBreakdown(pitches){
 
   // Pitch type counts
   const typeMap={FB:0,CB:0,SL:0,CH:0,CT:0,SP:0,SI:0,KN:0};
-  const typeColors={FB:'#1a5fa8',CT:'#0a4a8a',SI:'#1a7ab0',CB:'#a81a1a',SL:'#c44010',SP:'#8a1a6a',CH:'#1a8a2a',KN:'#6a6a00'};
+  const typeColors={FB:'#2878d4',CT:'#0a3a6a',SI:'#4a9ec8',CB:'#d42828',SL:'#e05c10',SP:'#6a0a5a',CH:'#28a83a',KN:'#8a8a00'};
   const outcomeMap={ball:0,'strike-swinging':0,'strike-looking':0,foul:0,'ip-hit':0,'ip-out':0};
 
   pitches.forEach(p=>{
@@ -5749,7 +5749,7 @@ function buildPitchBreakdown(pitches){
   const outcomeSlices = Object.entries(outcomeMap).filter(([,n])=>n>0).map(([o,n])=>({label:outLabels[o]||o,value:n,color:outColors[o]||'#8a909e'}));
 
   const pitchTypes = [...new Set(pitches.map(p=>p.pitchType).filter(t=>t&&t!=='—'))].sort((a,b)=>pitches.filter(p=>p.pitchType===b).length-pitches.filter(p=>p.pitchType===a).length);
-  const typeColors2={FB:'#1a5fa8',CT:'#0a4a8a',SI:'#1a7ab0',CB:'#a81a1a',SL:'#c44010',SP:'#8a1a6a',CH:'#1a8a2a',KN:'#6a6a00'};
+  const typeColors2={FB:'#2878d4',CT:'#0a3a6a',SI:'#4a9ec8',CB:'#d42828',SL:'#e05c10',SP:'#6a0a5a',CH:'#28a83a',KN:'#8a8a00'};
   const bdId = 'bd-'+Math.random().toString(36).slice(2,8);
   const pitchesJson = JSON.stringify(pitches.map(p=>({pitchType:p.pitchType,outcome:p.outcome,velocity:p.velocity})));
   const ofBtnsFixed = pitchTypes.length > 1 ? pitchTypes.map(t=>`
