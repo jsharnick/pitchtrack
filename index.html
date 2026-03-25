@@ -312,7 +312,7 @@ body{background:var(--bg);color:var(--text);font-family:'Barlow',sans-serif;min-
 
 /* CENTER */
 #panel-center{display:flex;flex-direction:column;background:var(--bg);overflow:hidden;}
-#zone-container{padding:8px 12px;display:flex;gap:10px;align-items:flex-start;flex-wrap:wrap;flex:1;overflow-y:hidden;min-height:0;}
+#zone-container{padding:8px 12px;display:flex;gap:10px;align-items:flex-start;flex-wrap:wrap;flex:1;overflow-y:auto;min-height:0;}
 .zone-wrap{flex:0 0 auto;display:flex;flex-direction:column;align-items:center;gap:4px;}
 #zone-batter-svg{position:absolute;top:-30px;pointer-events:none;z-index:2;transition:left .15s, right .15s;line-height:0;}
 #zone-home-plate{position:absolute;bottom:10px;left:50%;transform:translateX(-50%);pointer-events:none;z-index:3;}
@@ -979,7 +979,6 @@ th.sorted{color:var(--accent);}
   /* ── Spray modal: stacked column, field large at bottom ── */
   #spray-modal {
     padding:0 !important;
-    align-items:stretch !important;
     overflow-y:auto !important;
   }
   #spray-modal > div {
@@ -1522,6 +1521,43 @@ th.sorted{color:var(--accent);}
 
 </div><!-- #main -->
 
+  </div>
+  <div class="app-panel" id="panel-hub">
+    <div id="hub-app">
+
+  <!-- Mobile team nav bar (hidden on desktop via CSS) -->
+  <div id="hub-mobile-bar">
+    <button class="hub-mob-team-btn all active" id="hub-mob-all" onclick="hubMobNav('games')">All Games</button>
+    <div id="hub-mob-teams" style="display:flex;gap:8px;flex-shrink:0"></div>
+  </div>
+
+  <div id="hub-sidebar">
+    <span class="sidebar-label">Teams</span>
+    <div id="hub-team-list"><div class="sidebar-empty">No teams yet — save a game first</div></div>
+    <div style="margin-top:12px;border-top:1px solid var(--border);padding-top:12px">
+      <span class="sidebar-label">All Games</span>
+      <button class="team-btn" onclick="showView('games')" id="btn-all-games">
+        <div class="team-icon"></div>
+        <div><div class="team-name">Game History</div><div class="team-meta">All saved games</div></div>
+      </button>
+    </div>
+  </div>
+
+  <div id="hub-main">
+    <div id="hub-welcome">
+      <div class="welcome-icon"></div>
+      <div class="welcome-title">Welcome to PitchTrack Hub</div>
+      <div class="welcome-sub">Save games from the PitchTrack tracker to see team rosters, player stats, and game history appear here automatically.</div>
+      <div style="margin-top:20px;font-size:12px;color:var(--text3)">Click Save Game in the tracker after each game</div>
+    </div>
+    <div id="hub-content" style="display:none"></div>
+  </div>
+</div>
+
+    </div>
+  </div>
+</div>
+
 <!-- LINEUP EDITOR MODAL -->
 <div id="lineup-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:1100;align-items:center;justify-content:center;backdrop-filter:blur(4px)">
   <div style="background:var(--surface2);border:1px solid var(--border2);border-radius:16px;padding:24px;width:560px;max-width:95vw;max-height:90vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.6);animation:modalPop .25s cubic-bezier(.34,1.56,.64,1)">
@@ -1897,43 +1933,6 @@ th.sorted{color:var(--accent);}
   <div style="margin:6px 0 3px;font-size:8px;letter-spacing:2px;color:var(--text3);text-transform:uppercase">Pitch Type</div>
   <div class="kbd-row"><span class="kbd-desc">FB / CB / SL / CH</span><span class="kbd-key">1 2 3 4</span></div>
   <div class="kbd-row"><span class="kbd-desc">CT / SP / SI / KN</span><span class="kbd-key">5 6 7 8</span></div>
-</div>
-
-  </div>
-  <div class="app-panel" id="panel-hub">
-    <div id="hub-app">
-
-  <!-- Mobile team nav bar (hidden on desktop via CSS) -->
-  <div id="hub-mobile-bar">
-    <button class="hub-mob-team-btn all active" id="hub-mob-all" onclick="hubMobNav('games')">All Games</button>
-    <div id="hub-mob-teams" style="display:flex;gap:8px;flex-shrink:0"></div>
-  </div>
-
-  <div id="hub-sidebar">
-    <span class="sidebar-label">Teams</span>
-    <div id="hub-team-list"><div class="sidebar-empty">No teams yet — save a game first</div></div>
-    <div style="margin-top:12px;border-top:1px solid var(--border);padding-top:12px">
-      <span class="sidebar-label">All Games</span>
-      <button class="team-btn" onclick="showView('games')" id="btn-all-games">
-        <div class="team-icon"></div>
-        <div><div class="team-name">Game History</div><div class="team-meta">All saved games</div></div>
-      </button>
-    </div>
-  </div>
-
-  <div id="hub-main">
-    <div id="hub-welcome">
-      <div class="welcome-icon"></div>
-      <div class="welcome-title">Welcome to PitchTrack Hub</div>
-      <div class="welcome-sub">Save games from the PitchTrack tracker to see team rosters, player stats, and game history appear here automatically.</div>
-      <div style="margin-top:20px;font-size:12px;color:var(--text3)">Click Save Game in the tracker after each game</div>
-    </div>
-    <div id="hub-content" style="display:none"></div>
-  </div>
-</div>
-
-    </div>
-  </div>
 </div>
 
 <div id="save-modal">
@@ -3688,7 +3687,7 @@ function openSprayModal(outcome, entry, callback){
 
   if(pre){ selectBallType(pre); }
 
-  qs('spray-modal').style.display = 'flex';
+  qs('spray-modal').style.display = 'block';
 }
 
 function selectBallType(btype){
