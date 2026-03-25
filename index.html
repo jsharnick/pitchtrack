@@ -735,7 +735,7 @@ th.sorted{color:var(--accent);}
   .hs-cta    { font-size:13px; padding:9px 0; }
 
   /* ── panel-wrap: fixed box between nav (44px) and tab bar (56px) ── */
-  #panel-wrap { top:44px !important; bottom:56px !important; overflow:hidden !important; }
+  #panel-wrap { top:44px !important; bottom:calc(56px + env(safe-area-inset-bottom, 0px)) !important; overflow:hidden !important; }
 
   /* ── panel-tracker fills panel-wrap exactly ── */
   #panel-tracker {
@@ -843,9 +843,11 @@ th.sorted{color:var(--accent);}
   /* ── Mobile bottom tab bar ── */
   #mob-tabs {
     display:flex !important;
-    position:fixed; bottom:0; left:0; right:0; z-index:200;
+    position:fixed; bottom:0; left:0; right:0; z-index:9999;
     background:#111318; border-top:1px solid rgba(255,255,255,.1);
     height:56px;
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+    -webkit-transform: translateZ(0); /* force GPU layer on iOS */
   }
   .mob-tab {
     flex:1; display:flex; flex-direction:column; align-items:center;
@@ -859,7 +861,7 @@ th.sorted{color:var(--accent);}
   .mob-tab-icon{ font-size:20px; line-height:1; }
 
   /* ── panel-wrap: full height between nav and tab bar ── */
-  #panel-wrap { bottom:56px; overflow:hidden; }
+  #panel-wrap { bottom:calc(56px + env(safe-area-inset-bottom, 0px)); overflow:hidden; }
 
   /* ── Re-show mobile-only elements (overrides desktop hide) ── */
   #mob-tabs  { display:flex !important; }
