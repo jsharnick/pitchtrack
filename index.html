@@ -5049,7 +5049,7 @@ function buildPitchTypeFilterBar(pitches, svgContainerId){
   const types = [...new Set(pitches.map(p=>p.pitchType).filter(t=>t&&t!=='—'))].sort();
   if(!types.length) return '';
 
-  const typeColors = {FB:'#5baef5',CT:'#5baef5',SI:'#5baef5',CB:'#f57a7a',SL:'#f57a7a',SP:'#f57a7a',CH:'#6ae87a',KN:'#6ae87a'};
+  const typeColors = {FB:'#1a6abf',CT:'#1a6abf',SI:'#1a6abf',CB:'#c01a1a',SL:'#c01a1a',SP:'#c01a1a',CH:'#1a8a2a',KN:'#1a8a2a'};
   const counts = {};
   types.forEach(t=>{ counts[t]=pitches.filter(p=>p.pitchType===t).length; });
 
@@ -5066,7 +5066,7 @@ function buildPitchTypeFilterBar(pitches, svgContainerId){
     </button>`).join('');
 
   return `<div id="${btnId}" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px;align-items:center">
-    <button onclick="selectAllPitchTypes('${svgContainerId}')"
+    <button onclick="selectAllPitchTypes('${svgContainerId}')" data-all-active="true"
       style="padding:4px 10px;border:1.5px solid var(--border);border-radius:20px;
         background:var(--surface2);color:var(--text2);
         font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:11px;
@@ -5090,12 +5090,15 @@ function togglePitchTypeFilter(btn){
 }
 
 function selectAllPitchTypes(containerId){
-  // Activate all buttons
   const filterBar = document.getElementById(containerId+'-filter');
   if(!filterBar) return;
+  const allBtn = filterBar.querySelector('[data-all-active]');
+  const allActive = allBtn?.getAttribute('data-all-active') !== 'false';
+  const newState = !allActive;
+  if(allBtn) allBtn.setAttribute('data-all-active', newState ? 'true' : 'false');
   filterBar.querySelectorAll('[data-pt-filter]').forEach(b=>{
-    b.setAttribute('data-active','true');
-    b.style.opacity='1';
+    b.setAttribute('data-active', newState ? 'true' : 'false');
+    b.style.opacity = newState ? '1' : '0.35';
   });
   applyPitchTypeFilter(containerId);
 }
@@ -5205,35 +5208,151 @@ function buildPitchZoneSVG(pitches, width=320, height=300){
   </svg>`;
 }
 
+
+// ===== OUTCOME BREAKDOWN RENDERER (called on pitch type filter change) =====
+function renderOutcomeBreakdown(containerId, pitches){
+  const typeColors={FB:'#1a6abf',CT:'#1a6abf',SI:'#1a6abf',CB:'#c01a1a',SL:'#c01a1a',SP:'#c01a1a',CH:'#1a8a2a',KN:'#1a8a2a'};
+  const outLabels={'ball':'Ball','strike-swinging':'Swing K','strike-looking':'Called K','foul':'Foul','ip-hit':'In Play (Hit)','ip-out':'In Play (Out)'};
+  const outColors={'ball':'#1a6abf','strike-swinging':'#8a0000','strike-looking':'#c01a1a','foul':'#8a4a00','ip-hit':'#9a7a00','ip-out':'#6a1ab0'};
+
+  const total = pitches.length;
+  const outcomeMap={ball:0,'strike-swinging':0,'strike-looking':0,foul:0,'ip-hit':0,'ip-out':0};
+  pitches.forEach(p=>{
+    const o=p.outcome;
+    if(o==='ball') outcomeMap.ball++;
+    else if(o==='strike-swinging') outcomeMap['strike-swinging']++;
+    else if(o==='strike-looking')  outcomeMap['strike-looking']++;
+    else if(o==='foul')            outcomeMap.foul++;
+    else if(['single','double','triple','homerun','error'].includes(o)) outcomeMap['ip-hit']++;
+    else if(['groundout','flyout','lineout','sacfly','sacbunt'].includes(o)) outcomeMap['ip-out']++;
+  });
+
+  // Bar rows
+  const barHTML = Object.entries(outcomeMap).filter(([,n])=>n>0).sort((a,b)=>b[1]-a[1]).map(([o,n])=>{
+    const pct = total>0?Math.round(n/total*100):0;
+    const lbl = outLabels[o]||o;
+    const clr = outColors[o]||'#8a909e';
+    return `<div style="display:flex;align-items:center;gap:8px;margin-bottom:5px">
+      <div style="font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:600;color:#4a5060;width:110px;flex-shrink:0">${lbl}</div>
+      <div style="flex:1;background:#e8eaee;border-radius:3px;height:14px;overflow:hidden">
+        <div style="width:${pct}%;height:100%;background:${clr};border-radius:3px"></div>
+      </div>
+      <div style="font-family:'Share Tech Mono',monospace;font-size:10px;color:#8a909e;width:42px;text-align:right;flex-shrink:0">${n} · ${pct}%</div>
+    </div>`;
+  }).join('') || '<div style="color:#8a909e;font-size:12px">No outcomes</div>';
+
+  // Pie slices
+  const slices = Object.entries(outcomeMap).filter(([,n])=>n>0).map(([o,n])=>({label:outLabels[o]||o,value:n,color:outColors[o]||'#8a909e'}));
+  const pieHTML = buildPieChart(slices, 130);
+
+  // Update bar view
+  const barEl = document.getElementById(containerId+'-outcome-bars');
+  if(barEl) barEl.innerHTML = barHTML;
+
+  // Update pie view
+  const pieEl = document.getElementById(containerId+'-outcome-pie');
+  if(pieEl) pieEl.innerHTML = pieHTML;
+
+  // Update total label
+  const lblEl = document.getElementById(containerId+'-outcome-total');
+  if(lblEl) lblEl.textContent = `Outcome Breakdown · ${total} pitches`;
+}
+
+function toggleOutcomeFilter(btn, containerId){
+  const type = btn.getAttribute('data-of-type');
+  const isActive = btn.getAttribute('data-active') !== 'false';
+  btn.setAttribute('data-active', isActive ? 'false' : 'true');
+  btn.style.opacity = isActive ? '0.35' : '1';
+  applyOutcomeFilter(containerId);
+}
+
+function selectAllOutcomeFilters(containerId){
+  const bar = document.getElementById(containerId+'-of-bar');
+  if(!bar) return;
+  const allBtn = bar.querySelector('[data-all-active]');
+  const allActive = allBtn?.getAttribute('data-all-active') !== 'false';
+  const newState = !allActive;
+  if(allBtn) allBtn.setAttribute('data-all-active', newState ? 'true' : 'false');
+  bar.querySelectorAll('[data-of-type]').forEach(b=>{
+    b.setAttribute('data-active', newState ? 'true' : 'false');
+    b.style.opacity = newState ? '1' : '0.35';
+  });
+  applyOutcomeFilter(containerId);
+}
+
+function applyOutcomeFilter(containerId){
+  const bar = document.getElementById(containerId+'-of-bar');
+  const container = document.getElementById(containerId);
+  if(!bar||!container) return;
+
+  const activeTypes = new Set();
+  bar.querySelectorAll('[data-of-type]').forEach(b=>{
+    if(b.getAttribute('data-active')!=='false') activeTypes.add(b.getAttribute('data-of-type'));
+  });
+
+  // Get stored pitches from data attribute
+  let pitches = [];
+  try { pitches = JSON.parse(container.getAttribute('data-pitches')||'[]'); } catch(e){}
+
+  const filtered = activeTypes.size===0 ? pitches : pitches.filter(p=>activeTypes.has(p.pitchType||'—'));
+  renderOutcomeBreakdown(containerId, filtered);
+}
+
 // ===== PITCH BREAKDOWN CHARTS =====
 
 // ===== PIE CHART BUILDER =====
-function buildPieChart(slices, size=120){
+function buildPieChart(slices, size=130){
   // slices: [{label, value, color}]
   const total = slices.reduce((a,s)=>a+s.value,0);
   if(!total) return '<div style="color:var(--text3);font-size:11px">No data</div>';
   let cumAngle = -Math.PI/2; // start at top
   const cx=size/2, cy=size/2, r=size/2-2;
-  let paths='';
+  const rLabel = r*0.65; // label radius — 65% out from center
+  let paths='', labels='';
+
   slices.filter(s=>s.value>0).forEach(s=>{
     const angle = (s.value/total)*Math.PI*2;
     const x1=cx+r*Math.cos(cumAngle), y1=cy+r*Math.sin(cumAngle);
+    const midAngle = cumAngle + angle/2; // midpoint angle for label placement
     cumAngle+=angle;
     const x2=cx+r*Math.cos(cumAngle), y2=cy+r*Math.sin(cumAngle);
     const large=angle>Math.PI?1:0;
-    paths+=`<path d="M${cx},${cy} L${x1},${y1} A${r},${r} 0 ${large},1 ${x2},${y2} Z"
+    const pct = Math.round(s.value/total*100);
+
+    paths+=`<path d="M${cx},${cy} L${x1.toFixed(1)},${y1.toFixed(1)} A${r},${r} 0 ${large},1 ${x2.toFixed(1)},${y2.toFixed(1)} Z"
       fill="${s.color}" stroke="white" stroke-width="1.5" opacity="0.9">
-      <title>${s.label}: ${s.value} (${Math.round(s.value/total*100)}%)</title></path>`;
+      <title>${s.label}: ${s.value} (${pct}%)</title></path>`;
+
+    // Only show label if slice is big enough to fit text (>= 8%)
+    if(pct >= 8){
+      const lx = (cx + rLabel*Math.cos(midAngle)).toFixed(1);
+      const ly = (cy + rLabel*Math.sin(midAngle)).toFixed(1);
+      const isLight = s.color==='#9a7a00'||s.color==='#1a8a2a';
+      const textColor = isLight ? '#111' : 'white';
+      const outlineColor = isLight ? 'white' : '#111';
+      const fs = pct>=15?11:9;
+      labels+=`<text x="${lx}" y="${ly}" text-anchor="middle" dominant-baseline="middle"
+        font-family="Barlow Condensed,sans-serif" font-weight="400" font-size="${fs}"
+        fill="${outlineColor}" stroke="${outlineColor}" stroke-width="3" stroke-linejoin="round"
+        paint-order="stroke" pointer-events="none">${pct}%</text>
+      <text x="${lx}" y="${ly}" text-anchor="middle" dominant-baseline="middle"
+        font-family="Barlow Condensed,sans-serif" font-weight="400" font-size="${fs}"
+        fill="${textColor}" pointer-events="none">${pct}%</text>`;
+    }
   });
+
   // Legend
   const legend = slices.filter(s=>s.value>0).map(s=>`
     <div style="display:flex;align-items:center;gap:5px;font-size:10px;color:var(--text2)">
       <div style="width:8px;height:8px;border-radius:2px;background:${s.color};flex-shrink:0"></div>
       <span>${s.label}</span>
-      <span style="color:var(--text3);margin-left:auto">${Math.round(s.value/total*100)}%</span>
+      <span style="color:var(--text3);margin-left:auto;padding-left:8px">${Math.round(s.value/total*100)}%</span>
     </div>`).join('');
+
   return `<div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap">
-    <svg width="${size}" height="${size}" viewBox="0 0 ${size} ${size}" style="flex-shrink:0">${paths}</svg>
+    <svg width="${size}" height="${size}" viewBox="0 0 ${size} ${size}" style="flex-shrink:0">
+      ${paths}${labels}
+    </svg>
     <div style="display:flex;flex-direction:column;gap:4px;flex:1">${legend}</div>
   </div>`;
 }
@@ -5296,6 +5415,147 @@ function buildPitchTypeDetail(pitches){
   }).join('');
 
   return rows || '<div class="empty-state">No pitch type data</div>';
+}
+
+
+
+// ===== ZONE TENDENCIES WITH PITCH TYPE FILTER =====
+function buildZoneTendenciesFiltered(pitches, containerId){
+  const pitchTypes = [...new Set(pitches.map(p=>p.pitchType).filter(t=>t&&t!=='—'))].sort();
+  const typeColors2={FB:'#1a6abf',CT:'#1a6abf',SI:'#1a6abf',CB:'#c01a1a',SL:'#c01a1a',SP:'#c01a1a',CH:'#1a8a2a',KN:'#1a8a2a'};
+  const pitchesJson = JSON.stringify(pitches.map(p=>({pitchType:p.pitchType,outcome:p.outcome,pitchX:p.pitchX,pitchY:p.pitchY})));
+
+  const filterBar = pitchTypes.length > 1 ? `
+    <div style="margin-bottom:10px;padding:8px;background:var(--surface2);border-radius:8px">
+      <div style="font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:8px;letter-spacing:2px;text-transform:uppercase;color:#8a909e;margin-bottom:6px">Filter by pitch type</div>
+      <div id="${containerId}-zt-bar" style="display:flex;flex-wrap:wrap;gap:5px;align-items:center">
+        <button onclick="toggleAllZtFilter('${containerId}')" data-all-active="true"
+          style="padding:3px 10px;border:1.5px solid var(--border);border-radius:20px;
+            background:var(--surface3);color:var(--text2);
+            font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:10px;
+            letter-spacing:1px;cursor:pointer">ALL</button>
+        ${pitchTypes.map(t=>`
+          <button data-zt-type="${t}" data-active="true"
+            onclick="toggleZtFilter(this,'${containerId}')"
+            style="padding:3px 8px;border:1.5px solid ${typeColors2[t]||'#8a909e'};border-radius:20px;
+              background:${typeColors2[t]||'#8a909e'};color:white;
+              font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:10px;
+              letter-spacing:1px;cursor:pointer;transition:all .15s">${t}</button>`).join('')}
+      </div>
+    </div>` : '';
+
+  return `<div id="${containerId}" data-zt-pitches='${pitchesJson.replace(/'/g,"&#39;")}'>
+    ${filterBar}
+    <div id="${containerId}-zt-chart">${buildZoneTendencies(pitches)}</div>
+  </div>`;
+}
+
+function toggleZtFilter(btn, containerId){
+  const isActive = btn.getAttribute('data-active') !== 'false';
+  btn.setAttribute('data-active', isActive ? 'false' : 'true');
+  btn.style.opacity = isActive ? '0.35' : '1';
+  applyZtFilter(containerId);
+}
+
+function toggleAllZtFilter(containerId){
+  const bar = document.getElementById(containerId+'-zt-bar');
+  if(!bar) return;
+  const allBtn = bar.querySelector('[data-all-active]');
+  const allActive = allBtn?.getAttribute('data-all-active') !== 'false';
+  // Toggle: if all currently active → deselect all; if any inactive → select all
+  const newState = !allActive;
+  if(allBtn) allBtn.setAttribute('data-all-active', newState ? 'true' : 'false');
+  bar.querySelectorAll('[data-zt-type]').forEach(b=>{
+    b.setAttribute('data-active', newState ? 'true' : 'false');
+    b.style.opacity = newState ? '1' : '0.35';
+  });
+  applyZtFilter(containerId);
+}
+
+function applyZtFilter(containerId){
+  const container = document.getElementById(containerId);
+  const chartEl = document.getElementById(containerId+'-zt-chart');
+  if(!container||!chartEl) return;
+  const bar = document.getElementById(containerId+'-zt-bar');
+  const activeTypes = new Set();
+  if(bar) bar.querySelectorAll('[data-zt-type]').forEach(b=>{
+    if(b.getAttribute('data-active')!=='false') activeTypes.add(b.getAttribute('data-zt-type'));
+  });
+  let pitches = [];
+  try { pitches = JSON.parse(container.getAttribute('data-zt-pitches')||'[]'); } catch(e){}
+  const filtered = activeTypes.size===0 ? [] : pitches.filter(p=>activeTypes.has(p.pitchType||'—'));
+  chartEl.innerHTML = filtered.length ? buildZoneTendencies(filtered) : '<div class="empty-state" style="padding:20px 0">No pitches selected</div>';
+}
+
+// ===== HOT/COLD ZONE WITH PITCH TYPE FILTER =====
+function buildHotColdZoneFiltered(pitches, perspective, containerId){
+  const pitchTypes = [...new Set(pitches.map(p=>p.pitchType).filter(t=>t&&t!=='—'))].sort();
+  const typeColors2={FB:'#1a6abf',CT:'#1a6abf',SI:'#1a6abf',CB:'#c01a1a',SL:'#c01a1a',SP:'#c01a1a',CH:'#1a8a2a',KN:'#1a8a2a'};
+  const pitchesJson = JSON.stringify(pitches.map(p=>({pitchType:p.pitchType,outcome:p.outcome,pitchX:p.pitchX,pitchY:p.pitchY,loc:p.loc})));
+
+  const filterBar = pitchTypes.length > 1 ? `
+    <div style="margin-bottom:10px;padding:8px;background:var(--surface2);border-radius:8px">
+      <div style="font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:8px;letter-spacing:2px;text-transform:uppercase;color:#8a909e;margin-bottom:6px">Filter by pitch type</div>
+      <div id="${containerId}-hcz-bar" style="display:flex;flex-wrap:wrap;gap:5px;align-items:center">
+        <button onclick="selectAllHczFilters('${containerId}')" data-all-active="true"
+          style="padding:3px 10px;border:1.5px solid var(--border);border-radius:20px;
+            background:var(--surface3);color:var(--text2);
+            font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:10px;
+            letter-spacing:1px;cursor:pointer">ALL</button>
+        ${pitchTypes.map(t=>`
+          <button data-hcz-type="${t}" data-active="true"
+            onclick="toggleHczFilter(this,'${containerId}')"
+            style="padding:3px 8px;border:1.5px solid ${typeColors2[t]||'#8a909e'};border-radius:20px;
+              background:${typeColors2[t]||'#8a909e'};color:white;
+              font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:10px;
+              letter-spacing:1px;cursor:pointer;transition:all .15s">${t}</button>`).join('')}
+      </div>
+    </div>` : '';
+
+  return `<div id="${containerId}" data-hcz-pitches='${pitchesJson.replace(/'/g,"&#39;")}' data-perspective="${perspective}">
+    ${filterBar}
+    <div id="${containerId}-hcz-chart">${buildHotColdZone(pitches, perspective)}</div>
+  </div>`;
+}
+
+function toggleHczFilter(btn, containerId){
+  const isActive = btn.getAttribute('data-active') !== 'false';
+  btn.setAttribute('data-active', isActive ? 'false' : 'true');
+  btn.style.opacity = isActive ? '0.35' : '1';
+  applyHczFilter(containerId);
+}
+
+function selectAllHczFilters(containerId){
+  const bar = document.getElementById(containerId+'-hcz-bar');
+  if(!bar) return;
+  const allBtn = bar.querySelector('[data-all-active]');
+  const allActive = allBtn?.getAttribute('data-all-active') !== 'false';
+  const newState = !allActive;
+  if(allBtn) allBtn.setAttribute('data-all-active', newState ? 'true' : 'false');
+  bar.querySelectorAll('[data-hcz-type]').forEach(b=>{
+    b.setAttribute('data-active', newState ? 'true' : 'false');
+    b.style.opacity = newState ? '1' : '0.35';
+  });
+  applyHczFilter(containerId);
+}
+
+function applyHczFilter(containerId){
+  const container = document.getElementById(containerId);
+  const chartEl = document.getElementById(containerId+'-hcz-chart');
+  if(!container||!chartEl) return;
+
+  const bar = document.getElementById(containerId+'-hcz-bar');
+  const activeTypes = new Set();
+  if(bar) bar.querySelectorAll('[data-hcz-type]').forEach(b=>{
+    if(b.getAttribute('data-active')!=='false') activeTypes.add(b.getAttribute('data-hcz-type'));
+  });
+
+  let pitches = [];
+  try { pitches = JSON.parse(container.getAttribute('data-hcz-pitches')||'[]'); } catch(e){}
+  const perspective = container.getAttribute('data-perspective')||'pitcher';
+
+  const filtered = activeTypes.size===0 ? pitches : pitches.filter(p=>activeTypes.has(p.pitchType||'—'));
+  chartEl.innerHTML = buildHotColdZone(filtered, perspective);
 }
 
 // ===== HOT/COLD ZONE MAP =====
@@ -5423,7 +5683,7 @@ function buildPitchBreakdown(pitches){
 
   // Pitch type counts
   const typeMap={FB:0,CB:0,SL:0,CH:0,CT:0,SP:0,SI:0,KN:0};
-  const typeColors={FB:'#5baef5',CB:'#f57a7a',SL:'#f57a7a',SP:'#f57a7a',CH:'#6ae87a',KN:'#6ae87a',CT:'#5baef5',SI:'#5baef5'};
+  const typeColors={FB:'#1a6abf',CB:'#c01a1a',SL:'#c01a1a',SP:'#c01a1a',CH:'#1a8a2a',KN:'#1a8a2a',CT:'#1a6abf',SI:'#1a6abf'};
   const outcomeMap={ball:0,'strike-swinging':0,'strike-looking':0,foul:0,'ip-hit':0,'ip-out':0};
 
   pitches.forEach(p=>{
@@ -5456,7 +5716,7 @@ function buildPitchBreakdown(pitches){
     }).join('');
 
   const outLabels={'ball':'Ball','strike-swinging':'Swing K','strike-looking':'Called K','foul':'Foul','ip-hit':'In Play (Hit/Reach)','ip-out':'In Play (Out)'};
-  const outColors={'ball':'#5baef5','strike-swinging':'#cc1a1a','strike-looking':'#f57a7a','foul':'#c07020','ip-hit':'#e8c84a','ip-out':'#c084f5'};
+  const outColors={'ball':'#1a6abf','strike-swinging':'#8a0000','strike-looking':'#c01a1a','foul':'#8a4a00','ip-hit':'#9a7a00','ip-out':'#6a1ab0'};
   const outcomeRows = Object.entries(outcomeMap)
     .filter(([,n])=>n>0)
     .sort((a,b)=>b[1]-a[1])
@@ -5488,7 +5748,21 @@ function buildPitchBreakdown(pitches){
   const typeSlices = Object.entries(typeMap).filter(([,n])=>n>0).map(([t,n])=>({label:t,value:n,color:typeColors[t]||'#8a909e'}));
   const outcomeSlices = Object.entries(outcomeMap).filter(([,n])=>n>0).map(([o,n])=>({label:outLabels[o]||o,value:n,color:outColors[o]||'#8a909e'}));
 
+  const pitchTypes = [...new Set(pitches.map(p=>p.pitchType).filter(t=>t&&t!=='—'))].sort();
+  const typeColors2={FB:'#1a6abf',CT:'#1a6abf',SI:'#1a6abf',CB:'#c01a1a',SL:'#c01a1a',SP:'#c01a1a',CH:'#1a8a2a',KN:'#1a8a2a'};
+  const bdId = 'bd-'+Math.random().toString(36).slice(2,8);
+  const pitchesJson = JSON.stringify(pitches.map(p=>({pitchType:p.pitchType,outcome:p.outcome,velocity:p.velocity})));
+  const ofBtnsFixed = pitchTypes.length > 1 ? pitchTypes.map(t=>`
+    <button data-of-type="${t}" data-active="true"
+      onclick="toggleOutcomeFilter(this,'${bdId}')"
+      style="display:inline-flex;align-items:center;gap:3px;padding:3px 8px;
+        border:1.5px solid ${typeColors2[t]||'#8a909e'};border-radius:20px;
+        background:${typeColors2[t]||'#8a909e'};color:white;
+        font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:10px;
+        letter-spacing:1px;cursor:pointer;transition:all .15s">${t}</button>`).join('') : '';
+
   return `
+    <div id="${bdId}" data-pitches='${pitchesJson.replace(/'/g,"&#39;")}'>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">
       <div style="background:#fff;border:1px solid #d4d8e0;border-radius:8px;padding:10px 14px;text-align:center">
         <div style="font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:26px;color:#cc1a1a">${avgVel}</div>
@@ -5508,6 +5782,19 @@ function buildPitchBreakdown(pitches){
       </div>
     </div>
 
+    <!-- Shared pitch type filter for outcomes (works across BAR and PIE views) -->
+    ${ofBtnsFixed ? `<div style="margin-bottom:10px;padding:8px;background:var(--surface2);border-radius:8px">
+      <div style="font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:8px;letter-spacing:2px;text-transform:uppercase;color:#8a909e;margin-bottom:6px">Filter outcomes by pitch type</div>
+      <div id="${bdId}-of-bar" style="display:flex;flex-wrap:wrap;gap:5px;align-items:center">
+        <button onclick="selectAllOutcomeFilters('${bdId}')" data-all-active="true"
+          style="padding:3px 10px;border:1.5px solid var(--border);border-radius:20px;
+            background:var(--surface2);color:var(--text2);
+            font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:10px;
+            letter-spacing:1px;cursor:pointer;border:1.5px solid var(--border)">ALL</button>
+        ${ofBtnsFixed}
+      </div>
+    </div>` : ''}
+
     <!-- Chart type toggle -->
     <div style="display:flex;gap:6px;margin-bottom:12px">
       <button onclick="toggleChartView(this,'bars')" class="chart-toggle-btn active" data-view="bars" style="flex:1;padding:5px;background:var(--accent);color:white;border:none;border-radius:6px;font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:11px;letter-spacing:1px;cursor:pointer">BAR</button>
@@ -5522,8 +5809,8 @@ function buildPitchBreakdown(pitches){
         ${typeRows||'<div style="color:#8a909e;font-size:12px">No pitch type data</div>'}
       </div>
       <div>
-        <div style="font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:9px;letter-spacing:3px;text-transform:uppercase;color:#8a909e;margin-bottom:8px">Outcome Breakdown</div>
-        ${outcomeRows}
+        <div id="${bdId}-outcome-total" style="font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:9px;letter-spacing:3px;text-transform:uppercase;color:#8a909e;margin-bottom:8px">Outcome Breakdown · ${total} pitches</div>
+        <div id="${bdId}-outcome-bars">${outcomeRows}</div>
       </div>
     </div>
 
@@ -5532,7 +5819,7 @@ function buildPitchBreakdown(pitches){
       <div style="font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:9px;letter-spacing:3px;text-transform:uppercase;color:#8a909e;margin-bottom:10px">Pitch Mix</div>
       ${buildPieChart(typeSlices, 130)}
       <div style="font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:9px;letter-spacing:3px;text-transform:uppercase;color:#8a909e;margin:14px 0 10px">Outcomes</div>
-      ${buildPieChart(outcomeSlices, 130)}
+      <div id="${bdId}-outcome-pie">${buildPieChart(outcomeSlices, 130)}</div>
     </div>
 
     <!-- DETAIL VIEW (hidden by default) -->
@@ -5540,7 +5827,7 @@ function buildPitchBreakdown(pitches){
       <div style="font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:9px;letter-spacing:3px;text-transform:uppercase;color:#8a909e;margin-bottom:10px">Per Pitch Type · Velo + BA Against</div>
       ${buildPitchTypeDetail(pitches)}
     </div>
-  `;
+  </div>`;
 }
 
 function toggleChartView(btn, view){
@@ -5697,10 +5984,10 @@ function renderPlayer(teamName, playerName){
         </div>
         <div>
           <div class="section-title" style="margin-bottom:8px">Zone Tendencies</div>
-          ${buildZoneTendencies(allPitches)}
+          ${buildZoneTendenciesFiltered(allPitches,'player-zt')}
           <div style="margin-top:16px">
             <div class="section-title" style="margin-bottom:8px">Hot / Cold Zone</div>
-            ${buildHotColdZone(allPitches,'batter')}
+            ${buildHotColdZoneFiltered(allPitches,'batter','player-hcz')}
           </div>
         </div>
       </div>
@@ -6081,10 +6368,10 @@ function renderPitcher(teamName, pitcherName){
         </div>
         <div>
           <div class="section-title" style="margin-bottom:8px">Zone Command</div>
-          ${buildZoneTendencies(allPitches)}
+          ${buildZoneTendenciesFiltered(allPitches,'pitcher-zt')}
           <div style="margin-top:16px">
             <div class="section-title" style="margin-bottom:8px">Hot / Cold Zone</div>
-            ${buildHotColdZone(allPitches,'pitcher')}
+            ${buildHotColdZoneFiltered(allPitches,'pitcher','pitcher-hcz')}
           </div>
         </div>
       </div>
