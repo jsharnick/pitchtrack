@@ -851,7 +851,7 @@ th.sorted{color:var(--accent);}
     flex:1; display:flex; flex-direction:column; align-items:center;
     justify-content:center; gap:3px; cursor:pointer;
     font-family:'Barlow Condensed',sans-serif; font-weight:700;
-    font-size:9px; letter-spacing:1px; text-transform:uppercase;
+    font-size:8px; letter-spacing:0.5px; text-transform:uppercase;
     color:rgba(255,255,255,.4); transition:all .15s;
     border-top:2.5px solid transparent; padding-top:2px;
   }
@@ -1026,6 +1026,10 @@ th.sorted{color:var(--accent);}
   /* Prevent any horizontal overflow at body level */
   #panel-tracker, #panel-hub { overflow-x:hidden; }
   .app-panel { overflow-x:hidden; }
+
+  /* Hide keyboard shortcut button on mobile */
+  #kbd-toggle { display:none !important; }
+  #kbd-panel  { display:none !important; }
 
 } /* end @media mobile */
 
@@ -1479,6 +1483,14 @@ th.sorted{color:var(--accent);}
 <!-- MOBILE: Lineup Panel -->
 <div class="mob-panel" id="mob-lineup-panel">
   <div id="mob-lineup-content" style="padding:14px"></div>
+</div>
+
+<!-- MOBILE: Pitchers Panel -->
+<div class="mob-panel" id="mob-pitchers-panel">
+  <div style="padding:14px">
+    <div class="mob-section-title">Pitchers</div>
+    <div id="mob-pitchers-content"></div>
+  </div>
 </div>
 
 <!-- MOBILE: Log Panel -->
@@ -2846,6 +2858,7 @@ function handleThreeOuts(){
   if(!S.isTop) S.inning++;
   S.isTop=!S.isTop;
   clearAtBat(); clearPlayBlurb(); renderLineup(); renderPitcherList(); updateScoreBug();
+  try{ if(typeof _currentMobTab!=='undefined'&&_currentMobTab==='pitchers') renderMobPitchers(); }catch(e){}
 }
 function recordAtBatResult(type,label){
   const key=currentBatterKey();
@@ -4425,21 +4438,24 @@ function isMobile(){ return window.innerWidth <= 768; }
 
 function mobTab(tab){
   _currentMobTab = tab;
-  ['zone','score','lineup','log'].forEach(t=>{
+  ['zone','score','lineup','pitchers','log'].forEach(t=>{
     const el = document.getElementById('mobtab-'+t);
     if(el) el.classList.toggle('on', t===tab);
   });
   const panelCenter = document.getElementById('panel-center');
-  const scoreP  = document.getElementById('mob-score-panel');
-  const lineupP = document.getElementById('mob-lineup-panel');
-  const logP    = document.getElementById('mob-log-panel');
+  const scoreP    = document.getElementById('mob-score-panel');
+  const lineupP   = document.getElementById('mob-lineup-panel');
+  const pitchersP = document.getElementById('mob-pitchers-panel');
+  const logP      = document.getElementById('mob-log-panel');
   if(panelCenter) panelCenter.style.display = tab==='zone' ? 'flex' : 'none';
-  if(scoreP)  scoreP.classList.toggle('on',  tab==='score');
-  if(lineupP) lineupP.classList.toggle('on', tab==='lineup');
-  if(logP)    logP.classList.toggle('on',    tab==='log');
-  if(tab==='lineup') renderMobLineup();
-  if(tab==='log')    renderMobLog(_mobLogTab);
-  if(tab==='score')  updateMobScore();
+  if(scoreP)    scoreP.classList.toggle('on',    tab==='score');
+  if(lineupP)   lineupP.classList.toggle('on',   tab==='lineup');
+  if(pitchersP) pitchersP.classList.toggle('on', tab==='pitchers');
+  if(logP)      logP.classList.toggle('on',      tab==='log');
+  if(tab==='lineup')   renderMobLineup();
+  if(tab==='pitchers') renderMobPitchers();
+  if(tab==='log')      renderMobLog(_mobLogTab);
+  if(tab==='score')    updateMobScore();
 }
 
 function mobLogTab(t){
@@ -4462,6 +4478,52 @@ function renderMobLog(t){
   };
   const src = document.getElementById(srcMap[t]);
   wrap.innerHTML = src ? src.innerHTML : '<div style="padding:20px;text-align:center;color:var(--text3);font-size:12px">No data yet.</div>';
+}
+
+function renderMobPitchers(){
+  const wrap = document.getElementById('mob-pitchers-content');
+  if(!wrap) return;
+  // Clone the pitcher list from the desktop left panel
+  const src = document.getElementById('panel-left');
+  if(!src) return;
+  // Get pitcher section from panel-left
+  const pitcherSection = src.querySelector('#pitcher-list-wrap') || src.querySelector('[id*="pitcher"]');
+  // Render full pitcher controls: active pitcher list + add form
+  wrap.innerHTML = '';
+
+  // Team label
+  const teamLabel = document.createElement('div');
+  teamLabel.style.cssText = 'font-size:8px;letter-spacing:2px;color:var(--text3);text-transform:uppercase;font-weight:600;margin-bottom:8px';
+  teamLabel.textContent = S.isTop ? 'HOME PITCHING' : 'AWAY PITCHING';
+  wrap.appendChild(teamLabel);
+
+  // Clone pitcher list
+  const pListSrc = document.getElementById('pitcher-list');
+  if(pListSrc){
+    const clone = pListSrc.cloneNode(true);
+    clone.id = 'mob-pitcher-list-clone';
+    // Fix onclick handlers — they reference indices that still work globally
+    wrap.appendChild(clone);
+  }
+
+  // Add pitcher form clone
+  const addBtn = document.createElement('button');
+  addBtn.style.cssText = 'width:100%;margin-top:10px;padding:10px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;font-family:"Barlow Condensed",sans-serif;font-weight:700;font-size:14px;color:var(--text2);cursor:pointer;letter-spacing:1px';
+  addBtn.textContent = '+ Add Pitcher';
+  addBtn.onclick = () => { mobTab('zone'); toggleAddPitcherForm(); };
+  wrap.appendChild(addBtn);
+
+  // Switch side button
+  const switchLabel = document.createElement('div');
+  switchLabel.style.cssText = 'font-size:8px;letter-spacing:2px;color:var(--text3);text-transform:uppercase;font-weight:600;margin:14px 0 8px';
+  switchLabel.textContent = 'OTHER TEAM';
+  wrap.appendChild(switchLabel);
+
+  const otherTeamLabel = document.createElement('div');
+  otherTeamLabel.style.cssText = 'font-size:11px;color:var(--text3);padding:8px;background:var(--surface2);border-radius:6px;text-align:center';
+  const otherPitchers = S.isTop ? S.pitchersAway : S.pitchersHome;
+  otherTeamLabel.textContent = otherPitchers.filter(p=>p.pitches>0).map(p=>`#${p.num||'?'} ${p.name}: ${p.pitches}P`).join(' · ') || 'No pitches yet';
+  wrap.appendChild(otherTeamLabel);
 }
 
 function renderMobLineup(){
@@ -6105,18 +6167,11 @@ async function hubBoot(){
 </script>
 <!-- MOBILE BOTTOM TABS -->
 <div id="mob-tabs">
-  <div class="mob-tab on" id="mobtab-zone"   onclick="mobTab('zone')">
-    Zone
-  </div>
-  <div class="mob-tab" id="mobtab-score"  onclick="mobTab('score')">
-    Score
-  </div>
-  <div class="mob-tab" id="mobtab-lineup" onclick="mobTab('lineup')">
-    Lineup
-  </div>
-  <div class="mob-tab" id="mobtab-log"    onclick="mobTab('log')">
-    Log
-  </div>
+  <div class="mob-tab on" id="mobtab-zone"     onclick="mobTab('zone')">Zone</div>
+  <div class="mob-tab"    id="mobtab-score"    onclick="mobTab('score')">Score</div>
+  <div class="mob-tab"    id="mobtab-lineup"   onclick="mobTab('lineup')">Lineup</div>
+  <div class="mob-tab"    id="mobtab-pitchers" onclick="mobTab('pitchers')">Pitchers</div>
+  <div class="mob-tab"    id="mobtab-log"      onclick="mobTab('log')">Log</div>
 </div>
 
 </body>
