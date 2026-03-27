@@ -1231,6 +1231,7 @@ th.sorted{color:var(--accent);}
       <div class="add-p-row">
         <input class="setup-input num-in" id="new-p-num"  placeholder="#"    style="width:38px;flex-shrink:0">
         <input class="setup-input"        id="new-p-name" placeholder="Name..." style="flex:1">
+        <select id="new-p-hand" style="background:var(--surface2);border:1px solid var(--border);border-radius:5px;color:var(--text);font-family:'Barlow Condensed',sans-serif;font-size:13px;padding:3px 5px;outline:none;cursor:pointer;flex-shrink:0"><option value="R">R</option><option value="L">L</option></select>
         <button class="add-p-btn"    onclick="addPitcher()">Add</button>
         <button class="cancel-p-btn" onclick="toggleAddPitcherForm()" style="display:flex;align-items:center;justify-content:center"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="1" y1="1" x2="11" y2="11"/><line x1="11" y1="1" x2="1" y2="11"/></svg></button>
       </div>
@@ -1292,11 +1293,17 @@ th.sorted{color:var(--accent);}
     <div class="zone-controls">
 
       <div>
-        <div class="outcome-label" style="margin-bottom:5px">Velocity &amp; Pitch Type</div>
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:5px">
+          <div class="outcome-label" style="margin-bottom:0">Velocity &amp; Pitch Type</div>
+          <button onclick="openPitchClockModal()" title="Pitch Clock Violation" style="display:flex;align-items:center;gap:5px;padding:3px 8px 3px 6px;background:var(--surface2);border:1px solid var(--border2);border-radius:5px;cursor:pointer;transition:all .14s;color:var(--text3)" onmouseover="this.style.borderColor='var(--accent)';this.style.color='var(--accent)'" onmouseout="this.style.borderColor='var(--border2)';this.style.color='var(--text3)'">
+            <img src="data:image/png;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/4gHYSUNDX1BST0ZJTEUAAQEAAAHIAAAAAAQwAABtbnRyUkdCIFhZWiAH4AABAAEAAAAAAABhY3NwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAQAA9tYAAQAAAADTLQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAlkZXNjAAAA8AAAACRyWFlaAAABFAAAABRnWFlaAAABKAAAABRiWFlaAAABPAAAABR3dHB0AAABUAAAABRyVFJDAAABZAAAAChnVFJDAAABZAAAAChiVFJDAAABZAAAAChjcHJ0AAABjAAAADxtbHVjAAAAAAAAAAEAAAAMZW5VUwAAAAgAAAAcAHMAUgBHAEJYWVogAAAAAAAAb6IAADj1AAADkFhZWiAAAAAAAABimQAAt4UAABjaWFlaIAAAAAAAACSgAAAPhAAAts9YWVogAAAAAAAA9tYAAQAAAADTLXBhcmEAAAAAAAQAAAACZmYAAPKnAAANWQAAE9AAAApbAAAAAAAAAABtbHVjAAAAAAAAAAEAAAAMZW5VUwAAACAAAAAcAEcAbwBvAGcAbABlACAASQBuAGMALgAgADIAMAAxADb/2wBDAAUDBAQEAwUEBAQFBQUGBwwIBwcHBw8LCwkMEQ8SEhEPERETFhwXExQaFRERGCEYGh0dHx8fExciJCIeJBweHx7/2wBDAQUFBQcGBw4ICA4eFBEUHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh7/wAARCAAmADADASIAAhEBAxEB/8QAGgAAAgMBAQAAAAAAAAAAAAAAAAUDBAYCB//EAC8QAAICAgECAwUIAwAAAAAAAAECAwQFEQAGITFBURI2dIGxBxMkMjdxg5Gys8H/xAAVAQEBAAAAAAAAAAAAAAAAAAAAAf/EABcRAQEBAQAAAAAAAAAAAAAAAAARIQH/2gAMAwEAAhEDEQA/APUKteCpViq1YIoK8KCOKKNAqIoGgqgdgABoAc0OH6WyuVpC5WEKxMSFLvonXY+Xrxfgo0mzdCKVA8b2Y1ZT4EFhsca9VT2sV1NkK+PuWasDSI4ihkKKpMa70F157Pf19NAXkQlyNOehdlp2VCyxHTAHY9fpwx1Oe/dip1lDSynSgnQ9fpx/kKsQ+z6hdcfeW5rkhkncD2220nYnz8FHy8z34Y+rEfs+v3UH3duG5GY50A9tdNH2B8vFh8/I9+MpsVcx0tlcVSNyyIWiUgMUfZG+w8vXmetV4LdWWraginrzIY5YpEDI6kaKsD2IIOiDzTdKz2sr1Nj6+RuWbUCyO5ilkLqxEba2G356Pb09Ngqs7GkObvxRIEjSzIqqB2ADHQ47B3077wY74uL/ADHL3X/vdd/j/wBa8VYuwtTJ1bTqWWGZJCB4kBgf+c01nB5HqnIW81TetFVmkCwiUkN7KqqknW/MH0/bzKK5yf6Y4r4tvrLwxn6Y5X4tfrFypmrb1enIemrSfjKdp2d0/IVJYrrv46cf15eAMLba105N01VT8ZctIyO/5AoKlt9/HSH+/PwKbEqPoD3upfyf625R6i94Mj8XL/meP62DyPS2QqZq49aWrDIVmERJb2WVl2N68yPX9vMZrKWFt5O1aRSqzTPIAfEAsT/3iKUYDJwZrA4/M1UlSvfqx2YlkADhZFDAMASN6PfRPGle3arqVgszRKTshJCoJ+XDhyCJ2Z2LMxZidkk7JPBGZGDKxVgdgg6IPDhwJbFu1YULPZmlUHYDyFgD8+K8/k4MLgchmbSSvXoVZLMqxgFysaliFBIG9Dtsjhw4H//Z" style="width:16px;height:16px;display:block;opacity:.7">
+            <span style="font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:10px;letter-spacing:1px">CLOCK</span>
+          </button>
+        </div>
         <div style="display:flex;gap:8px;align-items:stretch;">
           <div class="vel-wrap" style="flex-direction:column;align-items:center;justify-content:center;gap:1px;padding:5px 10px;">
             <label style="font-size:9px;letter-spacing:1px;color:var(--text3);text-transform:uppercase;font-weight:600;">MPH</label>
-            <input class="vel-input" id="vel-input" type="number" min="40" max="110" placeholder="—" style="font-size:22px;width:52px;text-align:center;">
+            <input class="vel-input" id="vel-input" type="text" inputmode="numeric" placeholder="—" style="font-size:22px;width:52px;text-align:center;">
           </div>
           <div style="flex:1;display:grid;grid-template-columns:repeat(4,1fr);gap:4px;">
             <button class="pitch-type-btn" data-type="FB" onclick="selectPitchType('FB')">FB</button>
@@ -1935,6 +1942,31 @@ th.sorted{color:var(--accent);}
   <div class="kbd-row"><span class="kbd-desc">CT / SP / SI / KN</span><span class="kbd-key">5 6 7 8</span></div>
 </div>
 
+<!-- PITCH CLOCK VIOLATION MODAL -->
+<div id="pitch-clock-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.72);z-index:1400;align-items:center;justify-content:center;backdrop-filter:blur(5px)">
+  <div style="background:#ffffff;border:1px solid #bfc4cf;border-radius:16px;padding:28px 30px;width:360px;max-width:92vw;box-shadow:0 24px 60px rgba(0,0,0,.25);animation:smPop .22s cubic-bezier(.34,1.56,.64,1)">
+    <div style="display:flex;align-items:center;gap:14px;margin-bottom:6px">
+      <img src="data:image/png;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/4gHYSUNDX1BST0ZJTEUAAQEAAAHIAAAAAAQwAABtbnRyUkdCIFhZWiAH4AABAAEAAAAAAABhY3NwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAQAA9tYAAQAAAADTLQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAlkZXNjAAAA8AAAACRyWFlaAAABFAAAABRnWFlaAAABKAAAABRiWFlaAAABPAAAABR3dHB0AAABUAAAABRyVFJDAAABZAAAAChnVFJDAAABZAAAAChiVFJDAAABZAAAAChjcHJ0AAABjAAAADxtbHVjAAAAAAAAAAEAAAAMZW5VUwAAAAgAAAAcAHMAUgBHAEJYWVogAAAAAAAAb6IAADj1AAADkFhZWiAAAAAAAABimQAAt4UAABjaWFlaIAAAAAAAACSgAAAPhAAAts9YWVogAAAAAAAA9tYAAQAAAADTLXBhcmEAAAAAAAQAAAACZmYAAPKnAAANWQAAE9AAAApbAAAAAAAAAABtbHVjAAAAAAAAAAEAAAAMZW5VUwAAACAAAAAcAEcAbwBvAGcAbABlACAASQBuAGMALgAgADIAMAAxADb/2wBDAAUDBAQEAwUEBAQFBQUGBwwIBwcHBw8LCwkMEQ8SEhEPERETFhwXExQaFRERGCEYGh0dHx8fExciJCIeJBweHx7/2wBDAQUFBQcGBw4ICA4eFBEUHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh7/wAARCAAmADADASIAAhEBAxEB/8QAGgAAAgMBAQAAAAAAAAAAAAAAAAUDBAYCB//EAC8QAAICAgECAwUIAwAAAAAAAAECAwQFEQAGITFBURI2dIGxBxMkMjdxg5Gys8H/xAAVAQEBAAAAAAAAAAAAAAAAAAAAAf/EABcRAQEBAQAAAAAAAAAAAAAAAAARIQH/2gAMAwEAAhEDEQA/APUKteCpViq1YIoK8KCOKKNAqIoGgqgdgABoAc0OH6WyuVpC5WEKxMSFLvonXY+Xrxfgo0mzdCKVA8b2Y1ZT4EFhsca9VT2sV1NkK+PuWasDSI4ihkKKpMa70F157Pf19NAXkQlyNOehdlp2VCyxHTAHY9fpwx1Oe/dip1lDSynSgnQ9fpx/kKsQ+z6hdcfeW5rkhkncD2220nYnz8FHy8z34Y+rEfs+v3UH3duG5GY50A9tdNH2B8vFh8/I9+MpsVcx0tlcVSNyyIWiUgMUfZG+w8vXmetV4LdWWraginrzIY5YpEDI6kaKsD2IIOiDzTdKz2sr1Nj6+RuWbUCyO5ilkLqxEba2G356Pb09Ngqs7GkObvxRIEjSzIqqB2ADHQ47B3077wY74uL/ADHL3X/vdd/j/wBa8VYuwtTJ1bTqWWGZJCB4kBgf+c01nB5HqnIW81TetFVmkCwiUkN7KqqknW/MH0/bzKK5yf6Y4r4tvrLwxn6Y5X4tfrFypmrb1enIemrSfjKdp2d0/IVJYrrv46cf15eAMLba105N01VT8ZctIyO/5AoKlt9/HSH+/PwKbEqPoD3upfyf625R6i94Mj8XL/meP62DyPS2QqZq49aWrDIVmERJb2WVl2N68yPX9vMZrKWFt5O1aRSqzTPIAfEAsT/3iKUYDJwZrA4/M1UlSvfqx2YlkADhZFDAMASN6PfRPGle3arqVgszRKTshJCoJ+XDhyCJ2Z2LMxZidkk7JPBGZGDKxVgdgg6IPDhwJbFu1YULPZmlUHYDyFgD8+K8/k4MLgchmbSSvXoVZLMqxgFysaliFBIG9Dtsjhw4H//Z" style="width:40px;height:40px;display:block;flex-shrink:0">
+      <div>
+        <div style="font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:22px;color:#111318">Pitch Clock Violation</div>
+        <div style="font-size:12px;color:#8a909e;margin-top:2px">Adjust count only — no pitch recorded</div>
+      </div>
+    </div>
+    <div id="pcm-count" style="text-align:center;font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:28px;color:#111318;background:#f4f5f7;border-radius:8px;padding:10px;margin:16px 0;letter-spacing:2px"></div>
+    <div style="display:flex;flex-direction:column;gap:9px">
+      <button onclick="pitchClockViolation('strike')" style="width:100%;padding:14px 16px;border-radius:10px;border:none;background:linear-gradient(135deg,#cc1a1a,#e53030);color:#fff;font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:17px;letter-spacing:1px;cursor:pointer;transition:all .14s;display:flex;align-items:center;justify-content:space-between" onmouseover="this.style.filter='brightness(1.1)'" onmouseout="this.style.filter='none'">
+        <span>Automatic Strike</span>
+        <span style="font-size:12px;opacity:.8;font-weight:400">pitcher violation → +1 strike</span>
+      </button>
+      <button onclick="pitchClockViolation('ball')" style="width:100%;padding:14px 16px;border-radius:10px;border:none;background:linear-gradient(135deg,#1a5acc,#2a6ae0);color:#fff;font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:17px;letter-spacing:1px;cursor:pointer;transition:all .14s;display:flex;align-items:center;justify-content:space-between" onmouseover="this.style.filter='brightness(1.1)'" onmouseout="this.style.filter='none'">
+        <span>Automatic Ball</span>
+        <span style="font-size:12px;opacity:.8;font-weight:400">batter/fielder violation → +1 ball</span>
+      </button>
+      <button onclick="closePitchClockModal()" style="width:100%;padding:10px;background:transparent;border:1px solid #d4d8e0;border-radius:9px;color:#8a909e;font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:14px;cursor:pointer;transition:all .14s" onmouseover="this.style.borderColor='#8a909e';this.style.color='#111318'" onmouseout="this.style.borderColor='#d4d8e0';this.style.color='#8a909e'">Cancel</button>
+    </div>
+  </div>
+</div>
+
 <div id="save-modal">
   <div class="sm-box">
     <div class="sm-icon"></div>
@@ -2110,8 +2142,8 @@ const S = {
   // Away pitchers throw to home batters and vice versa:
   // pitchersAway = pitchers for the away team (throw while home bats)
   // pitchersHome = pitchers for the home team (throw while away bats)
-  pitchersAway:[{name:'Pitcher',num:'1',pitches:0,strikes:0,k:0,bb:0,swings:0,looks:0,hits:0,active:true}],
-  pitchersHome:[{name:'Pitcher',num:'1',pitches:0,strikes:0,k:0,bb:0,swings:0,looks:0,hits:0,active:true}],
+  pitchersAway:[{name:'Pitcher',num:'1',hand:'R',pitches:0,strikes:0,k:0,bb:0,swings:0,looks:0,hits:0,active:true}],
+  pitchersHome:[{name:'Pitcher',num:'1',hand:'R',pitches:0,strikes:0,k:0,bb:0,swings:0,looks:0,hits:0,active:true}],
 
   batterStats:{}, lineupResults:{},
   gameLog:[],
@@ -2155,6 +2187,7 @@ function dotColor(cls){
   if(cls.startsWith('un')) return '#7a8aaa';
   if(cls==='ip-out')       return '#c084f5';
   if(cls==='ip-hit')       return '#e8c84a';
+  if(cls==='hbp')          return '#c84af0';
   return 'var(--text2)';
 }
 
@@ -2179,7 +2212,7 @@ function updateScoreBug(){
   qs('base-2nd').classList.toggle('occupied',!!S.bases['2nd']);
   qs('base-3rd').classList.toggle('occupied',!!S.bases['3rd']);
   const p=activePitcher();
-  qs('bug-pitcher-name').textContent  = p?`#${p.num} ${p.name}`:'—';
+  qs('bug-pitcher-name').textContent  = p?`#${p.num} ${p.name} (${p.hand||'R'}HP)`:'—';
   qs('bug-pitcher-stats').textContent = p?`${p.pitches}P · ${p.k}K · ${p.bb}BB`:'';
   const b=currentBatter(), bs=getBatterStats(currentBatterKey());
   qs('bug-batter-name').textContent  = b?`#${b.num||''} ${b.name}`:'—';
@@ -2419,7 +2452,13 @@ function commitPitch(){
 
 function currentBatterHand(){
   const b = currentBatter();
-  return b?.hand || 'R';
+  const hand = b?.hand || 'R';
+  if(hand === 'S'){
+    const p = activePitcher();
+    const pitcherHand = p?.hand || 'R';
+    return pitcherHand === 'L' ? 'R' : 'L';
+  }
+  return hand;
 }
 
 // Update the IN/OUT visual labels on the zone canvas based on batter handedness
@@ -2892,9 +2931,10 @@ function toggleAddPitcherForm(){ qs('add-pitcher-form').classList.toggle('open')
 function addPitcher(){
   const name=qs('new-p-name').value.trim();
   const num =qs('new-p-num').value.trim();
+  const hand=qs('new-p-hand')?.value||'R';
   if(!name) return;
   activePitcherList().forEach(p=>p.active=false);
-  activePitcherList().push({name,num,pitches:0,strikes:0,k:0,bb:0,swings:0,looks:0,hits:0,active:true});
+  activePitcherList().push({name,num,hand,pitches:0,strikes:0,k:0,bb:0,swings:0,looks:0,hits:0,active:true});
   qs('new-p-name').value=''; qs('new-p-num').value='';
   qs('add-pitcher-form').classList.remove('open');
   renderPitcherList(); updateScoreBug();
@@ -2931,6 +2971,7 @@ function renderPitcherList(){
         <div style="font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:10px;color:var(--text3);width:100%;letter-spacing:1px;text-transform:uppercase">Edit Pitcher</div>
         <input class="setup-input num-in" id="edit-p-num-${i}"  value="${p.num||''}"  placeholder="#"    style="width:38px;flex-shrink:0;padding:5px 4px;text-align:center;font-size:13px">
         <input class="setup-input"        id="edit-p-name-${i}" value="${p.name||''}" placeholder="Name..." style="flex:1;font-size:13px">
+        <select id="edit-p-hand-${i}" style="background:var(--surface3);border:1px solid var(--border2);border-radius:4px;color:var(--text);font-family:'Barlow Condensed',sans-serif;font-size:13px;padding:4px 5px;outline:none;cursor:pointer;flex-shrink:0"><option value="R"${(p.hand||'R')==='R'?' selected':''}>R</option><option value="L"${p.hand==='L'?' selected':''}>L</option></select>
         <button onclick="savePitcherEdit(${i})" style="background:var(--accent);border:none;border-radius:5px;color:var(--bg);font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:13px;padding:5px 10px;cursor:pointer;flex-shrink:0">✓</button>
         <button onclick="cancelPitcherEdit()" style="background:none;border:1px solid var(--border);border-radius:5px;color:var(--text3);padding:6px 7px;cursor:pointer;flex-shrink:0;display:flex;align-items:center;justify-content:center"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="1" y1="1" x2="11" y2="11"/><line x1="11" y1="1" x2="1" y2="11"/></svg></button>
       `;
@@ -2940,7 +2981,7 @@ function renderPitcherList(){
       div.innerHTML=`
         <div class="pitcher-active-dot" style="background:${p.active?'var(--accent)':'transparent'};border:${p.active?'none':'1px solid var(--text3)'}"></div>
         <div class="pitcher-card-info">
-          <div class="pitcher-card-name"><span style="color:var(--text3);font-size:12px;margin-right:4px">#${p.num||'?'}</span>${p.name}${p.active?' <span style="font-size:9px;color:var(--accent);letter-spacing:1px">NOW</span>':''}</div>
+          <div class="pitcher-card-name"><span style="color:var(--text3);font-size:12px;margin-right:4px">#${p.num||'?'}</span>${p.name} <span style="font-size:9px;font-weight:700;color:${(p.hand||'R')==='L'?'var(--blue)':'var(--text3)'};letter-spacing:1px;margin-left:2px">${p.hand||'R'}HP</span>${p.active?' <span style="font-size:9px;color:var(--accent);letter-spacing:1px">NOW</span>':''}</div>
           <div class="pitcher-card-stats">${p.pitches}P · ${p.strikes}str · ${p.k}K · ${p.bb}BB · ${p.hits}H${p.swings||p.looks?' · '+p.swings+'sw/'+p.looks+'lk':''}</div>
         </div>
         <button onclick="startPitcherEdit(event,${i})" title="Edit" style="background:none;border:1px solid var(--border);border-radius:3px;color:var(--text3);font-size:10px;padding:2px 5px;cursor:pointer;opacity:0;transition:all .12s" class="pitcher-edit-btn">✎</button>
@@ -2961,8 +3002,10 @@ function savePitcherEdit(i){
   const list=activePitcherList();
   const n=qs(`edit-p-name-${i}`)?.value.trim();
   const num=qs(`edit-p-num-${i}`)?.value.trim();
+  const hand=qs(`edit-p-hand-${i}`)?.value||'R';
   if(n) list[i].name=n;
   list[i].num=num||list[i].num;
+  list[i].hand=hand;
   editingPitcher=null; renderPitcherList(); updateScoreBug();
 }
 function cancelPitcherEdit(){ editingPitcher=null; renderPitcherList(); }
@@ -4854,7 +4897,7 @@ function buildPitcherTable(pitchers, teamName){
     <div class="section-title">Pitching Stats</div>
     <table class="data-table">
       <thead><tr>
-        <th>Pitcher</th><th>#</th><th>G</th><th>P</th><th>K</th><th>BB</th>
+        <th>Pitcher</th><th>#</th><th>T</th><th>G</th><th>P</th><th>K</th><th>BB</th>
         <th>H</th><th>K/9</th><th>BB/9</th><th>K/BB</th><th>Str%</th>
         <th>Swng%</th><th>Lk%</th>
       </tr></thead>
@@ -4869,6 +4912,7 @@ function buildPitcherTable(pitchers, teamName){
         return `<tr ${clickable}>
           <td>${escHtml(p.name)}</td>
           <td class="dim">${p.num||'—'}</td>
+          <td class="dim">${p.hand||'R'}HP</td>
           <td>${p.games}</td>
           <td>${p.pitches}</td>
           <td class="${p.k>=5?'good':''}">${p.k}</td>
@@ -5147,6 +5191,7 @@ function buildPitchZoneSVG(pitches, width=320, height=300){
     if(d.startsWith('os')) return '#6ae87a';
     if(d==='ip-hit')       return '#e8c84a';
     if(d==='ip-out')       return '#c084f5';
+    if(d==='hbp')          return '#c84af0';
     return '#8a909e';
   };
 
@@ -5222,7 +5267,6 @@ function renderOutcomeBreakdown(containerId, pitches){
     else if(o==='foul')            outcomeMap.foul++;
     else if(['single','double','triple','homerun','error'].includes(o)) outcomeMap['ip-hit']++;
     else if(['groundout','flyout','lineout','sacfly','sacbunt'].includes(o)) outcomeMap['ip-out']++;
-    // hbp and ci are tracked by pitch family color, not as in-play outcomes
   });
 
   // Bar rows
@@ -5693,7 +5737,7 @@ function buildPitchBreakdown(pitches){
     else if(o==='strike-looking')  outcomeMap['strike-looking']++;
     else if(o==='foul')            outcomeMap.foul++;
     else if(['single','double','triple','homerun','error'].includes(o)) outcomeMap['ip-hit']++;
-    else if(['groundout','flyout','lineout','sacfly','sacbunt'].includes(o)) outcomeMap['ip-out']++;
+    else if(['groundout','flyout','lineout','sacfly','sacbunt'].includes(o))      outcomeMap['ip-out']++;
   });
 
   const total = pitches.length;
@@ -6255,7 +6299,7 @@ function getTeamPitchers(teamName, games){
     const pitchers=g.awayTeam===teamName ? g.awayPitchers : g.homePitchers;
     (pitchers||[]).forEach(p=>{
       if(!p.name) return;
-      if(!pitcherMap[p.name]) pitcherMap[p.name]={name:p.name,num:p.num,games:0,pitches:0,strikes:0,k:0,bb:0,hits:0,swings:0,looks:0,outs:0};
+      if(!pitcherMap[p.name]) pitcherMap[p.name]={name:p.name,num:p.num,hand:p.hand||'R',games:0,pitches:0,strikes:0,k:0,bb:0,hits:0,swings:0,looks:0,outs:0};
       const m=pitcherMap[p.name];
       if(p.pitches>0) m.games++;
       m.pitches+=p.pitches||0; m.strikes+=p.strikes||0;
@@ -6296,12 +6340,12 @@ function renderPitcher(teamName, pitcherName){
   const games   = getTeamGames(teamName);
   const allPitches = getPitcherPitches(teamName, pitcherName, games);
 
-  let career = {num:'—',games:0,pitches:0,strikes:0,k:0,bb:0,hits:0,swings:0,looks:0};
+  let career = {num:'—',hand:'R',games:0,pitches:0,strikes:0,k:0,bb:0,hits:0,swings:0,looks:0};
   games.forEach(g=>{
     const pitchers = g.awayTeam===teamName ? g.awayPitchers : g.homePitchers;
     const p = (pitchers||[]).find(x=>x.name===pitcherName);
     if(!p||!p.pitches) return;
-    career.num=p.num||career.num; career.games++;
+    career.num=p.num||career.num; career.hand=p.hand||career.hand; career.games++;
     career.pitches+=p.pitches||0; career.strikes+=p.strikes||0;
     career.k+=p.k||0; career.bb+=p.bb||0; career.hits+=p.hits||0;
     career.swings+=p.swings||0; career.looks+=p.looks||0;
@@ -6536,6 +6580,49 @@ async function hubBoot(){
     showView('games');
   }
 }
+// ===================== PITCH CLOCK VIOLATION =====================
+function openPitchClockModal(){
+  qs('pcm-count').textContent = `${S.balls} - ${S.strikes}  ·  ${S.outs} out${S.outs!==1?'s':''}`;
+  qs('pitch-clock-modal').style.display = 'flex';
+}
+function closePitchClockModal(){
+  qs('pitch-clock-modal').style.display = 'none';
+}
+function pitchClockViolation(type){
+  closePitchClockModal();
+  if(type === 'strike'){
+    if(S.strikes >= 2){
+      S.outs++;
+      const batter = currentBatter()?.name || 'Batter';
+      recordAtBatResult('K','K');
+      toast(`⏱ Auto Strike 3 — ${batter} out`);
+      logEvent('⏱','Pitch Clock — Auto Strike 3',`${batter} out on clock violation · ${S.outs} out${S.outs!==1?'s':''}`);
+      if(S.outs >= 3){ handleThreeOuts(); return; }
+      nextBatter();
+    } else {
+      S.strikes++;
+      const batter = currentBatter()?.name || 'Batter';
+      toast(`⏱ Auto Strike — Count: ${S.balls}-${S.strikes}`);
+      logEvent('⏱','Pitch Clock — Auto Strike',`${batter} · Count: ${S.balls}-${S.strikes}`);
+      updateScoreBug();
+    }
+  } else {
+    if(S.balls >= 3){
+      const batter = currentBatter()?.name || 'Batter';
+      recordAtBatResult('BB','BB');
+      toast(`⏱ Auto Ball 4 — ${batter} walks`);
+      logEvent('⏱','Pitch Clock — Auto Ball 4',`${batter} walks on clock violation`);
+      advanceOnWalk();
+    } else {
+      S.balls++;
+      const batter = currentBatter()?.name || 'Batter';
+      toast(`⏱ Auto Ball — Count: ${S.balls}-${S.strikes}`);
+      logEvent('⏱','Pitch Clock — Auto Ball',`${batter} · Count: ${S.balls}-${S.strikes}`);
+      updateScoreBug();
+    }
+  }
+}
+
 /* BOOT */
 (function(){
   var trackerInited = false;
