@@ -1231,7 +1231,6 @@ th.sorted{color:var(--accent);}
       <div class="add-p-row">
         <input class="setup-input num-in" id="new-p-num"  placeholder="#"    style="width:38px;flex-shrink:0">
         <input class="setup-input"        id="new-p-name" placeholder="Name..." style="flex:1">
-        <select id="new-p-hand" style="background:var(--surface2);border:1px solid var(--border);border-radius:5px;color:var(--text);font-family:'Barlow Condensed',sans-serif;font-size:13px;padding:3px 5px;outline:none;cursor:pointer;flex-shrink:0"><option value="R">R</option><option value="L">L</option></select>
         <button class="add-p-btn"    onclick="addPitcher()">Add</button>
         <button class="cancel-p-btn" onclick="toggleAddPitcherForm()" style="display:flex;align-items:center;justify-content:center"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="1" y1="1" x2="11" y2="11"/><line x1="11" y1="1" x2="1" y2="11"/></svg></button>
       </div>
@@ -2111,8 +2110,8 @@ const S = {
   // Away pitchers throw to home batters and vice versa:
   // pitchersAway = pitchers for the away team (throw while home bats)
   // pitchersHome = pitchers for the home team (throw while away bats)
-  pitchersAway:[{name:'Pitcher',num:'1',hand:'R',pitches:0,strikes:0,k:0,bb:0,swings:0,looks:0,hits:0,active:true}],
-  pitchersHome:[{name:'Pitcher',num:'1',hand:'R',pitches:0,strikes:0,k:0,bb:0,swings:0,looks:0,hits:0,active:true}],
+  pitchersAway:[{name:'Pitcher',num:'1',pitches:0,strikes:0,k:0,bb:0,swings:0,looks:0,hits:0,active:true}],
+  pitchersHome:[{name:'Pitcher',num:'1',pitches:0,strikes:0,k:0,bb:0,swings:0,looks:0,hits:0,active:true}],
 
   batterStats:{}, lineupResults:{},
   gameLog:[],
@@ -2156,7 +2155,6 @@ function dotColor(cls){
   if(cls.startsWith('un')) return '#7a8aaa';
   if(cls==='ip-out')       return '#c084f5';
   if(cls==='ip-hit')       return '#e8c84a';
-  if(cls==='hbp')          return '#c84af0';
   return 'var(--text2)';
 }
 
@@ -2181,7 +2179,7 @@ function updateScoreBug(){
   qs('base-2nd').classList.toggle('occupied',!!S.bases['2nd']);
   qs('base-3rd').classList.toggle('occupied',!!S.bases['3rd']);
   const p=activePitcher();
-  qs('bug-pitcher-name').textContent  = p?`#${p.num} ${p.name} (${p.hand||'R'}HP)`:'—';
+  qs('bug-pitcher-name').textContent  = p?`#${p.num} ${p.name}`:'—';
   qs('bug-pitcher-stats').textContent = p?`${p.pitches}P · ${p.k}K · ${p.bb}BB`:'';
   const b=currentBatter(), bs=getBatterStats(currentBatterKey());
   qs('bug-batter-name').textContent  = b?`#${b.num||''} ${b.name}`:'—';
@@ -2288,9 +2286,9 @@ function commitPitch(){
     if(S.strikes<2){S.strikes++;if(p)p.strikes++;}
     dotClass=ptFamily+'-foul'; logLabel='Foul';
   } else if(outcome==='hbp'){
-    dotClass='hbp'; logLabel='HBP';
+    dotClass=ptFamily+'-ball'; logLabel='HBP';
   } else if(outcome==='ci'){
-    dotClass='hbp'; logLabel='CI';
+    dotClass=ptFamily+'-ball'; logLabel='CI';
   } else if(outcome==='error'){
     dotClass='ip-hit'; logLabel='E';
     if(p){p.strikes++;}
@@ -2421,15 +2419,7 @@ function commitPitch(){
 
 function currentBatterHand(){
   const b = currentBatter();
-  const hand = b?.hand || 'R';
-  // Switch hitter: bats opposite of pitcher handedness
-  // RHP on mound → batter bats LHH; LHP → batter bats RHH
-  if(hand === 'S'){
-    const p = activePitcher();
-    const pitcherHand = p?.hand || 'R';
-    return pitcherHand === 'L' ? 'R' : 'L';
-  }
-  return hand;
+  return b?.hand || 'R';
 }
 
 // Update the IN/OUT visual labels on the zone canvas based on batter handedness
@@ -2902,10 +2892,9 @@ function toggleAddPitcherForm(){ qs('add-pitcher-form').classList.toggle('open')
 function addPitcher(){
   const name=qs('new-p-name').value.trim();
   const num =qs('new-p-num').value.trim();
-  const hand=qs('new-p-hand')?.value||'R';
   if(!name) return;
   activePitcherList().forEach(p=>p.active=false);
-  activePitcherList().push({name,num,hand,pitches:0,strikes:0,k:0,bb:0,swings:0,looks:0,hits:0,active:true});
+  activePitcherList().push({name,num,pitches:0,strikes:0,k:0,bb:0,swings:0,looks:0,hits:0,active:true});
   qs('new-p-name').value=''; qs('new-p-num').value='';
   qs('add-pitcher-form').classList.remove('open');
   renderPitcherList(); updateScoreBug();
@@ -2942,7 +2931,6 @@ function renderPitcherList(){
         <div style="font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:10px;color:var(--text3);width:100%;letter-spacing:1px;text-transform:uppercase">Edit Pitcher</div>
         <input class="setup-input num-in" id="edit-p-num-${i}"  value="${p.num||''}"  placeholder="#"    style="width:38px;flex-shrink:0;padding:5px 4px;text-align:center;font-size:13px">
         <input class="setup-input"        id="edit-p-name-${i}" value="${p.name||''}" placeholder="Name..." style="flex:1;font-size:13px">
-        <select id="edit-p-hand-${i}" style="background:var(--surface3);border:1px solid var(--border2);border-radius:4px;color:var(--text);font-family:'Barlow Condensed',sans-serif;font-size:13px;padding:4px 5px;outline:none;cursor:pointer;flex-shrink:0"><option value="R"${(p.hand||'R')==='R'?' selected':''}>R</option><option value="L"${p.hand==='L'?' selected':''}>L</option></select>
         <button onclick="savePitcherEdit(${i})" style="background:var(--accent);border:none;border-radius:5px;color:var(--bg);font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:13px;padding:5px 10px;cursor:pointer;flex-shrink:0">✓</button>
         <button onclick="cancelPitcherEdit()" style="background:none;border:1px solid var(--border);border-radius:5px;color:var(--text3);padding:6px 7px;cursor:pointer;flex-shrink:0;display:flex;align-items:center;justify-content:center"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="1" y1="1" x2="11" y2="11"/><line x1="11" y1="1" x2="1" y2="11"/></svg></button>
       `;
@@ -2952,7 +2940,7 @@ function renderPitcherList(){
       div.innerHTML=`
         <div class="pitcher-active-dot" style="background:${p.active?'var(--accent)':'transparent'};border:${p.active?'none':'1px solid var(--text3)'}"></div>
         <div class="pitcher-card-info">
-          <div class="pitcher-card-name"><span style="color:var(--text3);font-size:12px;margin-right:4px">#${p.num||'?'}</span>${p.name} <span style="font-size:9px;font-weight:700;color:${(p.hand||'R')==='L'?'var(--blue)':'var(--text3)'};letter-spacing:1px;margin-left:2px">${p.hand||'R'}HP</span>${p.active?' <span style="font-size:9px;color:var(--accent);letter-spacing:1px">NOW</span>':''}</div>
+          <div class="pitcher-card-name"><span style="color:var(--text3);font-size:12px;margin-right:4px">#${p.num||'?'}</span>${p.name}${p.active?' <span style="font-size:9px;color:var(--accent);letter-spacing:1px">NOW</span>':''}</div>
           <div class="pitcher-card-stats">${p.pitches}P · ${p.strikes}str · ${p.k}K · ${p.bb}BB · ${p.hits}H${p.swings||p.looks?' · '+p.swings+'sw/'+p.looks+'lk':''}</div>
         </div>
         <button onclick="startPitcherEdit(event,${i})" title="Edit" style="background:none;border:1px solid var(--border);border-radius:3px;color:var(--text3);font-size:10px;padding:2px 5px;cursor:pointer;opacity:0;transition:all .12s" class="pitcher-edit-btn">✎</button>
@@ -2973,10 +2961,8 @@ function savePitcherEdit(i){
   const list=activePitcherList();
   const n=qs(`edit-p-name-${i}`)?.value.trim();
   const num=qs(`edit-p-num-${i}`)?.value.trim();
-  const hand=qs(`edit-p-hand-${i}`)?.value||'R';
   if(n) list[i].name=n;
   list[i].num=num||list[i].num;
-  list[i].hand=hand;
   editingPitcher=null; renderPitcherList(); updateScoreBug();
 }
 function cancelPitcherEdit(){ editingPitcher=null; renderPitcherList(); }
@@ -4868,7 +4854,7 @@ function buildPitcherTable(pitchers, teamName){
     <div class="section-title">Pitching Stats</div>
     <table class="data-table">
       <thead><tr>
-        <th>Pitcher</th><th>#</th><th>T</th><th>G</th><th>P</th><th>K</th><th>BB</th>
+        <th>Pitcher</th><th>#</th><th>G</th><th>P</th><th>K</th><th>BB</th>
         <th>H</th><th>K/9</th><th>BB/9</th><th>K/BB</th><th>Str%</th>
         <th>Swng%</th><th>Lk%</th>
       </tr></thead>
@@ -4883,7 +4869,6 @@ function buildPitcherTable(pitchers, teamName){
         return `<tr ${clickable}>
           <td>${escHtml(p.name)}</td>
           <td class="dim">${p.num||'—'}</td>
-          <td class="dim">${p.hand||'R'}HP</td>
           <td>${p.games}</td>
           <td>${p.pitches}</td>
           <td class="${p.k>=5?'good':''}">${p.k}</td>
@@ -5162,7 +5147,6 @@ function buildPitchZoneSVG(pitches, width=320, height=300){
     if(d.startsWith('os')) return '#6ae87a';
     if(d==='ip-hit')       return '#e8c84a';
     if(d==='ip-out')       return '#c084f5';
-    if(d==='hbp')          return '#c84af0';
     return '#8a909e';
   };
 
@@ -5238,6 +5222,7 @@ function renderOutcomeBreakdown(containerId, pitches){
     else if(o==='foul')            outcomeMap.foul++;
     else if(['single','double','triple','homerun','error'].includes(o)) outcomeMap['ip-hit']++;
     else if(['groundout','flyout','lineout','sacfly','sacbunt'].includes(o)) outcomeMap['ip-out']++;
+    // hbp and ci are tracked by pitch family color, not as in-play outcomes
   });
 
   // Bar rows
@@ -5708,7 +5693,7 @@ function buildPitchBreakdown(pitches){
     else if(o==='strike-looking')  outcomeMap['strike-looking']++;
     else if(o==='foul')            outcomeMap.foul++;
     else if(['single','double','triple','homerun','error'].includes(o)) outcomeMap['ip-hit']++;
-    else if(['groundout','flyout','lineout','sacfly','sacbunt'].includes(o))      outcomeMap['ip-out']++;
+    else if(['groundout','flyout','lineout','sacfly','sacbunt'].includes(o)) outcomeMap['ip-out']++;
   });
 
   const total = pitches.length;
@@ -6270,7 +6255,7 @@ function getTeamPitchers(teamName, games){
     const pitchers=g.awayTeam===teamName ? g.awayPitchers : g.homePitchers;
     (pitchers||[]).forEach(p=>{
       if(!p.name) return;
-      if(!pitcherMap[p.name]) pitcherMap[p.name]={name:p.name,num:p.num,hand:p.hand||'R',games:0,pitches:0,strikes:0,k:0,bb:0,hits:0,swings:0,looks:0,outs:0};
+      if(!pitcherMap[p.name]) pitcherMap[p.name]={name:p.name,num:p.num,games:0,pitches:0,strikes:0,k:0,bb:0,hits:0,swings:0,looks:0,outs:0};
       const m=pitcherMap[p.name];
       if(p.pitches>0) m.games++;
       m.pitches+=p.pitches||0; m.strikes+=p.strikes||0;
@@ -6311,12 +6296,12 @@ function renderPitcher(teamName, pitcherName){
   const games   = getTeamGames(teamName);
   const allPitches = getPitcherPitches(teamName, pitcherName, games);
 
-  let career = {num:'—',hand:'R',games:0,pitches:0,strikes:0,k:0,bb:0,hits:0,swings:0,looks:0};
+  let career = {num:'—',games:0,pitches:0,strikes:0,k:0,bb:0,hits:0,swings:0,looks:0};
   games.forEach(g=>{
     const pitchers = g.awayTeam===teamName ? g.awayPitchers : g.homePitchers;
     const p = (pitchers||[]).find(x=>x.name===pitcherName);
     if(!p||!p.pitches) return;
-    career.num=p.num||career.num; career.hand=p.hand||career.hand; career.games++;
+    career.num=p.num||career.num; career.games++;
     career.pitches+=p.pitches||0; career.strikes+=p.strikes||0;
     career.k+=p.k||0; career.bb+=p.bb||0; career.hits+=p.hits||0;
     career.swings+=p.swings||0; career.looks+=p.looks||0;
