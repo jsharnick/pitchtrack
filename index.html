@@ -1327,25 +1327,41 @@ th.sorted{color:var(--accent);}
           <button class="outcome-btn" data-outcome="foul"            onclick="selectOutcome('foul')"            data-hotkey="F">Foul<span class="outcome-sub">2-strike cap</span><span class="outcome-hotkey">F</span></button>
           <button class="outcome-btn" data-outcome="hbp"             onclick="selectOutcome('hbp')"             data-hotkey="H">HBP<span class="outcome-sub">hit by pitch</span><span class="outcome-hotkey">H</span></button>
           <button class="outcome-btn" data-outcome="ci"              onclick="selectOutcome('ci')"              data-hotkey="I">CI<span class="outcome-sub">catcher's interference</span><span class="outcome-hotkey">I</span></button>
-          <button class="outcome-btn inplay-toggle" data-outcome="inplay" onclick="toggleInPlay()" id="inplay-toggle-btn" data-hotkey="P" style="grid-column:span 2">In Play <span class="outcome-sub">hit or out</span><span class="outcome-hotkey">P</span></button>
+          <button class="outcome-btn inplay-toggle" data-outcome="inplay" onclick="toggleInPlay()" id="inplay-toggle-btn" data-hotkey="P" style="grid-column:span 2">In Play <span class="outcome-sub">hit · out · sac · error</span><span class="outcome-hotkey">P</span></button>
         </div>
-        <div id="inplay-grid" style="display:none;margin-top:5px">
-          <div class="inplay-header">
-            <span style="font-size:8px;letter-spacing:2px;color:var(--accent);text-transform:uppercase;font-weight:700">— In Play —</span>
-            <button onclick="toggleInPlay()" style="background:none;border:none;color:var(--text3);cursor:pointer;font-size:11px;padding:1px 5px"></button>
+
+        <!-- In Play — two-level selector -->
+        <div id="inplay-grid" style="display:none;margin-top:6px">
+          <!-- Category row -->
+          <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:4px;margin-bottom:5px">
+            <button class="inplay-cat-btn" id="ipc-hit"  onclick="selectInPlayCat('hit')"  style="padding:6px 4px;border:1.5px solid var(--border2);border-radius:7px;background:#fff;color:var(--text2);font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:14px;cursor:pointer;transition:all .13s;text-align:center">Hit<span style="display:block;font-size:8px;font-weight:400;color:var(--text3)">1B 2B 3B HR</span></button>
+            <button class="inplay-cat-btn" id="ipc-out"  onclick="selectInPlayCat('out')"  style="padding:6px 4px;border:1.5px solid var(--border2);border-radius:7px;background:#fff;color:var(--text2);font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:14px;cursor:pointer;transition:all .13s;text-align:center">Out<span style="display:block;font-size:8px;font-weight:400;color:var(--text3)">GO FO LO</span></button>
+            <button class="inplay-cat-btn" id="ipc-sac"  onclick="selectInPlayCat('sac')"  style="padding:6px 4px;border:1.5px solid var(--border2);border-radius:7px;background:#fff;color:var(--text2);font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:14px;cursor:pointer;transition:all .13s;text-align:center">Sac<span style="display:block;font-size:8px;font-weight:400;color:var(--text3)">SF SB</span></button>
+            <button class="inplay-cat-btn outcome-btn" id="ipc-err" data-outcome="error" onclick="selectInPlayCatError()" style="padding:6px 4px;border:1.5px solid var(--border2);border-radius:7px;background:#fff;color:var(--text2);font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:14px;cursor:pointer;transition:all .13s;text-align:center">Error<span style="display:block;font-size:8px;font-weight:400;color:var(--text3)">E</span></button>
           </div>
-          <div class="outcome-grid" style="margin-top:5px">
-            <button class="outcome-btn" data-outcome="single"    onclick="selectOutcome('single')"    data-hotkey="A">Single<span class="outcome-sub">1B</span><span class="outcome-hotkey">A</span></button>
-            <button class="outcome-btn" data-outcome="double"    onclick="selectOutcome('double')"    data-hotkey="D">Double<span class="outcome-sub">2B</span><span class="outcome-hotkey">D</span></button>
-            <button class="outcome-btn" data-outcome="triple"    onclick="selectOutcome('triple')"    data-hotkey="T">Triple<span class="outcome-sub">3B</span><span class="outcome-hotkey">T</span></button>
-            <button class="outcome-btn" data-outcome="homerun"   onclick="selectOutcome('homerun')"   data-hotkey="R">Home Run<span class="outcome-sub">all score</span><span class="outcome-hotkey">R</span></button>
-            <button class="outcome-btn" data-outcome="groundout" onclick="selectOutcome('groundout')" data-hotkey="G">Ground Out<span class="outcome-sub">GO</span><span class="outcome-hotkey">G</span></button>
-            <button class="outcome-btn" data-outcome="flyout"    onclick="selectOutcome('flyout')"    data-hotkey="Y">Fly Out<span class="outcome-sub">FO</span><span class="outcome-hotkey">Y</span></button>
-            <button class="outcome-btn" data-outcome="lineout"   onclick="selectOutcome('lineout')"   data-hotkey="L">Line Out<span class="outcome-sub">LO</span><span class="outcome-hotkey">L</span></button>
-            <button class="outcome-btn" data-outcome="sacfly"    onclick="selectOutcome('sacfly')"    data-hotkey="">Sac Fly<span class="outcome-sub">SF · runner scores</span></button>
-            <button class="outcome-btn" data-outcome="sacbunt"   onclick="selectOutcome('sacbunt')"   data-hotkey="">Sac Bunt<span class="outcome-sub">SB · batter out</span></button>
-            <button class="outcome-btn" data-outcome="error"     onclick="selectOutcome('error')"     data-hotkey="E">Error<span class="outcome-sub">fielding error</span><span class="outcome-hotkey">E</span></button>
+          <!-- Sub-button panels -->
+          <div id="ipc-sub-hit" style="display:none">
+            <div class="outcome-grid">
+              <button class="outcome-btn" data-outcome="single"  onclick="selectOutcome('single')"  data-hotkey="A">Single<span class="outcome-sub">1B</span><span class="outcome-hotkey">A</span></button>
+              <button class="outcome-btn" data-outcome="double"  onclick="selectOutcome('double')"  data-hotkey="D">Double<span class="outcome-sub">2B</span><span class="outcome-hotkey">D</span></button>
+              <button class="outcome-btn" data-outcome="triple"  onclick="selectOutcome('triple')"  data-hotkey="T">Triple<span class="outcome-sub">3B</span><span class="outcome-hotkey">T</span></button>
+              <button class="outcome-btn" data-outcome="homerun" onclick="selectOutcome('homerun')" data-hotkey="R">Home Run<span class="outcome-sub">all score</span><span class="outcome-hotkey">R</span></button>
+            </div>
           </div>
+          <div id="ipc-sub-out" style="display:none">
+            <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:4px">
+              <button class="outcome-btn" data-outcome="groundout" onclick="selectOutcome('groundout')" data-hotkey="G">Ground Out<span class="outcome-sub">GO</span><span class="outcome-hotkey">G</span></button>
+              <button class="outcome-btn" data-outcome="flyout"    onclick="selectOutcome('flyout')"    data-hotkey="Y">Fly Out<span class="outcome-sub">FO</span><span class="outcome-hotkey">Y</span></button>
+              <button class="outcome-btn" data-outcome="lineout"   onclick="selectOutcome('lineout')"   data-hotkey="L">Line Out<span class="outcome-sub">LO</span><span class="outcome-hotkey">L</span></button>
+            </div>
+          </div>
+          <div id="ipc-sub-sac" style="display:none">
+            <div class="outcome-grid">
+              <button class="outcome-btn" data-outcome="sacfly"  onclick="selectOutcome('sacfly')"  data-hotkey="">Sac Fly<span class="outcome-sub">SF · runner scores</span></button>
+              <button class="outcome-btn" data-outcome="sacbunt" onclick="selectOutcome('sacbunt')" data-hotkey="">Sac Bunt<span class="outcome-sub">SB · batter out</span></button>
+            </div>
+          </div>
+
         </div>
       </div>
 
@@ -2250,11 +2266,56 @@ function isInZone(px,py){ return px>=31&&px<=69&&py>=30.9&&py<=69.1; }
 
 // ===================== OUTCOMES =====================
 let inPlayOpen=false;
+let _inPlayCat = null; // 'hit' | 'out' | 'sac' | 'err'
+
 function toggleInPlay(){
   inPlayOpen=!inPlayOpen;
   qs('inplay-grid').style.display=inPlayOpen?'block':'none';
   qs('inplay-toggle-btn').classList.toggle('open',inPlayOpen);
-  if(!inPlayOpen && S.selectedOutcome && isContactOutcome(S.selectedOutcome)){
+  if(!inPlayOpen){
+    _inPlayCat=null;
+    ['hit','out','sac','err'].forEach(c=>{
+      const sub=qs('ipc-sub-'+c); if(sub) sub.style.display='none';
+      const btn=qs('ipc-'+c); if(btn){ btn.style.background='#fff'; btn.style.borderColor='var(--border2)'; btn.style.color='var(--text2)'; }
+    });
+    if(S.selectedOutcome && isContactOutcome(S.selectedOutcome)){
+      S.selectedOutcome=null;
+      qsa('.outcome-btn').forEach(b=>b.classList.remove('selected'));
+      checkCommitReady();
+    }
+  }
+}
+
+function selectInPlayCatError(){
+  // Directly select error outcome and style the button like an active category
+  ['hit','out','sac','err'].forEach(c=>{
+    const btn=qs('ipc-'+c);
+    const sub=qs('ipc-sub-'+c);
+    if(btn){ btn.style.background='#fff'; btn.style.borderColor='var(--border2)'; btn.style.color='var(--text2)'; btn.style.borderWidth='1.5px'; }
+    if(sub) sub.style.display='none';
+  });
+  const errBtn = qs('ipc-err');
+  if(errBtn){ errBtn.style.background='rgba(204,26,26,.08)'; errBtn.style.borderColor='var(--accent)'; errBtn.style.color='var(--accent)'; errBtn.style.borderWidth='2px'; }
+  selectOutcome('error');
+}
+
+function selectInPlayCat(cat){
+  _inPlayCat = cat;
+  // Highlight active category button, hide all sub-panels
+  ['hit','out','sac','err'].forEach(c=>{
+    const btn=qs('ipc-'+c);
+    const sub=qs('ipc-sub-'+c);
+    const active = c===cat;
+    if(btn){
+      btn.style.background    = active ? 'rgba(204,26,26,.08)' : '#fff';
+      btn.style.borderColor   = active ? 'var(--accent)' : 'var(--border2)';
+      btn.style.color         = active ? 'var(--accent)' : 'var(--text2)';
+      btn.style.borderWidth   = active ? '2px' : '1.5px';
+    }
+    if(sub) sub.style.display = active ? 'block' : 'none';
+  });
+  // Clear any previously selected contact outcome
+  if(S.selectedOutcome && isContactOutcome(S.selectedOutcome)){
     S.selectedOutcome=null;
     qsa('.outcome-btn').forEach(b=>b.classList.remove('selected'));
     checkCommitReady();
@@ -2552,6 +2613,8 @@ function resetPitchControls(clearZone=true){
     qsa('#ab-strip .ab-pitch-chip').forEach(c=>c.remove());
     S.currentAtBatPitches=[]; S.pitchCount=0;
     if(inPlayOpen){inPlayOpen=false;qs('inplay-grid').style.display='none';qs('inplay-toggle-btn').classList.remove('open');}
+    _inPlayCat=null;
+    ['hit','out','sac','err'].forEach(c=>{ const s=qs('ipc-sub-'+c); if(s) s.style.display='none'; const b=qs('ipc-'+c); if(b){b.style.background='#fff';b.style.borderColor='var(--border2)';b.style.color='var(--text2)';} });
   }
 }
 // After committing a pitch mid-AB: keep zone dots, just clear outcome/type selection
@@ -2566,6 +2629,8 @@ function resetAfterPitch(){
   // Close in-play panel after a contact/in-play outcome was committed
   if(inPlayOpen && wasContact){
     inPlayOpen=false; qs('inplay-grid').style.display='none'; qs('inplay-toggle-btn').classList.remove('open');
+    _inPlayCat=null;
+    ['hit','out','sac','err'].forEach(c=>{ const s=qs('ipc-sub-'+c); if(s) s.style.display='none'; const b=qs('ipc-'+c); if(b){b.style.background='#fff';b.style.borderColor='var(--border2)';b.style.color='var(--text2)';} });
   }
 }
 function clearAtBat(){ S.balls=0; S.strikes=0; resetPitchControls(true); clearPlayBlurb(); updateScoreBug(); renderLineup(); }
