@@ -2421,7 +2421,15 @@ function commitPitch(){
 
 function currentBatterHand(){
   const b = currentBatter();
-  return b?.hand || 'R';
+  const hand = b?.hand || 'R';
+  // Switch hitter: bats opposite of pitcher handedness
+  // RHP on mound → batter bats LHH; LHP → batter bats RHH
+  if(hand === 'S'){
+    const p = activePitcher();
+    const pitcherHand = p?.hand || 'R';
+    return pitcherHand === 'L' ? 'R' : 'L';
+  }
+  return hand;
 }
 
 // Update the IN/OUT visual labels on the zone canvas based on batter handedness
@@ -6332,7 +6340,7 @@ function renderPitcher(teamName, pitcherName){
       <div class="player-number">#${career.num||'—'}</div>
       <div>
         <div class="player-info-name">${escHtml(pitcherName)}</div>
-        <div class="player-info-meta">Pitcher · ${career.hand||'R'}HP · ${escHtml(teamName)} · ${career.games} game${career.games!==1?'s':''} · ${career.pitches} pitches · ${allPitches.length} logged</div>
+        <div class="player-info-meta">Pitcher · ${escHtml(teamName)} · ${career.games} game${career.games!==1?'s':''} · ${career.pitches} pitches · ${allPitches.length} logged</div>
       </div>
       <div style="margin-left:auto;display:flex;gap:14px;align-items:center;flex-wrap:wrap">
         <div style="text-align:center"><div style="font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:28px;color:var(--accent)">${career.k}</div><div style="font-size:9px;letter-spacing:2px;color:var(--text3);text-transform:uppercase">K</div></div>
