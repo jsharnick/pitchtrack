@@ -1555,7 +1555,14 @@ th.sorted{color:var(--accent);}
   </div>
 
   <div id="hub-sidebar">
-    <span class="sidebar-label">Teams</span>
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 14px 4px">
+      <span class="sidebar-label" style="padding:0">Teams</span>
+      <div style="display:flex;gap:5px">
+        <button onclick="exportAllData()" title="Export all saved games as JSON" style="display:flex;align-items:center;gap:4px;padding:3px 8px;background:var(--surface2);border:1px solid var(--border2);border-radius:5px;font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:10px;letter-spacing:1px;color:var(--text3);cursor:pointer;transition:all .14s;white-space:nowrap" onmouseover="this.style.borderColor='var(--accent)';this.style.color='var(--accent)'" onmouseout="this.style.borderColor='var(--border2)';this.style.color='var(--text3)'">⬇ Export</button>
+        <button onclick="triggerImport()" title="Import games from JSON file" style="display:flex;align-items:center;gap:4px;padding:3px 8px;background:var(--surface2);border:1px solid var(--border2);border-radius:5px;font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:10px;letter-spacing:1px;color:var(--text3);cursor:pointer;transition:all .14s;white-space:nowrap" onmouseover="this.style.borderColor='var(--green)';this.style.color='var(--green)'" onmouseout="this.style.borderColor='var(--border2)';this.style.color='var(--text3)'">⬆ Import</button>
+        <input type="file" id="import-file-input" accept=".json" style="display:none" onchange="handleImportFile(event)">
+      </div>
+    </div>
     <div id="hub-team-list"><div class="sidebar-empty">No teams yet — save a game first</div></div>
     <div style="margin-top:12px;border-top:1px solid var(--border);padding-top:12px">
       <span class="sidebar-label">All Games</span>
@@ -4429,7 +4436,7 @@ async function saveGame(){
     let teamsRaw;
     try { teamsRaw = await window.storage.get('pitchtrack_teams', true); } catch(e){}
     const teams = teamsRaw ? JSON.parse(teamsRaw.value) : [];
-    [awayTeam, homeTeam].forEach(t=>{ if(!teams.includes(t)) teams.push(t); });
+    [awayTeam, homeTeam].forEach(t=>{ _addTeamToIndex(t, teams); });
     await window.storage.set('pitchtrack_teams', JSON.stringify(teams), true);
 
     toast(`Game saved! ${awayTeam} vs ${homeTeam} — ${date}`); try{ unsavedGame=false; updateDot(); }catch(e){}
@@ -4810,13 +4817,16 @@ function renderSidebar(){
   list.innerHTML = allTeams.map(t=>{
     const games = getTeamGames(t);
     const record = getTeamRecord(t, games);
-    return `<button class="team-btn${currentView?.type==='team'&&currentView?.data===t?' active':''}" data-team="${escAttr(t)}" onclick="showView('team',this.getAttribute('data-team'))">
-      <div class="team-icon">${teamEmoji(t)}</div>
-      <div>
-        <div class="team-name">${escHtml(t)}</div>
-        <div class="team-meta">${games.length} game${games.length!==1?'s':''} · ${record.w}-${record.l}${record.t?'-'+record.t:''}</div>
-      </div>
-    </button>`;
+    return `<div style="display:flex;align-items:center;border-left:3px solid transparent" class="${currentView?.type==='team'&&currentView?.data===t?'team-row-active':''}">
+      <button class="team-btn${currentView?.type==='team'&&currentView?.data===t?' active':''}" data-team="${escAttr(t)}" onclick="showView('team',this.getAttribute('data-team'))" style="flex:1;border-left:none">
+        <div class="team-icon">${teamEmoji(t)}</div>
+        <div>
+          <div class="team-name">${escHtml(t)}</div>
+          <div class="team-meta">${games.length} game${games.length!==1?'s':''} · ${record.w}-${record.l}${record.t?'-'+record.t:''}</div>
+        </div>
+      </button>
+      <button onclick="exportTeamData('${escAttr(t)}')" title="Export ${escHtml(t)} games" style="flex-shrink:0;padding:6px 10px;background:none;border:none;color:var(--text3);cursor:pointer;font-size:11px;transition:color .14s" onmouseover="this.style.color='var(--accent)'" onmouseout="this.style.color='var(--text3)'">⬇</button>
+    </div>`;
   }).join('');
 }
 
@@ -4863,6 +4873,7 @@ function renderAllGames(){
       <div class="game-teams">${escHtml(g.awayTeam)} <span style="color:var(--text3);font-weight:400">vs</span> ${escHtml(g.homeTeam)}</div>
       <div style="flex:1;font-size:11px;color:var(--text3)">${g.totalPitches||0} pitches · ${g.innings} inn</div>
       <div class="game-score">${g.awayScore}–${g.homeScore}</div>
+      <button onclick="event.stopPropagation();exportGameData('${g.id}')" title="Export this game" style="background:none;border:none;color:var(--text3);cursor:pointer;font-size:12px;padding:3px 5px;border-radius:4px;transition:all .13s" onmouseover="this.style.color='var(--accent)'" onmouseout="this.style.color='var(--text3)'">⬇</button>
       <button class="del-btn" onclick="event.stopPropagation();promptDeleteGame('${g.id}','${escHtml(g.awayTeam)} vs ${escHtml(g.homeTeam)} (${g.date})')"><svg xmlns="http://www.w3.org/2000/svg" width="13" height="14" viewBox="0 0 13 14" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><polyline points="1,3 12,3"/><path d="M4,3V2a1,1,0,0,1,1-1h3a1,1,0,0,1,1,1V3"/><path d="M2,3l.7,8.5A1,1,0,0,0,3.7,12.5h5.6a1,1,0,0,0,1-.99L11,3"/><line x1="5" y1="6" x2="5" y2="10"/><line x1="8" y1="6" x2="8" y2="10"/></svg></button>
     `;
     div.onclick=()=>showView('game', g.id);
@@ -5018,6 +5029,7 @@ function buildTeamGamesList(games, teamName){
         <div class="game-teams">${isHome?'vs':'@'} ${escHtml(opp)}</div>
         <div class="game-score">${tf}–${ta}</div>
         <div class="game-pitches">${g.totalPitches||0}P</div>
+        <button onclick="event.stopPropagation();exportGameData('${g.id}')" title="Export this game" style="background:none;border:none;color:var(--text3);cursor:pointer;font-size:12px;padding:3px 5px;border-radius:4px;transition:all .13s" onmouseover="this.style.color='var(--accent)'" onmouseout="this.style.color='var(--text3)'">⬇</button>
         <button class="del-btn" onclick="event.stopPropagation();promptDeleteGame('${g.id}','${escHtml(isHome?opp+' @ '+teamName:teamName+' @ '+opp)} (${g.date})')"><svg xmlns="http://www.w3.org/2000/svg" width="13" height="14" viewBox="0 0 13 14" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><polyline points="1,3 12,3"/><path d="M4,3V2a1,1,0,0,1,1-1h3a1,1,0,0,1,1,1V3"/><path d="M2,3l.7,8.5A1,1,0,0,0,3.7,12.5h5.6a1,1,0,0,0,1-.99L11,3"/><line x1="5" y1="6" x2="5" y2="10"/><line x1="8" y1="6" x2="8" y2="10"/></svg></button>
       </div>`;
     }).join('');
@@ -6693,6 +6705,121 @@ function pitchClockViolation(type){
       logEvent('⏱','Pitch Clock — Auto Ball',`${batter} · Count: ${S.balls}-${S.strikes}`);
       updateScoreBug();
     }
+  }
+}
+
+// ===================== EXPORT / IMPORT =====================
+function _downloadJSON(payload, filename){
+  const a = document.createElement('a');
+  a.href = 'data:application/json;charset=utf-8,' + encodeURIComponent(JSON.stringify(payload, null, 2));
+  a.download = filename;
+  a.click();
+}
+
+function _resolveTeamName(name, teams){
+  // Case-insensitive match — returns the existing casing if found, otherwise the new name
+  const lower = name.toLowerCase();
+  return teams.find(t => t.toLowerCase() === lower) || name;
+}
+
+function _addTeamToIndex(name, teams){
+  const resolved = _resolveTeamName(name, teams);
+  if(!teams.includes(resolved)) teams.push(resolved);
+  return resolved; // return canonical name so game object can be updated
+}
+
+function _sanitizeFilename(s){
+  return s.replace(/[^a-zA-Z0-9_\-]/g, '_').replace(/_+/g,'_').slice(0,40);
+}
+
+async function exportAllData(){
+  try {
+    const keys = await window.storage.list('ptgame_', true);
+    const games = [];
+    for(const key of (keys?.keys||[])){
+      try { const raw = await window.storage.get(key, true); if(raw?.value) games.push(JSON.parse(raw.value)); } catch(e){}
+    }
+    if(!games.length){ toast('No saved games to export.'); return; }
+    games.sort((a,b)=>b.date.localeCompare(a.date));
+    const date = new Date().toISOString().split('T')[0];
+    _downloadJSON({ exportedAt: new Date().toISOString(), gameCount: games.length, games },
+      `pitchtrack_all_${date}.json`);
+    toast(`⬇ Exported ${games.length} game${games.length!==1?'s':''}!`);
+  } catch(e){ toast('Export failed — '+(e?.message||'error')); }
+}
+
+async function exportTeamData(teamName){
+  try {
+    const keys = await window.storage.list('ptgame_', true);
+    const games = [];
+    for(const key of (keys?.keys||[])){
+      try {
+        const raw = await window.storage.get(key, true);
+        if(raw?.value){
+          const g = JSON.parse(raw.value);
+          if(g.awayTeam===teamName || g.homeTeam===teamName) games.push(g);
+        }
+      } catch(e){}
+    }
+    if(!games.length){ toast(`No games found for ${teamName}.`); return; }
+    games.sort((a,b)=>b.date.localeCompare(a.date));
+    const date = new Date().toISOString().split('T')[0];
+    const fname = `pitchtrack_${_sanitizeFilename(teamName)}_${date}.json`;
+    _downloadJSON({ exportedAt: new Date().toISOString(), team: teamName, gameCount: games.length, games }, fname);
+    toast(`⬇ Exported ${games.length} game${games.length!==1?'s':''} for ${teamName}!`);
+  } catch(e){ toast('Export failed — '+(e?.message||'error')); }
+}
+
+async function exportGameData(gameId){
+  try {
+    const raw = await window.storage.get(gameId, true);
+    if(!raw?.value){ toast('Game not found.'); return; }
+    const g = JSON.parse(raw.value);
+    const date = g.date || new Date().toISOString().split('T')[0];
+    const fname = `pitchtrack_${_sanitizeFilename(g.awayTeam)}_vs_${_sanitizeFilename(g.homeTeam)}_${date}.json`;
+    _downloadJSON({ exportedAt: new Date().toISOString(), gameCount: 1, games: [g] }, fname);
+    toast(`⬇ Exported ${g.awayTeam} vs ${g.homeTeam}!`);
+  } catch(e){ toast('Export failed — '+(e?.message||'error')); }
+}
+
+function triggerImport(){
+  const input = document.getElementById('import-file-input');
+  if(input) input.click();
+}
+
+async function handleImportFile(event){
+  const file = event.target.files?.[0];
+  if(!file){ return; }
+  // Reset input so same file can be re-imported
+  event.target.value = '';
+  try {
+    const text = await file.text();
+    const data = JSON.parse(text);
+    const games = data.games || (data.id ? [data] : []);
+    if(!games.length){ toast('No games found in file.'); return; }
+
+    let imported = 0, skipped = 0;
+    for(const g of games){
+      if(!g.id || !g.awayTeam || !g.homeTeam){ skipped++; continue; }
+      // Don't overwrite if already exists — check first
+      let exists = false;
+      try { const chk = await window.storage.get(g.id, true); if(chk?.value) exists=true; } catch(e){}
+      if(exists){ skipped++; continue; }
+      await window.storage.set(g.id, JSON.stringify(g), true);
+      // Update team index
+      const teamsRaw = await (async()=>{ try{ return await window.storage.get('pitchtrack_teams',true); }catch(e){return null;} })();
+      const teams = teamsRaw ? JSON.parse(teamsRaw.value) : [];
+      // Normalise team names to match existing casing
+      g.awayTeam = _addTeamToIndex(g.awayTeam, teams);
+      g.homeTeam = _addTeamToIndex(g.homeTeam, teams);
+      await window.storage.set('pitchtrack_teams', JSON.stringify(teams), true);
+      imported++;
+    }
+    await hubRefreshAll();
+    toast(`⬆ Imported ${imported} game${imported!==1?'s':''}${skipped?' · '+skipped+' skipped (already exist)':''}`);
+  } catch(e){
+    toast('Import failed — '+(e?.message||'invalid file'));
+    console.error('handleImportFile error:', e);
   }
 }
 
