@@ -3854,14 +3854,23 @@ function sprayBtypeLabel(btype){
 // ===================== ERROR BASE SELECT =====================
 function commitError(base){
   qs('error-modal').style.display='none';
+  const entry = S.pendingErrorEntry;
+  S.pendingErrorEntry = null;
+  // Open spray chart first, then resolve game logic
+  openSprayModal('error', entry||{}, ()=>{
+    _resolveError(base, entry);
+  });
+}
+function _resolveError(base, entry){
   const batter = currentBatter()?.name||'Batter';
   if(base==='home'){
     S.bases={'1st':false,'2nd':false,'3rd':false};
     addRun();
     toast(`💥 Error — ${batter} scores!`);
     logEvent('💥','Error — Batter Scores',`${batter} reaches on error, scores`);
+    recordAtBatResult('H','E');
+    nextBatter();
   } else {
-    // Handle runners — same as hit logic
     const runners=[];
     if(S.bases['3rd'])runners.push('3rd');
     if(S.bases['2nd'])runners.push('2nd');
@@ -3871,16 +3880,15 @@ function commitError(base){
       S.bases[base]=true;
       toast(`💥 Error — ${batter} reaches ${base}`);
       logEvent('💥','Error',`${batter} reaches ${base} on error`);
+      recordAtBatResult('H','E');
       nextBatter(); return;
     }
     // Use runner modal for baserunner advancement
     S.modalHit={hitType:'error',newBase:base,runners};
     S.runnerQueue=[...runners]; S.runnerMoves={}; S.currentQueueIdx=0;
+    recordAtBatResult('H','E');
     showRunnerModal();
-    return;
   }
-  recordAtBatResult('H','E');
-  nextBatter();
 }
 function closeErrorModal(){
   qs('error-modal').style.display='none';
