@@ -1426,7 +1426,19 @@ th.sorted{color:var(--accent);}
 
 
 <div class="mob-panel" id="mob-score-panel">
-  <div style="padding:14px">
+  <div style="padding:14px 14px 80px">
+    <div class="mob-section-title">Teams</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px">
+      <div class="setup-field">
+        <label style="font-size:8px;letter-spacing:2px;color:var(--text3);text-transform:uppercase;font-weight:600">Away Team</label>
+        <input class="setup-input" id="mob-away-name-input" placeholder="AWAY" oninput="document.getElementById('away-name-input').value=this.value;updateTeamNames()">
+      </div>
+      <div class="setup-field">
+        <label style="font-size:8px;letter-spacing:2px;color:var(--text3);text-transform:uppercase;font-weight:600">Home Team</label>
+        <input class="setup-input" id="mob-home-name-input" placeholder="HOME" oninput="document.getElementById('home-name-input').value=this.value;updateTeamNames()">
+      </div>
+    </div>
+
     <div class="mob-section-title">Score</div>
     <div class="mob-score-grid">
       <div class="mob-score-card">
@@ -1503,28 +1515,17 @@ th.sorted{color:var(--accent);}
       <div style="font-size:11px;color:var(--text3);text-align:center">Tap base to place / manage runner</div>
     </div>
 
-    <div class="mob-section-title" style="margin-top:4px">Teams</div>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px">
-      <div class="setup-field">
-        <label class="setup-field" style="font-size:8px;letter-spacing:2px;color:var(--text3);text-transform:uppercase;font-weight:600">Away Team</label>
-        <input class="setup-input" id="mob-away-name-input" placeholder="AWAY" oninput="document.getElementById('away-name-input').value=this.value;updateTeamNames()">
-      </div>
-      <div class="setup-field">
-        <label class="setup-field" style="font-size:8px;letter-spacing:2px;color:var(--text3);text-transform:uppercase;font-weight:600">Home Team</label>
-        <input class="setup-input" id="mob-home-name-input" placeholder="HOME" oninput="document.getElementById('home-name-input').value=this.value;updateTeamNames()">
-      </div>
-    </div>
   </div>
 </div>
 
 <!-- MOBILE: Lineup Panel -->
 <div class="mob-panel" id="mob-lineup-panel">
-  <div id="mob-lineup-content" style="padding:14px"></div>
+  <div id="mob-lineup-content" style="padding:14px 14px 80px"></div>
 </div>
 
 <!-- MOBILE: Pitchers Panel -->
 <div class="mob-panel" id="mob-pitchers-panel">
-  <div style="padding:14px">
+  <div style="padding:14px 14px 80px">
     <div class="mob-section-title">Pitchers</div>
     <div id="mob-pitchers-content"></div>
   </div>
@@ -1538,7 +1539,7 @@ th.sorted{color:var(--accent);}
     <div class="right-tab"       id="mob-tab-pitchmix"  onclick="mobLogTab('pitchmix')">Mix</div>
     <div class="right-tab"       id="mob-tab-gamelog"   onclick="mobLogTab('gamelog')">Log</div>
   </div>
-  <div id="mob-log-content" style="flex:1;overflow-y:auto"></div>
+  <div id="mob-log-content" style="flex:1;overflow-y:auto;padding-bottom:80px"></div>
 </div>
 
 
