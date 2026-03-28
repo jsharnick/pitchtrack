@@ -4616,57 +4616,157 @@ function renderMobLog(t){
   wrap.innerHTML = src ? src.innerHTML : '<div style="padding:20px;text-align:center;color:var(--text3);font-size:12px">No data yet.</div>';
 }
 
+let _mobEditingPitcher = null;
+let _mobEditingSlot    = null;
+
+// ── MOBILE PITCHERS ──────────────────────────────────────────────
 function renderMobPitchers(){
   const wrap = document.getElementById('mob-pitchers-content');
   if(!wrap) return;
-  // Clone the pitcher list from the desktop left panel
-  const src = document.getElementById('panel-left');
-  if(!src) return;
-  // Get pitcher section from panel-left
-  const pitcherSection = src.querySelector('#pitcher-list-wrap') || src.querySelector('[id*="pitcher"]');
-  // Render full pitcher controls: active pitcher list + add form
-  wrap.innerHTML = '';
 
-  // Team label
-  const teamLabel = document.createElement('div');
-  teamLabel.style.cssText = 'font-size:8px;letter-spacing:2px;color:var(--text3);text-transform:uppercase;font-weight:600;margin-bottom:8px';
-  teamLabel.textContent = S.isTop ? 'HOME PITCHING' : 'AWAY PITCHING';
-  wrap.appendChild(teamLabel);
+  const list = activePitcherList();
+  const teamLabel = S.isTop ? 'HOME PITCHING' : 'AWAY PITCHING';
+  let html = `<div style="font-size:8px;letter-spacing:2px;color:var(--text3);text-transform:uppercase;font-weight:600;margin-bottom:10px">${teamLabel}</div>`;
 
-  // Clone pitcher list
-  const pListSrc = document.getElementById('pitcher-list');
-  if(pListSrc){
-    const clone = pListSrc.cloneNode(true);
-    clone.id = 'mob-pitcher-list-clone';
-    // Fix onclick handlers — they reference indices that still work globally
-    wrap.appendChild(clone);
-  }
+  list.forEach((p, i) => {
+    const isEditing = _mobEditingPitcher === i;
+    const handColor = (p.hand||'R')==='L' ? 'var(--blue)' : 'var(--text3)';
+    if(isEditing){
+      html += `<div style="background:var(--surface2);border:1px solid var(--border2);border-radius:8px;padding:10px;margin-bottom:8px">
+        <div style="font-size:8px;letter-spacing:2px;color:var(--text3);text-transform:uppercase;font-weight:600;margin-bottom:8px">Edit Pitcher</div>
+        <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">
+          <input id="mob-ep-num-${i}"  value="${p.num||''}"  placeholder="#" style="width:44px;background:var(--surface3);border:1px solid var(--border2);border-radius:5px;color:var(--text);font-family:'Barlow Condensed',sans-serif;font-size:14px;padding:6px 6px;outline:none;text-align:center">
+          <input id="mob-ep-name-${i}" value="${p.name||''}" placeholder="Name..." style="flex:1;min-width:100px;background:var(--surface3);border:1px solid var(--border2);border-radius:5px;color:var(--text);font-family:'Barlow Condensed',sans-serif;font-size:14px;padding:6px 8px;outline:none">
+          <select id="mob-ep-hand-${i}" style="background:var(--surface3);border:1px solid var(--border2);border-radius:5px;color:var(--text);font-family:'Barlow Condensed',sans-serif;font-size:14px;padding:6px 6px;outline:none;cursor:pointer">
+            <option value="R"${(p.hand||'R')==='R'?' selected':''}>R</option>
+            <option value="L"${p.hand==='L'?' selected':''}>L</option>
+          </select>
+          <button onclick="saveMobPitcherEdit(${i})" style="background:var(--accent);border:none;border-radius:5px;color:#fff;font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:14px;padding:7px 12px;cursor:pointer">✓</button>
+          <button onclick="_mobEditingPitcher=null;renderMobPitchers()" style="background:none;border:1px solid var(--border);border-radius:5px;color:var(--text3);padding:7px 10px;cursor:pointer">✕</button>
+        </div>
+      </div>`;
+    } else {
+      html += `<div style="display:flex;align-items:center;gap:8px;padding:9px 10px;background:${p.active?'rgba(204,26,26,.06)':'var(--surface2)'};border:${p.active?'1.5px solid var(--accent)':'1px solid var(--border)'};border-radius:8px;margin-bottom:6px;cursor:pointer" onclick="setActivePitcher(${i});renderMobPitchers()">
+        <div style="width:8px;height:8px;border-radius:50%;flex-shrink:0;background:${p.active?'var(--accent)':'transparent'};border:${p.active?'none':'1px solid var(--text3)'}"></div>
+        <div style="flex:1;min-width:0">
+          <div style="font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:15px;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">
+            <span style="color:var(--text3);font-size:12px;margin-right:4px">#${p.num||'?'}</span>${p.name}
+            <span style="font-size:9px;font-weight:700;color:${handColor};letter-spacing:1px;margin-left:4px">${p.hand||'R'}HP</span>
+            ${p.active?'<span style="font-size:9px;color:var(--accent);letter-spacing:1px;margin-left:4px">NOW</span>':''}
+          </div>
+          <div style="font-family:'Share Tech Mono',monospace;font-size:9px;color:var(--text3);margin-top:2px">${p.pitches}P · ${p.strikes}str · ${p.k}K · ${p.bb}BB · ${p.hits}H</div>
+        </div>
+        <button onclick="event.stopPropagation();_mobEditingPitcher=${i};renderMobPitchers()" style="background:none;border:1px solid var(--border);border-radius:4px;color:var(--text3);font-size:11px;padding:4px 8px;cursor:pointer">✎</button>
+        <button onclick="event.stopPropagation();removePitcher(event,${i});renderMobPitchers()" style="background:none;border:none;color:var(--text3);font-size:13px;padding:4px 7px;cursor:pointer;opacity:.5">✕</button>
+      </div>`;
+    }
+  });
 
-  // Add pitcher form clone
-  const addBtn = document.createElement('button');
-  addBtn.style.cssText = 'width:100%;margin-top:10px;padding:10px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;font-family:"Barlow Condensed",sans-serif;font-weight:700;font-size:14px;color:var(--text2);cursor:pointer;letter-spacing:1px';
-  addBtn.textContent = '+ Add Pitcher';
-  addBtn.onclick = () => { mobTab('zone'); toggleAddPitcherForm(); };
-  wrap.appendChild(addBtn);
+  // Add pitcher form
+  html += `<div style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:10px;margin-top:4px">
+    <div style="font-size:8px;letter-spacing:2px;color:var(--text3);text-transform:uppercase;font-weight:600;margin-bottom:8px">Add Pitcher</div>
+    <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">
+      <input id="mob-np-num"  placeholder="#" style="width:44px;background:#fff;border:1px solid var(--border);border-radius:5px;color:var(--text);font-family:'Barlow Condensed',sans-serif;font-size:14px;padding:6px 6px;outline:none;text-align:center">
+      <input id="mob-np-name" placeholder="Name..." style="flex:1;min-width:100px;background:#fff;border:1px solid var(--border);border-radius:5px;color:var(--text);font-family:'Barlow Condensed',sans-serif;font-size:14px;padding:6px 8px;outline:none">
+      <select id="mob-np-hand" style="background:#fff;border:1px solid var(--border);border-radius:5px;color:var(--text);font-family:'Barlow Condensed',sans-serif;font-size:14px;padding:6px 6px;outline:none;cursor:pointer">
+        <option value="R">R</option>
+        <option value="L">L</option>
+      </select>
+      <button onclick="addMobPitcher()" style="background:var(--accent);border:none;border-radius:5px;color:#fff;font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:13px;padding:7px 12px;cursor:pointer;white-space:nowrap">+ Add</button>
+    </div>
+  </div>`;
 
-  // Switch side button
-  const switchLabel = document.createElement('div');
-  switchLabel.style.cssText = 'font-size:8px;letter-spacing:2px;color:var(--text3);text-transform:uppercase;font-weight:600;margin:14px 0 8px';
-  switchLabel.textContent = 'OTHER TEAM';
-  wrap.appendChild(switchLabel);
-
-  const otherTeamLabel = document.createElement('div');
-  otherTeamLabel.style.cssText = 'font-size:11px;color:var(--text3);padding:8px;background:var(--surface2);border-radius:6px;text-align:center';
-  const otherPitchers = S.isTop ? S.pitchersAway : S.pitchersHome;
-  otherTeamLabel.textContent = otherPitchers.filter(p=>p.pitches>0).map(p=>`#${p.num||'?'} ${p.name}: ${p.pitches}P`).join(' · ') || 'No pitches yet';
-  wrap.appendChild(otherTeamLabel);
+  wrap.innerHTML = html;
 }
 
+function saveMobPitcherEdit(i){
+  const list = activePitcherList();
+  const n    = document.getElementById(`mob-ep-name-${i}`)?.value.trim();
+  const num  = document.getElementById(`mob-ep-num-${i}`)?.value.trim();
+  const hand = document.getElementById(`mob-ep-hand-${i}`)?.value || 'R';
+  if(n) list[i].name = n;
+  list[i].num  = num  || list[i].num;
+  list[i].hand = hand;
+  _mobEditingPitcher = null;
+  renderMobPitchers(); updateScoreBug();
+}
+
+function addMobPitcher(){
+  const name = document.getElementById('mob-np-name')?.value.trim();
+  const num  = document.getElementById('mob-np-num')?.value.trim();
+  const hand = document.getElementById('mob-np-hand')?.value || 'R';
+  if(!name) return;
+  activePitcherList().forEach(p=>p.active=false);
+  activePitcherList().push({name,num,hand,pitches:0,strikes:0,k:0,bb:0,swings:0,looks:0,hits:0,active:true});
+  document.getElementById('mob-np-name').value='';
+  document.getElementById('mob-np-num').value='';
+  renderMobPitchers(); renderPitcherList(); updateScoreBug();
+  toast(`Pitching: #${num} ${name}`);
+}
+
+// ── MOBILE LINEUP ─────────────────────────────────────────────────
 function renderMobLineup(){
   const wrap = document.getElementById('mob-lineup-content');
   if(!wrap) return;
-  const lp = document.getElementById('panel-left');
-  if(lp) wrap.innerHTML = lp.innerHTML;
+
+  const lineup  = currentLineup();
+  const idx     = currentBatterIdx() % lineup.length;
+  const side    = S.isTop ? 'away' : 'home';
+  const label   = S.isTop ? 'AWAY BATTING ORDER' : 'HOME BATTING ORDER';
+
+  let html = `<div style="font-size:8px;letter-spacing:2px;color:var(--text3);text-transform:uppercase;font-weight:600;margin-bottom:10px">${label}</div>`;
+
+  lineup.forEach((b, i) => {
+    const isActive  = i === idx;
+    const isEditing = _mobEditingSlot?.side === side && _mobEditingSlot?.idx === i;
+    const handColor = b.hand==='L'?'var(--blue)':b.hand==='S'?'var(--foul)':'var(--text3)';
+
+    if(isEditing){
+      html += `<div style="background:var(--surface2);border:1px solid var(--border2);border-radius:8px;padding:10px;margin-bottom:6px">
+        <div style="font-size:8px;letter-spacing:2px;color:var(--text3);text-transform:uppercase;font-weight:600;margin-bottom:8px">${i+1}. Edit Player</div>
+        <div style="display:flex;gap:5px;align-items:center;flex-wrap:wrap">
+          <input id="mob-el-num-${i}"  value="${b.num||''}"  placeholder="#"   style="width:44px;background:var(--surface3);border:1px solid var(--border2);border-radius:5px;color:var(--text);font-family:'Barlow Condensed',sans-serif;font-size:14px;padding:6px 5px;outline:none;text-align:center">
+          <input id="mob-el-name-${i}" value="${b.name||''}" placeholder="Name..." style="flex:1;min-width:100px;background:var(--surface3);border:1px solid var(--border2);border-radius:5px;color:var(--text);font-family:'Barlow Condensed',sans-serif;font-size:14px;padding:6px 8px;outline:none">
+          <input id="mob-el-pos-${i}"  value="${b.pos||''}"  placeholder="POS" maxlength="3" style="width:44px;background:var(--surface3);border:1px solid var(--border2);border-radius:5px;color:var(--text);font-family:'Barlow Condensed',sans-serif;font-size:14px;padding:6px 5px;outline:none;text-align:center;text-transform:uppercase">
+          <select id="mob-el-hand-${i}" style="background:var(--surface3);border:1px solid var(--border2);border-radius:5px;color:var(--text);font-family:'Barlow Condensed',sans-serif;font-size:14px;padding:6px 6px;outline:none;cursor:pointer">
+            <option value="R"${(b.hand||'R')==='R'?' selected':''}>R</option>
+            <option value="L"${b.hand==='L'?' selected':''}>L</option>
+            <option value="S"${b.hand==='S'?' selected':''}>S</option>
+          </select>
+          <button onclick="saveMobLineupSlot(${i})" style="background:var(--accent);border:none;border-radius:5px;color:#fff;font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:14px;padding:7px 12px;cursor:pointer">✓</button>
+          <button onclick="_mobEditingSlot=null;renderMobLineup()" style="background:none;border:1px solid var(--border);border-radius:5px;color:var(--text3);padding:7px 10px;cursor:pointer">✕</button>
+        </div>
+      </div>`;
+    } else {
+      html += `<div style="display:flex;align-items:center;gap:8px;padding:8px 10px;background:${isActive?'linear-gradient(90deg,rgba(204,26,26,.08),transparent)':'transparent'};border-left:${isActive?'3px solid var(--accent)':'3px solid transparent'};border-radius:6px;margin-bottom:2px" onclick="setBatterIdx(${i});clearAtBat()">
+        <div style="font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:12px;color:${isActive?'var(--accent)':'var(--text3)'};width:14px;text-align:center;flex-shrink:0">${i+1}</div>
+        <div style="font-family:'Share Tech Mono',monospace;font-size:9px;color:${isActive?'var(--accent)':'var(--text2)'};width:26px;text-align:center;flex-shrink:0;background:var(--surface3);border-radius:3px;padding:1px 2px">#${b.num||'—'}</div>
+        <div style="flex:1;min-width:0">
+          <div style="font-family:'Barlow Condensed',sans-serif;font-weight:600;font-size:14px;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">
+            ${b.name} <span style="font-size:9px;font-weight:700;color:${handColor};letter-spacing:1px;margin-left:2px">${b.hand||'R'}</span>
+          </div>
+          <div style="font-size:8px;font-weight:600;color:var(--text3);letter-spacing:1px;background:var(--surface3);padding:1px 4px;border-radius:2px;display:inline-block;margin-top:1px">${b.pos}</div>
+        </div>
+        <button onclick="event.stopPropagation();_mobEditingSlot={side:'${side}',idx:${i}};renderMobLineup()" style="background:none;border:1px solid var(--border);border-radius:4px;color:var(--text3);font-size:11px;padding:5px 9px;cursor:pointer;flex-shrink:0">✎</button>
+      </div>`;
+    }
+  });
+
+  wrap.innerHTML = html;
+}
+
+function saveMobLineupSlot(i){
+  const lineup = currentLineup();
+  const n    = document.getElementById(`mob-el-name-${i}`)?.value.trim();
+  const num  = document.getElementById(`mob-el-num-${i}`)?.value.trim();
+  const pos  = document.getElementById(`mob-el-pos-${i}`)?.value.trim().toUpperCase();
+  const hand = document.getElementById(`mob-el-hand-${i}`)?.value || 'R';
+  if(n)   lineup[i].name = n;
+  if(pos) lineup[i].pos  = pos;
+  lineup[i].num  = num  || lineup[i].num;
+  lineup[i].hand = hand;
+  _mobEditingSlot = null;
+  renderMobLineup(); updateScoreBug();
 }
 
 function updateMobScore(){
