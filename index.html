@@ -5440,11 +5440,11 @@ function buildPitchZoneSVG(pitches, width=320, height=300){
 // ===== OUTCOME BREAKDOWN RENDERER (called on pitch type filter change) =====
 function renderOutcomeBreakdown(containerId, pitches){
   const typeColors={FB:'#2878d4',CT:'#0a3a6a',SI:'#4a9ec8',CB:'#d42828',SL:'#e05c10',SP:'#6a0a5a',CH:'#28a83a',KN:'#8a8a00'};
-  const outLabels={'ball':'Ball','strike-swinging':'Swing K','strike-looking':'Called K','foul':'Foul','ip-hit':'In Play (Hit)','ip-out':'In Play (Out)'};
-  const outColors={'ball':'#1a6abf','strike-swinging':'#8a0000','strike-looking':'#c01a1a','foul':'#8a4a00','ip-hit':'#9a7a00','ip-out':'#6a1ab0'};
+  const outLabels={'ball':'Ball','strike-swinging':'Swing K','strike-looking':'Called K','foul':'Foul','ip-hit':'In Play (Hit)','ip-out':'In Play (Out)','hbp':'HBP','ci':'CI'};
+  const outColors={'ball':'#1a6abf','strike-swinging':'#8a0000','strike-looking':'#c01a1a','foul':'#8a4a00','ip-hit':'#9a7a00','ip-out':'#6a1ab0','hbp':'#8822cc','ci':'#8822cc'};
 
   const total = pitches.length;
-  const outcomeMap={ball:0,'strike-swinging':0,'strike-looking':0,foul:0,'ip-hit':0,'ip-out':0};
+  const outcomeMap={ball:0,'strike-swinging':0,'strike-looking':0,foul:0,'ip-hit':0,'ip-out':0,hbp:0,ci:0};
   pitches.forEach(p=>{
     const o=p.outcome;
     if(o==='ball') outcomeMap.ball++;
@@ -5453,6 +5453,8 @@ function renderOutcomeBreakdown(containerId, pitches){
     else if(o==='foul')            outcomeMap.foul++;
     else if(['single','double','triple','homerun','error'].includes(o)) outcomeMap['ip-hit']++;
     else if(['groundout','flyout','lineout','sacfly','sacbunt'].includes(o)) outcomeMap['ip-out']++;
+    else if(o==='hbp') outcomeMap.hbp++;
+    else if(o==='ci')  outcomeMap.ci++;
   });
 
   // Bar rows
@@ -5473,13 +5475,23 @@ function renderOutcomeBreakdown(containerId, pitches){
   const slices = Object.entries(outcomeMap).filter(([,n])=>n>0).map(([o,n])=>({label:outLabels[o]||o,value:n,color:outColors[o]||'#8a909e'}));
   const pieHTML = buildPieChart(slices, 130);
 
+  // Rebuild pitch mix (type) pie from filtered pitches
+  const typeColors2={FB:'#2878d4',CT:'#0a3a6a',SI:'#4a9ec8',CB:'#d42828',SL:'#e05c10',SP:'#6a0a5a',CH:'#28a83a',KN:'#8a8a00'};
+  const typeCount={};
+  pitches.forEach(p=>{ if(p.pitchType&&p.pitchType!=='—') typeCount[p.pitchType]=(typeCount[p.pitchType]||0)+1; });
+  const typeSlices2 = Object.entries(typeCount).filter(([,n])=>n>0).map(([t,n])=>({label:t,value:n,color:typeColors2[t]||'#8a909e'}));
+
   // Update bar view
   const barEl = document.getElementById(containerId+'-outcome-bars');
   if(barEl) barEl.innerHTML = barHTML;
 
-  // Update pie view
+  // Update outcome pie
   const pieEl = document.getElementById(containerId+'-outcome-pie');
   if(pieEl) pieEl.innerHTML = pieHTML;
+
+  // Update pitch mix pie
+  const typePieEl = document.getElementById(containerId+'-type-pie');
+  if(typePieEl) typePieEl.innerHTML = buildPieChart(typeSlices2, 130);
 
   // Update total label
   const lblEl = document.getElementById(containerId+'-outcome-total');
@@ -5524,6 +5536,24 @@ function applyOutcomeFilter(containerId){
 
   const filtered = activeTypes.size===0 ? pitches : pitches.filter(p=>activeTypes.has(p.pitchType||'—'));
   renderOutcomeBreakdown(containerId, filtered);
+
+  // Also update Pitch Arsenal stats and Results Against if they exist on the page
+  const pmixContainer = document.getElementById('pmix-container');
+  if(pmixContainer){
+    let allPitches = [];
+    try { allPitches = JSON.parse(pmixContainer.getAttribute('data-all-pitches')||'[]'); } catch(e){}
+    const showAll = activeTypes.size === 0;
+    const pmixFiltered = showAll ? allPitches : allPitches.filter(p=>activeTypes.has(p.pitchType||'—'));
+    const arsenalTitle  = document.getElementById('pmix-arsenal-title');
+    const arsenalStats  = document.getElementById('pmix-arsenal-stats');
+    const resultsEl     = document.getElementById('pmix-results');
+    const label = showAll ? `Pitch Arsenal · ${allPitches.length} pitches`
+      : `Pitch Arsenal · ${[...activeTypes].join('+')} · ${pmixFiltered.length} pitches`;
+    if(arsenalTitle) arsenalTitle.textContent = label;
+    // Only update the stat cards — the breakdown chart/filter below stays untouched
+    if(arsenalStats) arsenalStats.innerHTML = buildArsenalStats(pmixFiltered);
+    if(resultsEl) resultsEl.innerHTML = pmixFiltered.length ? buildPitcherResultsBreakdown(pmixFiltered) : '<div class="empty-state" style="padding:20px 0">No pitches for selection</div>';
+  }
 }
 
 // ===== PITCH BREAKDOWN CHARTS =====
@@ -5592,10 +5622,12 @@ function buildPitchTypeDetail(pitches){
   const byType={};
   pitches.forEach(p=>{
     const t=p.pitchType||'—'; if(t==='—') return;
-    if(!byType[t]) byType[t]={count:0,vels:[],hits:0,ab:0,swings:0,whiffs:0,balls:0};
+    if(!byType[t]) byType[t]={count:0,vels:[],hits:0,ab:0,swings:0,whiffs:0,balls:0,strikes:0,fp:0,fpStrikes:0};
     byType[t].count++;
     const v=parseFloat(p.velocity); if(!isNaN(v)&&v>0) byType[t].vels.push(v);
     const o=p.outcome;
+    if(_isFirstPitch(p)){ byType[t].fp++; if(_isStrike(o)) byType[t].fpStrikes++; }
+    if(_isStrike(o)) byType[t].strikes++;
     if(['single','double','triple','homerun'].includes(o)){byType[t].hits++;byType[t].ab++;}
     else if(['groundout','flyout','lineout','sacfly','sacbunt','error'].includes(o)){byType[t].ab++;}
     else if(o==='strike-swinging'){byType[t].swings++;byType[t].whiffs++;}
@@ -5618,7 +5650,7 @@ function buildPitchTypeDetail(pitches){
           <div style="font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:14px;letter-spacing:1px">${t}</div>
           <div style="margin-left:auto;font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--text3)">${d.count} pitches · ${pct}%</div>
         </div>
-        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:6px">
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px">
           <div style="text-align:center;background:var(--surface2);border-radius:6px;padding:6px 4px">
             <div style="font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:16px;color:var(--accent)">${avgV}</div>
             <div style="font-size:8px;letter-spacing:1px;color:var(--text3);text-transform:uppercase">Avg MPH</div>
@@ -5634,6 +5666,14 @@ function buildPitchTypeDetail(pitches){
           <div style="text-align:center;background:var(--surface2);border-radius:6px;padding:6px 4px">
             <div style="font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:16px">${whiffPct}</div>
             <div style="font-size:8px;letter-spacing:1px;color:var(--text3);text-transform:uppercase">Whiff%</div>
+          </div>
+          <div style="text-align:center;background:var(--surface2);border-radius:6px;padding:6px 4px">
+            <div style="font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:16px;color:#cc1a1a">${d.count>0?Math.round(d.strikes/d.count*100)+'%':'—'}</div>
+            <div style="font-size:8px;letter-spacing:1px;color:var(--text3);text-transform:uppercase">Strike%</div>
+          </div>
+          <div style="text-align:center;background:var(--surface2);border-radius:6px;padding:6px 4px">
+            <div style="font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:16px;color:${d.fp>0&&Math.round(d.fpStrikes/d.fp*100)>=60?'#1a8a3a':d.fp>0&&Math.round(d.fpStrikes/d.fp*100)<50?'#cc1a1a':'var(--text)'}">${d.fp>0?Math.round(d.fpStrikes/d.fp*100)+'%':'—'}</div>
+            <div style="font-size:8px;letter-spacing:1px;color:var(--text3);text-transform:uppercase">FPS%</div>
           </div>
         </div>
         <div style="margin-top:8px;background:var(--surface3);border-radius:4px;height:6px;overflow:hidden">
@@ -5912,7 +5952,7 @@ function buildPitchBreakdown(pitches){
   // Pitch type counts
   const typeMap={FB:0,CB:0,SL:0,CH:0,CT:0,SP:0,SI:0,KN:0};
   const typeColors={FB:'#2878d4',CT:'#0a3a6a',SI:'#4a9ec8',CB:'#d42828',SL:'#e05c10',SP:'#6a0a5a',CH:'#28a83a',KN:'#8a8a00'};
-  const outcomeMap={ball:0,'strike-swinging':0,'strike-looking':0,foul:0,'ip-hit':0,'ip-out':0};
+  const outcomeMap={ball:0,'strike-swinging':0,'strike-looking':0,foul:0,'ip-hit':0,'ip-out':0,hbp:0,ci:0};
 
   pitches.forEach(p=>{
     const t=p.pitchType;
@@ -5923,7 +5963,9 @@ function buildPitchBreakdown(pitches){
     else if(o==='strike-looking')  outcomeMap['strike-looking']++;
     else if(o==='foul')            outcomeMap.foul++;
     else if(['single','double','triple','homerun','error'].includes(o)) outcomeMap['ip-hit']++;
-    else if(['groundout','flyout','lineout','sacfly','sacbunt'].includes(o))      outcomeMap['ip-out']++;
+    else if(['groundout','flyout','lineout','sacfly','sacbunt'].includes(o)) outcomeMap['ip-out']++;
+    else if(o==='hbp') outcomeMap.hbp++;
+    else if(o==='ci')  outcomeMap.ci++;
   });
 
   const total = pitches.length;
@@ -5943,8 +5985,8 @@ function buildPitchBreakdown(pitches){
       </div>`;
     }).join('');
 
-  const outLabels={'ball':'Ball','strike-swinging':'Swing K','strike-looking':'Called K','foul':'Foul','ip-hit':'In Play (Hit/Reach)','ip-out':'In Play (Out)'};
-  const outColors={'ball':'#1a6abf','strike-swinging':'#8a0000','strike-looking':'#c01a1a','foul':'#8a4a00','ip-hit':'#9a7a00','ip-out':'#6a1ab0'};
+  const outLabels={'ball':'Ball','strike-swinging':'Swing K','strike-looking':'Called K','foul':'Foul','ip-hit':'In Play (Hit)','ip-out':'In Play (Out)','hbp':'HBP','ci':'CI'};
+  const outColors={'ball':'#1a6abf','strike-swinging':'#8a0000','strike-looking':'#c01a1a','foul':'#8a4a00','ip-hit':'#9a7a00','ip-out':'#6a1ab0','hbp':'#8822cc','ci':'#8822cc'};
   const outcomeRows = Object.entries(outcomeMap)
     .filter(([,n])=>n>0)
     .sort((a,b)=>b[1]-a[1])
@@ -5979,7 +6021,7 @@ function buildPitchBreakdown(pitches){
   const pitchTypes = [...new Set(pitches.map(p=>p.pitchType).filter(t=>t&&t!=='—'))].sort((a,b)=>pitches.filter(p=>p.pitchType===b).length-pitches.filter(p=>p.pitchType===a).length);
   const typeColors2={FB:'#2878d4',CT:'#0a3a6a',SI:'#4a9ec8',CB:'#d42828',SL:'#e05c10',SP:'#6a0a5a',CH:'#28a83a',KN:'#8a8a00'};
   const bdId = 'bd-'+Math.random().toString(36).slice(2,8);
-  const pitchesJson = JSON.stringify(pitches.map(p=>({pitchType:p.pitchType,outcome:p.outcome,velocity:p.velocity})));
+  const pitchesJson = JSON.stringify(pitches.map(p=>({pitchType:p.pitchType,outcome:p.outcome,velocity:p.velocity,balls:p.balls||0,strikes:p.strikes||0})));
   const ofBtnsFixed = pitchTypes.length > 1 ? pitchTypes.map(t=>`
     <button data-of-type="${t}" data-active="true"
       onclick="toggleOutcomeFilter(this,'${bdId}')"
@@ -6045,7 +6087,7 @@ function buildPitchBreakdown(pitches){
     <!-- PIE VIEW (hidden by default) -->
     <div data-chart-view="pie" style="display:none">
       <div style="font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:9px;letter-spacing:3px;text-transform:uppercase;color:#8a909e;margin-bottom:10px">Pitch Mix</div>
-      ${buildPieChart(typeSlices, 130)}
+      <div id="${bdId}-type-pie">${buildPieChart(typeSlices, 130)}</div>
       <div style="font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:9px;letter-spacing:3px;text-transform:uppercase;color:#8a909e;margin:14px 0 10px">Outcomes</div>
       <div id="${bdId}-outcome-pie">${buildPieChart(outcomeSlices, 130)}</div>
     </div>
@@ -6302,53 +6344,95 @@ function buildBattedBallBreakdown(pitches){
     </div>`;
 }
 
+// Strike outcomes: called K, swinging K, foul, any ball in play (batted ball = pitcher threw a strike)
+function _isStrike(o){ return ['strike-swinging','strike-looking','foul','single','double','triple','homerun','groundout','flyout','lineout','sacfly','sacbunt','error'].includes(o); }
+
+// First pitch of an at-bat: pitch num===1 within the at-bat context
+// We detect this by looking for pitches where balls===0 && strikes===0 at time of throw
+function _isFirstPitch(p){ return (p.balls||0)===0 && (p.strikes||0)===0; }
+
 function buildZoneTendencies(pitches){
   if(!pitches.length) return '<div class="empty-state" style="padding:20px 0">No data</div>';
   const inZone = pitches.filter(p=>p.pitchX!=null&&p.pitchX>=31&&p.pitchX<=69&&p.pitchY!=null&&p.pitchY>=30.9&&p.pitchY<=69.1);
-  const outZone = pitches.filter(p=>p.pitchX!=null&&!(p.pitchX>=31&&p.pitchX<=69&&p.pitchY!=null&&p.pitchY>=30.9&&p.pitchY<=69.1));
   const total=pitches.length;
   const balls=pitches.filter(p=>p.outcome==='ball').length;
   const swStrikes=pitches.filter(p=>p.outcome==='strike-swinging').length;
   const calledStrikes=pitches.filter(p=>p.outcome==='strike-looking').length;
   const fouls=pitches.filter(p=>p.outcome==='foul').length;
   const contact=pitches.filter(p=>['single','double','triple','homerun','groundout','flyout','lineout','sacfly','sacbunt','error'].includes(p.outcome)).length;
+  const totalStrikes = pitches.filter(p=>_isStrike(p.outcome)).length;
+  const strPct = total>0 ? Math.round(totalStrikes/total*100) : 0;
 
-  const row=(label,n,col)=>`<div style="display:flex;align-items:center;justify-content:space-between;padding:6px 10px;border-radius:6px;margin-bottom:4px;background:#f8f9fb">
+  // First-pitch strike%
+  const fp = pitches.filter(p=>_isFirstPitch(p));
+  const fpStrikes = fp.filter(p=>_isStrike(p.outcome)).length;
+  const fpsPct = fp.length>0 ? Math.round(fpStrikes/fp.length*100) : null;
+
+  // Per pitch-type strike%
+  const typeColors={FB:'#2878d4',CT:'#0a3a6a',SI:'#4a9ec8',CB:'#d42828',SL:'#e05c10',SP:'#6a0a5a',CH:'#28a83a',KN:'#8a8a00'};
+  const byType={};
+  pitches.forEach(p=>{
+    const t=p.pitchType; if(!t||t==='—') return;
+    if(!byType[t]) byType[t]={total:0,strikes:0};
+    byType[t].total++;
+    if(_isStrike(p.outcome)) byType[t].strikes++;
+  });
+  const typeStrRows = Object.entries(byType)
+    .filter(([,d])=>d.total>=1)
+    .sort((a,b)=>b[1].total-a[1].total)
+    .map(([t,d])=>{
+      const pct=Math.round(d.strikes/d.total*100);
+      const col=typeColors[t]||'#8a909e';
+      return `<div style="display:flex;align-items:center;gap:8px;margin-bottom:5px">
+        <div style="font-family:'Share Tech Mono',monospace;font-size:10px;color:${col};width:28px;flex-shrink:0;font-weight:700">${t}</div>
+        <div style="flex:1;background:#e8eaee;border-radius:3px;height:12px;overflow:hidden">
+          <div style="width:${pct}%;height:100%;background:${col};border-radius:3px;opacity:.85"></div>
+        </div>
+        <div style="font-family:'Share Tech Mono',monospace;font-size:10px;color:#8a909e;width:52px;text-align:right;flex-shrink:0">${d.strikes}/${d.total} · ${pct}%</div>
+      </div>`;
+    }).join('');
+
+  const row=(label,n,col,extra='')=>`<div style="display:flex;align-items:center;justify-content:space-between;padding:6px 10px;border-radius:6px;margin-bottom:4px;background:#f8f9fb">
     <span style="font-family:'Barlow Condensed',sans-serif;font-weight:600;font-size:13px;color:#4a5060">${label}</span>
-    <span style="font-family:'Share Tech Mono',monospace;font-size:11px;color:${col||'#8a909e'}">${n} <span style="opacity:.6">(${Math.round(n/total*100)}%)</span></span>
+    <span style="font-family:'Share Tech Mono',monospace;font-size:11px;color:${col||'#8a909e'}">${n}${extra}</span>
   </div>`;
 
   return `
     <div style="margin-bottom:14px">
       ${row('Total Pitches', total, '#111318')}
-      ${row('In Zone', inZone.length, '#cc1a1a')}
-      ${row('Out of Zone', outZone.length, '#5baef5')}
-      ${row('Balls', balls, '#1a5acc')}
-      ${row('Called Strikes', calledStrikes, '#f57a7a')}
-      ${row('Swinging Strikes', swStrikes, '#cc1a1a')}
-      ${row('Foul Balls', fouls, '#c07020')}
-      ${row('Balls in Play', contact, '#1a8a3a')}
+      ${row('Strikes (all)', totalStrikes, '#cc1a1a', ` <span style="opacity:.6">(${strPct}%)</span>`)}
+      ${row('Balls', balls, '#1a5acc', ` <span style="opacity:.6">(${total>0?Math.round(balls/total*100):0}%)</span>`)}
+      ${row('Called Strikes', calledStrikes, '#f57a7a', ` <span style="opacity:.6">(${total>0?Math.round(calledStrikes/total*100):0}%)</span>`)}
+      ${row('Swinging Strikes', swStrikes, '#cc1a1a', ` <span style="opacity:.6">(${total>0?Math.round(swStrikes/total*100):0}%)</span>`)}
+      ${row('Foul Balls', fouls, '#c07020', ` <span style="opacity:.6">(${total>0?Math.round(fouls/total*100):0}%)</span>`)}
+      ${row('Balls in Play', contact, '#1a8a3a', ` <span style="opacity:.6">(${total>0?Math.round(contact/total*100):0}%)</span>`)}
+      ${pitches.filter(p=>p.outcome==='hbp').length>0?row('Hit By Pitch', pitches.filter(p=>p.outcome==='hbp').length, '#8822cc', ` <span style="opacity:.6">(${total>0?Math.round(pitches.filter(p=>p.outcome==='hbp').length/total*100):0}%)</span>`):''}
     </div>
-    <div style="background:#fff;border:1px solid #d4d8e0;border-radius:8px;padding:12px;text-align:center">
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+
+    <!-- Key rate stats -->
+    <div style="background:#fff;border:1px solid #d4d8e0;border-radius:8px;padding:12px;margin-bottom:14px">
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;text-align:center">
         <div>
-          <div style="font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:24px;color:#cc1a1a">${total>0?Math.round(inZone.length/total*100):0}%</div>
+          <div style="font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:26px;color:#cc1a1a">${strPct}%</div>
+          <div style="font-size:8px;letter-spacing:2px;color:#8a909e;text-transform:uppercase">Strike%</div>
+        </div>
+        <div>
+          <div style="font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:26px;color:${fpsPct!==null&&fpsPct>=60?'#1a8a3a':fpsPct!==null&&fpsPct<50?'#cc1a1a':'#111318'}">${fpsPct!==null?fpsPct+'%':'—'}</div>
+          <div style="font-size:8px;letter-spacing:2px;color:#8a909e;text-transform:uppercase">FPS%</div>
+          ${fp.length>0?`<div style="font-size:8px;color:#8a909e;margin-top:2px">${fpStrikes}/${fp.length} AB</div>`:''}
+        </div>
+        <div>
+          <div style="font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:26px">${total>0?Math.round(inZone.length/total*100):0}%</div>
           <div style="font-size:8px;letter-spacing:2px;color:#8a909e;text-transform:uppercase">Zone%</div>
         </div>
-        <div>
-          <div style="font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:24px">${total>0?Math.round((swStrikes+fouls+contact)/total*100):0}%</div>
-          <div style="font-size:8px;letter-spacing:2px;color:#8a909e;text-transform:uppercase">Swing%</div>
-        </div>
-        <div>
-          <div style="font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:24px;color:#1a8a3a">${(swStrikes+fouls+contact)>0?Math.round(contact/(swStrikes+fouls+contact)*100):0}%</div>
-          <div style="font-size:8px;letter-spacing:2px;color:#8a909e;text-transform:uppercase">Contact%</div>
-        </div>
-        <div>
-          <div style="font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:24px;color:#1a5acc">${(calledStrikes+swStrikes+fouls+contact)>0?Math.round(calledStrikes/(calledStrikes+swStrikes+fouls+contact)*100):0}%</div>
-          <div style="font-size:8px;letter-spacing:2px;color:#8a909e;text-transform:uppercase">Take%</div>
-        </div>
       </div>
-    </div>`;
+    </div>
+
+    <!-- Per pitch-type strike% -->
+    ${typeStrRows ? `<div style="margin-bottom:6px">
+      <div style="font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:9px;letter-spacing:3px;text-transform:uppercase;color:#8a909e;margin-bottom:8px">Strike% by Pitch Type</div>
+      ${typeStrRows}
+    </div>` : ''}`;
 }
 
 function buildPlayerGameLog(teamName, playerName, games){
@@ -6537,13 +6621,21 @@ function renderPitcher(teamName, pitcherName){
     career.swings+=p.swings||0; career.looks+=p.looks||0;
   });
 
-  const sp  = career.pitches>0 ? Math.round(career.strikes/career.pitches*100) : 0;
-  const swp = career.pitches>0 ? Math.round(career.swings/career.pitches*100)  : 0;
-  const lkp = career.pitches>0 ? Math.round(career.looks/career.pitches*100)   : 0;
   const kbb = career.bb>0 ? (career.k/career.bb).toFixed(2) : career.k>0?'∞':'—';
   const vels = allPitches.map(p=>parseFloat(p.velocity)).filter(v=>!isNaN(v)&&v>0);
   const avgVel = vels.length ? (vels.reduce((a,b)=>a+b,0)/vels.length).toFixed(1) : '—';
   const maxVel = vels.length ? Math.max(...vels) : '—';
+  // Use pitch log as ground truth for all rate stats
+  const logTotal   = allPitches.length;
+  const logStrikes = allPitches.filter(p=>_isStrike(p.outcome)).length;
+  const logSwings  = allPitches.filter(p=>['strike-swinging','foul','single','double','triple','homerun','groundout','flyout','lineout','sacfly','sacbunt','error'].includes(p.outcome)).length;
+  const logLooks   = allPitches.filter(p=>p.outcome==='strike-looking').length;
+  const logHBP     = allPitches.filter(p=>p.outcome==='hbp').length;
+  const sp    = logTotal>0 ? Math.round(logStrikes/logTotal*100) : 0;
+  const swp   = logTotal>0 ? Math.round(logSwings/logTotal*100) : 0;
+  const lkp   = logTotal>0 ? Math.round(logLooks/logTotal*100) : 0;
+  const fpPitches = allPitches.filter(p=>_isFirstPitch(p));
+  const fpsPct = fpPitches.length>0 ? Math.round(fpPitches.filter(p=>_isStrike(p.outcome)).length/fpPitches.length*100) : null;
 
   const c = document.getElementById('hub-content');
   c.innerHTML=`
@@ -6561,6 +6653,7 @@ function renderPitcher(teamName, pitcherName){
         <div style="text-align:center"><div style="font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:28px;color:var(--accent)">${career.k}</div><div style="font-size:9px;letter-spacing:2px;color:var(--text3);text-transform:uppercase">K</div></div>
         <div style="text-align:center"><div style="font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:28px">${career.bb}</div><div style="font-size:9px;letter-spacing:2px;color:var(--text3);text-transform:uppercase">BB</div></div>
         <div style="text-align:center"><div style="font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:28px">${sp}%</div><div style="font-size:9px;letter-spacing:2px;color:var(--text3);text-transform:uppercase">Str%</div></div>
+        <div style="text-align:center"><div style="font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:28px">${fpsPct!==null?fpsPct+'%':'—'}</div><div style="font-size:9px;letter-spacing:2px;color:var(--text3);text-transform:uppercase">FPS%</div></div>
         <div style="text-align:center"><div style="font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:28px;color:var(--green)">${kbb}</div><div style="font-size:9px;letter-spacing:2px;color:var(--text3);text-transform:uppercase">K/BB</div></div>
         <div style="text-align:center"><div style="font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:28px;color:var(--blue)">${avgVel}</div><div style="font-size:9px;letter-spacing:2px;color:var(--text3);text-transform:uppercase">Avg MPH</div></div>
       </div>
@@ -6568,6 +6661,7 @@ function renderPitcher(teamName, pitcherName){
     <div class="stat-cards">
       <div class="stat-card accent"><div class="stat-card-val">${career.pitches}</div><div class="stat-card-lbl">Pitches</div></div>
       <div class="stat-card"><div class="stat-card-val">${sp}%</div><div class="stat-card-lbl">Strike%</div></div>
+      <div class="stat-card"><div class="stat-card-val">${fpsPct!==null?fpsPct+'%':'—'}</div><div class="stat-card-lbl">FPS%</div></div>
       <div class="stat-card"><div class="stat-card-val">${career.k}</div><div class="stat-card-lbl">Strikeouts</div></div>
       <div class="stat-card"><div class="stat-card-val">${career.bb}</div><div class="stat-card-lbl">Walks</div></div>
       <div class="stat-card"><div class="stat-card-val">${career.hits}</div><div class="stat-card-lbl">Hits Allowed</div></div>
@@ -6606,16 +6700,7 @@ function renderPitcher(teamName, pitcherName){
     </div>
 
     <div id="ptab-p-mix" style="display:none">
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;align-items:start;max-width:900px">
-        <div>
-          <div class="section-title" style="margin-bottom:10px">Pitch Arsenal · ${allPitches.length} pitches</div>
-          ${buildPitchBreakdown(allPitches)}
-        </div>
-        <div>
-          <div class="section-title" style="margin-bottom:10px">Results Against</div>
-          ${buildPitcherResultsBreakdown(allPitches)}
-        </div>
-      </div>
+      ${buildPitchMixTab(allPitches)}
     </div>
 
     <div id="ptab-p-gamelog" style="display:none">
@@ -6640,6 +6725,68 @@ function pitcherTab(tab){
   if(tab==='zone') setTimeout(()=>selectAllPitchTypes('pitcher-zone-wrap'),0);
 }
 
+
+function buildPitchMixTab(allPitches){
+  const pitchesJson = JSON.stringify(allPitches).replace(/'/g,"&#39;");
+  return `<div id="pmix-container" data-all-pitches='${pitchesJson}'>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;align-items:start;max-width:900px">
+      <div>
+        <!-- Filterable stat cards — updated by the existing outcome filter -->
+        <div class="section-title" style="margin-bottom:8px" id="pmix-arsenal-title">Pitch Arsenal · ${allPitches.length} pitches</div>
+        <div id="pmix-arsenal-stats">${buildArsenalStats(allPitches)}</div>
+        <!-- Full pitch breakdown with its own filter/charts — stays intact -->
+        <div style="margin-top:14px">${buildPitchBreakdown(allPitches)}</div>
+      </div>
+      <div>
+        <div class="section-title" style="margin-bottom:10px">Results Against</div>
+        <div id="pmix-results">${buildPitcherResultsBreakdown(allPitches)}</div>
+      </div>
+    </div>
+  </div>`;
+}
+
+// Renders only the filterable stat cards for Pitch Arsenal (no filter bar)
+function buildArsenalStats(pitches){
+  if(!pitches.length) return '<div class="empty-state" style="padding:10px 0">No pitches for selection</div>';
+  const vels = pitches.map(p=>parseFloat(p.velocity)).filter(v=>!isNaN(v)&&v>0);
+  const avgVel = vels.length ? (vels.reduce((a,b)=>a+b,0)/vels.length).toFixed(1) : '—';
+  const maxVel = vels.length ? Math.max(...vels).toFixed(1) : '—';
+  const total = pitches.length;
+  const inZone = pitches.filter(p=>p.pitchX!=null&&p.pitchX>=31&&p.pitchX<=69&&p.pitchY!=null&&p.pitchY>=30.9&&p.pitchY<=69.1).length;
+  const zonePct = total>0 ? Math.round(inZone/total*100) : 0;
+  const strikes = pitches.filter(p=>_isStrike(p.outcome)).length;
+  const strPct  = total>0 ? Math.round(strikes/total*100) : 0;
+  const fp      = pitches.filter(p=>_isFirstPitch(p));
+  const fpsPct  = fp.length>0 ? Math.round(fp.filter(p=>_isStrike(p.outcome)).length/fp.length*100) : null;
+  const swings  = pitches.filter(p=>['strike-swinging','foul','single','double','triple','homerun','groundout','flyout','lineout','sacfly','sacbunt','error'].includes(p.outcome)).length;
+  const swingPct= total>0 ? Math.round(swings/total*100) : 0;
+  return `<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px">
+    <div style="background:#fff;border:1px solid #d4d8e0;border-radius:8px;padding:10px 14px;text-align:center">
+      <div style="font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:26px;color:#cc1a1a">${avgVel}</div>
+      <div style="font-size:8px;letter-spacing:2px;color:#8a909e;text-transform:uppercase">Avg Velo</div>
+    </div>
+    <div style="background:#fff;border:1px solid #d4d8e0;border-radius:8px;padding:10px 14px;text-align:center">
+      <div style="font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:26px">${maxVel}</div>
+      <div style="font-size:8px;letter-spacing:2px;color:#8a909e;text-transform:uppercase">Max Velo</div>
+    </div>
+    <div style="background:#fff;border:1px solid #d4d8e0;border-radius:8px;padding:10px 14px;text-align:center">
+      <div style="font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:26px;color:#cc1a1a">${strPct}%</div>
+      <div style="font-size:8px;letter-spacing:2px;color:#8a909e;text-transform:uppercase">Strike%</div>
+    </div>
+    <div style="background:#fff;border:1px solid #d4d8e0;border-radius:8px;padding:10px 14px;text-align:center">
+      <div style="font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:26px">${fpsPct!==null?fpsPct+'%':'—'}</div>
+      <div style="font-size:8px;letter-spacing:2px;color:#8a909e;text-transform:uppercase">FPS%</div>
+    </div>
+    <div style="background:#fff;border:1px solid #d4d8e0;border-radius:8px;padding:10px 14px;text-align:center">
+      <div style="font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:26px">${zonePct}%</div>
+      <div style="font-size:8px;letter-spacing:2px;color:#8a909e;text-transform:uppercase">Zone%</div>
+    </div>
+    <div style="background:#fff;border:1px solid #d4d8e0;border-radius:8px;padding:10px 14px;text-align:center">
+      <div style="font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:26px">${swingPct}%</div>
+      <div style="font-size:8px;letter-spacing:2px;color:#8a909e;text-transform:uppercase">Swing%</div>
+    </div>
+  </div>`;
+}
 
 function buildPitcherResultsBreakdown(pitches){
   if(!pitches.length) return '<div class="empty-state" style="padding:20px 0">No pitch data logged yet.<br><small style="color:var(--text3)">Pitch data is tracked from new saves going forward.</small></div>';
