@@ -1133,22 +1133,27 @@ th.sorted{color:var(--accent);}
     <div class="count-group">
       <div class="count-label">Balls</div>
       <div class="count-dots">
-        <div class="count-dot" id="b1"></div><div class="count-dot" id="b2"></div>
-        <div class="count-dot" id="b3"></div><div class="count-dot" id="b4"></div>
+        <div class="count-dot" id="b1" onclick="tweakCount('ball',1)"   title="Ball 1"   style="cursor:pointer"></div>
+        <div class="count-dot" id="b2" onclick="tweakCount('ball',2)"   title="Ball 2"   style="cursor:pointer"></div>
+        <div class="count-dot" id="b3" onclick="tweakCount('ball',3)"   title="Ball 3"   style="cursor:pointer"></div>
+        <div class="count-dot" id="b4" onclick="tweakCount('ball',4)"   title="Ball 4"   style="cursor:pointer"></div>
       </div>
     </div>
     <div class="count-group">
       <div class="count-label">Strikes</div>
       <div class="count-dots">
-        <div class="count-dot" id="s1"></div><div class="count-dot" id="s2"></div>
-        <div class="count-dot" id="s3"></div>
+        <div class="count-dot" id="s1" onclick="tweakCount('strike',1)" title="Strike 1" style="cursor:pointer"></div>
+        <div class="count-dot" id="s2" onclick="tweakCount('strike',2)" title="Strike 2" style="cursor:pointer"></div>
+        <div class="count-dot" id="s3" onclick="tweakCount('strike',3)" title="Strike 3" style="cursor:pointer"></div>
       </div>
     </div>
   </div>
   <div class="bug-outs">
     <div class="count-label">Outs</div>
     <div class="outs-row">
-      <div class="out-dot" id="o1"></div><div class="out-dot" id="o2"></div><div class="out-dot" id="o3"></div>
+      <div class="out-dot" id="o1" onclick="tweakCount('out',1)" title="Out 1" style="cursor:pointer"></div>
+      <div class="out-dot" id="o2" onclick="tweakCount('out',2)" title="Out 2" style="cursor:pointer"></div>
+      <div class="out-dot" id="o3" onclick="tweakCount('out',3)" title="Out 3" style="cursor:pointer"></div>
     </div>
   </div>
   <div class="bug-bases" title="Click occupied base for actions, empty base to add runner">
@@ -6385,10 +6390,10 @@ function buildZoneTendencies(pitches){
       const col=typeColors[t]||'#8a909e';
       return `<div style="display:flex;align-items:center;gap:8px;margin-bottom:5px">
         <div style="font-family:'Share Tech Mono',monospace;font-size:10px;color:${col};width:28px;flex-shrink:0;font-weight:700">${t}</div>
-        <div style="flex:1;background:#e8eaee;border-radius:3px;height:12px;overflow:hidden">
+        <div style="flex:1;min-width:0;max-width:55%;background:#e8eaee;border-radius:3px;height:12px;overflow:hidden">
           <div style="width:${pct}%;height:100%;background:${col};border-radius:3px;opacity:.85"></div>
         </div>
-        <div style="font-family:'Share Tech Mono',monospace;font-size:10px;color:#8a909e;width:52px;text-align:right;flex-shrink:0">${d.strikes}/${d.total} · ${pct}%</div>
+        <div style="font-family:'Share Tech Mono',monospace;font-size:10px;color:#8a909e;white-space:nowrap;flex-shrink:0;text-align:right">${d.strikes}/${d.total} · ${pct}%</div>
       </div>`;
     }).join('');
 
@@ -7069,6 +7074,23 @@ async function handleImportFile(event){
     toast('Import failed — '+(e?.message||'invalid file'));
     console.error('handleImportFile error:', e);
   }
+}
+
+// ===================== COUNT DOT CLICK =====================
+function tweakCount(type, n){
+  if(type==='ball'){
+    // If clicking an active dot (n <= current balls) → reduce to n-1; else set to n
+    S.balls = S.balls >= n ? n-1 : n;
+    S.balls = Math.max(0, Math.min(4, S.balls));
+  } else if(type==='strike'){
+    S.strikes = S.strikes >= n ? n-1 : n;
+    S.strikes = Math.max(0, Math.min(2, S.strikes));
+  } else if(type==='out'){
+    S.outs = S.outs >= n ? n-1 : n;
+    S.outs = Math.max(0, Math.min(3, S.outs));
+    if(S.outs >= 3){ handleThreeOuts(); return; }
+  }
+  updateScoreBug();
 }
 
 /* BOOT */
