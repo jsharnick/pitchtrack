@@ -829,6 +829,7 @@ th.sorted{color:var(--accent);}
   .base-second{top:2px;left:15px;} .base-third{top:15px;left:1px;} .base-first{top:15px;left:29px;} .base-home{top:29px;left:15px;}
   .bug-pitcher,.bug-batter{ display:none; }
   #save-game-btn{ display:none !important; }
+  #fullscreen-btn{ display:none !important; }
 
   /* ── Strike zone: scale to fill width ── */
   .zone-wrap { width:100%; align-items:center; }
@@ -1196,7 +1197,17 @@ th.sorted{color:var(--accent);}
     <span class="bname"  id="bug-batter-name">—</span>
     <span class="bstats" id="bug-batter-stats">0-0 · 0BB</span>
   </div>
-  <button id="save-game-btn" onclick="saveGame()" style="margin-left:10px;padding:6px 14px;background:rgba(255,255,255,.15);border:1.5px solid rgba(255,255,255,.35);border-radius:7px;color:#ffffff;font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:13px;letter-spacing:1px;cursor:pointer;transition:all .15s;white-space:nowrap;flex-shrink:0" onmouseover="this.style.background='rgba(255,255,255,.25)'" onmouseout="this.style.background='rgba(255,255,255,.15)'">Save Game</button>
+  <button id="fullscreen-btn" onclick="toggleFullscreen()" title="Toggle fullscreen" style="margin-left:10px;padding:6px 10px;background:rgba(255,255,255,.15);border:1.5px solid rgba(255,255,255,.35);border-radius:7px;color:#ffffff;cursor:pointer;transition:all .15s;flex-shrink:0;display:flex;align-items:center;justify-content:center" onmouseover="this.style.background='rgba(255,255,255,.25)'" onmouseout="this.style.background='rgba(255,255,255,.15)'">
+    <svg id="fs-icon-expand" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+      <polyline points="15 3 21 3 21 9"/><polyline points="9 21 3 21 3 15"/>
+      <line x1="21" y1="3" x2="14" y2="10"/><line x1="3" y1="21" x2="10" y2="14"/>
+    </svg>
+    <svg id="fs-icon-compress" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="display:none">
+      <polyline points="4 14 10 14 10 20"/><polyline points="20 10 14 10 14 4"/>
+      <line x1="10" y1="14" x2="3" y2="21"/><line x1="21" y1="3" x2="14" y2="10"/>
+    </svg>
+  </button>
+  <button id="save-game-btn" onclick="saveGame()" style="margin-left:6px;padding:6px 14px;background:rgba(255,255,255,.15);border:1.5px solid rgba(255,255,255,.35);border-radius:7px;color:#ffffff;font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:13px;letter-spacing:1px;cursor:pointer;transition:all .15s;white-space:nowrap;flex-shrink:0" onmouseover="this.style.background='rgba(255,255,255,.25)'" onmouseout="this.style.background='rgba(255,255,255,.15)'">Save Game</button>
 </div>
 
 <!-- MAIN -->
@@ -7230,6 +7241,23 @@ function _fielderSkip(){
   if(_fielderCallback) _fielderCallback(null);
   _fielderCallback = null;
 }
+
+// ===================== FULLSCREEN =====================
+function toggleFullscreen(){
+  if(!document.fullscreenElement){
+    document.documentElement.requestFullscreen().catch(()=>{});
+  } else {
+    document.exitFullscreen().catch(()=>{});
+  }
+}
+
+document.addEventListener('fullscreenchange', ()=>{
+  const isFs = !!document.fullscreenElement;
+  const expand   = document.getElementById('fs-icon-expand');
+  const compress = document.getElementById('fs-icon-compress');
+  if(expand)   expand.style.display   = isFs ? 'none'  : 'block';
+  if(compress) compress.style.display = isFs ? 'block' : 'none';
+});
 
 /* BOOT */
 (function(){
