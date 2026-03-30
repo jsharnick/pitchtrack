@@ -4024,18 +4024,30 @@ function commitError(base){
   qs('error-modal').style.display='none';
   const entry = S.pendingErrorEntry;
   S.pendingErrorEntry = null;
-  // Open spray chart first, then resolve game logic
+  const batter = currentBatter()?.name||'Batter';
+  // 1. Spray chart → 2. Fielder modal → 3. Resolve game logic
   openSprayModal('error', entry||{}, ()=>{
-    _resolveError(base, entry);
+    openFielderModal('error', 'Error', batter, (fielder)=>{
+      const posNum = {P:1,C:2,'1B':3,'2B':4,'3B':5,SS:6,LF:7,CF:8,RF:9};
+      S._lastErrorFielder = fielder || null;
+      S._lastErrorPosNum  = fielder ? (posNum[fielder]||'') : null;
+      _resolveError(base, entry);
+    });
   });
 }
 function _resolveError(base, entry){
-  const batter = currentBatter()?.name||'Batter';
+  const batter  = currentBatter()?.name||'Batter';
+  const fielder = S._lastErrorFielder;
+  const posNum  = S._lastErrorPosNum;
+  const fielderStr = fielder ? ` · E${posNum} (${fielder})` : '';
+  const runs = base==='home' ? 1 : 0;
+  // Build blurb now — fielder is already set on S._lastErrorFielder
+  updatePlayBlurb('error', entry?.pitchType||'—', entry?.velocity||'', entry?.loc||'', entry?.spray||null, runs, S.bases, {balls:entry?.balls||0,strikes:entry?.strikes||0});
   if(base==='home'){
     S.bases={'1st':false,'2nd':false,'3rd':false};
     addRun();
     toast(`💥 Error — ${batter} scores!`);
-    logEvent('💥','Error — Batter Scores',`${batter} reaches on error, scores`);
+    logEvent('💥','Error — Batter Scores',`${batter} reaches on error, scores${fielderStr}`);
     recordAtBatResult('H','E');
     nextBatter();
   } else {
@@ -4047,7 +4059,7 @@ function _resolveError(base, entry){
       S.bases={'1st':false,'2nd':false,'3rd':false};
       S.bases[base]=true;
       toast(`💥 Error — ${batter} reaches ${base}`);
-      logEvent('💥','Error',`${batter} reaches ${base} on error`);
+      logEvent('💥','Error',`${batter} reaches ${base} on error${fielderStr}`);
       recordAtBatResult('H','E');
       nextBatter(); return;
     }
@@ -4239,7 +4251,10 @@ function buildBlurb(outcome, pitchType, velocity, loc, spray, batter, pitcher,
 
     case 'error':{
       let tail = runsScored>0 ? ` ${run(runsScored+' score'+(runsScored>1?'s':''))}.` : '';
-      return `${b(batter)} reaches on an error${spPhrase ? ' '+spPhrase : ''}${tail ? ';'+tail : '.'}`;
+      const ef = S._lastErrorFielder;
+      const ep = S._lastErrorPosNum;
+      const eStr = ef ? ` ${neu('E'+ep+' ('+ef+')')}` : '';
+      return `${b(batter)} reaches on an error${spPhrase ? ' '+spPhrase : ''}${tail ? ';'+tail : '.'} ${eStr}`;
     }
 
     default:
