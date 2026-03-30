@@ -210,6 +210,28 @@ body{background:var(--bg);color:var(--text);font-family:'Barlow',sans-serif;min-
 .bug-count{display:flex;gap:14px;padding:0 16px;border-left:1px solid rgba(255,255,255,.25);border-right:1px solid rgba(255,255,255,.25);align-items:center;flex-shrink:0;}
 .count-group{display:flex;flex-direction:column;align-items:center;gap:4px;}
 .count-label{font-size:8px;font-weight:700;letter-spacing:2px;color:rgba(255,255,255,.6);text-transform:uppercase;}
+.fpos-btn{
+  background:#f5c842;
+  border:1.5px solid #f5c842;
+  border-radius:6px;
+  color:#1a1200;
+  font-family:'Barlow Condensed',sans-serif;
+  font-weight:900;
+  font-size:12px;
+  letter-spacing:1px;
+  padding:4px 7px;
+  cursor:pointer;
+  transition:all .14s;
+  white-space:nowrap;
+  line-height:1.2;
+  box-shadow:0 0 6px rgba(245,200,66,.5);
+}
+.fpos-btn:hover,.fpos-btn.selected{
+  background:#ffe066;
+  border-color:#ffe066;
+  box-shadow:0 0 12px rgba(245,200,66,.9);
+  transform:translate(-50%,-50%) scale(1.18);
+}
 .count-dots{display:flex;gap:5px;}
 .count-dot{width:13px;height:13px;border-radius:50%;border:1.5px solid rgba(255,255,255,.35);background:transparent;transition:all .18s;}
 .count-dot.active-ball{background:#4a8fe8;border-color:#7ab4f0;box-shadow:0 0 8px rgba(74,143,232,.8);}
@@ -1632,6 +1654,63 @@ th.sorted{color:var(--accent);}
 </div>
 
 <!-- SPRAY CHART MODAL -->
+<!-- FIELDER MODAL -->
+<div id="fielder-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.82);z-index:1060;align-items:center;justify-content:center;backdrop-filter:blur(5px)">
+  <div style="background:var(--surface2);border:1px solid var(--border2);border-radius:16px;padding:22px 24px;width:min(480px,96vw);box-shadow:0 24px 60px rgba(0,0,0,.5);animation:smPop .2s cubic-bezier(.34,1.56,.64,1)">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+      <div>
+        <div style="font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:20px;color:var(--text)" id="fielder-title">Who made the play?</div>
+        <div style="font-size:11px;color:var(--text3);margin-top:2px" id="fielder-sub">Select the fielder — or skip</div>
+      </div>
+      <button onclick="_fielderSkip()" style="background:none;border:1px solid var(--border);border-radius:6px;color:var(--text3);font-size:12px;padding:5px 10px;cursor:pointer;font-family:'Barlow Condensed',sans-serif;font-weight:700">Skip</button>
+    </div>
+    <!-- Field SVG with position buttons -->
+    <div style="position:relative;width:100%;user-select:none">
+      <svg viewBox="0 0 560 510" style="width:100%;border-radius:10px;display:block;border:1px solid var(--border)">
+        <rect width="560" height="510" fill="#111a0d"/>
+        <path d="M280,480 L18,220 Q280,-60 542,220 Z" fill="#1a2e14"/>
+        <path d="M280,480 L18,220 Q280,-60 542,220 Z" fill="none" stroke="#3a2510" stroke-width="26"/>
+        <path d="M280,480 L18,220 L0,510 Z" fill="#0f1a0a" opacity=".6"/>
+        <path d="M280,480 L542,220 L560,510 Z" fill="#0f1a0a" opacity=".6"/>
+        <rect x="0" y="480" width="560" height="30" fill="#0f1a0a" opacity=".6"/>
+        <!-- Infield dirt -->
+        <path d="M280,480 L160,360 L280,240 L400,360 Z" fill="#2a1a0a"/>
+        <!-- Infield grass -->
+        <path d="M280,460 L170,365 L280,262 L390,365 Z" fill="#1e3a18"/>
+        <!-- Bases -->
+        <rect x="265" y="227" width="30" height="30" rx="3" fill="white" transform="rotate(45,280,242)"/>
+        <rect x="145" y="347" width="30" height="30" rx="3" fill="white" transform="rotate(45,160,362)"/>
+        <rect x="385" y="347" width="30" height="30" rx="3" fill="white" transform="rotate(45,400,362)"/>
+        <rect x="265" y="467" width="30" height="30" rx="3" fill="white" transform="rotate(45,280,482)"/>
+        <!-- Foul lines -->
+        <line x1="280" y1="480" x2="18" y2="220" stroke="white" stroke-width="1.5" opacity=".4"/>
+        <line x1="280" y1="480" x2="542" y2="220" stroke="white" stroke-width="1.5" opacity=".4"/>
+        <!-- Pitcher mound -->
+        <circle cx="280" cy="355" r="18" fill="#2a1a0a" stroke="#3a2a10" stroke-width="1.5"/>
+      </svg>
+      <!-- Position buttons overlaid -->
+      <!-- LF -->
+      <button onclick="_fielderSelect('LF')" class="fpos-btn" style="position:absolute;left:22%;top:38%;transform:translate(-50%,-50%)">LF</button>
+      <!-- CF -->
+      <button onclick="_fielderSelect('CF')" class="fpos-btn" style="position:absolute;left:50%;top:23%;transform:translate(-50%,-50%)">CF</button>
+      <!-- RF -->
+      <button onclick="_fielderSelect('RF')" class="fpos-btn" style="position:absolute;left:78%;top:38%;transform:translate(-50%,-50%)">RF</button>
+      <!-- 3B -->
+      <button onclick="_fielderSelect('3B')" class="fpos-btn" style="position:absolute;left:25%;top:62%;transform:translate(-50%,-50%)">3B</button>
+      <!-- SS -->
+      <button onclick="_fielderSelect('SS')" class="fpos-btn" style="position:absolute;left:37%;top:52%;transform:translate(-50%,-50%)">SS</button>
+      <!-- 2B -->
+      <button onclick="_fielderSelect('2B')" class="fpos-btn" style="position:absolute;left:63%;top:52%;transform:translate(-50%,-50%)">2B</button>
+      <!-- 1B -->
+      <button onclick="_fielderSelect('1B')" class="fpos-btn" style="position:absolute;left:75%;top:62%;transform:translate(-50%,-50%)">1B</button>
+      <!-- P -->
+      <button onclick="_fielderSelect('P')"  class="fpos-btn" style="position:absolute;left:50%;top:66%;transform:translate(-50%,-50%)">P</button>
+      <!-- C -->
+      <button onclick="_fielderSelect('C')"  class="fpos-btn" style="position:absolute;left:50%;top:88%;transform:translate(-50%,-50%)">C</button>
+    </div>
+  </div>
+</div>
+
 <div id="spray-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.88);z-index:1050;align-items:flex-start;justify-content:center;backdrop-filter:blur(6px);overflow-y:auto;padding:16px 12px">
   <div style="background:var(--surface2);border:1px solid var(--border2);border-radius:16px;padding:18px 20px 16px;width:min(780px,98vw);margin:0 auto;box-shadow:0 28px 80px rgba(0,0,0,.8);animation:modalPop .2s cubic-bezier(.34,1.56,.64,1)">
 
@@ -2633,7 +2712,7 @@ function resetPitchControls(clearZone=true){
 // After committing a pitch mid-AB: keep zone dots, just clear outcome/type selection
 function resetAfterPitch(){
   const wasContact = isContactOutcome(S.selectedOutcome||'');
-  S.selectedOutcome=null; S.selectedPitchType=null;
+  S.selectedOutcome=null; S.selectedPitchType=null; S._lastFielder=null; S._lastScoreStr=null;
   if(placeholderEl){placeholderEl.remove();placeholderEl=null;}
   qsa('.outcome-btn').forEach(b=>b.classList.remove('selected'));
   qsa('.pitch-type-btn').forEach(b=>b.classList.remove('selected'));
@@ -4125,15 +4204,26 @@ function buildBlurb(outcome, pitchType, velocity, loc, spray, batter, pitcher,
     }
 
     // ── Outs ────────────────────────────────────────
-    case 'groundout':
-      return `${b(batter)} grounds out${spPhrase ? ' '+spPhrase : ''}. ${neu('(GO)')}`;
-    case 'flyout':
-      return `${b(batter)} flies out${spPhrase ? ' '+spPhrase : ''}. ${neu('(FO)')}`;
-    case 'lineout':
-      return `${b(batter)} lines out${spPhrase ? ' '+spPhrase : ''}. ${neu('(LO)')}`;
+    case 'groundout':{
+      const fd = S._lastFielder ? ` to ${S._lastFielder}` : '';
+      const sc = S._lastScoreStr ? ` ${neu('('+S._lastScoreStr+')')}` : ` ${neu('(GO)')}`;
+      return `${b(batter)} grounds out${spPhrase ? ' '+spPhrase : ''}${fd}.${sc}`;
+    }
+    case 'flyout':{
+      const fd = S._lastFielder ? ` to ${S._lastFielder}` : '';
+      const sc = S._lastScoreStr ? ` ${neu('('+S._lastScoreStr+')')}` : ` ${neu('(FO)')}`;
+      return `${b(batter)} flies out${spPhrase ? ' '+spPhrase : ''}${fd}.${sc}`;
+    }
+    case 'lineout':{
+      const fd = S._lastFielder ? ` to ${S._lastFielder}` : '';
+      const sc = S._lastScoreStr ? ` ${neu('('+S._lastScoreStr+')')}` : ` ${neu('(LO)')}`;
+      return `${b(batter)} lines out${spPhrase ? ' '+spPhrase : ''}${fd}.${sc}`;
+    }
     case 'sacfly':{
+      const fd = S._lastFielder ? ` to ${S._lastFielder}` : '';
+      const sc = S._lastScoreStr ? ` ${neu('('+S._lastScoreStr+')')}` : ` ${neu('(SF)')}`;
       const scored = had3rd ? run('scores on the sac fly') : '';
-      return `${b(batter)} hits a sacrifice fly${spPhrase ? ' '+spPhrase : ''}${scored ? '; runner '+scored : ''}. ${neu('(SF)')}`;
+      return `${b(batter)} hits a sacrifice fly${spPhrase ? ' '+spPhrase : ''}${fd}${scored ? '; runner '+scored : ''}.${sc}`;
     }
 
     case 'error':{
@@ -4186,17 +4276,33 @@ function commitBatterOut(outcome, logLabel, entry, pitchType, velocity, px, py){
   S.outs++;
   const batter = currentBatter()?.name||'Batter';
   toast(`Out! (${logLabel})`);
-  logEvent('🟤',`${logLabel} — Out`,`${batter} · ${S.outs} out${S.outs>1?'s':''} this inning`);
   recordAtBatResult('O', logLabel);
-  updatePlayBlurb(outcome, pitchType, velocity, zoneLabel(px,py), entry.spray||null, 0, S.bases, {balls:S.balls,strikes:S.strikes});
-  checkForDoublePlay(outcome, pitchType, velocity, zoneLabel(px,py), entry.spray||null, ()=>{
-    if(S.outs>=3){handleThreeOuts();return;}
-    const runnersOn = ['1st','2nd','3rd'].some(b=>S.bases[b]);
-    if(runnersOn){
-      showRunnerAdvanceOnOut(outcome, ()=>{ if(S.outs>=3){handleThreeOuts();return;} nextBatter(); });
-    } else {
-      nextBatter();
+  // Ask who made the play in the field — blurb is built AFTER so it has fielder info
+  openFielderModal(outcome, logLabel, batter, (fielder)=>{
+    const posNum = {P:1,C:2,'1B':3,'2B':4,'3B':5,SS:6,LF:7,CF:8,RF:9};
+    let scoreStr = '';
+    if(fielder){
+      const n = posNum[fielder]||'';
+      if(outcome==='flyout'||outcome==='sacfly')         scoreStr = `F${n}`;
+      else if(outcome==='lineout')                        scoreStr = `L${n}`;
+      else if(outcome==='groundout'||outcome==='sacbunt') scoreStr = `${n}-3`;
+      else                                                scoreStr = `${n}`;
     }
+    // Store for blurb — must be set before updatePlayBlurb is called
+    S._lastFielder  = fielder || null;
+    S._lastScoreStr = scoreStr || null;
+    updatePlayBlurb(outcome, pitchType, velocity, zoneLabel(px,py), entry.spray||null, 0, S.bases, {balls:S.balls,strikes:S.strikes});
+    const fielderStr = fielder ? ` · ${fielder}${scoreStr?' ('+scoreStr+')':''}` : '';
+    logEvent('🟤',`${logLabel} — Out`,`${batter}${fielderStr} · ${S.outs} out${S.outs>1?'s':''} this inning`);
+    checkForDoublePlay(outcome, pitchType, velocity, zoneLabel(px,py), entry.spray||null, ()=>{
+      if(S.outs>=3){handleThreeOuts();return;}
+      const runnersOn = ['1st','2nd','3rd'].some(b=>S.bases[b]);
+      if(runnersOn){
+        showRunnerAdvanceOnOut(outcome, ()=>{ if(S.outs>=3){handleThreeOuts();return;} nextBatter(); });
+      } else {
+        nextBatter();
+      }
+    });
   });
 }
 
@@ -7091,6 +7197,38 @@ function tweakCount(type, n){
     if(S.outs >= 3){ handleThreeOuts(); return; }
   }
   updateScoreBug();
+}
+
+// ===================== FIELDER MODAL =====================
+let _fielderCallback = null;
+let _fielderContext  = null; // {outcome, logLabel, batter}
+
+function openFielderModal(outcome, logLabel, batter, callback){
+  _fielderCallback = callback;
+  _fielderContext  = {outcome, logLabel, batter};
+  // Reset button states
+  document.querySelectorAll('.fpos-btn').forEach(b=>b.classList.remove('selected'));
+  qs('fielder-title').textContent = 'Who made the play?';
+  qs('fielder-sub').textContent   = `${logLabel} — ${batter}`;
+  qs('fielder-modal').style.display = 'flex';
+}
+
+function _fielderSelect(pos){
+  // Highlight selected
+  document.querySelectorAll('.fpos-btn').forEach(b=>b.classList.remove('selected'));
+  event.currentTarget.classList.add('selected');
+  // Brief visual feedback then close
+  setTimeout(()=>{
+    qs('fielder-modal').style.display = 'none';
+    if(_fielderCallback) _fielderCallback(pos);
+    _fielderCallback = null;
+  }, 180);
+}
+
+function _fielderSkip(){
+  qs('fielder-modal').style.display = 'none';
+  if(_fielderCallback) _fielderCallback(null);
+  _fielderCallback = null;
 }
 
 /* BOOT */
