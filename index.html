@@ -5754,15 +5754,133 @@ function buildPitchTypeFilterBar(pitches, svgContainerId){
   </div>`;
 }
 
+// Outcome / batted ball filter bar for the pitch zone
+function buildOutcomeFilterBar(pitches, svgContainerId){
+  // Outcome groups we care about
+  const groups = [
+    {key:'strike-swinging', label:'Swing K',   color:'#8a0000'},
+    {key:'strike-looking',  label:'Called K',   color:'#c01a1a'},
+    {key:'ball',            label:'Ball',        color:'#1a6abf'},
+    {key:'foul',            label:'Foul',        color:'#8a4a00'},
+    {key:'hbp',             label:'HBP',         color:'#8822cc'},
+    // Batted ball types
+    {key:'btype:flyball',     label:'Fly Ball',      color:'#1a8a3a'},
+    {key:'btype:linedrive',   label:'Line Drive',    color:'#28a83a'},
+    {key:'btype:groundball',  label:'Ground Ball',   color:'#b8860b'},
+    {key:'btype:weakgrounder',label:'Weak Grounder', color:'#8a6000'},
+    {key:'btype:popup',       label:'Popup',         color:'#6a3a8a'},
+  ];
+
+  // Only show groups that have pitches
+  const available = groups.filter(g=>{
+    if(g.key.startsWith('btype:')){
+      const bt=g.key.slice(6);
+      return pitches.some(p=>p.spray?.btype===bt);
+    }
+    return pitches.some(p=>p.outcome===g.key);
+  });
+  if(!available.length) return '';
+
+  const filterId = svgContainerId+'-outcome-filter';
+  const buttons = available.map(g=>`
+    <button data-oc-filter="${g.key}" data-container="${svgContainerId}"
+      onclick="toggleOutcomeZoneFilter(this)"
+      style="display:inline-flex;align-items:center;gap:4px;padding:3px 8px;
+        border:1.5px solid ${g.color};border-radius:20px;
+        background:${g.color};color:white;
+        font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:10px;
+        letter-spacing:1px;cursor:pointer;transition:all .15s;white-space:nowrap">
+      ${g.label}
+    </button>`).join('');
+
+  return `<div id="${filterId}" style="display:flex;flex-wrap:wrap;gap:5px;margin-bottom:8px;align-items:center">
+    <span style="font-size:8px;letter-spacing:2px;color:var(--text3);text-transform:uppercase;font-weight:700;margin-right:2px">Outcome</span>
+    <button onclick="selectAllOutcomeZone('${svgContainerId}')" data-oc-all="true"
+      style="padding:3px 8px;border:1.5px solid var(--border);border-radius:20px;
+        background:var(--surface2);color:var(--text2);
+        font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:10px;
+        letter-spacing:1px;cursor:pointer;transition:all .15s">ALL</button>
+    ${buttons}
+  </div>`;
+}
+
+function toggleOutcomeZoneFilter(btn){
+  const containerId = btn.getAttribute('data-container');
+  const isActive = btn.getAttribute('data-active') === 'true';
+  btn.setAttribute('data-active', isActive ? 'false' : 'true');
+  btn.style.opacity = isActive ? '0.35' : '1';
+  applyZoneFilters(containerId);
+}
+
+function selectAllOutcomeZone(containerId){
+  const filterId = containerId+'-outcome-filter';
+  const bar = document.getElementById(filterId);
+  if(!bar) return;
+  const allBtn = bar.querySelector('[data-oc-all]');
+  const allActive = allBtn?.getAttribute('data-oc-all') !== 'false';
+  const newState = !allActive;
+  if(allBtn) allBtn.setAttribute('data-oc-all', newState ? 'true' : 'false');
+  bar.querySelectorAll('[data-oc-filter]').forEach(b=>{
+    b.setAttribute('data-active', newState ? 'true' : 'false');
+    b.style.opacity = newState ? '1' : '0.35';
+  });
+  applyZoneFilters(containerId);
+}
+
+// Combined filter: pitch type AND outcome — both must pass
+function applyZoneFilters(containerId){
+  const ptBar = document.getElementById(containerId+'-filter');
+  const ocBar = document.getElementById(containerId+'-outcome-filter');
+  const svg   = document.querySelector('#'+containerId+' svg');
+  if(!svg) return;
+
+  // Active pitch types
+  const activePT = new Set();
+  if(ptBar) ptBar.querySelectorAll('[data-pt-filter]').forEach(b=>{
+    if(b.getAttribute('data-active')==='true') activePT.add(b.getAttribute('data-pt-filter'));
+  });
+  const showAllPT = activePT.size===0;
+
+  // Active outcome filters
+  const activeOC = new Set();
+  if(ocBar) ocBar.querySelectorAll('[data-oc-filter]').forEach(b=>{
+    if(b.getAttribute('data-active')==='true') activeOC.add(b.getAttribute('data-oc-filter'));
+  });
+  const showAllOC = activeOC.size===0;
+
+  let visible=0, total=0;
+  svg.querySelectorAll('circle[data-pt]').forEach(c=>{
+    total++;
+    const pt = c.getAttribute('data-pt');
+    const oc = c.getAttribute('data-outcome')||'—';
+    const bt = c.getAttribute('data-btype')||'';
+
+    const ptOk = showAllPT || activePT.has(pt);
+    let ocOk = showAllOC;
+    if(!showAllOC){
+      for(const k of activeOC){
+        if(k.startsWith('btype:')){
+          if(bt===k.slice(6)){ ocOk=true; break; }
+        } else {
+          if(oc===k){ ocOk=true; break; }
+        }
+      }
+    }
+    const show = ptOk && ocOk;
+    c.style.display = show ? '' : 'none';
+    if(show) visible++;
+  });
+
+  const label = document.getElementById(containerId+'-count');
+  if(label) label.textContent = visible+' pitch'+(visible!==1?'es':'');
+}
+
 function togglePitchTypeFilter(btn){
   const type = btn.getAttribute('data-pt-filter');
   const containerId = btn.getAttribute('data-container');
   const isActive = btn.getAttribute('data-active') === 'true';
-
-  // Toggle this button
   btn.setAttribute('data-active', isActive ? 'false' : 'true');
   btn.style.opacity = isActive ? '0.35' : '1';
-
   applyPitchTypeFilter(containerId);
 }
 
@@ -5781,30 +5899,8 @@ function selectAllPitchTypes(containerId){
 }
 
 function applyPitchTypeFilter(containerId){
-  const filterBar = document.getElementById(containerId+'-filter');
-  const svg = document.querySelector('#'+containerId+' svg');
-  if(!filterBar || !svg) return;
-
-  const activeTypes = new Set();
-  filterBar.querySelectorAll('[data-pt-filter]').forEach(b=>{
-    if(b.getAttribute('data-active')==='true') activeTypes.add(b.getAttribute('data-pt-filter'));
-  });
-
-  // If nothing active, show all
-  const showAll = activeTypes.size === 0;
-
-  svg.querySelectorAll('circle[data-pt]').forEach(c=>{
-    const pt = c.getAttribute('data-pt');
-    c.style.display = (showAll || activeTypes.has(pt)) ? '' : 'none';
-  });
-
-  // Update dot count label
-  const label = document.getElementById(containerId+'-count');
-  if(label){
-    const total = svg.querySelectorAll('circle[data-pt]').length;
-    const visible = showAll ? total : svg.querySelectorAll('circle[data-pt]:not([style*="none"])').length;
-    label.textContent = visible + ' pitch' + (visible!==1?'es':'');
-  }
+  // Delegate to combined filter so pitch type + outcome work together
+  applyZoneFilters(containerId);
 }
 
 // ===== PITCH ZONE SVG =====
@@ -5853,10 +5949,12 @@ function buildPitchZoneSVG(pitches, width=320, height=300){
     const da = ptStroke(p);
     const r = 7;
     const pt = p.pitchType||'—';
+    const oc = p.outcome||'—';
+    const bt = p.spray?.btype||'';
     return `<circle cx="${cx.toFixed(1)}" cy="${cy.toFixed(1)}" r="${r}"
       fill="${col}" opacity="${op}"
       stroke="${da!=='none'?col:'#fff'}" stroke-width="${da!=='none'?1.5:0.8}"
-      stroke-dasharray="${da}" data-pt="${pt}"/>`;
+      stroke-dasharray="${da}" data-pt="${pt}" data-outcome="${oc}" data-btype="${bt}"/>`;
   }).join('');
 
   // Count pitch totals per zone quadrant for heatmap overlay
@@ -5969,6 +6067,27 @@ function selectAllOutcomeFilters(containerId){
   applyOutcomeFilter(containerId);
 }
 
+function toggleBtypeFilter(btn, containerId){
+  const isActive = btn.getAttribute('data-active') === 'true';
+  btn.setAttribute('data-active', isActive ? 'false' : 'true');
+  btn.style.opacity = isActive ? '0.35' : '1';
+  applyOutcomeFilter(containerId);
+}
+
+function selectAllBtypes(containerId){
+  const bar = document.getElementById(containerId+'-btype-bar');
+  if(!bar) return;
+  const allBtn = bar.querySelector('[data-btype-all]');
+  const allActive = allBtn?.getAttribute('data-btype-all') !== 'false';
+  const newState = !allActive;
+  if(allBtn) allBtn.setAttribute('data-btype-all', newState ? 'true' : 'false');
+  bar.querySelectorAll('[data-btype-filter]').forEach(b=>{
+    b.setAttribute('data-active', newState ? 'true' : 'false');
+    b.style.opacity = newState ? '1' : '0.35';
+  });
+  applyOutcomeFilter(containerId);
+}
+
 function applyOutcomeFilter(containerId){
   const bar = document.getElementById(containerId+'-of-bar');
   const container = document.getElementById(containerId);
@@ -5984,7 +6103,15 @@ function applyOutcomeFilter(containerId){
   try { pitches = JSON.parse(container.getAttribute('data-pitches')||'[]'); } catch(e){}
 
   const filtered = activeTypes.size===0 ? pitches : pitches.filter(p=>activeTypes.has(p.pitchType||'—'));
-  renderOutcomeBreakdown(containerId, filtered);
+
+  // Also apply batted ball type filter if active
+  const btypeBar = document.getElementById(containerId+'-btype-bar');
+  const activeBtypes = new Set();
+  if(btypeBar) btypeBar.querySelectorAll('[data-btype-filter]').forEach(b=>{
+    if(b.getAttribute('data-active')==='true') activeBtypes.add(b.getAttribute('data-btype-filter'));
+  });
+  const finalFiltered = activeBtypes.size===0 ? filtered : filtered.filter(p=>activeBtypes.has(p.btype||''));
+  renderOutcomeBreakdown(containerId, finalFiltered);
 
   // Also update Pitch Arsenal stats and Results Against if they exist on the page
   const pmixContainer = document.getElementById('pmix-container');
@@ -5992,7 +6119,8 @@ function applyOutcomeFilter(containerId){
     let allPitches = [];
     try { allPitches = JSON.parse(pmixContainer.getAttribute('data-all-pitches')||'[]'); } catch(e){}
     const showAll = activeTypes.size === 0;
-    const pmixFiltered = showAll ? allPitches : allPitches.filter(p=>activeTypes.has(p.pitchType||'—'));
+    const _ptFiltered = showAll ? allPitches : allPitches.filter(p=>activeTypes.has(p.pitchType||'—'));
+    const pmixFiltered = activeBtypes.size===0 ? _ptFiltered : _ptFiltered.filter(p=>activeBtypes.has(p.btype||''));
     const arsenalTitle  = document.getElementById('pmix-arsenal-title');
     const arsenalStats  = document.getElementById('pmix-arsenal-stats');
     const resultsEl     = document.getElementById('pmix-results');
@@ -6470,7 +6598,7 @@ function buildPitchBreakdown(pitches){
   const pitchTypes = [...new Set(pitches.map(p=>p.pitchType).filter(t=>t&&t!=='—'))].sort((a,b)=>pitches.filter(p=>p.pitchType===b).length-pitches.filter(p=>p.pitchType===a).length);
   const typeColors2={FB:'#2878d4',CT:'#0a3a6a',SI:'#4a9ec8',CB:'#d42828',SL:'#e05c10',SP:'#6a0a5a',CH:'#28a83a',KN:'#8a8a00'};
   const bdId = 'bd-'+Math.random().toString(36).slice(2,8);
-  const pitchesJson = JSON.stringify(pitches.map(p=>({pitchType:p.pitchType,outcome:p.outcome,velocity:p.velocity,balls:p.balls||0,strikes:p.strikes||0})));
+  const pitchesJson = JSON.stringify(pitches.map(p=>({pitchType:p.pitchType,outcome:p.outcome,velocity:p.velocity,balls:p.balls||0,strikes:p.strikes||0,btype:p.spray?.btype||''})));
   const ofBtnsFixed = pitchTypes.length > 1 ? pitchTypes.map(t=>`
     <button data-of-type="${t}" data-active="true"
       onclick="toggleOutcomeFilter(this,'${bdId}')"
@@ -6502,17 +6630,35 @@ function buildPitchBreakdown(pitches){
     </div>
 
     <!-- Shared pitch type filter for outcomes (works across BAR and PIE views) -->
-    ${ofBtnsFixed ? `<div style="margin-bottom:10px;padding:8px;background:var(--surface2);border-radius:8px">
-      <div style="font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:8px;letter-spacing:2px;text-transform:uppercase;color:#8a909e;margin-bottom:6px">Filter outcomes by pitch type</div>
-      <div id="${bdId}-of-bar" style="display:flex;flex-wrap:wrap;gap:5px;align-items:center">
-        <button onclick="selectAllOutcomeFilters('${bdId}')" data-all-active="true"
-          style="padding:3px 10px;border:1.5px solid var(--border);border-radius:20px;
-            background:var(--surface2);color:var(--text2);
-            font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:10px;
-            letter-spacing:1px;cursor:pointer;border:1.5px solid var(--border)">ALL</button>
-        ${ofBtnsFixed}
-      </div>
-    </div>` : ''}
+    <div style="margin-bottom:10px;padding:8px;background:var(--surface2);border-radius:8px">
+      ${ofBtnsFixed ? `<div style="margin-bottom:6px">
+        <div style="font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:8px;letter-spacing:2px;text-transform:uppercase;color:#8a909e;margin-bottom:5px">Pitch Type</div>
+        <div id="${bdId}-of-bar" style="display:flex;flex-wrap:wrap;gap:5px;align-items:center">
+          <button onclick="selectAllOutcomeFilters('${bdId}')" data-all-active="true"
+            style="padding:3px 10px;border:1.5px solid var(--border);border-radius:20px;
+              background:var(--surface2);color:var(--text2);
+              font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:10px;
+              letter-spacing:1px;cursor:pointer;border:1.5px solid var(--border)">ALL</button>
+          ${ofBtnsFixed}
+        </div>
+      </div>` : '<div id="${bdId}-of-bar" style="display:none"></div>'}
+      <!-- Batted ball type filter -->
+      ${(()=>{
+        const btypes = [{key:'flyball',label:'Fly Ball',color:'#1a8a3a'},{key:'linedrive',label:'Line Drive',color:'#28a83a'},{key:'groundball',label:'Ground Ball',color:'#b8860b'},{key:'weakgrounder',label:'Weak Grounder',color:'#8a6000'},{key:'popup',label:'Popup',color:'#6a3a8a'}];
+        const available = btypes.filter(bt=>pitches.some(p=>p.spray?.btype===bt.key));
+        if(!available.length) return '';
+        const btBtns = available.map(bt=>`<button data-btype-filter="${bt.key}" data-btype-container="${bdId}" onclick="toggleBtypeFilter(this,'${bdId}')"
+          style="display:inline-flex;align-items:center;gap:3px;padding:3px 8px;border:1.5px solid ${bt.color};border-radius:20px;background:${bt.color};color:white;font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:10px;letter-spacing:1px;cursor:pointer;transition:all .15s">${bt.label}</button>`).join('');
+        return `<div>
+          <div style="font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:8px;letter-spacing:2px;text-transform:uppercase;color:#8a909e;margin-bottom:5px;margin-top:${ofBtnsFixed?'6px':'0'}">Batted Ball Type</div>
+          <div id="${bdId}-btype-bar" style="display:flex;flex-wrap:wrap;gap:5px;align-items:center">
+            <button onclick="selectAllBtypes('${bdId}')" data-btype-all="true"
+              style="padding:3px 10px;border:1.5px solid var(--border);border-radius:20px;background:var(--surface2);color:var(--text2);font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:10px;letter-spacing:1px;cursor:pointer">ALL</button>
+            ${btBtns}
+          </div>
+        </div>`;
+      })()}
+    </div>
 
     <!-- Chart type toggle -->
     <div style="display:flex;gap:6px;margin-bottom:12px">
@@ -6987,6 +7133,7 @@ function renderPlayer(teamName, playerName){
         <div>
           <div class="section-title" style="margin-bottom:8px">Pitch Locations · <span id="player-zone-count">${allPitches.length} pitches</span></div>
           ${buildPitchTypeFilterBar(allPitches, 'player-zone-wrap')}
+          ${buildOutcomeFilterBar(allPitches, 'player-zone-wrap')}
           <div id="player-zone-wrap">
             ${buildPitchZoneSVG(allPitches, 320, 290)}
           </div>
@@ -7516,6 +7663,7 @@ function renderPitcher(teamName, pitcherName){
         <div>
           <div class="section-title" style="margin-bottom:8px">Pitch Locations · <span id="pitcher-zone-count">${allPitches.length} pitches logged</span></div>
           ${buildPitchTypeFilterBar(allPitches, 'pitcher-zone-wrap')}
+          ${buildOutcomeFilterBar(allPitches, 'pitcher-zone-wrap')}
           <div id="pitcher-zone-wrap">
             ${buildPitchZoneSVG(allPitches, 320, 290)}
           </div>
