@@ -2477,6 +2477,9 @@ function commitPitch(){
   const velocity=qs('vel-input').value.trim();
   const p=activePitcher();
 
+  // Snapshot full game state BEFORE any changes — enables full undo of any outcome
+  _takeSnapshot();
+
   S.pitchCount++;
   if(p) p.pitches++;
 
@@ -3307,21 +3310,57 @@ function clearLog(){ S.pitchLog=[]; renderPitchLog(); }
 
 // ===================== UNDO =====================
 function undoLastPitch(){
-  if(!S.currentAtBatPitches.length){toast('Nothing to undo.');return;}
-  const last=S.currentAtBatPitches.pop();
-  S.pitchLog.shift();
-  S.pitchCount--;
-  const p=activePitcher();
-  if(p) p.pitches=Math.max(0,p.pitches-1);
-  if(last.outcome==='strike-swinging'){S.strikes=Math.max(0,S.strikes-1);if(p){p.strikes=Math.max(0,p.strikes-1);p.swings=Math.max(0,p.swings-1);}}
-  else if(last.outcome==='strike-looking'){S.strikes=Math.max(0,S.strikes-1);if(p){p.strikes=Math.max(0,p.strikes-1);p.looks=Math.max(0,p.looks-1);}}
-  else if(last.outcome==='ball') S.balls=Math.max(0,S.balls-1);
-  else if(last.outcome==='foul'&&S.strikes>0){S.strikes--;if(p)p.strikes=Math.max(0,p.strikes-1);}
-  const dots=qsa('#pitch-dots .pitch-dot');
-  if(dots.length) dots[dots.length-1].remove();
-  qsa('#ab-strip .ab-pitch-chip').forEach((c,i,a)=>{ if(i===a.length-1) c.remove(); });
-  renderPitchLog(); renderPitcherList(); renderPitchMix(); updateScoreBug();
-  toast('Undone.');
+  if(!_undoStack.length){
+    toast('Nothing to undo.');
+    return;
+  }
+  const snap = _undoStack.pop();
+  _restoreSnapshot(snap);
+
+  // Close any open modals that may be waiting for input
+  ['error-modal','spray-modal','fielder-modal','pitch-clock-modal',
+   'runner-action-modal','dp-modal','baserun-modal']
+    .forEach(id=>{ const el=document.getElementById(id); if(el) el.style.display='none'; });
+
+  // Clear any pending state
+  S.pendingErrorEntry = null;
+  S.modalHit = null;
+  S.runnerQueue = []; S.runnerMoves = {}; S.currentQueueIdx = 0;
+  sprayCallback = null; sprayEntry = null;
+
+  // Re-render everything
+  resetPitchControls(false);  // clear outcome/type selection, keep zone dots from restored pitchLog
+  renderPitchZoneFromLog();   // redraw dots from restored pitchLog
+  renderPitchLog();
+  renderPitcherList();
+  renderPitchMix();
+  renderLineup();
+  renderBoxScore();
+  updateScoreBug();
+  clearPlayBlurb();
+  try{ renderMobPitchers(); }catch(e){}
+  try{ renderMobLineup(); }catch(e){}
+  markUnsaved();
+  toast('↩ Undone — game state restored.');
+}
+
+// Redraw pitch dots in zone from current pitchLog (used after undo)
+function renderPitchZoneFromLog(){
+  const dotsEl = document.getElementById('pitch-dots');
+  if(!dotsEl) return;
+  dotsEl.innerHTML = '';
+  // Only draw dots from currentAtBatPitches (current AB)
+  [...S.currentAtBatPitches].reverse().forEach(e=>{
+    if(e.pitchX!=null && e.pitchY!=null){
+      placePitchDot(e.pitchX, e.pitchY, e.dotClass, e.num, e.velocity);
+    }
+  });
+  // Redraw ab-strip chips
+  const strip = document.getElementById('ab-strip');
+  if(strip){
+    strip.querySelectorAll('.ab-pitch-chip').forEach(c=>c.remove());
+    S.currentAtBatPitches.forEach(e=>addAbChip(e.dotClass, e.label, e.pitchType, e.velocity));
+  }
 }
 
 // ===================== BOX SCORE =====================
@@ -7745,6 +7784,68 @@ function lmAddPitcher(){
   document.getElementById('lm-new-num').value='';
   toggleLmAddPitcherForm();
   renderLmPitchers(); renderPitcherList(); renderLineupPitchers(); updateScoreBug();
+}
+
+// ===================== GAME STATE UNDO STACK =====================
+// We snapshot the full game state before every committed pitch.
+// Undo pops the stack and restores — handles any outcome including AB/inning endings.
+const _undoStack = [];
+const _UNDO_MAX  = 20; // keep last 20 pitches worth of history
+
+function _takeSnapshot(){
+  try {
+    const snap = {
+      balls:          S.balls,
+      strikes:        S.strikes,
+      outs:           S.outs,
+      bases:          JSON.parse(JSON.stringify(S.bases)),
+      runnerNames:    JSON.parse(JSON.stringify(S.runnerNames||{})),
+      awayScore:      S.awayScore,
+      homeScore:      S.homeScore,
+      inning:         S.inning,
+      isTop:          S.isTop,
+      awayBatterIdx:  S.awayBatterIdx,
+      homeBatterIdx:  S.homeBatterIdx,
+      pitchersAway:   JSON.parse(JSON.stringify(S.pitchersAway)),
+      pitchersHome:   JSON.parse(JSON.stringify(S.pitchersHome)),
+      batterStats:    JSON.parse(JSON.stringify(S.batterStats)),
+      lineupResults:  JSON.parse(JSON.stringify(S.lineupResults)),
+      pitchLog:       JSON.parse(JSON.stringify(S.pitchLog)),
+      currentAtBatPitches: JSON.parse(JSON.stringify(S.currentAtBatPitches)),
+      pitchCount:     S.pitchCount,
+      inningRuns:     JSON.parse(JSON.stringify(S.inningRuns)),
+      gameLog:        JSON.parse(JSON.stringify(S.gameLog)),
+      fieldingStats:  JSON.parse(JSON.stringify(S.fieldingStats||{})),
+    };
+    _undoStack.push(snap);
+    if(_undoStack.length > _UNDO_MAX) _undoStack.shift();
+  } catch(e){
+    console.warn('Snapshot failed:', e);
+  }
+}
+
+function _restoreSnapshot(snap){
+  S.balls          = snap.balls;
+  S.strikes        = snap.strikes;
+  S.outs           = snap.outs;
+  S.bases          = JSON.parse(JSON.stringify(snap.bases));
+  S.runnerNames    = JSON.parse(JSON.stringify(snap.runnerNames||{}));
+  S.awayScore      = snap.awayScore;
+  S.homeScore      = snap.homeScore;
+  S.inning         = snap.inning;
+  S.isTop          = snap.isTop;
+  S.awayBatterIdx  = snap.awayBatterIdx;
+  S.homeBatterIdx  = snap.homeBatterIdx;
+  S.pitchersAway   = JSON.parse(JSON.stringify(snap.pitchersAway));
+  S.pitchersHome   = JSON.parse(JSON.stringify(snap.pitchersHome));
+  S.batterStats    = JSON.parse(JSON.stringify(snap.batterStats));
+  S.lineupResults  = JSON.parse(JSON.stringify(snap.lineupResults));
+  S.pitchLog       = JSON.parse(JSON.stringify(snap.pitchLog));
+  S.currentAtBatPitches = JSON.parse(JSON.stringify(snap.currentAtBatPitches));
+  S.pitchCount     = snap.pitchCount;
+  S.inningRuns     = JSON.parse(JSON.stringify(snap.inningRuns));
+  S.gameLog        = JSON.parse(JSON.stringify(snap.gameLog));
+  S.fieldingStats  = JSON.parse(JSON.stringify(snap.fieldingStats||{}));
 }
 
 /* BOOT */
