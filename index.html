@@ -5379,7 +5379,7 @@ function buildTeamBaserunningTable(players, teamName, games){
     const att=sb+cs;
     const sbPct=att>0?Math.round(sb/att*100)+'%':'—';
     return `<tr>
-      <td><a href="#" onclick="event.preventDefault();showView('player',JSON.stringify({team:'${escAttr(teamName)}',name:'${escAttr(p.name)}'}))"><strong>${escHtml(p.name)}</strong></a></td>
+      <td><a href="#" onclick="event.preventDefault();showView('player',JSON.stringify({team:'${escAttr(teamName)}',name:'${escAttr(p.name)}']))" style="color:inherit;text-decoration:none"><strong>${escHtml(p.name)}</strong></a></td>
       <td class="dim">${p.pos||'—'}</td>
       <td>${r}</td>
       <td>${rbi}</td>
@@ -6529,7 +6529,8 @@ function renderPlayer(teamName, playerName){
   const slg = stats.ab>0?tb/stats.ab:0;
   const fmt=n=>n===0?'.000':'.'+Math.round(n*1000).toString().padStart(3,'0');
 
-  c.innerHTML=`
+  const _rosterSidebar = buildRosterSidebar(teamName, playerName, games, 'batter');
+  c.innerHTML=`<div style="display:flex;gap:0;align-items:flex-start;min-height:100%"><div style="flex:1;min-width:0">
     <div class="breadcrumb">
       <a onclick="showView('team',this.getAttribute('data-team'))" data-team="${escAttr(teamName)}"">← ${escHtml(teamName)}</a>
       <span class="breadcrumb-sep">/</span>
@@ -6625,7 +6626,7 @@ function renderPlayer(teamName, playerName){
       <div class="section-title" style="margin-bottom:10px">Game Log</div>
       ${buildPlayerGameLog(teamName, playerName, games)}
     </div>
-  `;
+  </div>${_rosterSidebar}</div>`;
 } catch(e) { 
     console.error('renderPlayer crashed:', e);
     document.getElementById('hub-content').innerHTML = '<div class="empty-state">Error loading player: '+e.message+'</div>';
@@ -6931,6 +6932,37 @@ function getTeamPitchers(teamName, games){
   return Object.values(pitcherMap).filter(p=>p.pitches>0);
 }
 
+// ── Roster sidebar — shown on player and pitcher detail pages ──────────
+function buildRosterSidebar(teamName, currentName, games, type){
+  // type: 'batter' | 'pitcher'
+  const players = type==='pitcher' ? getTeamPitchers(teamName, games) : getTeamRoster(teamName, games);
+
+  const items = players.map(p=>{
+    const isCurrent = p.name === currentName;
+    const meta = type==='pitcher'
+      ? `${p.games}G · ${p.pitches}P · ${p.k}K`
+      : `${p.games}G · ${p.ab>0?'.'+(Math.round(p.hits/p.ab*1000)).toString().padStart(3,'0'):'.---'}`;
+    return `<button
+      onclick="showView('${type==='pitcher'?'pitcher':'player'}',JSON.stringify({team:'${escAttr(teamName)}',name:'${escAttr(p.name)}'}))"
+      style="width:100%;display:flex;align-items:center;gap:8px;padding:7px 10px;background:${isCurrent?'rgba(204,26,26,.07)':'transparent'};border:none;border-left:3px solid ${isCurrent?'var(--accent)':'transparent'};border-radius:0;cursor:pointer;text-align:left;transition:all .13s"
+      onmouseover="if(!${isCurrent})this.style.background='var(--surface2)'"
+      onmouseout="if(!${isCurrent})this.style.background='transparent'">
+      <div style="width:26px;height:26px;border-radius:50%;background:${isCurrent?'var(--accent)':'var(--surface3)'};display:flex;align-items:center;justify-content:center;flex-shrink:0">
+        <span style="font-family:'Share Tech Mono',monospace;font-size:9px;font-weight:700;color:${isCurrent?'#fff':'var(--text3)'}">${escHtml(p.num||'?')}</span>
+      </div>
+      <div style="min-width:0;flex:1">
+        <div style="font-family:'Barlow Condensed',sans-serif;font-weight:${isCurrent?'800':'600'};font-size:13px;color:${isCurrent?'var(--accent)':'var(--text)'};white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escHtml(p.name)}</div>
+        <div style="font-size:10px;color:var(--text3)">${meta}</div>
+      </div>
+    </button>`;
+  }).join('');
+
+  return `<div style="width:200px;flex-shrink:0;background:var(--surface);border-left:1px solid var(--border);margin:-20px -24px -20px 24px;padding-top:14px;overflow-y:auto;max-height:calc(100vh - 88px);position:sticky;top:0;align-self:flex-start">
+    <div style="font-size:8px;letter-spacing:2px;color:var(--text3);text-transform:uppercase;font-weight:700;padding:0 10px 8px;border-bottom:1px solid var(--border)">${escHtml(teamName)} · ${type==='pitcher'?'Pitchers':'Batters'}</div>
+    ${items||'<div style="padding:12px;font-size:12px;color:var(--text3)">No players</div>'}
+  </div>`;
+}
+
 function getPlayerCareerStats(teamName, playerName, games){
   const base={name:playerName,num:'—',pos:'—',hand:'R',games:0,pa:0,ab:0,hits:0,doubles:0,triples:0,hr:0,bb:0,k:0,hbp:0,ci:0,pitchesSeen:0,sb:0,cs:0,po:0,r:0,rbi:0};
   games.forEach(g=>{
@@ -7049,7 +7081,8 @@ function renderPitcher(teamName, pitcherName){
   const fpsPct = fpPitches.length>0 ? Math.round(fpPitches.filter(p=>_isStrike(p.outcome)).length/fpPitches.length*100) : null;
 
   const c = document.getElementById('hub-content');
-  c.innerHTML=`
+  const _pitcherSidebar = buildRosterSidebar(teamName, pitcherName, games, 'pitcher');
+  c.innerHTML=`<div style="display:flex;gap:0;align-items:flex-start;min-height:100%"><div style="flex:1;min-width:0">
     <div class="breadcrumb">
       <a data-team="${escAttr(teamName)}" onclick="showView('team',this.getAttribute('data-team'))" style="cursor:pointer">← ${escHtml(teamName)}</a>
       <span class="breadcrumb-sep">/</span><span>${escHtml(pitcherName)}</span>
@@ -7118,7 +7151,7 @@ function renderPitcher(teamName, pitcherName){
       <div class="section-title" style="margin-bottom:10px">Game Log</div>
       ${buildPitcherGameLog(teamName, pitcherName, games)}
     </div>
-  `;
+  </div>${_pitcherSidebar}</div>`;
   } catch(e) {
     console.error('renderPitcher crashed:', e);
     document.getElementById('hub-content').innerHTML='<div class="empty-state">Error: '+escHtml(e.message)+'</div>';
