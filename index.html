@@ -2235,6 +2235,8 @@ const S = {
   inning:1, isTop:true,
   outs:0, balls:0, strikes:0,
   bases:{'1st':false,'2nd':false,'3rd':false},
+  runnerNames:{'1st':null,'2nd':null,'3rd':null}, // tracks who is on each base
+  fieldingStats:{}, // {playerKey: {po:0, a:0, e:0, pos:'SS'}}
   pitchX:null, pitchY:null,
   selectedOutcome:null, selectedPitchType:null,
   pitchCount:0,
@@ -2282,7 +2284,7 @@ function setBatterIdx(i)    { if(S.isTop) S.awayBatterIdx=i; else S.homeBatterId
 function currentBatter()    { const l=currentLineup(); return l[currentBatterIdx()%l.length]; }
 function getBatterKey(isAway,i){ return `${isAway?'a':'h'}_${i}`; }
 function currentBatterKey() { return getBatterKey(S.isTop, currentBatterIdx()%currentLineup().length); }
-function getBatterStats(k)  { if(!S.batterStats[k]) S.batterStats[k]={ab:0,pa:0,hits:0,bb:0,k:0,hbp:0,ci:0}; return S.batterStats[k]; }
+function getBatterStats(k)  { if(!S.batterStats[k]) S.batterStats[k]={ab:0,pa:0,hits:0,bb:0,k:0,hbp:0,ci:0,sb:0,cs:0,po:0,r:0,rbi:0}; return S.batterStats[k]; }
 
 // Active pitcher: during top half, home team pitches; during bottom half, away team pitches
 function activePitcherList(){ return S.isTop ? S.pitchersHome : S.pitchersAway; }
@@ -2573,7 +2575,7 @@ function commitPitch(){
   } else if(outcome==='sacfly'){
     S.outs++;
     let sfRuns=0;
-    if(S.bases['3rd']){S.bases['3rd']=false;addRun();sfRuns=1;toast('Sac Fly — Run scores!');}
+    if(S.bases['3rd']){const _sfRunner=S.runnerNames['3rd'];S.bases['3rd']=false;clearRunner('3rd');addRun('3rd');sfRuns=1;const _sfBs=getBatterStats(currentBatterKey());_sfBs.rbi=(_sfBs.rbi||0)+1;toast('Sac Fly — Run scores!');}
     else toast('Sac Fly — Out (no runner on 3rd).');
     logEvent('🏃','Sac Fly',`${currentBatter()?.name||'Batter'}`);
     recordAtBatResult('O','SF'); abEnded=true;
@@ -2744,11 +2746,11 @@ function clearZoneOnly(){
 
 // ===================== WALK / HBP =====================
 function advanceOnWalk(){
-  const b=S.bases;
-  if(b['1st']&&b['2nd']&&b['3rd']){ addRun(); }
-  else if(b['1st']&&b['2nd'])      { b['3rd']=true; }
-  else if(b['1st'])                { b['2nd']=true; }
-  b['1st']=true;
+  const b=S.bases; const batter=currentBatter()?.name||null;
+  if(b['1st']&&b['2nd']&&b['3rd']){ const _wRun=S.runnerNames['3rd']; clearRunner('3rd'); addRun('3rd'); const _wBs=getBatterStats(currentBatterKey()); _wBs.rbi=(_wBs.rbi||0)+1; }
+  else if(b['1st']&&b['2nd'])      { b['3rd']=true; moveRunner('2nd','3rd'); }
+  else if(b['1st'])                { b['2nd']=true; moveRunner('1st','2nd'); }
+  b['1st']=true; setRunner('1st', batter);
   nextBatter();
 }
 
@@ -2759,7 +2761,10 @@ function handleHit(hitType){
     let runs=1;
     ['1st','2nd','3rd'].forEach(base=>{if(S.bases[base])runs++;});
     S.bases={'1st':false,'2nd':false,'3rd':false};
+    // clear all runners first, then addRun for each
+    S.runnerNames={'1st':null,'2nd':null,'3rd':null};
     for(let i=0;i<runs;i++) addRun();
+    const _hrBs=getBatterStats(currentBatterKey()); _hrBs.rbi=(_hrBs.rbi||0)+runs; _hrBs.r=(_hrBs.r||0)+1;
     const msg=`HOME RUN! ${runs} run${runs>1?'s':''} score!`;
     toast(msg);
     logEvent('',`HOME RUN — ${currentBatter()?.name||'?'}`,`${runs} run${runs>1?'s':''} score · ${awayName()} ${S.awayScore}, ${homeName()} ${S.homeScore}`);
@@ -2774,7 +2779,8 @@ function handleHit(hitType){
   const newBase=hitType==='single'?'1st':hitType==='double'?'2nd':'3rd';
   if(!runners.length){
     S.bases={'1st':false,'2nd':false,'3rd':false};
-    S.bases[newBase]=true;
+    S.runnerNames={'1st':null,'2nd':null,'3rd':null};
+    S.bases[newBase]=true; setRunner(newBase, currentBatter()?.name||null);
     const hitName=hitType.charAt(0).toUpperCase()+hitType.slice(1);
     toast(` ${hitName}!`);
     logEvent('',`${hitName} — ${currentBatter()?.name||'?'}`,`On ${newBase}`);
@@ -2869,6 +2875,7 @@ function applyRunnerMoves(){
   newBases[hit.newBase]=true;
   S.bases=newBases;
   for(let i=0;i<runs;i++) addRun();
+  if(runs>0){const _rmBs=getBatterStats(currentBatterKey());_rmBs.rbi=(_rmBs.rbi||0)+runs;}
   // Check if thrown out ended the inning before proceeding
   if(thrownOut>0 && S.outs>=3){
     S.modalHit=null; S.runnerQueue=[]; S.runnerMoves={};
@@ -3013,6 +3020,7 @@ function _applyRunnerAdvance(){
 
   S.bases = newBases;
   for(let i=0;i<runs;i++) addRun();
+  if(runs>0){const _raoBs=getBatterStats(currentBatterKey());_raoBs.rbi=(_raoBs.rbi||0)+runs;}
 
   if(runs > 0){
     toast(`${runs} run${runs>1?'s':''} score on the play!`);
@@ -3033,12 +3041,18 @@ function _applyRunnerAdvance(){
 }
 
 // ===================== SCORING =====================
-function addRun(){
+function addRun(scoringBase){
   const key=`${S.inning}-${S.isTop?'t':'b'}`;
   let ir=S.inningRuns.find(r=>r.key===key);
   if(!ir){ir={key,inning:S.inning,isTop:S.isTop,runs:0};S.inningRuns.push(ir);}
   ir.runs++;
   if(S.isTop) S.awayScore++; else S.homeScore++;
+  // Credit R to the runner who scored
+  const runnerName = scoringBase ? S.runnerNames[scoringBase] : null;
+  if(runnerName){
+    const rKey = _batterKeyByName(runnerName);
+    if(rKey){ const bs=getBatterStats(rKey); bs.r=(bs.r||0)+1; }
+  }
   updateScoreBug(); renderBoxScore();
 }
 function changeScore(team,d){
@@ -3074,13 +3088,13 @@ function handleThreeOuts(){
   // Advance past the batter who made the last out — correct batter leads off next time this team hits
   const nextIdx = (currentBatterIdx() + 1) % currentLineup().length;
   setBatterIdx(nextIdx);
-  S.outs=0; S.bases={'1st':false,'2nd':false,'3rd':false};
+  S.outs=0; S.bases={'1st':false,'2nd':false,'3rd':false}; S.runnerNames={'1st':null,'2nd':null,'3rd':null};
   if(!S.isTop) S.inning++;
   S.isTop=!S.isTop;
   clearAtBat(); clearPlayBlurb(); renderLineup(); renderPitcherList(); updateScoreBug();
   try{ if(typeof _currentMobTab!=='undefined'&&_currentMobTab==='pitchers') renderMobPitchers(); }catch(e){}
 }
-function recordAtBatResult(type,label){
+function recordAtBatResult(type,label,rbi){
   const key=currentBatterKey();
   const bs=getBatterStats(key);
   bs.pa++;                          // every result is a plate appearance
@@ -3090,6 +3104,7 @@ function recordAtBatResult(type,label){
   if(type==='K')   bs.k++;
   if(type==='HBP') bs.hbp++;
   if(type==='CI')  bs.ci++;
+  if(rbi)          bs.rbi=(bs.rbi||0)+rbi;
   if(!S.lineupResults[key]) S.lineupResults[key]=[];
   S.lineupResults[key].push({type,label});
 }
@@ -3504,21 +3519,24 @@ function executeRunnerAction(action){
   switch(action){
     case 'stolen-base': {
       const dest = base==='1st'?'2nd': base==='2nd'?'3rd':'home';
+      const sbRunner = S.runnerNames[base] || batter;
+      const sbKey = _batterKeyByName(sbRunner);
+      if(sbKey){ const bs=getBatterStats(sbKey); bs.sb=(bs.sb||0)+1; }
       if(dest==='home'){
-        S.bases[base]=false; addRun();
-        toast(`⚡ Stolen Base — ${batter} scores!`);
-        logEvent('⚡','Stolen Base (Home)',`Runner from ${base} scores`);
+        S.bases[base]=false; addRun(base); clearRunner(base);
+        toast(`⚡ Stolen Base — ${sbRunner} scores!`);
+        logEvent('⚡','Stolen Base (Home)',`${sbRunner} steals home & scores`);
       } else {
-        S.bases[base]=false; S.bases[dest]=true;
-        toast(`⚡ Stolen Base — Runner advances to ${dest}`);
-        logEvent('⚡','Stolen Base',`Runner: ${base} → ${dest}`);
+        S.bases[base]=false; S.bases[dest]=true; moveRunner(base,dest);
+        toast(`⚡ Stolen Base — ${sbRunner} advances to ${dest}`);
+        logEvent('⚡','Stolen Base',`${sbRunner}: ${base} → ${dest}`);
       }
       break;
     }
     case 'wild-pitch': {
       const dest = base==='1st'?'2nd': base==='2nd'?'3rd':'home';
       if(dest==='home'){
-        S.bases[base]=false; addRun();
+        S.bases[base]=false; addRun(base); clearRunner(base);
         toast(`🌀 Wild Pitch — Runner scores from ${base}!`);
         logEvent('🌀','Wild Pitch (Scores)',`Runner from ${base} scores`);
       } else {
@@ -3531,7 +3549,7 @@ function executeRunnerAction(action){
     case 'passed-ball': {
       const dest = base==='1st'?'2nd': base==='2nd'?'3rd':'home';
       if(dest==='home'){
-        S.bases[base]=false; addRun();
+        S.bases[base]=false; addRun(base); clearRunner(base);
         toast(`🧤 Passed Ball — Runner scores from ${base}!`);
         logEvent('🧤','Passed Ball (Scores)',`Runner from ${base} scores`);
       } else {
@@ -3561,7 +3579,7 @@ function executeRunnerAction(action){
     case 'advance-error': {
       const dest = base==='1st'?'2nd': base==='2nd'?'3rd':'home';
       if(dest==='home'){
-        S.bases[base]=false; addRun();
+        S.bases[base]=false; addRun(base); clearRunner(base);
         toast(`💥 Error — Runner scores from ${base}!`);
         logEvent('💥','Advances on Error (Scores)',`Runner from ${base} scores`);
       } else {
@@ -3572,22 +3590,28 @@ function executeRunnerAction(action){
       break;
     }
     case 'scores': {
-      S.bases[base]=false; addRun();
+      S.bases[base]=false; addRun(base); clearRunner(base);
       toast(` Runner scores from ${base}!`);
       logEvent('','Scores',`Runner from ${base} crosses home plate`);
       break;
     }
     case 'caught-stealing': {
-      S.bases[base]=false; S.outs++;
+      const csRunner = S.runnerNames[base] || batter;
+      const csKey = _batterKeyByName(csRunner);
+      if(csKey){ const bs=getBatterStats(csKey); bs.cs=(bs.cs||0)+1; }
+      S.bases[base]=false; clearRunner(base); S.outs++;
       toast(`🏷️ Caught Stealing — Out! (${S.outs} out${S.outs>1?'s':''})`);
-      logEvent('🏷️','Caught Stealing',`Runner out at ${base==='1st'?'2nd':base==='2nd'?'3rd':'home'} · ${S.outs} out`);
+      logEvent('🏷️','Caught Stealing',`${csRunner} out at ${base==='1st'?'2nd':base==='2nd'?'3rd':'home'} · ${S.outs} out`);
       if(S.outs>=3) handleThreeOuts();
       break;
     }
     case 'picked-off': {
-      S.bases[base]=false; S.outs++;
-      toast(`🎯 Picked Off — Runner out at ${base}!`);
-      logEvent('🎯','Picked Off',`Runner picked off ${base} · ${S.outs} out`);
+      const poRunner = S.runnerNames[base] || batter;
+      const poKey = _batterKeyByName(poRunner);
+      if(poKey){ const bs=getBatterStats(poKey); bs.po=(bs.po||0)+1; }
+      S.bases[base]=false; clearRunner(base); S.outs++;
+      toast(`🎯 Picked Off — ${poRunner} picked off ${base}!`);
+      logEvent('🎯','Picked Off',`${poRunner} picked off ${base} · ${S.outs} out`);
       if(S.outs>=3) handleThreeOuts();
       break;
     }
@@ -4041,10 +4065,13 @@ function _resolveError(base, entry){
   const posNum  = S._lastErrorPosNum;
   const fielderStr = fielder ? ` · E${posNum} (${fielder})` : '';
   const runs = base==='home' ? 1 : 0;
+  // Track error on fielder
+  if(fielder) _trackFielding(fielder, 'e');
   // Build blurb now — fielder is already set on S._lastErrorFielder
   updatePlayBlurb('error', entry?.pitchType||'—', entry?.velocity||'', entry?.loc||'', entry?.spray||null, runs, S.bases, {balls:entry?.balls||0,strikes:entry?.strikes||0});
   if(base==='home'){
     S.bases={'1st':false,'2nd':false,'3rd':false};
+    S.runnerNames={'1st':null,'2nd':null,'3rd':null};
     addRun();
     toast(`💥 Error — ${batter} scores!`);
     logEvent('💥','Error — Batter Scores',`${batter} reaches on error, scores${fielderStr}`);
@@ -4317,6 +4344,8 @@ function commitBatterOut(outcome, logLabel, entry, pitchType, velocity, px, py){
     // Store for blurb — must be set before updatePlayBlurb is called
     S._lastFielder  = fielder || null;
     S._lastScoreStr = scoreStr || null;
+    // Track fielding stats: PO on the fielder who recorded the out
+    if(fielder) _trackFielding(fielder, 'po');
     updatePlayBlurb(outcome, pitchType, velocity, zoneLabel(px,py), entry.spray||null, 0, S.bases, {balls:S.balls,strikes:S.strikes});
     const fielderStr = fielder ? ` · ${fielder}${scoreStr?' ('+scoreStr+')':''}` : '';
     logEvent('🟤',`${logLabel} — Out`,`${batter}${fielderStr} · ${S.outs} out${S.outs>1?'s':''} this inning`);
@@ -4525,7 +4554,11 @@ async function saveGame(){
         doubles: results.filter(r=>r.label==='2B').length,
         triples:  results.filter(r=>r.label==='3B').length,
         hr:       results.filter(r=>r.label==='HR').length,
-        sb:       0,
+        sb:       bs.sb||0,
+        cs:       bs.cs||0,
+        po:       bs.po||0,
+        r:        bs.r||0,
+        rbi:      bs.rbi||0,
         results:  results.map(r=>r.label),
       };
     });
@@ -4544,6 +4577,7 @@ async function saveGame(){
     homeBatters:  buildBatterRows(S.lineupHome, false),
     awayPitchers: S.pitchersAway.map(p=>({...p})),
     homePitchers: S.pitchersHome.map(p=>({...p})),
+    fieldingStats: JSON.parse(JSON.stringify(S.fieldingStats||{})),
     totalPitches: S.pitchLog.length,
     // ── Full resumable state ──
     resumable: {
@@ -4671,6 +4705,7 @@ async function resumeGame(gameId){
     S.inningRuns      = r.inningRuns || [];
     S.gameLog         = r.gameLog || [];
     S.batterStats     = r.batterStats || {};
+    S.fieldingStats   = g.fieldingStats || {};
     S.lineupResults   = r.lineupResults || {};
     S.currentAtBatPitches = r.currentAtBatPitches || [];
     S.pitchCount      = r.pitchCount || 0;
@@ -5077,15 +5112,17 @@ function hubMobNav(type, data){
 
 // ===== VIEWS =====
 function showView(type, data){
+  // data may be a JSON string (from onclick attributes) or an object
+  if(typeof data === 'string'){ try { data = JSON.parse(data); } catch(e){} }
   currentView = {type, data};
   document.getElementById('hub-welcome').style.display='none';
   document.getElementById('hub-content').style.display='block';
   renderSidebar();
-  if(type==='games')       renderAllGames();
-  else if(type==='team')   renderTeam(data);
-  else if(type==='player') renderPlayer(data.team, data.name);
+  if(type==='games')        renderAllGames();
+  else if(type==='team')    renderTeam(data);
+  else if(type==='player')  renderPlayer(data.team, data.name);
   else if(type==='pitcher') renderPitcher(data.team, data.name);
-  else if(type==='game')   renderGame(data);
+  else if(type==='game')    renderGame(data);
 }
 
 // ===== ALL GAMES VIEW =====
@@ -5144,24 +5181,34 @@ function renderTeam(teamName){
     </div>
 
     <div class="tab-row">
-      <div class="tab active" id="hub-tab-batters" onclick="hub_switchTab('batters')">Batters</div>
-      <div class="tab" id="hub-tab-pitchers" onclick="hub_switchTab('pitchers')">Pitchers</div>
-      <div class="tab" id="tab-games" onclick="hub_switchTab('team-games')">Games</div>
+      <div class="tab active" id="hub-tab-batters"     onclick="hub_switchTab('batters')">Batters</div>
+      <div class="tab" id="hub-tab-pitchers"           onclick="hub_switchTab('pitchers')">Pitchers</div>
+      <div class="tab" id="hub-tab-baserunning"        onclick="hub_switchTab('baserunning')">Baserunning</div>
+      <div class="tab" id="hub-tab-defense"            onclick="hub_switchTab('defense')">Defense</div>
+      <div class="tab" id="tab-games"                  onclick="hub_switchTab('team-games')">Games</div>
     </div>
 
     <div id="hub-tab-content-batters">${buildBatterTable(players, teamName)}</div>
-    <div id="hub-tab-content-pitchers" style="display:none">${buildPitcherTable(pitchers, teamName)}</div>
-    <div id="tab-content-team-games" style="display:none">${buildTeamGamesList(games, teamName)}</div>
+    <div id="hub-tab-content-pitchers"     style="display:none">${buildPitcherTable(pitchers, teamName)}</div>
+    <div id="hub-tab-content-baserunning"  style="display:none">${buildTeamBaserunningTable(players, teamName, games)}</div>
+    <div id="hub-tab-content-defense"      style="display:none">${buildTeamDefenseTable(teamName, games)}</div>
+    <div id="tab-content-team-games"       style="display:none">${buildTeamGamesList(games, teamName)}</div>
   `;
 }
 
 function hub_switchTab(tab){
   // Scope to hub-content only — don't touch player/pitcher tab rows
   const content = document.getElementById('hub-content');
+  // Map short tab name to full content div id
+  const contentIdMap = {
+    'batters':'hub-tab-content-batters','pitchers':'hub-tab-content-pitchers',
+    'baserunning':'hub-tab-content-baserunning','defense':'hub-tab-content-defense',
+    'team-games':'tab-content-team-games'
+  };
   if(content) content.querySelectorAll('.tab-row .tab').forEach(t=>t.classList.remove('active'));
   const tabEl = document.getElementById('hub-tab-'+tab) || document.getElementById('tab-'+tab);
   if(tabEl) tabEl.classList.add('active');
-  ['batters','pitchers','team-games'].forEach(t=>{
+  ['batters','pitchers','baserunning','defense','team-games'].forEach(t=>{
     const el = document.getElementById('hub-tab-content-'+t) || document.getElementById('tab-content-'+t);
     if(el) el.style.display = t===tab ? 'block' : 'none';
   });
@@ -5175,7 +5222,7 @@ function buildBatterTable(players, teamName){
     <table class="data-table">
       <thead><tr>
         <th>Player</th><th>#</th><th>Pos</th><th>G</th><th>PA</th><th>AB</th><th>H</th>
-        <th>2B</th><th>3B</th><th>HR</th><th>BB</th><th>K</th><th>HBP</th>
+        <th>2B</th><th>3B</th><th>HR</th><th>R</th><th>RBI</th><th>BB</th><th>K</th><th>HBP</th>
         <th class="${sortCol==='avg'?'sorted':''}">AVG</th>
         <th class="${sortCol==='obp'?'sorted':''}">OBP</th>
         <th class="${sortCol==='slg'?'sorted':''}">SLG</th>
@@ -5200,6 +5247,8 @@ function buildBatterTable(players, teamName){
           <td>${p.doubles}</td>
           <td>${p.triples}</td>
           <td class="${p.hr>0?'highlight':''}">${p.hr}</td>
+          <td>${p.r||0}</td>
+          <td>${p.rbi||0}</td>
           <td>${p.bb}</td>
           <td>${p.k}</td>
           <td>${p.hbp||0}</td>
@@ -5249,6 +5298,104 @@ function buildPitcherTable(pitchers, teamName){
         </tr>`;
       }).join('')}</tbody>
     </table>`;
+}
+
+function buildTeamBaserunningTable(players, teamName, games){
+  if(!players.length) return '<div class="empty-state">No player data</div>';
+  const rows = players.map(p=>{
+    let r=0,rbi=0,sb=0,cs=0,po=0,wpAdv=0,pbAdv=0,errAdv=0;
+    games.forEach(g=>{
+      const isHome=g.homeTeam===teamName;
+      const b=(isHome?g.homeBatters:g.awayBatters)?.find(x=>x.name===p.name);
+      if(b){ sb+=b.sb||0; cs+=b.cs||0; po+=b.po||0; r+=b.r||0; rbi+=b.rbi||0; }
+      (g.gameLog||[]).forEach(e=>{
+        const txt=(e.title||'')+(e.detail||'');
+        if(!txt.includes(p.name)) return;
+        if(txt.includes('Wild Pitch')&&txt.includes('→')) wpAdv++;
+        if(txt.includes('Passed Ball')&&txt.includes('→')) pbAdv++;
+        if(txt.includes('Advances on Error')&&txt.includes('→')) errAdv++;
+      });
+    });
+    const att=sb+cs;
+    const sbPct=att>0?Math.round(sb/att*100)+'%':'—';
+    return `<tr>
+      <td><a href="#" onclick="event.preventDefault();showView('player',JSON.stringify({team:'${escAttr(teamName)}',name:'${escAttr(p.name)}'}))"><strong>${escHtml(p.name)}</strong></a></td>
+      <td class="dim">${p.pos||'—'}</td>
+      <td>${r}</td>
+      <td>${rbi}</td>
+      <td class="${sb>0?'accent':''}">${sb}</td>
+      <td>${cs}</td>
+      <td>${att}</td>
+      <td>${sbPct}</td>
+      <td>${po}</td>
+      <td class="dim">${wpAdv+pbAdv+errAdv}</td>
+    </tr>`;
+  });
+
+  return `<div class="section-title" style="margin-bottom:10px">Baserunning</div>
+    <table class="data-table">
+    <thead><tr><th>Player</th><th>Pos</th><th>R</th><th>RBI</th><th>SB</th><th>CS</th><th>Att</th><th>SB%</th><th>PO</th><th>Adv</th></tr></thead>
+    <tbody>${rows.join('')}</tbody>
+  </table>`;
+}
+
+function buildTeamDefenseTable(teamName, games){
+  const byPlayer={};
+  // Also count double plays from game log
+  const dpByPlayer={};
+  games.forEach(g=>{
+    Object.values(g.fieldingStats||{}).forEach(f=>{
+      if(f.team!==teamName) return;
+      const k=f.name;
+      if(!byPlayer[k]) byPlayer[k]={name:f.name,pos:f.pos,po:0,a:0,e:0};
+      byPlayer[k].pos=f.pos||byPlayer[k].pos;
+      byPlayer[k].po+=f.po||0; byPlayer[k].a+=f.a||0; byPlayer[k].e+=f.e||0;
+    });
+    // Count errors per game for error-per-game stat
+    // Count DP from game log
+    (g.gameLog||[]).forEach(e=>{
+      if((e.title||'').includes('Double Play')){
+        // Can't easily attribute to individual without assist tracking yet
+      }
+    });
+  });
+
+  // Team totals
+  let tPO=0,tA=0,tE=0;
+  Object.values(byPlayer).forEach(p=>{tPO+=p.po;tA+=p.a;tE+=p.e;});
+  const tTC=tPO+tA+tE;
+  const tFpct=tTC>0?'.'+(Math.round((tPO+tA)/tTC*1000)).toString().padStart(3,'0'):'—';
+
+  const rows=Object.values(byPlayer)
+    .filter(p=>p.po+p.a+p.e>0)
+    .sort((a,b)=>(b.po+b.a)-(a.po+a.a))
+    .map(p=>{
+      const tc=p.po+p.a+p.e;
+      const fpct=tc>0?'.'+(Math.round((p.po+p.a)/tc*1000)).toString().padStart(3,'0'):'—';
+      return `<tr>
+        <td><strong>${escHtml(p.name)}</strong></td>
+        <td class="dim">${p.pos||'—'}</td>
+        <td class="accent">${p.po}</td>
+        <td>${p.a}</td>
+        <td class="${p.e>0?'highlight':''}">${p.e}</td>
+        <td>${tc}</td>
+        <td>${fpct}</td>
+      </tr>`;
+    });
+
+  if(!rows.length) return '<div class="empty-state" style="padding:30px">No defensive plays recorded yet.<br><span style="font-size:12px;color:var(--text3)">Putouts and errors are tracked when you select a fielder on outs and errors.</span></div>';
+
+  return `<div class="section-title" style="margin-bottom:10px">Team Defense</div>
+    <div class="stat-cards" style="margin-bottom:16px">
+      <div class="stat-card accent"><div class="stat-card-val">${tPO}</div><div class="stat-card-lbl">Team PO</div></div>
+      <div class="stat-card"><div class="stat-card-val">${tA}</div><div class="stat-card-lbl">Team A</div></div>
+      <div class="stat-card"><div class="stat-card-val">${tE}</div><div class="stat-card-lbl">Team E</div></div>
+      <div class="stat-card"><div class="stat-card-val">${tFpct}</div><div class="stat-card-lbl">Team FPCT</div></div>
+    </div>
+    <table class="data-table">
+    <thead><tr><th>Player</th><th>Pos</th><th>PO</th><th>A</th><th>E</th><th>TC</th><th>FPCT</th></tr></thead>
+    <tbody>${rows.join('')}</tbody>
+  </table>`;
 }
 
 function buildTeamGamesList(games, teamName){
@@ -6350,6 +6497,8 @@ function renderPlayer(teamName, playerName){
       <div class="stat-card"><div class="stat-card-val">${stats.doubles}</div><div class="stat-card-lbl">Doubles</div></div>
       <div class="stat-card"><div class="stat-card-val">${stats.triples}</div><div class="stat-card-lbl">Triples</div></div>
       <div class="stat-card accent"><div class="stat-card-val">${stats.hr}</div><div class="stat-card-lbl">Home Runs</div></div>
+      <div class="stat-card"><div class="stat-card-val">${stats.r||0}</div><div class="stat-card-lbl">Runs</div></div>
+      <div class="stat-card"><div class="stat-card-val">${stats.rbi||0}</div><div class="stat-card-lbl">RBI</div></div>
       <div class="stat-card"><div class="stat-card-val">${tb}</div><div class="stat-card-lbl">Total Bases</div></div>
       <div class="stat-card"><div class="stat-card-val">${stats.bb}</div><div class="stat-card-lbl">Walks</div></div>
       <div class="stat-card"><div class="stat-card-val">${stats.hbp||0}</div><div class="stat-card-lbl">HBP</div></div>
@@ -6362,7 +6511,12 @@ function renderPlayer(teamName, playerName){
       <div class="tab active" onclick="playerTab('spray')">🏟️ Spray Chart</div>
       <div class="tab" onclick="playerTab('zone')">🎯 Pitch Zone</div>
       <div class="tab" onclick="playerTab('breakdown')"> Pitch Breakdown</div>
+      <div class="tab" onclick="playerTab('baserunning')">Baserunning</div>
       <div class="tab" onclick="playerTab('gamelog')"> Game Log</div>
+    </div>
+
+    <div id="ptab-baserunning" style="display:none">
+      ${buildBaserunningTab(stats, games, teamName, playerName)}
     </div>
 
     <div id="ptab-spray">
@@ -6420,10 +6574,10 @@ function renderPlayer(teamName, playerName){
 
 function playerTab(tab){
   document.querySelectorAll('#player-tab-row .tab').forEach((t,i)=>{
-    const tabs=['spray','zone','breakdown','gamelog'];
+    const tabs=['spray','zone','breakdown','baserunning','gamelog'];
     t.classList.toggle('active', tabs[i]===tab);
   });
-  ['spray','zone','breakdown','gamelog'].forEach(t=>{
+  ['spray','zone','breakdown','baserunning','gamelog'].forEach(t=>{
     const el=document.getElementById('ptab-'+t);
     if(el) el.style.display = t===tab ? 'block' : 'none';
   });
@@ -6718,7 +6872,7 @@ function getTeamPitchers(teamName, games){
 }
 
 function getPlayerCareerStats(teamName, playerName, games){
-  const base={name:playerName,num:'—',pos:'—',hand:'R',games:0,pa:0,ab:0,hits:0,doubles:0,triples:0,hr:0,bb:0,k:0,hbp:0,ci:0,pitchesSeen:0};
+  const base={name:playerName,num:'—',pos:'—',hand:'R',games:0,pa:0,ab:0,hits:0,doubles:0,triples:0,hr:0,bb:0,k:0,hbp:0,ci:0,pitchesSeen:0,sb:0,cs:0,po:0,r:0,rbi:0};
   games.forEach(g=>{
     const isHome=g.homeTeam===teamName;
     const batters=isHome?g.homeBatters:g.awayBatters;
@@ -6730,8 +6884,68 @@ function getPlayerCareerStats(teamName, playerName, games){
     base.pa+=pa; base.ab+=p.ab||0; base.hits+=p.hits||0; base.doubles+=p.doubles||0;
     base.triples+=p.triples||0; base.hr+=p.hr||0; base.bb+=p.bb||0;
     base.k+=p.k||0; base.hbp+=p.hbp||0; base.ci+=(p.ci||0); base.pitchesSeen+=(p.pitchesSeen||0);
+    base.sb+=(p.sb||0); base.cs+=(p.cs||0); base.po+=(p.po||0); base.r+=(p.r||0); base.rbi+=(p.rbi||0);
   });
   return base;
+}
+
+function buildBaserunningTab(stats, games, teamName, playerName){
+  const sb=stats.sb||0, cs=stats.cs||0, po=stats.po||0, r=stats.r||0, rbi=stats.rbi||0;
+  const att=sb+cs;
+  const sbPct=att>0?Math.round(sb/att*100)+'%':'—';
+
+  // Count extra base advances from game log (runner advances tagged to this player)
+  let xba=0, wpAdv=0, pbAdv=0, errAdv=0;
+  games.forEach(g=>{
+    (g.gameLog||[]).forEach(e=>{
+      const txt=(e.title||'')+(e.detail||'');
+      if(!txt.includes(playerName)) return;
+      if(txt.includes('Wild Pitch')&&txt.includes('→')) wpAdv++;
+      if(txt.includes('Passed Ball')&&txt.includes('→')) pbAdv++;
+      if(txt.includes('Advances on Error')&&txt.includes('→')) errAdv++;
+    });
+  });
+
+  // Fielding stats
+  let fPO=0,fA=0,fE=0;
+  games.forEach(g=>{
+    Object.values(g.fieldingStats||{}).forEach(f=>{
+      if(f.name===playerName&&(g.awayTeam===teamName||g.homeTeam===teamName)){
+        fPO+=f.po||0; fA+=f.a||0; fE+=f.e||0;
+      }
+    });
+  });
+  const tc=fPO+fA+fE;
+  const fpct=tc>0?'.'+(Math.round((fPO+fA)/tc*1000)).toString().padStart(3,'0'):'—';
+
+  const card=(val,lbl,accent=false)=>`<div class="stat-card${accent?' accent':''}"><div class="stat-card-val">${val}</div><div class="stat-card-lbl">${lbl}</div></div>`;
+
+  return `
+    <div style="margin-bottom:28px">
+      <div class="section-title" style="margin-bottom:12px">Baserunning</div>
+      <div class="stat-cards">
+        ${card(r,'Runs Scored',true)}
+        ${card(rbi,'RBI')}
+        ${card(sb,'SB',true)}
+        ${card(cs,'CS')}
+        ${card(att,'SB Att')}
+        ${card(sbPct,'SB%')}
+        ${card(po,'Picked Off')}
+        ${card(wpAdv,'WP Advances')}
+        ${card(pbAdv,'PB Advances')}
+        ${card(errAdv,'Error Advances')}
+      </div>
+    </div>
+    <div>
+      <div class="section-title" style="margin-bottom:12px">Defense</div>
+      <div class="stat-cards">
+        ${card(fPO,'Putouts',true)}
+        ${card(fA,'Assists')}
+        ${card(fE,'Errors')}
+        ${card(tc,'Tot. Chances')}
+        ${card(fpct,'FPCT')}
+      </div>
+    </div>`;
 }
 
 function aggregateBattersFromGame(batters){
@@ -7273,6 +7487,53 @@ document.addEventListener('fullscreenchange', ()=>{
   if(expand)   expand.style.display   = isFs ? 'none'  : 'block';
   if(compress) compress.style.display = isFs ? 'block' : 'none';
 });
+
+// ── Baserunning + Defense helpers ──────────────────────────────────
+function getFieldingStats(team, playerName, pos){
+  const key = team+'::'+playerName;
+  if(!S.fieldingStats[key]) S.fieldingStats[key]={name:playerName,team,pos:pos||'?',po:0,a:0,e:0};
+  return S.fieldingStats[key];
+}
+
+// Set runner name when a batter reaches base
+function setRunner(base, name){
+  S.runnerNames[base] = name || null;
+}
+
+// Move runner between bases
+// Find batter key by player name (searches both lineups)
+function _batterKeyByName(name){
+  if(!name) return null;
+  const search = (lineup, isAway) => {
+    const idx = lineup.findIndex(p=>p.name===name);
+    return idx>=0 ? getBatterKey(isAway, idx) : null;
+  };
+  return search(S.lineupAway, true) || search(S.lineupHome, false) || null;
+}
+
+// Track fielding putout/assist/error for a fielder position on current defensive team
+function _trackFielding(pos, type){ // type: 'po'|'a'|'e'
+  if(!pos) return;
+  // Defensive team: if top half (away bats), home team defends
+  const isHomeDefending = S.isTop;
+  const lineup = isHomeDefending ? S.lineupHome : S.lineupAway;
+  const teamName = isHomeDefending ? (qs('home-name-input')?.value||'HOME') : (qs('away-name-input')?.value||'AWAY');
+  // Find player at that position
+  const player = lineup.find(p=>(p.pos||'').toUpperCase()===(pos||'').toUpperCase());
+  if(!player) return;
+  const key = teamName+'::'+player.name;
+  if(!S.fieldingStats[key]) S.fieldingStats[key]={name:player.name,team:teamName,pos,po:0,a:0,e:0};
+  S.fieldingStats[key][type]=(S.fieldingStats[key][type]||0)+1;
+}
+
+function moveRunner(from, to){
+  S.runnerNames[to]   = S.runnerNames[from] || null;
+  S.runnerNames[from] = null;
+}
+
+function clearRunner(base){
+  S.runnerNames[base] = null;
+}
 
 /* BOOT */
 (function(){
