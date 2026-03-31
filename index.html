@@ -5311,6 +5311,7 @@ function renderTeam(teamName){
       <div class="tab" id="hub-tab-splits"             onclick="hub_switchTab('splits')">Splits</div>
       <div class="tab" id="hub-tab-baserunning"        onclick="hub_switchTab('baserunning')">Baserunning</div>
       <div class="tab" id="hub-tab-defense"            onclick="hub_switchTab('defense')">Defense</div>
+      <div class="tab" id="hub-tab-scouting"           onclick="hub_switchTab('scouting')">Scouting Reports</div>
       <div class="tab" id="tab-games"                  onclick="hub_switchTab('team-games')">Games</div>
     </div>
 
@@ -5319,6 +5320,7 @@ function renderTeam(teamName){
     <div id="hub-tab-content-splits"       style="display:none">${buildTeamSplitsTab(players, teamName, games)}</div>
     <div id="hub-tab-content-baserunning"  style="display:none">${buildTeamBaserunningTable(players, teamName, games)}</div>
     <div id="hub-tab-content-defense"      style="display:none">${buildTeamDefenseTable(teamName, games)}</div>
+    <div id="hub-tab-content-scouting"     style="display:none">${buildTeamScoutingTab(teamName, players, pitchers, games)}</div>
     <div id="tab-content-team-games"       style="display:none">${buildTeamGamesList(games, teamName)}</div>
   `;
 }
@@ -5329,13 +5331,13 @@ function hub_switchTab(tab){
   // Map short tab name to full content div id
   const contentIdMap = {
     'batters':'hub-tab-content-batters','pitchers':'hub-tab-content-pitchers',
-    'splits':'hub-tab-content-splits','baserunning':'hub-tab-content-baserunning','defense':'hub-tab-content-defense',
+    'splits':'hub-tab-content-splits','baserunning':'hub-tab-content-baserunning','defense':'hub-tab-content-defense','scouting':'hub-tab-content-scouting',
     'team-games':'tab-content-team-games'
   };
   if(content) content.querySelectorAll('.tab-row .tab').forEach(t=>t.classList.remove('active'));
   const tabEl = document.getElementById('hub-tab-'+tab) || document.getElementById('tab-'+tab);
   if(tabEl) tabEl.classList.add('active');
-  ['batters','pitchers','splits','baserunning','defense','team-games'].forEach(t=>{
+  ['batters','pitchers','splits','baserunning','defense','scouting','team-games'].forEach(t=>{
     const el = document.getElementById('hub-tab-content-'+t) || document.getElementById('tab-content-'+t);
     if(el) el.style.display = t===tab ? 'block' : 'none';
   });
@@ -8417,6 +8419,637 @@ function _restoreSnapshot(snap){
   S.inningRuns     = JSON.parse(JSON.stringify(snap.inningRuns));
   S.gameLog        = JSON.parse(JSON.stringify(snap.gameLog));
   S.fieldingStats  = JSON.parse(JSON.stringify(snap.fieldingStats||{}));
+}
+
+
+// ===================== SCOUTING REPORTS =====================
+
+function buildTeamScoutingTab(teamName, players, pitchers, games){
+  const hitterBtns = players.filter(p=>p.pa>0).sort((a,b)=>b.ab-a.ab)
+    .map(p=>`<button onclick="showScoutingReport('hitter','${escAttr(teamName)}','${escAttr(p.name)}')" 
+      class="scout-player-btn" id="scout-btn-h-${escAttr(p.name)}"
+      style="padding:5px 12px;border:1px solid var(--border2);border-radius:20px;background:var(--surface3);color:var(--text2);font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:12px;cursor:pointer;transition:all .14s;white-space:nowrap"
+      onmouseover="this.style.borderColor='var(--accent)';this.style.color='var(--accent)'"
+      onmouseout="if(!this.classList.contains('active')){this.style.borderColor='var(--border2)';this.style.color='var(--text2)'}">
+      #${p.num||'?'} ${escHtml(p.name)}
+    </button>`).join('');
+
+  const pitcherBtns = pitchers.filter(p=>p.pitches>0).sort((a,b)=>b.pitches-a.pitches)
+    .map(p=>`<button onclick="showScoutingReport('pitcher','${escAttr(teamName)}','${escAttr(p.name)}')"
+      class="scout-player-btn" id="scout-btn-p-${escAttr(p.name)}"
+      style="padding:5px 12px;border:1px solid var(--border2);border-radius:20px;background:var(--surface3);color:var(--text2);font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:12px;cursor:pointer;transition:all .14s;white-space:nowrap"
+      onmouseover="this.style.borderColor='var(--blue)';this.style.color='var(--blue)'"
+      onmouseout="if(!this.classList.contains('active')){this.style.borderColor='var(--border2)';this.style.color='var(--text2)'}">
+      #${p.num||'?'} ${escHtml(p.name)} (${p.hand||'R'}HP)
+    </button>`).join('');
+
+  const firstHitter  = players.filter(p=>p.pa>0).sort((a,b)=>b.ab-a.ab)[0];
+  const firstPitcher = pitchers.filter(p=>p.pitches>0).sort((a,b)=>b.pitches-a.pitches)[0];
+  const initReport   = firstHitter ? buildHitterScoutingReport(teamName, firstHitter.name, games) : '<div class="empty-state">No hitter data</div>';
+
+  return `
+  <style>
+    .scout-section{margin-bottom:18px;break-inside:avoid;}
+    .scout-section-title{font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:11px;letter-spacing:3px;text-transform:uppercase;color:var(--text3);border-bottom:2px solid var(--border);padding-bottom:4px;margin-bottom:10px;}
+    .scout-big-stat{font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:36px;line-height:1;}
+    .scout-big-lbl{font-size:8px;letter-spacing:2px;text-transform:uppercase;color:var(--text3);margin-top:2px;}
+    .scout-stat-grid{display:grid;gap:8px;}
+    .scout-card{background:#fff;border:1px solid #e0e4ea;border-radius:8px;padding:8px 10px;text-align:center;}
+    .scout-card-val{font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:20px;}
+    .scout-card-lbl{font-size:7px;letter-spacing:2px;text-transform:uppercase;color:#8a909e;margin-top:1px;}
+    .scout-table{width:100%;border-collapse:collapse;font-size:11px;}
+    .scout-table th{font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:8px;letter-spacing:2px;text-transform:uppercase;color:#8a909e;padding:4px 6px;border-bottom:1.5px solid #d4d8e0;text-align:center;background:#f8f9fb;}
+    .scout-table td{padding:5px 6px;border-bottom:1px solid #e8eaee;text-align:center;font-family:'Barlow Condensed',sans-serif;font-size:12px;}
+    .scout-table td:first-child{text-align:left;font-weight:600;}
+    .scout-table tr:last-child td{border-bottom:none;}
+    .scout-highlight{color:#cc1a1a;font-weight:800;}
+    .scout-dim{color:#8a909e;}
+    .scout-good{color:#1a8a3a;font-weight:700;}
+    .scout-bar-row{display:flex;align-items:center;gap:6px;margin-bottom:4px;}
+    .scout-bar-label{font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:600;color:#4a5060;width:90px;flex-shrink:0;}
+    .scout-bar-track{flex:1;background:#e8eaee;border-radius:3px;height:10px;overflow:hidden;}
+    .scout-bar-fill{height:100%;border-radius:3px;}
+    .scout-bar-val{font-family:'Share Tech Mono',monospace;font-size:10px;color:#8a909e;width:38px;text-align:right;flex-shrink:0;}
+    @media print {
+      #hub-sidebar,#hub-app>div:first-child,.tab-row,#scout-picker,.scout-print-hide{display:none!important;}
+      #hub-main{padding:0!important;overflow:visible!important;}
+      #hub-content{display:block!important;}
+      .scout-report-page{page-break-after:always;width:8.5in;min-height:11in;padding:0.5in;box-sizing:border-box;background:#fff!important;}
+      .scout-report-page:last-child{page-break-after:auto;}
+      body,html{background:#fff!important;}
+      @page{size:letter;margin:0;}
+    }
+  </style>
+  <div id="scout-picker" class="scout-print-hide">
+    <div style="margin-bottom:16px">
+      <div style="font-size:8px;letter-spacing:2px;color:var(--text3);text-transform:uppercase;font-weight:700;margin-bottom:6px">Hitters</div>
+      <div style="display:flex;flex-wrap:wrap;gap:6px">${hitterBtns||'<span style="color:var(--text3);font-size:12px">No hitter data</span>'}</div>
+    </div>
+    <div style="margin-bottom:16px">
+      <div style="font-size:8px;letter-spacing:2px;color:var(--text3);text-transform:uppercase;font-weight:700;margin-bottom:6px">Pitchers</div>
+      <div style="display:flex;flex-wrap:wrap;gap:6px">${pitcherBtns||'<span style="color:var(--text3);font-size:12px">No pitcher data</span>'}</div>
+    </div>
+    <div style="display:flex;gap:8px;margin-bottom:20px">
+      <button onclick="window.print()" style="padding:8px 20px;background:var(--accent);border:none;border-radius:7px;color:#fff;font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:14px;letter-spacing:1px;cursor:pointer">🖨 Print Report</button>
+    </div>
+    <div style="border-top:1px solid var(--border);padding-top:16px"></div>
+  </div>
+  <div id="scout-report-content">${initReport}</div>`;
+}
+
+function showScoutingReport(type, teamName, playerName){
+  const games = getTeamGames(teamName);
+  const el = document.getElementById('scout-report-content');
+  if(!el) return;
+  el.innerHTML = type==='hitter'
+    ? buildHitterScoutingReport(teamName, playerName, games)
+    : buildPitcherScoutingReport(teamName, playerName, games);
+  // Highlight active button
+  document.querySelectorAll('.scout-player-btn').forEach(b=>{
+    const isMe = b.id===`scout-btn-${type==='hitter'?'h':'p'}-${playerName}`;
+    b.classList.toggle('active', isMe);
+    b.style.background    = isMe ? 'rgba(204,26,26,.08)' : 'var(--surface3)';
+    b.style.borderColor   = isMe ? 'var(--accent)' : 'var(--border2)';
+    b.style.color         = isMe ? 'var(--accent)' : 'var(--text2)';
+  });
+}
+
+// ── HITTER SCOUTING REPORT ────────────────────────────────────────
+function buildHitterScoutingReport(teamName, playerName, games){
+  const stats  = getPlayerCareerStats(teamName, playerName, games);
+  const allPitches = getPlayerPitches(teamName, playerName, games);
+  const sortedGames = [...games].sort((a,b)=>a.date.localeCompare(b.date));
+  const allABs = sortedGames.flatMap(g=>_extractABs(g.pitchLog||[], playerName, teamName, g));
+
+  // Core rate stats
+  const pa=stats.pa||0, ab=stats.ab||0, h=stats.hits||0;
+  const tb=(h-stats.doubles-stats.triples-stats.hr)+stats.doubles*2+stats.triples*3+stats.hr*4;
+  const avg=ab>0?h/ab:0, obp=pa>0?(h+(stats.bb||0)+(stats.hbp||0))/pa:0;
+  const slg=ab>0?tb/ab:0, ops=obp+slg;
+  const kpct=pa>0?(stats.k||0)/pa:0, bbpct=pa>0?(stats.bb||0)/pa:0;
+  const f=n=>n===0?'.000':'.'+Math.round(n*1000).toString().padStart(3,'0');
+  const fp=n=>Math.round(n*100)+'%';
+
+  // Plate discipline from pitches
+  const total=allPitches.length;
+  const swingOuts=['strike-swinging','foul','single','double','triple','homerun','groundout','flyout','lineout','sacfly','sacbunt','error'];
+  const contactOuts=['single','double','triple','homerun','groundout','flyout','lineout','sacfly','sacbunt','error'];
+  const inZone=allPitches.filter(p=>p.pitchX!=null&&p.pitchX>=31&&p.pitchX<=69&&p.pitchY!=null&&p.pitchY>=30.9&&p.pitchY<=69.1);
+  const outZone=allPitches.filter(p=>p.pitchX!=null&&!(p.pitchX>=31&&p.pitchX<=69&&p.pitchY!=null&&p.pitchY>=30.9&&p.pitchY<=69.1));
+  const swings=allPitches.filter(p=>swingOuts.includes(p.outcome)).length;
+  const contact=allPitches.filter(p=>contactOuts.includes(p.outcome)).length;
+  const whiffs=allPitches.filter(p=>p.outcome==='strike-swinging').length;
+  const chaseSwings=outZone.filter(p=>swingOuts.includes(p.outcome)).length;
+  const hardHits=allPitches.filter(p=>p.spray?.hardHit).length;
+  const pct=n=>total>0?Math.round(n/total*100)+'%':'—';
+
+  // Batted ball profile
+  const bip=allPitches.filter(p=>p.spray?.btype);
+  const bipTotal=bip.length||1;
+  const btCounts={flyball:0,linedrive:0,groundball:0,weakgrounder:0,popup:0};
+  bip.forEach(p=>{ if(btCounts[p.spray.btype]!==undefined) btCounts[p.spray.btype]++; });
+  const bipBar=(label,key,color)=>`<div class="scout-bar-row">
+    <div class="scout-bar-label">${label}</div>
+    <div class="scout-bar-track"><div class="scout-bar-fill" style="width:${Math.round(btCounts[key]/bipTotal*100)}%;background:${color}"></div></div>
+    <div class="scout-bar-val">${Math.round(btCounts[key]/bipTotal*100)}%</div>
+  </div>`;
+
+  // Spray direction (pull/center/oppo) — use fieldX
+  const pullPct=bip.length>0?Math.round(bip.filter(p=>stats.hand==='L'?p.spray?.fieldX>55:p.spray?.fieldX<45).length/bipTotal*100):0;
+  const centrPct=bip.length>0?Math.round(bip.filter(p=>p.spray?.fieldX>=40&&p.spray?.fieldX<=60).length/bipTotal*100):0;
+  const oppoPct=bip.length>0?Math.round(bip.filter(p=>stats.hand==='L'?p.spray?.fieldX<45:p.spray?.fieldX>55).length/bipTotal*100):0;
+
+  // Count splits
+  const countGroups=[
+    {lbl:'0-0 (First Pitch)', fn:a=>a.pitches.length===1},
+    {lbl:'Ahead in Count',    fn:a=>{const fp=a.pitches[0];return fp&&fp.balls>fp.strikes;}},
+    {lbl:'Behind in Count',  fn:a=>{const fp=a.pitches[0];return fp&&fp.strikes>fp.balls;}},
+    {lbl:'2-Strike',         fn:a=>a.pitches.some(p=>p.strikes===2)},
+    {lbl:'Full Count (3-2)', fn:a=>a.pitches.some(p=>p.balls===3&&p.strikes===2)},
+    {lbl:'RISP',             fn:a=>a.runnersOn?.['2nd']||a.runnersOn?.['3rd']},
+  ];
+  const countRows=countGroups.map(g=>{
+    const abs=allABs.filter(g.fn);
+    const s=_sumStats(abs.map(_abToStats));
+    const a=s.ab>0?s.h/s.ab:null;
+    const obpS=s.pa>0?(s.h+s.bb+s.hbp)/s.pa:null;
+    return `<tr>
+      <td>${g.lbl}</td>
+      <td>${s.pa}</td><td>${s.ab}</td><td>${s.h}</td>
+      <td class="${a!==null&&a>=.300?'scout-highlight':a!==null&&a<.200?'scout-dim':''}">${a!==null?f(a):'.---'}</td>
+      <td>${obpS!==null?f(obpS):'.---'}</td>
+      <td>${s.pa>0?(s.k/s.pa*100).toFixed(0)+'%':'—'}</td>
+      <td>${s.pa>0?(s.bb/s.pa*100).toFixed(0)+'%':'—'}</td>
+    </tr>`;
+  }).join('');
+
+  // Pitch type faced
+  const ptMap={};
+  allPitches.forEach(p=>{
+    const t=p.pitchType||'—'; if(t==='—') return;
+    if(!ptMap[t])ptMap[t]={total:0,swings:0,whiffs:0,hits:0,ab:0,k:0};
+    ptMap[t].total++;
+    if(swingOuts.includes(p.outcome))ptMap[t].swings++;
+    if(p.outcome==='strike-swinging')ptMap[t].whiffs++;
+    if(['single','double','triple','homerun'].includes(p.outcome)){ptMap[t].hits++;ptMap[t].ab++;}
+    if(['groundout','flyout','lineout','sacfly','sacbunt','error'].includes(p.outcome))ptMap[t].ab++;
+    if(['strike-swinging','strike-looking'].includes(p.outcome))ptMap[t].k++;
+  });
+  const typeColors={FB:'#2878d4',CT:'#0a3a6a',SI:'#4a9ec8',CB:'#d42828',SL:'#e05c10',SP:'#6a0a5a',CH:'#28a83a',KN:'#8a8a00'};
+  const ptRows=Object.entries(ptMap).sort((a,b)=>b[1].total-a[1].total).map(([t,d])=>{
+    const usg=Math.round(d.total/total*100);
+    const bavg=d.ab>0?f(d.hits/d.ab):'.---';
+    const whiffPct=d.swings>0?Math.round(d.whiffs/d.swings*100)+'%':'—';
+    const kpct2=d.total>0?Math.round(d.k/d.total*100)+'%':'—';
+    return `<tr>
+      <td><span style="font-weight:800;color:${typeColors[t]||'#8a909e'}">${t}</span></td>
+      <td>${d.total} <span class="scout-dim">(${usg}%)</span></td>
+      <td class="${d.ab>0&&d.hits/d.ab>=.300?'scout-highlight':d.ab>0&&d.hits/d.ab<.200?'scout-good':''}">${bavg}</td>
+      <td>${whiffPct}</td><td>${kpct2}</td>
+    </tr>`;
+  }).join('');
+
+  // vs LHP/RHP
+  const vsL=_sumStats(allABs.filter(a=>a.pitcherHand==='L').map(_abToStats));
+  const vsR=_sumStats(allABs.filter(a=>a.pitcherHand!=='L').map(_abToStats));
+
+  // Splits table rows
+  const splitRow=(lbl,s)=>{
+    const a=s.ab>0?f(s.h/s.ab):'.---';
+    const o=s.pa>0?f((s.h+s.bb+s.hbp)/s.pa):'.---';
+    const sg=s.ab>0?f((s.h-s.h2b-s.h3b-s.hr+s.h2b*2+s.h3b*3+s.hr*4)/s.ab):'.---';
+    return `<tr><td>${lbl}</td><td>${s.pa}</td><td>${a}</td><td>${o}</td><td>${sg}</td>
+      <td>${s.pa>0?Math.round(s.k/s.pa*100)+'%':'—'}</td>
+      <td>${s.pa>0?Math.round(s.bb/s.pa*100)+'%':'—'}</td></tr>`;
+  };
+
+  const recentABs5=sortedGames.slice(-5).flatMap(g=>_extractABs(g.pitchLog||[],playerName,teamName,g));
+  const recentABs10=sortedGames.slice(-10).flatMap(g=>_extractABs(g.pitchLog||[],playerName,teamName,g));
+  const homeSplit=_sumStats(allABs.filter(a=>a.isHome).map(_abToStats));
+  const awaySplit=_sumStats(allABs.filter(a=>!a.isHome).map(_abToStats));
+  const rispSplit=_sumStats(allABs.filter(a=>a.runnersOn?.['2nd']||a.runnersOn?.['3rd']).map(_abToStats));
+  const emptyS=_sumStats(allABs.filter(a=>!a.runnersOn?.['1st']&&!a.runnersOn?.['2nd']&&!a.runnersOn?.['3rd']).map(_abToStats));
+
+  // Lineup slot
+  const slotMap={};
+  allABs.forEach(ab=>{const slot=(ab.pitches[0]?.batterIdx??null);if(slot===null)return;const k=slot+1;if(!slotMap[k])slotMap[k]=[];slotMap[k].push(_abToStats(ab));});
+  const slotRows=Object.entries(slotMap).sort((a,b)=>+a[0]-+b[0]).map(([k,rows])=>{
+    const s=_sumStats(rows);
+    const ord=+k,sfx=ord===1?'st':ord===2?'nd':ord===3?'rd':'th';
+    return splitRow(`${ord}${sfx}`,s);
+  }).join('');
+
+  // Hot/Cold zone SVG using pitch log
+  const hcz=buildScoutHotColdZone(allPitches,'batter');
+
+  // Spray chart
+  const sprayChart=buildSprayChartSVG(allPitches);
+
+  // Recent 5 and 10
+  const r5=_sumStats(recentABs5.map(_abToStats));
+  const r10=_sumStats(recentABs10.map(_abToStats));
+  const today=new Date().toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
+
+  return `<div class="scout-report-page" id="scout-hitter-report">
+  <!-- Header -->
+  <div style="display:flex;align-items:flex-start;justify-content:space-between;border-bottom:3px solid #cc1a1a;padding-bottom:10px;margin-bottom:16px">
+    <div>
+      <div style="font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:10px;letter-spacing:3px;text-transform:uppercase;color:#cc1a1a;margin-bottom:2px">Hitter Scouting Report</div>
+      <div style="font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:32px;color:#111318;line-height:1">#${stats.num||'—'} ${escHtml(playerName)}</div>
+      <div style="font-size:12px;color:#8a909e;margin-top:3px">${stats.pos||'—'} · ${stats.hand||'R'}HH · ${escHtml(teamName)} · ${stats.games} G · ${pa} PA · Generated ${today}</div>
+    </div>
+    <div style="display:flex;gap:18px;align-items:flex-end;flex-shrink:0">
+      <div style="text-align:center"><div class="scout-big-stat" style="color:#cc1a1a">${f(avg)}</div><div class="scout-big-lbl">AVG</div></div>
+      <div style="text-align:center"><div class="scout-big-stat">${f(obp)}</div><div class="scout-big-lbl">OBP</div></div>
+      <div style="text-align:center"><div class="scout-big-stat">${f(slg)}</div><div class="scout-big-lbl">SLG</div></div>
+      <div style="text-align:center"><div class="scout-big-stat" style="color:${ops>=.800?'#1a8a3a':ops>=.700?'#b8860b':'#cc1a1a'}">${f(ops)}</div><div class="scout-big-lbl">OPS</div></div>
+    </div>
+  </div>
+
+  <!-- Row 1: Core stats + Discipline -->
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px">
+    <div class="scout-section">
+      <div class="scout-section-title">Production</div>
+      <div style="display:grid;grid-template-columns:repeat(6,1fr);gap:6px">
+        ${[['H',h],['2B',stats.doubles],['3B',stats.triples],['HR',stats.hr],['R',stats.r||0],['RBI',stats.rbi||0],['BB',stats.bb||0],['K',stats.k||0],['HBP',stats.hbp||0],['K%',fp(kpct)],['BB%',fp(bbpct)],['P/PA',pa>0?(total/pa).toFixed(1):'—']].map(([l,v])=>`
+          <div class="scout-card"><div class="scout-card-val ${l==='HR'&&v>0?'scout-highlight':''}">${v}</div><div class="scout-card-lbl">${l}</div></div>`).join('')}
+      </div>
+    </div>
+    <div class="scout-section">
+      <div class="scout-section-title">Plate Discipline</div>
+      ${[
+        ['Swing%',swings,total,'#5baef5'],['Contact%',contact,swings,'#1a8a3a'],
+        ['Zone%',inZone.length,total,'#cc1a1a'],['Zone Swing%',inZone.filter(p=>swingOuts.includes(p.outcome)).length,inZone.length,'#e05c10'],
+        ['Chase%',chaseSwings,outZone.length,'#8a0000'],['Whiff%',whiffs,swings,'#c01a1a'],
+        ['Hard Hit%',hardHits,contact,'#d42828'],
+      ].map(([lbl,n,d,col])=>`<div class="scout-bar-row">
+        <div class="scout-bar-label">${lbl}</div>
+        <div class="scout-bar-track"><div class="scout-bar-fill" style="width:${d>0?Math.round(n/d*100):0}%;background:${col}"></div></div>
+        <div class="scout-bar-val">${d>0?Math.round(n/d*100)+'%':'—'}</div>
+      </div>`).join('')}
+    </div>
+  </div>
+
+  <!-- Row 2: Spray + Batted Ball + Hot/Cold -->
+  <div style="display:grid;grid-template-columns:220px 1fr 170px;gap:16px;margin-bottom:16px">
+    <div class="scout-section">
+      <div class="scout-section-title">Spray Chart</div>
+      ${sprayChart}
+    </div>
+    <div class="scout-section">
+      <div class="scout-section-title">Batted Ball Profile</div>
+      ${bipBar('Line Drive','linedrive','#28a83a')}
+      ${bipBar('Fly Ball','flyball','#1a8a3a')}
+      ${bipBar('Ground Ball','groundball','#b8860b')}
+      ${bipBar('Weak/Bunt','weakgrounder','#8a6000')}
+      ${bipBar('Popup','popup','#6a3a8a')}
+      <div style="margin-top:8px;border-top:1px solid var(--border);padding-top:8px">
+        <div style="font-size:8px;letter-spacing:2px;text-transform:uppercase;color:#8a909e;margin-bottom:5px">Spray Direction</div>
+        <div style="display:flex;gap:6px">
+          ${[['Pull',pullPct,'#cc1a1a'],['Center',centrPct,'#8a909e'],['Oppo',oppoPct,'#1a5acc']].map(([l,v,c])=>`
+          <div style="flex:1;text-align:center;background:#f8f9fb;border-radius:6px;padding:5px">
+            <div style="font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:18px;color:${c}">${v}%</div>
+            <div style="font-size:8px;color:#8a909e">${l}</div>
+          </div>`).join('')}
+        </div>
+      </div>
+    </div>
+    <div class="scout-section">
+      <div class="scout-section-title">Hot / Cold Zone</div>
+      ${hcz}
+    </div>
+  </div>
+
+  <!-- Row 3: Count splits + Pitch type faced -->
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px">
+    <div class="scout-section">
+      <div class="scout-section-title">Performance by Count / Situation</div>
+      <table class="scout-table">
+        <thead><tr><th style="text-align:left">Situation</th><th>PA</th><th>AB</th><th>H</th><th>AVG</th><th>OBP</th><th>K%</th><th>BB%</th></tr></thead>
+        <tbody>${countRows}</tbody>
+      </table>
+    </div>
+    <div class="scout-section">
+      <div class="scout-section-title">vs Pitch Type</div>
+      <table class="scout-table">
+        <thead><tr><th style="text-align:left">Pitch</th><th>Seen</th><th>AVG</th><th>Whiff%</th><th>K%</th></tr></thead>
+        <tbody>${ptRows||'<tr><td colspan="5" style="color:#8a909e">No pitch type data</td></tr>'}</tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Row 4: Splits -->
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px">
+    <div class="scout-section">
+      <div class="scout-section-title">Key Splits</div>
+      <table class="scout-table">
+        <thead><tr><th style="text-align:left">Split</th><th>PA</th><th>AVG</th><th>OBP</th><th>SLG</th><th>K%</th><th>BB%</th></tr></thead>
+        <tbody>
+          ${splitRow('vs LHP',vsL)}
+          ${splitRow('vs RHP',vsR)}
+          ${splitRow('Home',homeSplit)}
+          ${splitRow('Away',awaySplit)}
+          ${splitRow('RISP',rispSplit)}
+          ${splitRow('Bases Empty',emptyS)}
+          ${splitRow('Last 5 G',r5)}
+          ${splitRow('Last 10 G',r10)}
+        </tbody>
+      </table>
+    </div>
+    <div class="scout-section">
+      <div class="scout-section-title">By Lineup Slot</div>
+      <table class="scout-table">
+        <thead><tr><th style="text-align:left">Slot</th><th>PA</th><th>AVG</th><th>OBP</th><th>SLG</th><th>K%</th><th>BB%</th></tr></thead>
+        <tbody>${slotRows||'<tr><td colspan="7" style="color:#8a909e">No data</td></tr>'}</tbody>
+      </table>
+    </div>
+  </div>
+  </div>`;
+}
+
+// ── PITCHER SCOUTING REPORT ────────────────────────────────────────
+function buildPitcherScoutingReport(teamName, pitcherName, games){
+  const allPitches = getPitcherPitches(teamName, pitcherName, games);
+  const sortedGames=[...games].sort((a,b)=>a.date.localeCompare(b.date));
+
+  let career={num:'—',hand:'R',games:0,pitches:0,k:0,bb:0,hits:0,swings:0,looks:0};
+  sortedGames.forEach(g=>{
+    const pitchers=g.awayTeam===teamName?g.awayPitchers:g.homePitchers;
+    const p=(pitchers||[]).find(x=>x.name===pitcherName);
+    if(!p||!p.pitches) return;
+    career.num=p.num||career.num; career.hand=p.hand||career.hand; career.games++;
+    career.pitches+=p.pitches||0; career.k+=p.k||0; career.bb+=p.bb||0;
+    career.hits+=p.hits||0; career.swings+=p.swings||0; career.looks+=p.looks||0;
+  });
+
+  const total=allPitches.length||1;
+  const logStrikes=allPitches.filter(p=>_isStrike(p.outcome)).length;
+  const sp=Math.round(logStrikes/total*100);
+  const fp=allPitches.filter(p=>_isFirstPitch(p));
+  const fpsPct=fp.length>0?Math.round(fp.filter(p=>_isStrike(p.outcome)).length/fp.length*100):0;
+  const swings=allPitches.filter(p=>['strike-swinging','foul','single','double','triple','homerun','groundout','flyout','lineout','sacfly','sacbunt','error'].includes(p.outcome)).length;
+  const swPct=Math.round(swings/total*100);
+  const inZone=allPitches.filter(p=>p.pitchX!=null&&p.pitchX>=31&&p.pitchX<=69&&p.pitchY!=null&&p.pitchY>=30.9&&p.pitchY<=69.1);
+  const zonePct=Math.round(inZone.length/total*100);
+  const whiffs=allPitches.filter(p=>p.outcome==='strike-swinging').length;
+  const vels=allPitches.map(p=>parseFloat(p.velocity)).filter(v=>!isNaN(v)&&v>0);
+  const avgVel=vels.length?(vels.reduce((a,b)=>a+b,0)/vels.length).toFixed(1):'—';
+  const maxVel=vels.length?Math.max(...vels):'—';
+  const kbb=career.bb>0?(career.k/career.bb).toFixed(2):career.k>0?'∞':'—';
+  const typeColors={FB:'#2878d4',CT:'#0a3a6a',SI:'#4a9ec8',CB:'#d42828',SL:'#e05c10',SP:'#6a0a5a',CH:'#28a83a',KN:'#8a8a00'};
+
+  // Pitch arsenal per type
+  const byType={};
+  allPitches.forEach(p=>{
+    const t=p.pitchType||'—'; if(t==='—') return;
+    if(!byType[t])byType[t]={total:0,strikes:0,whiffs:0,swings:0,vels:[],hits:0,ab:0,fp:0,fpStr:0};
+    byType[t].total++;
+    if(_isStrike(p.outcome))byType[t].strikes++;
+    if(p.outcome==='strike-swinging')byType[t].whiffs++;
+    if(['strike-swinging','foul','single','double','triple','homerun','groundout','flyout','lineout','sacfly','sacbunt','error'].includes(p.outcome))byType[t].swings++;
+    const v=parseFloat(p.velocity); if(!isNaN(v)&&v>0)byType[t].vels.push(v);
+    if(['single','double','triple','homerun'].includes(p.outcome)){byType[t].hits++;byType[t].ab++;}
+    if(['groundout','flyout','lineout','sacfly','sacbunt','error'].includes(p.outcome))byType[t].ab++;
+    if(_isFirstPitch(p)){byType[t].fp++;if(_isStrike(p.outcome))byType[t].fpStr++;}
+  });
+
+  const arsenalRows=Object.entries(byType).sort((a,b)=>b[1].total-a[1].total).map(([t,d])=>{
+    const usg=Math.round(d.total/total*100);
+    const avgV=d.vels.length?(d.vels.reduce((a,b)=>a+b,0)/d.vels.length).toFixed(1):'—';
+    const strPct=d.total>0?Math.round(d.strikes/d.total*100)+'%':'—';
+    const whiffPct=d.swings>0?Math.round(d.whiffs/d.swings*100)+'%':'—';
+    const ba=d.ab>0?'.'+(Math.round(d.hits/d.ab*1000)).toString().padStart(3,'0'):'.---';
+    const fpPct=d.fp>0?Math.round(d.fpStr/d.fp*100)+'%':'—';
+    return `<tr>
+      <td><span style="font-weight:900;color:${typeColors[t]||'#8a909e'}">${t}</span></td>
+      <td>${d.total} <span class="scout-dim">(${usg}%)</span></td>
+      <td>${avgV}</td><td>${strPct}</td><td>${whiffPct}</td>
+      <td class="${d.ab>0&&d.hits/d.ab>=.300?'scout-highlight':d.ab>0&&d.hits/d.ab<.200?'scout-good':''}">${ba}</td>
+      <td>${fpPct}</td>
+    </tr>`;
+  }).join('');
+
+  // Outcome breakdown
+  const outMap={ball:0,'strike-swinging':0,'strike-looking':0,foul:0,'ip-hit':0,'ip-out':0,hbp:0};
+  allPitches.forEach(p=>{
+    const o=p.outcome;
+    if(o==='ball')outMap.ball++;
+    else if(o==='strike-swinging')outMap['strike-swinging']++;
+    else if(o==='strike-looking')outMap['strike-looking']++;
+    else if(o==='foul')outMap.foul++;
+    else if(['single','double','triple','homerun','error'].includes(o))outMap['ip-hit']++;
+    else if(['groundout','flyout','lineout','sacfly','sacbunt'].includes(o))outMap['ip-out']++;
+    else if(o==='hbp')outMap.hbp++;
+  });
+  const outLabels={ball:'Ball','strike-swinging':'Swing K','strike-looking':'Called K',foul:'Foul','ip-hit':'Hit/Reach','ip-out':'Field Out',hbp:'HBP'};
+  const outColors2={ball:'#1a6abf','strike-swinging':'#8a0000','strike-looking':'#c01a1a',foul:'#8a4a00','ip-hit':'#9a7a00','ip-out':'#6a1ab0',hbp:'#8822cc'};
+  // Build outcome pie chart inline SVG
+  const outSlices=Object.entries(outMap).filter(([,n])=>n>0).sort((a,b)=>b[1]-a[1]);
+  const outTotal=outSlices.reduce((s,[,n])=>s+n,0)||1;
+  let outAngle=0;
+  const PIE_R=70, PIE_CX=90, PIE_CY=80;
+  const outPaths=outSlices.map(([o,n])=>{
+    const pct=n/outTotal, sweep=pct*Math.PI*2;
+    const x1=PIE_CX+PIE_R*Math.sin(outAngle), y1=PIE_CY-PIE_R*Math.cos(outAngle);
+    outAngle+=sweep;
+    const x2=PIE_CX+PIE_R*Math.sin(outAngle), y2=PIE_CY-PIE_R*Math.cos(outAngle);
+    const large=sweep>Math.PI?1:0;
+    const col=outColors2[o]||'#8a909e';
+    const midA=outAngle-sweep/2;
+    const lx=PIE_CX+(PIE_R*0.65)*Math.sin(midA), ly=PIE_CY-(PIE_R*0.65)*Math.cos(midA);
+    const pctLbl=Math.round(pct*100);
+    return `<path d="M${PIE_CX},${PIE_CY} L${x1.toFixed(1)},${y1.toFixed(1)} A${PIE_R},${PIE_R} 0 ${large},1 ${x2.toFixed(1)},${y2.toFixed(1)} Z" fill="${col}"/>
+      ${pctLbl>=7?`<text x="${lx.toFixed(1)}" y="${ly.toFixed(1)}" text-anchor="middle" dominant-baseline="middle" font-size="9" font-weight="700" fill="white">${pctLbl}%</text>`:''}`;
+  }).join('');
+  // Legend
+  const outLegend=outSlices.map(([o,n])=>`
+    <div style="display:flex;align-items:center;gap:4px;margin-bottom:3px">
+      <div style="width:10px;height:10px;border-radius:2px;background:${outColors2[o]||'#8a909e'};flex-shrink:0"></div>
+      <div style="font-family:'Barlow Condensed',sans-serif;font-size:11px;color:#4a5060;white-space:nowrap">${outLabels[o]||o}</div>
+      <div style="font-family:'Share Tech Mono',monospace;font-size:10px;color:#8a909e;margin-left:auto;padding-left:6px">${n} · ${Math.round(n/outTotal*100)}%</div>
+    </div>`).join('');
+  const outcomePie=`<div style="display:flex;gap:12px;align-items:flex-start">
+    <svg viewBox="0 0 180 160" style="width:160px;flex-shrink:0"><g>${outPaths}</g></svg>
+    <div style="flex:1;padding-top:4px">${outLegend}</div>
+  </div>`;
+
+  // Count discipline rows
+  const countSit=[
+    {lbl:'0-0 (FPS)',      fn:p=>p.balls===0&&p.strikes===0},
+    {lbl:'Ahead (0-1,0-2)',fn:p=>p.strikes>p.balls},
+    {lbl:'Behind (1-0+)',  fn:p=>p.balls>p.strikes},
+    {lbl:'2-Strike',       fn:p=>p.strikes===2},
+    {lbl:'Full Count',     fn:p=>p.balls===3&&p.strikes===2},
+  ];
+  const cRows=countSit.map(c=>{
+    const subset=allPitches.filter(c.fn);
+    const s2=subset.filter(p=>_isStrike(p.outcome)).length;
+    const sw=subset.filter(p=>['strike-swinging','foul','single','double','triple','homerun','groundout','flyout','lineout','sacfly','sacbunt','error'].includes(p.outcome)).length;
+    const wh=subset.filter(p=>p.outcome==='strike-swinging').length;
+    return `<tr>
+      <td>${c.lbl}</td><td>${subset.length}</td>
+      <td class="${subset.length>0&&s2/subset.length>=.60?'scout-good':subset.length>0&&s2/subset.length<.50?'scout-highlight':''}">${subset.length>0?Math.round(s2/subset.length*100)+'%':'—'}</td>
+      <td>${subset.length>0?Math.round(sw/subset.length*100)+'%':'—'}</td>
+      <td>${sw>0?Math.round(wh/sw*100)+'%':'—'}</td>
+    </tr>`;
+  }).join('');
+
+  // Last 5 games
+  const last5=sortedGames.slice(-5).map(g=>{
+    const pitchers=g.awayTeam===teamName?g.awayPitchers:g.homePitchers;
+    const p=(pitchers||[]).find(x=>x.name===pitcherName);
+    if(!p||!p.pitches) return null;
+    const gPitches=allPitches.filter(q=>q.inning);
+    const sp2=p.pitches>0?Math.round(p.strikes/p.pitches*100):0;
+    return `<tr>
+      <td>${g.date}</td>
+      <td>${g.awayTeam===teamName?g.homeTeam:g.awayTeam}</td>
+      <td>${p.pitches}</td><td>${p.k}</td><td>${p.bb}</td><td>${p.hits}</td>
+      <td class="${sp2>=60?'scout-good':sp2<50?'scout-highlight':''}">${sp2}%</td>
+    </tr>`;
+  }).filter(Boolean).join('');
+
+  // Top 3 pitch type zone SVGs
+  const top3Types=Object.entries(byType).sort((a,b)=>b[1].total-a[1].total).slice(0,3).map(([t])=>t);
+  // top3Zones inlined in layout below
+  // Strike% by type bars
+  const strBars=Object.entries(byType).sort((a,b)=>b[1].total-a[1].total).map(([t,d])=>{
+    const pct=d.total>0?Math.round(d.strikes/d.total*100):0;
+    return `<div style="display:flex;align-items:center;gap:6px;margin-bottom:4px">
+      <div style="font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:800;color:${typeColors[t]||'#8a909e'};width:24px;flex-shrink:0">${t}</div>
+      <div style="flex:0 0 45%;background:#e8eaee;border-radius:3px;height:10px;overflow:hidden">
+        <div style="width:${pct}%;height:100%;background:${typeColors[t]||'#8a909e'};border-radius:3px"></div>
+      </div>
+      <div style="font-family:'Share Tech Mono',monospace;font-size:10px;color:#8a909e;white-space:nowrap">${d.strikes}/${d.total} · ${pct}%</div>
+    </div>`;
+  }).join('');
+
+  const today=new Date().toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
+
+  return `<div class="scout-report-page" id="scout-pitcher-report">
+  <!-- Header -->
+  <div style="display:flex;align-items:flex-start;justify-content:space-between;border-bottom:3px solid #1a5acc;padding-bottom:10px;margin-bottom:16px">
+    <div>
+      <div style="font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:10px;letter-spacing:3px;text-transform:uppercase;color:#1a5acc;margin-bottom:2px">Pitcher Scouting Report</div>
+      <div style="font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:32px;color:#111318;line-height:1">#${career.num||'—'} ${escHtml(pitcherName)}</div>
+      <div style="font-size:12px;color:#8a909e;margin-top:3px">${career.hand==='L'?'LHP':'RHP'} · ${escHtml(teamName)} · ${career.games} G · ${career.pitches} P · ${allPitches.length} logged · Generated ${today}</div>
+    </div>
+    <div style="display:flex;gap:18px;align-items:flex-end;flex-shrink:0">
+      <div style="text-align:center"><div class="scout-big-stat" style="color:#cc1a1a">${sp}%</div><div class="scout-big-lbl">Strike%</div></div>
+      <div style="text-align:center"><div class="scout-big-stat">${fpsPct}%</div><div class="scout-big-lbl">FPS%</div></div>
+      <div style="text-align:center"><div class="scout-big-stat">${kbb}</div><div class="scout-big-lbl">K/BB</div></div>
+      <div style="text-align:center"><div class="scout-big-stat" style="color:#1a5acc">${avgVel}</div><div class="scout-big-lbl">Avg MPH</div></div>
+    </div>
+  </div>
+
+  <!-- Row 1: Core stats + Outcomes -->
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px">
+    <div class="scout-section">
+      <div class="scout-section-title">Core Stats</div>
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-bottom:10px">
+        ${[['Pitches',career.pitches],['K',career.k],['BB',career.bb],['H Allow',career.hits],
+           ['Strike%',sp+'%'],['FPS%',fpsPct+'%'],['Swing%',swPct+'%'],['Zone%',zonePct+'%'],
+           ['Whiff%',swings>0?Math.round(whiffs/swings*100)+'%':'—'],['Avg MPH',avgVel],['Max MPH',maxVel],['K/BB',kbb]
+        ].map(([l,v])=>`<div class="scout-card"><div class="scout-card-val">${v}</div><div class="scout-card-lbl">${l}</div></div>`).join('')}
+      </div>
+    </div>
+    <div class="scout-section">
+      <div class="scout-section-title">Outcome Breakdown</div>
+      ${outcomePie}
+    </div>
+  </div>
+
+  <!-- Row 2: Arsenal table full width, then 4-column visual row below -->
+  <div style="margin-bottom:16px">
+    <div class="scout-section" style="margin-bottom:10px">
+      <div class="scout-section-title">Pitch Arsenal</div>
+      <table class="scout-table">
+        <thead><tr><th style="text-align:left">Pitch</th><th>Used</th><th>Avg MPH</th><th>Strike%</th><th>Whiff%</th><th>BA Against</th><th>FPS%</th></tr></thead>
+        <tbody>${arsenalRows||'<tr><td colspan="7" style="color:#8a909e">No pitch type data</td></tr>'}</tbody>
+      </table>
+    </div>
+    <!-- Visual row: Strike% bars | Hot/Cold | FB zone | CB zone | CT zone -->
+    <div style="display:grid;grid-template-columns:200px 180px 1fr 1fr 1fr;gap:14px;align-items:start">
+      <!-- Strike% bars -->
+      <div class="scout-section" style="margin-bottom:0">
+        <div class="scout-section-title">Strike% by Pitch</div>
+        ${strBars}
+      </div>
+      <!-- Hot/Cold -->
+      <div class="scout-section" style="margin-bottom:0">
+        <div class="scout-section-title">Hot / Cold Zone</div>
+        ${buildScoutHotColdZone(allPitches,'pitcher')}
+      </div>
+      <!-- Top 3 pitch zones, each equal width -->
+      ${top3Types.map(t=>{
+        const tP=allPitches.filter(p=>p.pitchType===t);
+        return `<div class="scout-section" style="margin-bottom:0">
+          <div class="scout-section-title" style="color:${typeColors[t]||'#8a909e'}">${t} Locations · ${tP.length}P</div>
+          ${buildPitchZoneSVG(tP,200,185)}
+        </div>`;
+      }).join('')}
+    </div>
+  </div>
+
+  <!-- Row 3: Count performance + Last 5 -->
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+    <div class="scout-section">
+      <div class="scout-section-title">Performance by Count</div>
+      <table class="scout-table">
+        <thead><tr><th style="text-align:left">Situation</th><th>P</th><th>Strike%</th><th>Swing%</th><th>Whiff%</th></tr></thead>
+        <tbody>${cRows}</tbody>
+      </table>
+    </div>
+    <div class="scout-section">
+      <div class="scout-section-title">Recent Game Log (Last 5)</div>
+      <table class="scout-table">
+        <thead><tr><th style="text-align:left">Date</th><th>Opp</th><th>P</th><th>K</th><th>BB</th><th>H</th><th>Str%</th></tr></thead>
+        <tbody>${last5||'<tr><td colspan="7" style="color:#8a909e">No games</td></tr>'}</tbody>
+      </table>
+    </div>
+  </div>
+  </div>`;
+}
+
+// ── Hot/Cold Zone for Scouting (compact) ──────────────────────────
+function buildScoutHotColdZone(pitches, perspective){
+  const W=150,H=130;
+  const ZX1=W*0.2,ZX2=W*0.8,ZY1=H*0.15,ZY2=H*0.82;
+  const ZW=ZX2-ZX1,ZH=ZY2-ZY1;
+  const cols=3,rows=3;
+  const cw=ZW/cols,ch=ZH/rows;
+  const cells=[];
+  for(let r=0;r<rows;r++){for(let c=0;c<cols;c++){cells.push({r,c,hits:0,ab:0});}}
+  const contact=['single','double','triple','homerun','groundout','flyout','lineout','sacfly','sacbunt','error'];
+  const abEnding=[...contact,'strike-swinging','strike-looking','hbp','ci'];
+  pitches.filter(p=>p.pitchX!=null&&p.pitchY!=null&&abEnding.includes(p.outcome)).forEach(p=>{
+    const nx=(p.pitchX-31)/38,ny=(p.pitchY-30.9)/38.2;
+    if(nx<0||nx>1||ny<0||ny>1) return;
+    const c=Math.min(cols-1,Math.floor(nx*cols)),r=Math.min(rows-1,Math.floor(ny*rows));
+    const cell=cells.find(x=>x.r===r&&x.c===c);
+    if(!cell) return;
+    cell.ab++;
+    if(contact.includes(p.outcome)) cell.hits++;
+  });
+  const avgs=cells.map(x=>x.ab>0?x.hits/x.ab:null).filter(x=>x!==null);
+  const minA=avgs.length?Math.min(...avgs):0,maxA=avgs.length?Math.max(...avgs):1;
+  const cellSVG=cells.map(({r,c,hits,ab})=>{
+    const x=ZX1+c*cw,y=ZY1+r*ch;
+    const avg=ab>0?hits/ab:null;
+    const norm=avg!==null&&maxA>minA?(avg-minA)/(maxA-minA):0.5;
+    const hot=`rgba(220,50,50,${(0.15+norm*0.7).toFixed(2)})`;
+    const cold=`rgba(50,80,220,${(0.15+(1-norm)*0.7).toFixed(2)})`;
+    const fill=avg===null?'rgba(200,200,200,0.15)':norm>=0.5?hot:cold;
+    const label=avg!==null?'.'+(Math.round(avg*1000)).toString().padStart(3,'0'):'-';
+    return `<rect x="${x}" y="${y}" width="${cw}" height="${ch}" fill="${fill}" stroke="white" stroke-width="0.5"/>
+      <text x="${x+cw/2}" y="${y+ch/2+4}" text-anchor="middle" font-family="monospace" font-size="8" font-weight="700" fill="${avg!==null?(norm>=0.5?'white':'white'):'#aaa'}">${label}</text>`;
+  }).join('');
+  return `<svg viewBox="0 0 ${W} ${H}" style="width:100%;border-radius:6px;background:#f0f2f5">
+    <rect x="${ZX1}" y="${ZY1}" width="${ZW}" height="${ZH}" fill="none" stroke="#999" stroke-width="1"/>
+    ${cellSVG}
+    <text x="${W/2}" y="${H-4}" text-anchor="middle" font-size="7" fill="#999">LOW</text>
+    <text x="${W/2}" y="10" text-anchor="middle" font-size="7" fill="#999">HIGH</text>
+  </svg>`;
 }
 
 /* BOOT */
