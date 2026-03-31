@@ -567,7 +567,7 @@ body{background:var(--bg);color:var(--text);font-family:'Barlow',sans-serif;min-
 #hard-hit-btn.active{background:rgba(232,74,74,.1);border-color:var(--red);color:var(--red);}
 
 /* LINEUP MODAL ROWS */
-.lm-row{display:grid;grid-template-columns:24px 44px 1fr 52px 36px 36px;gap:5px;align-items:center;padding:5px 4px;border-bottom:1px solid rgba(37,45,66,.3);}
+.lm-row{display:grid;grid-template-columns:24px 44px 1fr 52px 36px 36px 36px;gap:5px;align-items:center;padding:5px 4px;border-bottom:1px solid rgba(37,45,66,.3);}
 .lm-row:hover{background:rgba(0,0,0,.02);}
 .lm-order{font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:13px;color:var(--text3);text-align:center;}
 .lm-input{background:#ffffff;border:1px solid var(--border);border-radius:5px;color:var(--text);font-family:'Barlow Condensed',sans-serif;font-weight:600;font-size:13px;padding:5px 7px;outline:none;transition:border-color .14s;width:100%;}
@@ -2536,6 +2536,13 @@ function commitPitch(){
     inning:S.inning, isTop:S.isTop,
     pitcher:p?.name||'—', pitcherNum:p?.num||'—',
     pitcherTeam: S.isTop ? (qs('home-name-input').value||'HOME') : (qs('away-name-input').value||'AWAY'),
+    pitcherHand: (S.isTop ? S.pitchersHome : S.pitchersAway).find(x=>x.active)?.hand || 'R',
+    runnersOn: {...S.bases},  // snapshot of base state when pitch was thrown
+    outs: S.outs,
+    batterIdx: currentBatterIdx() % currentLineup().length,
+    isPH:  !!(currentBatter()?.isPH),
+    isPR:  !!(currentBatter()?.isPR),
+    isDEF: !!(currentBatter()?.isDEF),
   };
   S.pitchLog.unshift(entry); try{ markUnsaved(); }catch(e){}
   S.currentAtBatPitches.push(entry);
@@ -3233,18 +3240,40 @@ function renderLineup(){
     if(isEditing){
       slot.className='lineup-slot editing';
       slot.innerHTML=`
-        <div style="font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:11px;color:var(--text3);width:100%;margin-bottom:2px">${i+1}. Edit Player</div>
-        <div class="lineup-edit-row">
+        <!-- Title + save/cancel in same row -->
+        <div style="display:flex;align-items:center;justify-content:space-between;width:100%;margin-bottom:5px">
+          <div style="font-size:8px;letter-spacing:2px;color:var(--text3);text-transform:uppercase;font-weight:700">${i+1}. Player</div>
+          <div style="display:flex;gap:3px">
+            <button class="lineup-edit-save"   onclick="saveLineupSlot(${i})">✓</button>
+            <button class="lineup-edit-cancel" onclick="cancelEdit()" style="display:flex;align-items:center;justify-content:center;padding:5px 7px"><svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="1" y1="1" x2="11" y2="11"/><line x1="11" y1="1" x2="1" y2="11"/></svg></button>
+          </div>
+        </div>
+        <!-- Row 1: inputs only, full width -->
+        <div style="display:flex;gap:4px;align-items:center;width:100%;margin-bottom:6px">
           <input class="lineup-edit-input num-in"  id="edit-num-${i}"  value="${b.num||''}" placeholder="#" maxlength="3">
-          <input class="lineup-edit-input name-in" id="edit-name-${i}" value="${b.name}"    placeholder="Name">
+          <input class="lineup-edit-input name-in" id="edit-name-${i}" value="${b.name}"    placeholder="Name..." style="min-width:0">
           <input class="lineup-edit-input pos-in"  id="edit-pos-${i}"  value="${b.pos}"     placeholder="POS" maxlength="3">
-          <select id="edit-hand-${i}" style="background:var(--surface3);border:1px solid var(--border2);border-radius:4px;color:var(--text);font-family:'Barlow Condensed',sans-serif;font-size:13px;padding:4px 5px;outline:none;cursor:pointer">
+          <select id="edit-hand-${i}" style="background:var(--surface3);border:1px solid var(--border2);border-radius:4px;color:var(--text);font-family:'Barlow Condensed',sans-serif;font-size:13px;padding:4px 5px;outline:none;cursor:pointer;flex-shrink:0">
             <option value="R"${b.hand==='R'?' selected':''}>R</option>
             <option value="L"${b.hand==='L'?' selected':''}>L</option>
             <option value="S"${b.hand==='S'?' selected':''}>S</option>
           </select>
-          <button class="lineup-edit-save"   onclick="saveLineupSlot(${i})">✓</button>
-          <button class="lineup-edit-cancel" onclick="cancelEdit()" style="display:flex;align-items:center;justify-content:center;padding:4px 7px"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="1" y1="1" x2="11" y2="11"/><line x1="11" y1="1" x2="1" y2="11"/></svg></button>
+        </div>
+        <!-- Row 2: substitution type pills -->
+        <div style="font-size:8px;letter-spacing:2px;color:var(--text3);text-transform:uppercase;font-weight:700;margin-bottom:4px">Substitution</div>
+        <div style="display:flex;gap:5px;flex-wrap:wrap">
+          ${['PH','PR','DEF'].map(type=>{
+            const active = type==='PH'?b.isPH : type==='PR'?b.isPR : b.isDEF;
+            const label  = type==='PH'?'Pinch Hitter' : type==='PR'?'Pinch Runner' : 'Defensive Sub';
+            return `<button onclick="toggleInlineSub('${type}',${i})" id="inline-${type.toLowerCase()}-${i}"
+              style="padding:4px 10px;border:1.5px solid ${active?'var(--accent)':'var(--border2)'};border-radius:5px;
+              background:${active?'rgba(204,26,26,.08)':'none'};
+              color:${active?'var(--accent)':'var(--text3)'};
+              font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:10px;letter-spacing:.5px;
+              cursor:pointer;transition:all .14s;white-space:nowrap">
+              ${active?'✓ ':''} ${label}
+            </button>`;
+          }).join('')}
         </div>
       `;
       setTimeout(()=>{ const n=qs(`edit-name-${i}`); if(n){n.focus();n.select();} },30);
@@ -3254,7 +3283,7 @@ function renderLineup(){
         <div class="lineup-order-num">${i+1}</div>
         <div class="lineup-jersey">#${b.num||'—'}</div>
         <div class="lineup-info">
-          <div class="lineup-name">${b.name} <span style="font-size:9px;font-weight:700;color:${b.hand==='L'?'var(--blue)':b.hand==='S'?'var(--foul)':'var(--text3)'};letter-spacing:1px;margin-left:2px">${b.hand||'R'}</span></div>
+          <div class="lineup-name">${b.name} <span style="font-size:9px;font-weight:700;color:${b.hand==='L'?'var(--blue)':b.hand==='S'?'var(--foul)':'var(--text3)'};letter-spacing:1px;margin-left:2px">${b.hand||'R'}</span>${b.isPH?'<span style="font-size:9px;font-weight:800;color:var(--accent);letter-spacing:1px;margin-left:4px;background:rgba(204,26,26,.08);padding:1px 4px;border-radius:3px">PH</span>':''}${b.isPR?'<span style="font-size:9px;font-weight:800;color:var(--blue);letter-spacing:1px;margin-left:4px;background:rgba(26,90,204,.08);padding:1px 4px;border-radius:3px">PR</span>':''}${b.isDEF?'<span style="font-size:9px;font-weight:800;color:var(--green);letter-spacing:1px;margin-left:4px;background:rgba(26,138,58,.08);padding:1px 4px;border-radius:3px">DEF</span>':''}</div>
           <div class="lineup-sub"><span class="lineup-pos">${b.pos}</span>${chips}</div>
         </div>
         <button class="lineup-edit-btn" onclick="startEdit(event,${i})">✎</button>
@@ -3276,9 +3305,27 @@ function saveLineupSlot(i){
   if(pos) lineup[i].pos=pos;
   lineup[i].num=num;
   lineup[i].hand=hand;
+  // isPH preserved via toggleInlinePH — no need to read here
   editingSlot=null; renderLineup(); updateScoreBug();
 }
 function cancelEdit(){ editingSlot=null; renderLineup(); }
+
+function toggleInlineSub(type, i){
+  const lineup = currentLineup();
+  const key = type==='PH'?'isPH': type==='PR'?'isPR':'isDEF';
+  lineup[i][key] = !lineup[i][key];
+  const btn = document.getElementById(`inline-${type.toLowerCase()}-${i}`);
+  if(btn){
+    const active = lineup[i][key];
+    const label  = type==='PH'?'Pinch Hitter': type==='PR'?'Pinch Runner':'Defensive Sub';
+    btn.style.borderColor = active ? 'var(--accent)' : 'var(--border2)';
+    btn.style.background  = active ? 'rgba(204,26,26,.08)' : 'none';
+    btn.style.color       = active ? 'var(--accent)' : 'var(--text3)';
+    btn.innerHTML         = (active?'✓ ':' ') + label;
+  }
+}
+// Legacy alias
+function toggleInlinePH(i){ toggleInlineSub('PH', i); }
 
 // ===================== PITCH LOG =====================
 function renderPitchLog(){
@@ -3905,10 +3952,19 @@ function renderLineupModal(){
         <option value="L"${b.hand==='L'?' selected':''}>L</option>
         <option value="S"${b.hand==='S'?' selected':''}>S</option>
       </select>
+      <button onclick="togglePH(${i})" id="lm-ph-${i}" title="Mark as Pinch Hitter" style="background:${b.isPH?'rgba(204,26,26,.12)':'none'};border:1px solid ${b.isPH?'var(--accent)':'var(--border)'};border-radius:4px;color:${b.isPH?'var(--accent)':'var(--text3)'};font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:10px;padding:4px 4px;cursor:pointer;transition:all .14s;width:100%;letter-spacing:.5px">PH</button>
       <button onclick="randomizeSingleRow(${i})" title="Random player" style="background:none;border:1px solid var(--border);border-radius:4px;color:var(--text3);font-size:12px;padding:4px 6px;cursor:pointer;transition:all .14s;width:100%" onmouseover="this.style.borderColor='var(--green)';this.style.color='var(--green)'" onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--text3)'">🎲</button>
     `;
     rows.appendChild(div);
   });
+}
+
+function togglePH(i){ toggleLmSub('PH',i); }
+function toggleLmSub(type,i){
+  const lineup = lineupModalSide==='away' ? S.lineupAway : S.lineupHome;
+  const key=type==='PH'?'isPH':type==='PR'?'isPR':'isDEF';
+  lineup[i][key] = !lineup[i][key];
+  // Update button style inline without full re-render
 }
 
 function saveLineupModalInputs(){
@@ -5171,7 +5227,10 @@ function hubMobNav(type, data){
 }
 
 // ===== VIEWS =====
-function showView(type, data){
+let _lastPlayerTab  = 'spray';
+let _lastPitcherTab = 'zone';
+
+function showView(type, data, preserveTab){
   // data may be a JSON string (from onclick attributes) or an object
   if(typeof data === 'string'){ try { data = JSON.parse(data); } catch(e){} }
   currentView = {type, data};
@@ -5180,8 +5239,14 @@ function showView(type, data){
   renderSidebar();
   if(type==='games')        renderAllGames();
   else if(type==='team')    renderTeam(data);
-  else if(type==='player')  renderPlayer(data.team, data.name);
-  else if(type==='pitcher') renderPitcher(data.team, data.name);
+  else if(type==='player'){
+    renderPlayer(data.team, data.name);
+    if(preserveTab && _lastPlayerTab) setTimeout(()=>playerTab(_lastPlayerTab), 0);
+  }
+  else if(type==='pitcher'){
+    renderPitcher(data.team, data.name);
+    if(preserveTab && _lastPitcherTab) setTimeout(()=>pitcherTab(_lastPitcherTab), 0);
+  }
   else if(type==='game')    renderGame(data);
 }
 
@@ -5243,6 +5308,7 @@ function renderTeam(teamName){
     <div class="tab-row">
       <div class="tab active" id="hub-tab-batters"     onclick="hub_switchTab('batters')">Batters</div>
       <div class="tab" id="hub-tab-pitchers"           onclick="hub_switchTab('pitchers')">Pitchers</div>
+      <div class="tab" id="hub-tab-splits"             onclick="hub_switchTab('splits')">Splits</div>
       <div class="tab" id="hub-tab-baserunning"        onclick="hub_switchTab('baserunning')">Baserunning</div>
       <div class="tab" id="hub-tab-defense"            onclick="hub_switchTab('defense')">Defense</div>
       <div class="tab" id="tab-games"                  onclick="hub_switchTab('team-games')">Games</div>
@@ -5250,6 +5316,7 @@ function renderTeam(teamName){
 
     <div id="hub-tab-content-batters">${buildBatterTable(players, teamName)}</div>
     <div id="hub-tab-content-pitchers"     style="display:none">${buildPitcherTable(pitchers, teamName)}</div>
+    <div id="hub-tab-content-splits"       style="display:none">${buildTeamSplitsTab(players, teamName, games)}</div>
     <div id="hub-tab-content-baserunning"  style="display:none">${buildTeamBaserunningTable(players, teamName, games)}</div>
     <div id="hub-tab-content-defense"      style="display:none">${buildTeamDefenseTable(teamName, games)}</div>
     <div id="tab-content-team-games"       style="display:none">${buildTeamGamesList(games, teamName)}</div>
@@ -5262,13 +5329,13 @@ function hub_switchTab(tab){
   // Map short tab name to full content div id
   const contentIdMap = {
     'batters':'hub-tab-content-batters','pitchers':'hub-tab-content-pitchers',
-    'baserunning':'hub-tab-content-baserunning','defense':'hub-tab-content-defense',
+    'splits':'hub-tab-content-splits','baserunning':'hub-tab-content-baserunning','defense':'hub-tab-content-defense',
     'team-games':'tab-content-team-games'
   };
   if(content) content.querySelectorAll('.tab-row .tab').forEach(t=>t.classList.remove('active'));
   const tabEl = document.getElementById('hub-tab-'+tab) || document.getElementById('tab-'+tab);
   if(tabEl) tabEl.classList.add('active');
-  ['batters','pitchers','baserunning','defense','team-games'].forEach(t=>{
+  ['batters','pitchers','splits','baserunning','defense','team-games'].forEach(t=>{
     const el = document.getElementById('hub-tab-content-'+t) || document.getElementById('tab-content-'+t);
     if(el) el.style.display = t===tab ? 'block' : 'none';
   });
@@ -5358,6 +5425,44 @@ function buildPitcherTable(pitchers, teamName){
         </tr>`;
       }).join('')}</tbody>
     </table>`;
+}
+
+function buildTeamSplitsTab(players, teamName, games){
+  // Show a player picker then their splits inline
+  if(!players.length) return '<div class="empty-state" style="padding:30px">No player data</div>';
+  const sorted = [...players].sort((a,b)=>b.ab-a.ab);
+  const playerBtns = sorted.map(p=>`
+    <button onclick="showTeamSplitsForPlayer('${escAttr(teamName)}','${escAttr(p.name)}')"
+      id="tsplit-btn-${escAttr(p.name)}"
+      style="padding:5px 12px;border:1px solid var(--border2);border-radius:20px;background:var(--surface3);color:var(--text2);font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:12px;cursor:pointer;transition:all .14s;white-space:nowrap"
+      onmouseover="this.style.borderColor='var(--accent)';this.style.color='var(--accent)'"
+      onmouseout="if(!this.classList.contains('active')){this.style.borderColor='var(--border2)';this.style.color='var(--text2)'}">
+      #${p.num||'?'} ${escHtml(p.name)}
+    </button>`).join('');
+
+  const first = sorted[0];
+  const firstSplits = first ? buildPlayerSplitsTab(teamName, first.name, games) : '';
+
+  return `<div>
+    <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:18px;padding-bottom:14px;border-bottom:1px solid var(--border)" id="tsplit-player-bar">
+      ${playerBtns}
+    </div>
+    <div id="tsplit-content">${firstSplits}</div>
+  </div>`;
+}
+
+function showTeamSplitsForPlayer(teamName, playerName){
+  const games = getTeamGames(teamName);
+  const content = document.getElementById('tsplit-content');
+  if(content) content.innerHTML = buildPlayerSplitsTab(teamName, playerName, games);
+  // Update active button
+  document.querySelectorAll('[id^="tsplit-btn-"]').forEach(b=>{
+    const isActive = b.id === 'tsplit-btn-'+playerName;
+    b.classList.toggle('active', isActive);
+    b.style.background    = isActive ? 'rgba(204,26,26,.08)' : 'var(--surface3)';
+    b.style.borderColor   = isActive ? 'var(--accent)' : 'var(--border2)';
+    b.style.color         = isActive ? 'var(--accent)' : 'var(--text2)';
+  });
 }
 
 function buildTeamBaserunningTable(players, teamName, games){
@@ -6515,6 +6620,284 @@ function pitchZoneLegend(){
 }
 
 // ===== UPDATED RENDER PLAYER =====
+
+// ===================== SPLITS & SPANS ENGINE =====================
+
+// Derive AB-level records from pitch log for a specific batter in a game
+function _extractABs(pitchLog, batterName, teamName, game){
+  // Group pitches into at-bats by batter name, in reverse (log is newest-first)
+  const pitches = [...pitchLog].reverse().filter(p=>p.batter===batterName);
+  const abs = [];
+  let cur = null;
+  pitches.forEach(p=>{
+    if(!cur || p.balls===0 && p.strikes===0 && abs.length>0 && cur.pitches.length>0){
+      // New AB starts when count resets to 0-0 (after previous AB ended)
+      // Check: this is first pitch (0-0) and previous AB had a result
+      const lastAB = abs[abs.length-1];
+      const lastEnded = lastAB && ['single','double','triple','homerun',
+        'groundout','flyout','lineout','sacfly','sacbunt','error',
+        'strike-swinging','strike-looking','ball','hbp','ci'].includes(lastAB.result);
+      if(!cur || (p.balls===0 && p.strikes===0 && cur.pitches.length>0)){
+        cur = {
+          pitches:[], result:null, inning:p.inning, isTop:p.isTop,
+          pitcherHand:p.pitcherHand||'R', pitcher:p.pitcher,
+          runnersOn:p.runnersOn||{'1st':false,'2nd':false,'3rd':false},
+          outs:p.outs||0, abNum:abs.length+1,
+          isHome: game.homeTeam===teamName,
+          date: game.date, gameId: game.id,
+        };
+        abs.push(cur);
+      }
+    }
+    if(cur){ cur.pitches.push(p); cur.result=p.outcome; }
+  });
+  return abs;
+}
+
+function _abToStats(ab){
+  const o = ab.result;
+  const hit = ['single','double','triple','homerun'].includes(o);
+  const isAB = !['bb','hbp','ci','sacfly','sacbunt'].includes(o);
+  const h2b = o==='double'?1:0, h3b=o==='triple'?1:0, hr=o==='homerun'?1:0;
+  const k = ['strike-swinging','strike-looking'].includes(o)?1:0;
+  const bb = o==='bb'?1:0, hbp = o==='hbp'?1:0;
+  const tb = (hit?1:0)+h2b+h3b*2+hr*3;
+  return {pa:1, ab:isAB?1:0, h:hit?1:0, h2b, h3b, hr, k, bb, hbp, tb,
+          pitches:ab.pitches.length};
+}
+
+function _sumStats(rows){
+  const s={pa:0,ab:0,h:0,h2b:0,h3b:0,hr:0,k:0,bb:0,hbp:0,tb:0,pitches:0};
+  rows.forEach(r=>{ for(const k in s) s[k]+=(r[k]||0); });
+  return s;
+}
+
+function _fmtAvg(h,ab){ return ab>0?'.'+(Math.round(h/ab*1000)).toString().padStart(3,'0'):'.---'; }
+function _fmtOBP(h,bb,hbp,pa){ return pa>0?'.'+(Math.round((h+bb+hbp)/pa*1000)).toString().padStart(3,'0'):'.---'; }
+function _fmtSLG(tb,ab){ return ab>0?'.'+(Math.round(tb/ab*1000)).toString().padStart(3,'0'):'.---'; }
+function _fmtOPS(h,bb,hbp,tb,pa,ab){
+  if(pa===0||ab===0) return '.---';
+  return '.'+(Math.round(((h+bb+hbp)/pa + tb/ab)*1000)).toString().padStart(3,'0');
+}
+
+function _statsRow(label, s, accent){
+  const avg=_fmtAvg(s.h,s.ab), obp=_fmtOBP(s.h,s.bb,s.hbp,s.pa),
+        slg=_fmtSLG(s.tb,s.ab), ops=_fmtOPS(s.h,s.bb,s.hbp,s.tb,s.pa,s.ab);
+  const avgNum = s.ab>0?s.h/s.ab:0;
+  const highlight = avgNum>=.300?'color:var(--accent);font-weight:800':avgNum<.200&&s.ab>0?'color:#8a909e':'';
+  return `<tr>
+    <td style="font-weight:${accent?'700':'500'};color:${accent?'var(--text)':'var(--text2)'}">${label}</td>
+    <td>${s.pa}</td><td>${s.ab}</td><td>${s.h}</td>
+    <td>${s.h2b}</td><td>${s.h3b}</td><td class="${s.hr>0?'highlight':''}">${s.hr}</td>
+    <td>${s.bb}</td><td>${s.k}</td>
+    <td style="${highlight}">${avg}</td>
+    <td>${obp}</td><td>${slg}</td><td>${ops}</td>
+    <td style="color:var(--text3)">${s.pa>0?(s.pitches/s.pa).toFixed(1):'—'}</td>
+  </tr>`;
+}
+
+function _splitsTable(rows, title){
+  if(!rows.length) return '';
+  return `<div style="margin-bottom:28px">
+    <div style="font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:9px;letter-spacing:3px;text-transform:uppercase;color:var(--text3);margin-bottom:8px">${title}</div>
+    <div style="overflow-x:auto">
+    <table class="data-table" style="min-width:600px">
+      <thead><tr>
+        <th style="text-align:left;min-width:140px">Split</th>
+        <th>PA</th><th>AB</th><th>H</th>
+        <th>2B</th><th>3B</th><th>HR</th>
+        <th>BB</th><th>K</th>
+        <th>AVG</th><th>OBP</th><th>SLG</th><th>OPS</th>
+        <th>P/PA</th>
+      </tr></thead>
+      <tbody>${rows.join('')}</tbody>
+    </table></div>
+  </div>`;
+}
+
+function buildPlayerSplitsTab(teamName, playerName, games){
+  // Collect all at-bats across all games for this player
+  const allABs = [];
+  const sortedGames = [...games].sort((a,b)=>a.date.localeCompare(b.date));
+  sortedGames.forEach(g=>{
+    const pitchLog = g.pitchLog||[];
+    const abs = _extractABs(pitchLog, playerName, teamName, g);
+    allABs.push(...abs);
+  });
+
+  if(!allABs.length) return '<div class="empty-state" style="padding:30px">No at-bat data found.<br><span style="font-size:12px;color:var(--text3)">Splits populate from logged pitches.</span></div>';
+
+  const byKey = (keyFn, labelFn, abs) => {
+    const map={};
+    abs.forEach(ab=>{ const k=keyFn(ab); if(!map[k])map[k]=[]; map[k].push(_abToStats(ab)); });
+    return Object.entries(map)
+      .sort((a,b)=>a[0].localeCompare(b[0]))
+      .map(([k,rows])=>_statsRow(labelFn?labelFn(k):k, _sumStats(rows), false));
+  };
+
+  // ── Home / Away ──
+  const homeSplit = _sumStats(allABs.filter(a=>a.isHome).map(_abToStats));
+  const awaySplit = _sumStats(allABs.filter(a=>!a.isHome).map(_abToStats));
+  const homeAwayRows = [
+    _statsRow('Home', homeSplit, false),
+    _statsRow('Away', awaySplit, false),
+  ];
+
+  // ── vs LHP / vs RHP ──
+  const vsL = _sumStats(allABs.filter(a=>a.pitcherHand==='L').map(_abToStats));
+  const vsR = _sumStats(allABs.filter(a=>a.pitcherHand!=='L').map(_abToStats));
+  const handRows = [
+    _statsRow('vs LHP', vsL, false),
+    _statsRow('vs RHP', vsR, false),
+  ];
+
+  // ── By count (first pitch, 2-strike, full count, ahead, behind) ──
+  const countGroups = {
+    'First Pitch (0-0)': a=>a.pitches.length===1,
+    'Ahead in Count':    a=>{ const fp=a.pitches[0]; return fp&&fp.balls>fp.strikes; },
+    'Behind in Count':   a=>{ const fp=a.pitches[0]; return fp&&fp.strikes>fp.balls; },
+    '2-Strike Count':    a=>a.pitches.some(p=>p.strikes===2),
+    'Full Count (3-2)':  a=>a.pitches.some(p=>p.balls===3&&p.strikes===2),
+    '3-Ball Count':      a=>a.pitches.some(p=>p.balls===3),
+  };
+  const countRows = Object.entries(countGroups).map(([lbl, fn])=>
+    _statsRow(lbl, _sumStats(allABs.filter(fn).map(_abToStats)), false)
+  );
+
+  // ── By inning ──
+  const inningRows = byKey(a=>String(a.inning).padStart(2,'0'), k=>`Inning ${parseInt(k)}`, allABs);
+
+  // ── RISP ──
+  const risp    = _sumStats(allABs.filter(a=>(a.runnersOn['2nd']||a.runnersOn['3rd'])).map(_abToStats));
+  const rispEmpty= _sumStats(allABs.filter(a=>!a.runnersOn['1st']&&!a.runnersOn['2nd']&&!a.runnersOn['3rd']).map(_abToStats));
+  const runnersRows = [
+    _statsRow('RISP (2nd or 3rd)', risp, false),
+    _statsRow('Bases Empty', rispEmpty, false),
+    _statsRow('Runners On', _sumStats(allABs.filter(a=>a.runnersOn['1st']||a.runnersOn['2nd']||a.runnersOn['3rd']).map(_abToStats)), false),
+    _statsRow('Bases Loaded', _sumStats(allABs.filter(a=>a.runnersOn['1st']&&a.runnersOn['2nd']&&a.runnersOn['3rd']).map(_abToStats)), false),
+  ];
+
+  // ── By outs when AB started ──
+  const outsRows = [0,1,2].map(o=>
+    _statsRow(`${o} Out${o!==1?'s':''}`, _sumStats(allABs.filter(a=>a.outs===o).map(_abToStats)), false)
+  );
+
+  // ── vs Starter / vs Reliever (starter = pitcher's first 5 innings or <80 pitches) ──
+  const vsStarter = _sumStats(allABs.filter(a=>a.inning<=5).map(_abToStats));
+  const vsReliever= _sumStats(allABs.filter(a=>a.inning>5).map(_abToStats));
+  const pitcherRoleRows = [
+    _statsRow('vs Starter (Inn 1–5)', vsStarter, false),
+    _statsRow('vs Reliever (Inn 6+)', vsReliever, false),
+  ];
+
+  // ── By AB number in game (1st, 2nd, 3rd PA) ──
+  const abNumMap={};
+  sortedGames.forEach(g=>{
+    const pitchLog=g.pitchLog||[];
+    const abs=_extractABs(pitchLog,playerName,teamName,g);
+    abs.forEach((ab,i)=>{ const k=i+1; if(!abNumMap[k])abNumMap[k]=[]; abNumMap[k].push(_abToStats(ab)); });
+  });
+  const abNumRows=Object.entries(abNumMap).sort((a,b)=>+a[0]-+b[0])
+    .filter(([,r])=>_sumStats(r).pa>0)
+    .map(([k,rows])=>_statsRow(`${k}${k==='1'?'st':k==='2'?'nd':k==='3'?'rd':'th'} PA`, _sumStats(rows), false));
+
+  // ── By pitch type faced ──
+  const ptRows = byKey(a=>a.pitches[0]?.pitchType||'—', null, allABs.filter(a=>a.pitches[0]?.pitchType));
+
+  // ── Last 5 / 10 / 20 games ──
+  const recentRows = [5,10,20].map(n=>{
+    const recent=sortedGames.slice(-n);
+    const rABs=recent.flatMap(g=>_extractABs(g.pitchLog||[],playerName,teamName,g));
+    return _statsRow(`Last ${n} Games`, _sumStats(rABs.map(_abToStats)), false);
+  });
+
+  // ── By month ──
+  const monthMap={};
+  allABs.forEach(ab=>{
+    const d=ab.date||'';
+    const m=d.slice(0,7); // YYYY-MM
+    if(!monthMap[m])monthMap[m]=[];
+    monthMap[m].push(_abToStats(ab));
+  });
+  const monthRows=Object.entries(monthMap).sort((a,b)=>a[0].localeCompare(b[0]))
+    .map(([m,rows])=>{
+      const [y,mo]=m.split('-');
+      const name=['','Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][+mo]||m;
+      return _statsRow(`${name} ${y}`, _sumStats(rows), false);
+    });
+
+  // ── Plate discipline ──
+  const allPitches = sortedGames.flatMap(g=>(g.pitchLog||[]).filter(p=>p.batter===playerName));
+  const swingOutcomes=['strike-swinging','foul','single','double','triple','homerun','groundout','flyout','lineout','sacfly','sacbunt','error'];
+  const contactOutcomes=['single','double','triple','homerun','groundout','flyout','lineout','sacfly','sacbunt','error'];
+  const inZone=allPitches.filter(p=>p.pitchX!=null&&p.pitchX>=31&&p.pitchX<=69&&p.pitchY!=null&&p.pitchY>=30.9&&p.pitchY<=69.1);
+  const outZone=allPitches.filter(p=>p.pitchX!=null&&!(p.pitchX>=31&&p.pitchX<=69&&p.pitchY!=null&&p.pitchY>=30.9&&p.pitchY<=69.1));
+  const total=allPitches.length;
+  const swings=allPitches.filter(p=>swingOutcomes.includes(p.outcome)).length;
+  const contact=allPitches.filter(p=>contactOutcomes.includes(p.outcome)).length;
+  const zoneSwings=inZone.filter(p=>swingOutcomes.includes(p.outcome)).length;
+  const chaseSwings=outZone.filter(p=>swingOutcomes.includes(p.outcome)).length;
+  const pctF=n=>total>0?Math.round(n/total*100)+'%':'—';
+  const pctS=n=>swings>0?Math.round(n/swings*100)+'%':'—';
+  const disciplineHTML=`<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:28px">
+    ${[
+      ['Swing%', pctF(swings)],
+      ['Contact%', swings>0?Math.round(contact/swings*100)+'%':'—'],
+      ['Zone%', pctF(inZone.length)],
+      ['Zone Swing%', inZone.length>0?Math.round(zoneSwings/inZone.length*100)+'%':'—'],
+      ['Chase%', outZone.length>0?Math.round(chaseSwings/outZone.length*100)+'%':'—'],
+      ['Whiff%', swings>0?Math.round(allPitches.filter(p=>p.outcome==='strike-swinging').length/swings*100)+'%':'—'],
+      ['P/PA', allABs.length>0?(total/allABs.length).toFixed(2):'—'],
+      ['Hard Hit%', contact>0?Math.round(allPitches.filter(p=>p.spray?.hardHit).length/contact*100)+'%':'—'],
+    ].map(([l,v])=>`<div style="background:#fff;border:1px solid var(--border);border-radius:8px;padding:10px;text-align:center">
+      <div style="font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:22px">${v}</div>
+      <div style="font-size:8px;letter-spacing:2px;color:var(--text3);text-transform:uppercase">${l}</div>
+    </div>`).join('')}
+  </div>`;
+
+  // ── By lineup slot ──
+  const slotMap={};
+  allABs.forEach(ab=>{
+    const slot=ab.pitches[0]?.batterIdx;
+    if(slot===undefined||slot===null) return;
+    const k=slot+1; // 1-indexed
+    if(!slotMap[k])slotMap[k]=[];
+    slotMap[k].push(_abToStats(ab));
+  });
+  const slotRows=Object.entries(slotMap)
+    .sort((a,b)=>+a[0]-+b[0])
+    .map(([k,rows])=>{
+      const ord=+k, suffix=ord===1?'st':ord===2?'nd':ord===3?'rd':'th';
+      return _statsRow(`${ord}${suffix} in Lineup`, _sumStats(rows), false);
+    });
+
+  // ── Pinch hitting ──
+  const phABs   = allABs.filter(a=>a.pitches[0]?.isPH);
+  const nonPHABs= allABs.filter(a=>!a.pitches[0]?.isPH);
+  const phRows  = phABs.length ? [
+    _statsRow('Pinch Hitting', _sumStats(phABs.map(_abToStats)), true),
+    _statsRow('Starting', _sumStats(nonPHABs.map(_abToStats)), false),
+  ] : [];
+
+  return `
+    <div style="font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:9px;letter-spacing:3px;text-transform:uppercase;color:var(--text3);margin-bottom:10px">Plate Discipline</div>
+    ${disciplineHTML}
+    ${_splitsTable(homeAwayRows, 'Home / Away')}
+    ${_splitsTable(handRows, 'Pitcher Handedness')}
+    ${_splitsTable(runnersRows, 'Runners on Base / RISP')}
+    ${_splitsTable(outsRows, 'Outs when AB Began')}
+    ${_splitsTable(countRows, 'Count Splits')}
+    ${_splitsTable(pitcherRoleRows, 'Starter vs Reliever')}
+    ${_splitsTable(abNumRows, 'Plate Appearance Number in Game')}
+    ${_splitsTable(inningRows, 'By Inning')}
+    ${_splitsTable(recentRows, 'Recent Performance')}
+    ${monthRows.length>1?_splitsTable(monthRows,'By Month'):''}
+    ${ptRows.length?_splitsTable(ptRows,'By Pitch Type Faced'):''}
+    ${slotRows.length?_splitsTable(slotRows,'By Lineup Slot'):''}
+    ${phRows.length?_splitsTable(phRows,'Pinch Hit vs Starting'):''}
+  `;
+}
+
 function renderPlayer(teamName, playerName){
   try {
   const games = getTeamGames(teamName);
@@ -6572,8 +6955,13 @@ function renderPlayer(teamName, playerName){
       <div class="tab active" onclick="playerTab('spray')">🏟️ Spray Chart</div>
       <div class="tab" onclick="playerTab('zone')">🎯 Pitch Zone</div>
       <div class="tab" onclick="playerTab('breakdown')"> Pitch Breakdown</div>
+      <div class="tab" onclick="playerTab('splits')">Splits</div>
       <div class="tab" onclick="playerTab('baserunning')">Baserunning</div>
       <div class="tab" onclick="playerTab('gamelog')"> Game Log</div>
+    </div>
+
+    <div id="ptab-splits" style="display:none">
+      ${buildPlayerSplitsTab(teamName, playerName, games)}
     </div>
 
     <div id="ptab-baserunning" style="display:none">
@@ -6634,11 +7022,12 @@ function renderPlayer(teamName, playerName){
 }
 
 function playerTab(tab){
+  _lastPlayerTab = tab;
   document.querySelectorAll('#player-tab-row .tab').forEach((t,i)=>{
-    const tabs=['spray','zone','breakdown','baserunning','gamelog'];
+    const tabs=['spray','zone','breakdown','splits','baserunning','gamelog'];
     t.classList.toggle('active', tabs[i]===tab);
   });
-  ['spray','zone','breakdown','baserunning','gamelog'].forEach(t=>{
+  ['spray','zone','breakdown','splits','baserunning','gamelog'].forEach(t=>{
     const el=document.getElementById('ptab-'+t);
     if(el) el.style.display = t===tab ? 'block' : 'none';
   });
@@ -6943,7 +7332,7 @@ function buildRosterSidebar(teamName, currentName, games, type){
       ? `${p.games}G · ${p.pitches}P · ${p.k}K`
       : `${p.games}G · ${p.ab>0?'.'+(Math.round(p.hits/p.ab*1000)).toString().padStart(3,'0'):'.---'}`;
     return `<button
-      onclick="showView('${type==='pitcher'?'pitcher':'player'}',JSON.stringify({team:'${escAttr(teamName)}',name:'${escAttr(p.name)}'}))"
+      onclick="showView('${type==='pitcher'?'pitcher':'player'}',JSON.stringify({team:'${escAttr(teamName)}',name:'${escAttr(p.name)}'}),true)"
       style="width:100%;display:flex;align-items:center;gap:8px;padding:7px 10px;background:${isCurrent?'rgba(204,26,26,.07)':'transparent'};border:none;border-left:3px solid ${isCurrent?'var(--accent)':'transparent'};border-radius:0;cursor:pointer;text-align:left;transition:all .13s"
       onmouseover="if(!${isCurrent})this.style.background='var(--surface2)'"
       onmouseout="if(!${isCurrent})this.style.background='transparent'">
@@ -7158,6 +7547,7 @@ function renderPitcher(teamName, pitcherName){
   }
 }
 function pitcherTab(tab){
+  _lastPitcherTab = tab;
   document.querySelectorAll('#pitcher-tab-row .tab').forEach((t,i)=>{
     const tabs=['zone','mix','gamelog'];
     t.classList.toggle('active', tabs[i]===tab);
