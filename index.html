@@ -296,9 +296,9 @@ body{background:var(--bg);color:var(--text);font-family:'Barlow',sans-serif;min-
       .breadcrumb,
       .player-detail-header,
       .stat-cards,
-      /* The team page content (wins/losses cards etc) above hub-content */
       #hub-main > *:not(#hub-content),
-      #hub-app > div:first-child { display:none!important; }
+      #hub-app > div:first-child,
+      #hub-content > *:not(.scout-report-page):not(#scout-hitter-report):not(#scout-pitcher-report) { display:none!important; }
 
       html, body {
         margin:0!important; padding:0!important;
@@ -315,6 +315,15 @@ body{background:var(--bg);color:var(--text);font-family:'Barlow',sans-serif;min-
         margin:0!important;
         background:#fff!important;
         grid-template-columns:unset!important;
+        position:static!important;
+      }
+      /* Sidebar roster panel must not print */
+      #hub-content > div[style*="display:flex"] > div:last-child {
+        display:none!important;
+      }
+      /* Player/pitcher page wrapper flex → block */
+      #hub-content > div[style*="display:flex"] {
+        display:block!important;
       }
       /* Only the active hub panel should show */
       .app-panel { display:none!important; }
@@ -8824,8 +8833,8 @@ function buildHitterScoutingReport(teamName, playerName, games){
     </div>
   </div>
 
-  <!-- Row 2: Spray | Batted Ball pie + Savant table + Quality | Hot/Cold -->
-  <div style="display:grid;grid-template-columns:1.5fr 1.2fr 0.9fr;gap:12px;margin-bottom:12px;align-items:start">
+  <!-- Row 2: Spray | Batted Ball Profile | Field Heat Map | Hot/Cold -->
+  <div style="display:grid;grid-template-columns:1.4fr 1fr 1fr 0.85fr;gap:10px;margin-bottom:12px;align-items:start">
 
     <!-- Spray chart -->
     <div class="scout-section" style="margin-bottom:0">
@@ -8833,54 +8842,52 @@ function buildHitterScoutingReport(teamName, playerName, games){
       ${sprayChart}
     </div>
 
-    <!-- Middle: pie + Savant-style breakdown + quality of contact -->
-    <div style="display:flex;flex-direction:column;gap:10px">
-      <!-- Pie + legend -->
+    <!-- Batted ball: pie + Savant breakdown + quality -->
+    <div style="display:flex;flex-direction:column;gap:8px">
       <div class="scout-section" style="margin-bottom:0">
         <div class="scout-section-title">Batted Ball Profile</div>
         ${bipPie}
       </div>
-      <!-- Savant-style table -->
       <div class="scout-section" style="margin-bottom:0">
-        <div class="scout-section-title">Batted Ball Breakdown</div>
+        <div class="scout-section-title">Breakdown</div>
         <table class="scout-table" style="font-size:10px">
-          <thead>
-            <tr><th></th><th>GB%</th><th>AIR%</th><th>LD%</th><th>FB%</th><th>PU%</th></tr>
-          </thead>
-          <tbody>
-            <tr><td>Overall</td><td>${gbPct}%</td><td>${airPct}%</td><td>${ldPct}%</td><td>${fbPct}%</td><td>${puPct}%</td></tr>
-          </tbody>
+          <thead><tr><th></th><th>GB%</th><th>AIR%</th><th>LD%</th><th>FB%</th><th>PU%</th></tr></thead>
+          <tbody><tr><td>All</td><td>${gbPct}%</td><td>${airPct}%</td><td>${ldPct}%</td><td>${fbPct}%</td><td>${puPct}%</td></tr></tbody>
         </table>
-        <table class="scout-table" style="font-size:10px;margin-top:6px">
-          <thead>
-            <tr><th></th><th>Pull</th><th>Str</th><th>Oppo</th></tr>
-          </thead>
+        <table class="scout-table" style="font-size:10px;margin-top:4px">
+          <thead><tr><th></th><th>Pull</th><th>Str</th><th>Oppo</th></tr></thead>
           <tbody>
-            <tr><td>Overall%</td><td>${pullPct}%</td><td>${centrPct}%</td><td>${oppoPct}%</td></tr>
+            <tr><td>All%</td><td>${pullPct}%</td><td>${centrPct}%</td><td>${oppoPct}%</td></tr>
             <tr><td>GB%</td><td>${pullGbPct}%</td><td>${strGbPct}%</td><td>${oppoGbPct}%</td></tr>
             <tr><td>AIR%</td><td>${pullAirPct}%</td><td>${strAirPct}%</td><td>${oppoAirPct}%</td></tr>
           </tbody>
         </table>
-      </div>
-      <!-- Quality of contact -->
-      <div class="scout-section" style="margin-bottom:0">
-        <div class="scout-section-title">Quality of Contact</div>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:5px">
-          ${[['Hard Hit%',hardPct,'#cc1a1a'],['Line Drive%',ldContactPct,'#28a83a'],['Weak%',weakPct,'#8a6000'],['Solid Air%',solidPct,'#1a5acc']].map(([l,v,c])=>`
-            <div style="background:#f8f9fb;border:1px solid #e0e4ea;border-radius:6px;padding:6px;text-align:center">
-              <div style="font-weight:900;font-size:17px;color:${v>=30?c:'#111318'};line-height:1">${v}%</div>
-              <div style="font-size:7px;letter-spacing:1px;text-transform:uppercase;color:#8a909e;margin-top:1px">${l}</div>
-            </div>`).join('')}
+        <div style="margin-top:6px">
+          <div class="scout-section-title">Quality of Contact</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:4px">
+            ${[['Hard Hit%',hardPct,'#cc1a1a'],['LD%',ldContactPct,'#28a83a'],['Weak%',weakPct,'#8a6000'],['Solid Air%',solidPct,'#1a5acc']].map(([l,v,c])=>`
+              <div style="background:#f8f9fb;border:1px solid #e0e4ea;border-radius:5px;padding:4px;text-align:center">
+                <div style="font-weight:900;font-size:14px;color:${v>=30?c:'#111318'};line-height:1">${v}%</div>
+                <div style="font-size:6px;letter-spacing:1px;text-transform:uppercase;color:#8a909e;margin-top:1px">${l}</div>
+              </div>`).join('')}
+          </div>
         </div>
       </div>
     </div>
 
+    <!-- Field zone frequency heat map -->
+    <div class="scout-section" style="margin-bottom:0">
+      <div class="scout-section-title">Zone Frequency</div>
+      ${buildSprayHeatMap(bip, isLeftHand)}
+    </div>
+
     <!-- Hot/Cold zone -->
     <div class="scout-section" style="margin-bottom:0">
-      <div class="scout-section-title">Hot / Cold Zone</div>
+      <div class="scout-section-title">Pitch Contact Zone</div>
       ${hcz}
     </div>
   </div>
+
 
   <!-- Row 3: Count/Situation + vs Pitch Type (50/50) -->
   <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px">
@@ -9202,6 +9209,148 @@ function buildPitcherScoutingReport(teamName, pitcherName, games){
 }
 
 // ── Hot/Cold Zone for Scouting (compact) ──────────────────────────
+
+// ── Spray Field Heat Map — 5 infield + 3 outfield zones ─────────────
+function buildSprayHeatMap(bip, isLeft){
+  // Coordinate system: sprayZoneLabel uses spray.x, spray.y in SVG space (560×510)
+  // Home plate at (280,468). Angle: 0°=CF, neg=LF, pos=RF.
+  // We assign each ball to a zone using the same angle+distance logic.
+
+  const HX_orig=280, HY_orig=468;
+  // Infield edge ≈ 210px from home in 560x510 space
+  // Outfield warning track ≈ 430px from home in 560x510 space
+  const INFIELD_R_ORIG = 270; // beyond bases + SS/2B, into shallow OF territory
+
+  const sprayAngleDeg = p => {
+    const sx=p.spray?.x, sy=p.spray?.y;
+    if(sx==null||sy==null) return null;
+    const dx=sx-HX_orig, dy=-(sy-HY_orig);
+    return Math.atan2(dx,Math.max(dy,1))*180/Math.PI;
+  };
+  const sprayDist = p => {
+    const sx=p.spray?.x, sy=p.spray?.y;
+    if(sx==null||sy==null) return null;
+    return Math.sqrt((sx-HX_orig)**2+(sy-HY_orig)**2);
+  };
+
+  // Zone definitions — 5 infield + 3 outfield, foul lines at ±47°
+  const zones = [
+    { id:'3B',  label:'3B', a1:-47, a2:-22, infield:true  },
+    { id:'SS',  label:'SS', a1:-22, a2: -7, infield:true  },
+    { id:'MID', label:'Mid',a1: -7, a2:  7, infield:true  },
+    { id:'2B',  label:'2B', a1:  7, a2: 22, infield:true  },
+    { id:'1B',  label:'1B', a1: 22, a2: 47, infield:true  },
+    { id:'LF',  label:'LF', a1:-47, a2:-15, infield:false },
+    { id:'CF',  label:'CF', a1:-15, a2: 15, infield:false },
+    { id:'RF',  label:'RF', a1: 15, a2: 47, infield:false },
+  ];
+
+  const counts = {};
+  zones.forEach(z=>{ counts[z.id]=0; });
+  bip.forEach(p=>{
+    const ang=sprayAngleDeg(p), d=sprayDist(p);
+    if(ang==null||d==null) return;
+    const inf = d < INFIELD_R_ORIG;
+    for(const z of zones){
+      if(z.infield!==inf) continue;
+      if(ang>=z.a1 && ang<z.a2){ counts[z.id]++; break; }
+    }
+  });
+
+  // Separate totals: infield % of infield balls, outfield % of outfield balls
+  const infieldTotal = zones.filter(z=>z.infield).reduce((s,z)=>s+(counts[z.id]||0),0) || 1;
+  const outfieldTotal = zones.filter(z=>!z.infield).reduce((s,z)=>s+(counts[z.id]||0),0) || 1;
+  const maxCount = Math.max(...Object.values(counts), 1);
+
+  // Deep blue (least) → light blue → light red → maroon (most)
+  const zoneColor = n => {
+    if(n===0) return 'rgba(20,40,20,0.65)';
+    const t = n / maxCount; // 0→1
+    if(t < 0.25) return `rgba(15,55,160,${(0.7+t*0.3).toFixed(2)})`;   // deep blue
+    if(t < 0.5)  return `rgba(70,130,210,${(0.72+t*0.2).toFixed(2)})`; // mid blue
+    if(t < 0.75) return `rgba(215,80,80,${(0.74+t*0.2).toFixed(2)})`;  // light red
+    return `rgba(140,20,40,${(0.82+t*0.18).toFixed(2)})`;               // maroon
+  };
+
+  // SVG viewbox: scale 560→300, so scale factor = 300/560 ≈ 0.536
+  // HX=150, HY=250 (home plate), INR=112, OFR=230
+  const HX=150, HY=252, W=300, H=258;
+  const INR=145, OFR=230;
+
+  const pt=(a,r)=>{
+    const rad=a*Math.PI/180;
+    return [HX+r*Math.sin(rad), HY-r*Math.cos(rad)];
+  };
+
+  const fanPath=(a1,a2,r1,r2)=>{
+    const [ix1,iy1]=pt(a1,r1), [ix2,iy2]=pt(a2,r1);
+    const [ox2,oy2]=pt(a2,r2), [ox1,oy1]=pt(a1,r2);
+    if(r1===0){
+      return `M${HX},${HY} L${ox1.toFixed(1)},${oy1.toFixed(1)} A${r2},${r2} 0 0,1 ${ox2.toFixed(1)},${oy2.toFixed(1)} Z`;
+    }
+    return `M${ix1.toFixed(1)},${iy1.toFixed(1)} A${r1},${r1} 0 0,1 ${ix2.toFixed(1)},${iy2.toFixed(1)} L${ox2.toFixed(1)},${oy2.toFixed(1)} A${r2},${r2} 0 0,0 ${ox1.toFixed(1)},${oy1.toFixed(1)} Z`;
+  };
+
+  const svgPaths = zones.map(z=>{
+    const r1=z.infield?0:INR, r2=z.infield?INR:OFR;
+    const n=counts[z.id];
+    const col=zoneColor(n);
+    const path=fanPath(z.a1,z.a2,r1,r2);
+    const midA=(z.a1+z.a2)/2;
+    const midR=z.infield?INR*0.55:(INR+(OFR-INR)*0.5);
+    const [lx,ly]=pt(midA,midR);
+    // Percentage label
+    const pct=bip.length>0?Math.round(n/bip.length*100):0;
+    const groupTotal = z.infield ? infieldTotal : outfieldTotal;
+    const pctStr = Math.round(n/groupTotal*100)+'%';
+    const label = n>0 ? pctStr : '';
+    const dimLabel = n===0 ? z.label : '';
+    return `<path d="${path}" fill="${col}" stroke="rgba(255,255,255,0.2)" stroke-width="0.7"/>
+      ${n>0?`<text x="${lx.toFixed(1)}" y="${(ly+3.5).toFixed(1)}" text-anchor="middle" font-size="${z.infield?9:11}" font-weight="700" fill="white" font-family="'Barlow Condensed',sans-serif">${pctStr}</text>`:''}
+      ${n===0?`<text x="${lx.toFixed(1)}" y="${(ly+3.5).toFixed(1)}" text-anchor="middle" font-size="7" fill="rgba(255,255,255,0.25)" font-family="'Barlow Condensed',sans-serif">${z.label}</text>`:''}`;
+  }).join('');
+
+  // Field lines and labels
+  const [lfx,lfy]=pt(-47,OFR+8), [rfx,rfy]=pt(47,OFR+8);
+  const fieldLines=`
+    <line x1="${HX}" y1="${HY}" x2="${lfx.toFixed(1)}" y2="${lfy.toFixed(1)}" stroke="rgba(255,255,255,0.25)" stroke-width="1"/>
+    <line x1="${HX}" y1="${HY}" x2="${rfx.toFixed(1)}" y2="${rfy.toFixed(1)}" stroke="rgba(255,255,255,0.25)" stroke-width="1"/>
+    <polygon points="${HX},${HY-2} ${HX-5},${HY+7} ${HX},${HY+12} ${HX+5},${HY+7}" fill="white" opacity="0.85"/>`;
+
+  // Zone name labels (small, at outer edge of infield)
+  const ifLabels=['3B','SS','Mid','2B','1B'];
+  const ifZones=zones.filter(z=>z.infield);
+  const ifLabelsSVG=ifZones.map((z,i)=>{
+    const midA=(z.a1+z.a2)/2;
+    const [lx,ly]=pt(midA,INR+8);
+    return `<text x="${lx.toFixed(1)}" y="${(ly+3).toFixed(1)}" text-anchor="middle" font-size="6" fill="rgba(255,255,255,0.5)" font-family="'Barlow Condensed',sans-serif">${ifLabels[i]}</text>`;
+  }).join('');
+
+  // OF zone labels
+  const ofLabels=['LF','CF','RF'];
+  const ofZones=zones.filter(z=>!z.infield);
+  const ofLabelsSVG=ofZones.map((z,i)=>{
+    const midA=(z.a1+z.a2)/2;
+    const [lx,ly]=pt(midA,OFR+12);
+    if(ly<0||lx<0||lx>W) return '';
+    return `<text x="${lx.toFixed(1)}" y="${(ly).toFixed(1)}" text-anchor="middle" font-size="7" fill="rgba(255,255,255,0.4)" font-family="'Barlow Condensed',sans-serif">${ofLabels[i]}</text>`;
+  }).join('');
+
+  const legend=`<div style="display:flex;align-items:center;gap:4px;margin-top:3px;font-size:8px;color:#8a909e;font-family:'Barlow Condensed',sans-serif">
+    <div style="width:30px;height:8px;border-radius:2px;background:linear-gradient(to right,rgba(15,55,160,0.9),rgba(70,130,210,0.85),rgba(215,80,80,0.85),rgba(140,20,40,0.95))"></div>
+    <span>Least → Most frequent</span>
+  </div>`;
+
+  return `<div>${legend}
+    <svg viewBox="0 0 ${W} ${H}" style="width:100%;display:block;border-radius:6px;overflow:hidden">
+      <rect width="${W}" height="${H}" fill="#1a2e14"/>
+      ${svgPaths}
+      ${fieldLines}
+      ${ifLabelsSVG}
+    </svg>
+  </div>`;
+}
+
 function buildScoutHotColdZone(pitches, perspective){
   const W=160,H=148;
   const ZX1=W*0.2,ZX2=W*0.8,ZY1=H*0.15,ZY2=H*0.82;
