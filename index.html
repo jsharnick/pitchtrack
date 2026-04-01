@@ -9243,10 +9243,10 @@ function buildSprayHeatMap(bip, isLeft){
     return `rgba(140,20,40,${(0.82+t*0.18).toFixed(2)})`;               // maroon
   };
 
-  // SVG viewbox: scale 560→300, so scale factor = 300/560 ≈ 0.536
-  // HX=150, HY=250 (home plate), INR=112, OFR=230
-  const HX=150, HY=252, W=300, H=258;
-  const INR=145, OFR=230;
+  // SVG viewbox: HX centred, OFR capped so fan stays inside W
+  // At ±47°: max OFR = (W/2) / sin(47°) ≈ 150/0.731 = 205 → use 198 for a small margin
+  const HX=150, HY=240, W=300, H=248;
+  const INR=120, OFR=198;
 
   const pt=(a,r)=>{
     const rad=a*Math.PI/180;
@@ -9281,8 +9281,8 @@ function buildSprayHeatMap(bip, isLeft){
       ${n===0?`<text x="${lx.toFixed(1)}" y="${(ly+3.5).toFixed(1)}" text-anchor="middle" font-size="7" fill="rgba(255,255,255,0.25)" font-family="'Barlow Condensed',sans-serif">${z.label}</text>`:''}`;
   }).join('');
 
-  // Field lines and labels
-  const [lfx,lfy]=pt(-47,OFR+8), [rfx,rfy]=pt(47,OFR+8);
+  // Field lines stop exactly at OFR (no +8 overshoot)
+  const [lfx,lfy]=pt(-47,OFR), [rfx,rfy]=pt(47,OFR);
   const fieldLines=`
     <line x1="${HX}" y1="${HY}" x2="${lfx.toFixed(1)}" y2="${lfy.toFixed(1)}" stroke="rgba(255,255,255,0.25)" stroke-width="1"/>
     <line x1="${HX}" y1="${HY}" x2="${rfx.toFixed(1)}" y2="${rfy.toFixed(1)}" stroke="rgba(255,255,255,0.25)" stroke-width="1"/>
@@ -9302,7 +9302,7 @@ function buildSprayHeatMap(bip, isLeft){
   const ofZones=zones.filter(z=>!z.infield);
   const ofLabelsSVG=ofZones.map((z,i)=>{
     const midA=(z.a1+z.a2)/2;
-    const [lx,ly]=pt(midA,OFR+12);
+    const [lx,ly]=pt(midA,OFR-18);  // inside the arc, never outside the viewBox
     if(ly<0||lx<0||lx>W) return '';
     return `<text x="${lx.toFixed(1)}" y="${(ly).toFixed(1)}" text-anchor="middle" font-size="7" fill="rgba(255,255,255,0.4)" font-family="'Barlow Condensed',sans-serif">${ofLabels[i]}</text>`;
   }).join('');
@@ -9312,12 +9312,19 @@ function buildSprayHeatMap(bip, isLeft){
     <span>Least → Most frequent</span>
   </div>`;
 
-  return `<div>${legend}
-    <svg viewBox="0 0 ${W} ${H}" style="width:100%;display:block;border-radius:6px;overflow:hidden">
+  return `<div style="overflow:hidden;border-radius:6px">${legend}
+    <svg viewBox="0 0 ${W} ${H}" style="width:100%;display:block;border-radius:6px" overflow="hidden">
+      <defs>
+        <clipPath id="field-clip">
+          <rect x="0" y="0" width="${W}" height="${H}"/>
+        </clipPath>
+      </defs>
       <rect width="${W}" height="${H}" fill="#1a2e14"/>
-      ${svgPaths}
-      ${fieldLines}
-      ${ifLabelsSVG}
+      <g clip-path="url(#field-clip)">
+        ${svgPaths}
+        ${fieldLines}
+        ${ifLabelsSVG}
+      </g>
     </svg>
   </div>`;
 }
