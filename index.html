@@ -8545,11 +8545,11 @@ function buildHitterScoutingReport(teamName, playerName, games){
   const contact=allPitches.filter(p=>contactOuts.includes(p.outcome)).length;
   const whiffs=allPitches.filter(p=>p.outcome==='strike-swinging').length;
   const chaseSwings=outZone.filter(p=>swingOuts.includes(p.outcome)).length;
-  const hardHits=allPitches.filter(p=>p.spray?.hardHit).length;
+  // Batted ball profile — balls in play only (hits, outs, errors, sacs)
+  const bipOutcomes=['single','double','triple','homerun','groundout','flyout','lineout','sacfly','sacbunt','error'];
+  const bip=allPitches.filter(p=>p.spray?.btype && bipOutcomes.includes(p.outcome));
+  const hardHits=allPitches.filter(p=>p.spray?.hardHit && bipOutcomes.includes(p.outcome)).length;
   const pct=n=>total>0?Math.round(n/total*100)+'%':'—';
-
-  // Batted ball profile
-  const bip=allPitches.filter(p=>p.spray?.btype);
   const bipTotal=bip.length||1;
   const btCounts={flyball:0,linedrive:0,groundball:0,weakgrounder:0,popup:0};
   bip.forEach(p=>{ if(btCounts[p.spray.btype]!==undefined) btCounts[p.spray.btype]++; });
@@ -8560,9 +8560,25 @@ function buildHitterScoutingReport(teamName, playerName, games){
   </div>`;
 
   // Spray direction (pull/center/oppo) — use fieldX
-  const pullPct=bip.length>0?Math.round(bip.filter(p=>stats.hand==='L'?p.spray?.fieldX>55:p.spray?.fieldX<45).length/bipTotal*100):0;
-  const centrPct=bip.length>0?Math.round(bip.filter(p=>p.spray?.fieldX>=40&&p.spray?.fieldX<=60).length/bipTotal*100):0;
-  const oppoPct=bip.length>0?Math.round(bip.filter(p=>stats.hand==='L'?p.spray?.fieldX<45:p.spray?.fieldX>55).length/bipTotal*100):0;
+  // Pull/Straight/Oppo — angle-based from home plate (SVG coords: HX=280, HY=468)
+  // Angle 0° = straight up (center field), negative = left, positive = right
+  // Pull for RHH: angle < -15° (toward left field)
+  // Pull for LHH: angle > +15° (toward right field)
+  // Straight: within ±15° of center
+  const isLeftHand = stats.hand==='L';
+  const PULL_DEG = 15; // degrees from center to demarcate pull/straight/oppo
+  const sprayAngle = p => {
+    const sx = p.spray?.x, sy = p.spray?.y;
+    if(sx==null || sy==null) return 0;
+    const dx = sx - 280, dy = -(sy - 468); // dy flipped so up=positive
+    return Math.atan2(dx, Math.max(dy, 1)) * 180 / Math.PI;
+  };
+  const isPull   = p => isLeftHand ? sprayAngle(p) >  PULL_DEG : sprayAngle(p) < -PULL_DEG;
+  const isStraight = p => Math.abs(sprayAngle(p)) <= PULL_DEG;
+  const isOppo   = p => isLeftHand ? sprayAngle(p) < -PULL_DEG : sprayAngle(p) >  PULL_DEG;
+  const pullPct  = bip.length>0?Math.round(bip.filter(isPull).length/bipTotal*100):0;
+  const centrPct = bip.length>0?Math.round(bip.filter(isStraight).length/bipTotal*100):0;
+  const oppoPct  = bip.length>0?Math.round(bip.filter(isOppo).length/bipTotal*100):0;
 
   // Count splits
   const countGroups=[
@@ -8596,11 +8612,16 @@ function buildHitterScoutingReport(teamName, playerName, games){
   const ptMap={};
   allPitches.forEach(p=>{
     const t=p.pitchType||'—'; if(t==='—') return;
-    if(!ptMap[t])ptMap[t]={total:0,swings:0,whiffs:0,hits:0,ab:0,k:0};
+    if(!ptMap[t])ptMap[t]={total:0,swings:0,whiffs:0,hits:0,h2b:0,h3b:0,hr:0,ab:0,k:0};
     ptMap[t].total++;
     if(swingOuts.includes(p.outcome))ptMap[t].swings++;
     if(p.outcome==='strike-swinging')ptMap[t].whiffs++;
-    if(['single','double','triple','homerun'].includes(p.outcome)){ptMap[t].hits++;ptMap[t].ab++;}
+    if(['single','double','triple','homerun'].includes(p.outcome)){
+      ptMap[t].hits++; ptMap[t].ab++;
+      if(p.outcome==='double')  ptMap[t].h2b++;
+      if(p.outcome==='triple')  ptMap[t].h3b++;
+      if(p.outcome==='homerun') ptMap[t].hr++;
+    }
     if(['groundout','flyout','lineout','sacfly','sacbunt','error'].includes(p.outcome))ptMap[t].ab++;
     if(['strike-swinging','strike-looking'].includes(p.outcome))ptMap[t].k++;
   });
@@ -8610,7 +8631,8 @@ function buildHitterScoutingReport(teamName, playerName, games){
     const bavg=d.ab>0?f(d.hits/d.ab):'.---';
     const ptb=(d.hits-d.h2b-d.h3b-d.hr)+d.h2b*2+d.h3b*3+d.hr*4;
     const bslg=d.ab>0?f(ptb/d.ab):'.---';
-    const bops=d.ab>0&&d.hits!==undefined?f((d.hits/d.ab)+(ptb/d.ab)):'.---';
+    const bobp=d.ab>0?d.hits/d.ab:null; // simplified OBP (no BB tracked per pitch type)
+    const bops=d.ab>0?f((d.hits/d.ab)+(ptb/d.ab)):'.---';
     const whiffPct=d.swings>0?Math.round(d.whiffs/d.swings*100)+'%':'—';
     const kpct2=d.total>0?Math.round(d.k/d.total*100)+'%':'—';
     const avgHi=d.ab>0&&d.hits/d.ab>=.300,avgLo=d.ab>0&&d.hits/d.ab<.200;
@@ -8693,9 +8715,9 @@ function buildHitterScoutingReport(teamName, playerName, games){
   const fbPct=bipTotal>0?Math.round(btCounts.flyball/bipTotal*100):0;
   const puPct=bipTotal>0?Math.round(btCounts.popup/bipTotal*100):0;
   const isLeft=stats.hand==='L';
-  const pullBip=bip.filter(p=>isLeft?p.spray?.fieldX>55:p.spray?.fieldX<45);
-  const strBip=bip.filter(p=>p.spray?.fieldX>=40&&p.spray?.fieldX<=60);
-  const oppoBip=bip.filter(p=>isLeft?p.spray?.fieldX<45:p.spray?.fieldX>55);
+  const pullBip  = bip.filter(isPull);
+  const strBip   = bip.filter(isStraight);
+  const oppoBip  = bip.filter(isOppo);
   const pullGbPct=bipTotal>0?Math.round(pullBip.filter(p=>p.spray?.btype==='groundball'||p.spray?.btype==='weakgrounder').length/bipTotal*100):0;
   const strGbPct=bipTotal>0?Math.round(strBip.filter(p=>p.spray?.btype==='groundball'||p.spray?.btype==='weakgrounder').length/bipTotal*100):0;
   const oppoGbPct=bipTotal>0?Math.round(oppoBip.filter(p=>p.spray?.btype==='groundball'||p.spray?.btype==='weakgrounder').length/bipTotal*100):0;
@@ -8704,7 +8726,8 @@ function buildHitterScoutingReport(teamName, playerName, games){
   const oppoAirPct=bipTotal>0?Math.round(oppoBip.filter(p=>['flyball','linedrive','popup'].includes(p.spray?.btype)).length/bipTotal*100):0;
 
   // ── Quality of contact ──
-  const contactPitches=allPitches.filter(p=>contactOuts.includes(p.outcome));
+  // Quality of contact — use bip (already filtered to BIP outcomes with spray data)
+  const contactPitches=bip; // bip already restricted to BIP outcomes
   const hardPct=contactPitches.length>0?Math.round(contactPitches.filter(p=>p.spray?.hardHit).length/contactPitches.length*100):0;
   const ldContactPct=contactPitches.length>0?Math.round(contactPitches.filter(p=>p.spray?.btype==='linedrive').length/contactPitches.length*100):0;
   const weakPct=contactPitches.length>0?Math.round(contactPitches.filter(p=>p.spray?.btype==='weakgrounder'||p.spray?.btype==='popup').length/contactPitches.length*100):0;
@@ -9097,16 +9120,18 @@ function buildScoutHotColdZone(pitches, perspective){
   const cw=ZW/cols,ch=ZH/rows;
   const cells=[];
   for(let r=0;r<rows;r++){for(let c=0;c<cols;c++){cells.push({r,c,hits:0,ab:0});}}
+  // Balls in play only — shows hit avg by zone location on contact pitches
+  // For pitcher view: all contact pitches (where batter put ball in play)
+  // For batter view: same — pitch location of balls put in play
   const contact=['single','double','triple','homerun','groundout','flyout','lineout','sacfly','sacbunt','error'];
-  const abEnding=[...contact,'strike-swinging','strike-looking','hbp','ci'];
-  pitches.filter(p=>p.pitchX!=null&&p.pitchY!=null&&abEnding.includes(p.outcome)).forEach(p=>{
+  pitches.filter(p=>p.pitchX!=null&&p.pitchY!=null&&contact.includes(p.outcome)).forEach(p=>{
     const nx=(p.pitchX-31)/38,ny=(p.pitchY-30.9)/38.2;
     if(nx<0||nx>1||ny<0||ny>1) return;
     const c=Math.min(cols-1,Math.floor(nx*cols)),r=Math.min(rows-1,Math.floor(ny*rows));
     const cell=cells.find(x=>x.r===r&&x.c===c);
     if(!cell) return;
     cell.ab++;
-    if(contact.includes(p.outcome)) cell.hits++;
+    if(['single','double','triple','homerun'].includes(p.outcome)) cell.hits++;
   });
   const avgs=cells.map(x=>x.ab>0?x.hits/x.ab:null).filter(x=>x!==null);
   const minA=avgs.length?Math.min(...avgs):0,maxA=avgs.length?Math.max(...avgs):1;
