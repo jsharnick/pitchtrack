@@ -277,15 +277,73 @@ body{background:var(--bg);color:var(--text);font-family:'Barlow',sans-serif;min-
     .scout-bar-track{flex:1;background:#e8eaee;border-radius:3px;height:10px;overflow:hidden;}
     .scout-bar-fill{height:100%;border-radius:3px;}
     .scout-bar-val{font-family:'Share Tech Mono',monospace;font-size:10px;color:#8a909e;width:38px;text-align:right;flex-shrink:0;}
+    .scout-report-page{overflow:hidden;max-width:100%;}
+    .scout-report-page img, .scout-report-page svg{max-width:100%;height:auto;}
     .scout-report-page{background:#fff;}
     @media print {
-      #hub-sidebar,#hub-app>div:first-child,.tab-row,#scout-picker,.scout-print-hide,#player-tab-row,#pitcher-tab-row{display:none!important;}
-      #hub-main{padding:0!important;overflow:visible!important;}
-      #hub-content{display:block!important;}
-      .scout-report-page{page-break-after:always;width:8.5in;min-height:11in;padding:0.5in;box-sizing:border-box;background:#fff!important;}
-      .scout-report-page:last-child{page-break-after:auto;}
-      body,html{background:#fff!important;}
-      @page{size:letter;margin:0;}
+      @page { size:8.5in 11in portrait; margin:0.35in; }
+
+      /* Hide everything except the scouting report */
+      #shell-nav,
+      #mob-tabs,
+      #hub-sidebar,
+      #hub-welcome,
+      .scout-print-hide,
+      .tab-row,
+      #scout-picker,
+      #player-tab-row,
+      #pitcher-tab-row,
+      .breadcrumb,
+      .player-detail-header,
+      .stat-cards,
+      /* The team page content (wins/losses cards etc) above hub-content */
+      #hub-main > *:not(#hub-content),
+      #hub-app > div:first-child { display:none!important; }
+
+      html, body {
+        margin:0!important; padding:0!important;
+        background:#fff!important; overflow:visible!important;
+      }
+      /* Flatten all layout containers */
+      #panel-wrap, #hub-app, #hub-main, #hub-content {
+        display:block!important;
+        width:100%!important;
+        height:auto!important;
+        min-height:0!important;
+        overflow:visible!important;
+        padding:0!important;
+        margin:0!important;
+        background:#fff!important;
+        grid-template-columns:unset!important;
+      }
+      /* Only the active hub panel should show */
+      .app-panel { display:none!important; }
+      #panel-hub  { display:block!important; }
+
+      .scout-report-page {
+        display:block!important;
+        width:100%!important;
+        padding:0!important;
+        margin:0!important;
+        background:#fff!important;
+        overflow:hidden!important;
+        page-break-after:always;
+        break-after:page;
+      }
+      .scout-report-page:last-child { page-break-after:auto; break-after:auto; }
+      .scout-report-page * { max-width:100%!important; }
+      .scout-report-page svg { max-width:100%!important; height:auto!important; }
+
+      /* Tighten spacing for print */
+      .scout-section       { margin-bottom:7px!important; }
+      .scout-section-title { font-size:7px!important; padding-bottom:2px!important; margin-bottom:4px!important; }
+      .scout-table         { font-size:8px!important; }
+      .scout-table th, .scout-table td { padding:2px 4px!important; }
+      .scout-card          { padding:4px 3px!important; }
+      .scout-card-val      { font-size:13px!important; }
+      .scout-card-lbl      { font-size:5px!important; }
+      .scout-bar-row       { margin-bottom:2px!important; }
+      .scout-section, .scout-report-page > div { break-inside:avoid; }
     }
     /* LAYOUT */
 #main{display:grid;grid-template-columns:285px 1fr 305px;flex:1;min-height:0;overflow:hidden;}
@@ -8733,7 +8791,7 @@ function buildHitterScoutingReport(teamName, playerName, games){
   const weakPct=contactPitches.length>0?Math.round(contactPitches.filter(p=>p.spray?.btype==='weakgrounder'||p.spray?.btype==='popup').length/contactPitches.length*100):0;
   const solidPct=contactPitches.length>0?Math.round(contactPitches.filter(p=>['flyball','linedrive'].includes(p.spray?.btype)&&p.spray?.hardHit).length/contactPitches.length*100):0;
 
-  return `<div class="scout-report-page" id="scout-hitter-report" style="padding:20px;background:#fff;font-family:'Barlow Condensed',sans-serif">
+  return `<div class="scout-report-page" id="scout-hitter-report" style="padding:20px;background:#fff;font-family:'Barlow Condensed',sans-serif;overflow:hidden;max-width:100%;container-type:inline-size">
   <!-- Header -->
   <div style="display:flex;align-items:flex-start;justify-content:space-between;border-bottom:3px solid #cc1a1a;padding-bottom:8px;margin-bottom:12px">
     <div>
@@ -8973,6 +9031,34 @@ function buildPitcherScoutingReport(teamName, pitcherName, games){
     <div style="flex:1;padding-top:4px">${outLegend}</div>
   </div>`;
 
+  // ── Pitch mix pie chart ──
+  const mixTypes=Object.entries(byType).filter(([,d])=>d.total>0).sort((a,b)=>b[1].total-a[1].total);
+  let mixAngle=0;
+  const MIX_R=70, MIX_CX=90, MIX_CY=80;
+  const mixPaths=mixTypes.map(([t,d])=>{
+    const pct=d.total/total, sweep=pct*Math.PI*2;
+    const x1=MIX_CX+MIX_R*Math.sin(mixAngle), y1=MIX_CY-MIX_R*Math.cos(mixAngle);
+    mixAngle+=sweep;
+    const x2=MIX_CX+MIX_R*Math.sin(mixAngle), y2=MIX_CY-MIX_R*Math.cos(mixAngle);
+    const large=sweep>Math.PI?1:0;
+    const col=typeColors[t]||'#8a909e';
+    const midA=mixAngle-sweep/2;
+    const lx=MIX_CX+(MIX_R*0.65)*Math.sin(midA), ly=MIX_CY-(MIX_R*0.65)*Math.cos(midA);
+    const pctLbl=Math.round(pct*100);
+    return `<path d="M${MIX_CX},${MIX_CY} L${x1.toFixed(1)},${y1.toFixed(1)} A${MIX_R},${MIX_R} 0 ${large},1 ${x2.toFixed(1)},${y2.toFixed(1)} Z" fill="${col}" stroke="white" stroke-width="1.5"/>
+      ${pctLbl>=7?`<text x="${lx.toFixed(1)}" y="${ly.toFixed(1)}" text-anchor="middle" dominant-baseline="middle" font-size="9" font-weight="700" fill="white">${pctLbl}%</text>`:''}`;
+  }).join('');
+  const mixLegend=mixTypes.map(([t,d])=>`
+    <div style="display:flex;align-items:center;gap:4px;margin-bottom:3px">
+      <div style="width:10px;height:10px;border-radius:2px;background:${typeColors[t]||'#8a909e'};flex-shrink:0"></div>
+      <div style="font-family:'Barlow Condensed',sans-serif;font-size:11px;color:#4a5060;white-space:nowrap;font-weight:700;color:${typeColors[t]||'#4a5060'}">${t}</div>
+      <div style="font-family:'Share Tech Mono',monospace;font-size:10px;color:#8a909e;margin-left:auto;padding-left:6px">${d.total} · ${Math.round(d.total/total*100)}%</div>
+    </div>`).join('');
+  const mixPie=`<div style="display:flex;gap:12px;align-items:flex-start">
+    <svg viewBox="0 0 180 160" style="width:160px;flex-shrink:0"><g>${mixPaths}</g></svg>
+    <div style="flex:1;padding-top:4px">${mixLegend}</div>
+  </div>`;
+
   // Count discipline rows
   const countSit=[
     {lbl:'0-0 (FPS)',      fn:p=>p.balls===0&&p.strikes===0},
@@ -9042,20 +9128,24 @@ function buildPitcherScoutingReport(teamName, pitcherName, games){
     </div>
   </div>
 
-  <!-- Row 1: Core stats + Outcomes -->
-  <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px">
-    <div class="scout-section">
+  <!-- Row 1: Core stats | Outcome Breakdown | Pitch Mix -->
+  <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;margin-bottom:16px">
+    <div class="scout-section" style="margin-bottom:0">
       <div class="scout-section-title">Core Stats</div>
-      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-bottom:10px">
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:5px">
         ${[['Pitches',career.pitches],['K',career.k],['BB',career.bb],['H Allow',career.hits],
            ['Strike%',sp+'%'],['FPS%',fpsPct+'%'],['Swing%',swPct+'%'],['Zone%',zonePct+'%'],
            ['Whiff%',swings>0?Math.round(whiffs/swings*100)+'%':'—'],['Avg MPH',avgVel],['Max MPH',maxVel],['K/BB',kbb]
-        ].map(([l,v])=>`<div class="scout-card"><div class="scout-card-val">${v}</div><div class="scout-card-lbl">${l}</div></div>`).join('')}
+        ].map(([l,v])=>`<div style="background:#f8f9fb;border:1px solid #e0e4ea;border-radius:6px;padding:6px 4px;text-align:center"><div style="font-weight:900;font-size:15px;color:#111318">${v}</div><div style="font-size:6px;letter-spacing:1.5px;text-transform:uppercase;color:#8a909e;margin-top:1px">${l}</div></div>`).join('')}
       </div>
     </div>
-    <div class="scout-section">
+    <div class="scout-section" style="margin-bottom:0">
       <div class="scout-section-title">Outcome Breakdown</div>
       ${outcomePie}
+    </div>
+    <div class="scout-section" style="margin-bottom:0">
+      <div class="scout-section-title">Pitch Mix</div>
+      ${mixPie}
     </div>
   </div>
 
@@ -9069,7 +9159,7 @@ function buildPitcherScoutingReport(teamName, pitcherName, games){
       </table>
     </div>
     <!-- Visual row: Strike% bars | Hot/Cold | FB zone | CB zone | CT zone -->
-    <div style="display:grid;grid-template-columns:200px 180px 1fr 1fr 1fr;gap:14px;align-items:start">
+    <div style="display:grid;grid-template-columns:minmax(150px,200px) minmax(140px,180px) 1fr 1fr 1fr;gap:10px;align-items:start">
       <!-- Strike% bars -->
       <div class="scout-section" style="margin-bottom:0">
         <div class="scout-section-title">Strike% by Pitch</div>
