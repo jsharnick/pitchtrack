@@ -4857,6 +4857,66 @@
               <div id="lineup-list"></div>
             </div>
           </div>
+          <!-- MY TEAM ROSTER DRAWER (shown when Use My Team is active) -->
+          <div
+            id="myteam-drawer"
+            style="
+              display: none;
+              border-top: 2px solid var(--accent);
+              background: var(--surface);
+              flex-shrink: 0;
+            "
+          >
+            <div
+              style="
+                padding: 5px 8px;
+                background: rgba(204, 26, 26, 0.07);
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+              "
+            >
+              <div
+                style="
+                  font-family: 'Barlow Condensed', sans-serif;
+                  font-weight: 800;
+                  font-size: 10px;
+                  letter-spacing: 1.5px;
+                  text-transform: uppercase;
+                  color: var(--accent);
+                "
+              >
+                <span id="myteam-drawer-label"
+                  >Roster · drag or click to add</span
+                >
+              </div>
+              <button
+                onclick="closeMyTeamDrawer()"
+                style="
+                  background: none;
+                  border: none;
+                  color: var(--text3);
+                  font-size: 16px;
+                  cursor: pointer;
+                  padding: 0 4px;
+                  line-height: 1;
+                "
+              >
+                ×
+              </button>
+            </div>
+            <div
+              id="myteam-drawer-cards"
+              style="
+                padding: 5px 8px;
+                display: flex;
+                flex-direction: column;
+                gap: 3px;
+                max-height: 240px;
+                overflow-y: auto;
+              "
+            ></div>
+          </div>
           <!-- CENTER PANEL -->
           <div id="panel-center">
             <div id="zone-container">
@@ -6232,190 +6292,26 @@
           background: var(--surface2);
           border: 1px solid var(--border2);
           border-radius: 16px;
-          padding: 24px;
-          width: 560px;
-          max-width: 95vw;
-          max-height: 90vh;
-          overflow-y: auto;
+          padding: 0;
+          width: min(1100px, 96vw);
+          max-width: 96vw;
+          max-height: 92vh;
+          overflow: hidden;
           box-shadow: 0 20px 60px rgba(0, 0, 0, 0.6);
           animation: modalPop 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+          display: flex;
+          flex-direction: row;
         "
       >
+        <!-- LEFT: Lineup editor -->
         <div
+          id="lm-left-col"
           style="
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            margin-bottom: 16px;
-          "
-        >
-          <div>
-            <div
-              id="lineup-modal-title"
-              style="
-                font-family: 'Barlow Condensed', sans-serif;
-                font-weight: 900;
-                font-size: 22px;
-                color: var(--text);
-              "
-            >
-              Edit Lineup
-            </div>
-            <div style="font-size: 11px; color: var(--text3); margin-top: 2px">
-              Edit both lineups — changes apply immediately
-            </div>
-          </div>
-          <button
-            onclick="closeLineupModal()"
-            onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--text3)'"
-            onmouseover="this.style.borderColor='var(--red)';this.style.color='var(--red)'"
-            style="
-              background: none;
-              border: 1px solid var(--border);
-              border-radius: 6px;
-              color: var(--text3);
-              font-size: 14px;
-              padding: 4px 10px;
-              cursor: pointer;
-              transition: all 0.14s;
-            "
-          >
-            <svg
-              fill="none"
-              height="12"
-              stroke="currentColor"
-              stroke-linecap="round"
-              stroke-width="2"
-              viewbox="0 0 12 12"
-              width="12"
-              xmlns="http://www.w3.org/2000/svg"
-            >
-              <line x1="1" x2="11" y1="1" y2="11"></line>
-              <line x1="11" x2="1" y1="1" y2="11"></line>
-            </svg>
-          </button>
-        </div>
-        <!-- Team tabs -->
-        <div
-          style="
-            display: flex;
-            background: var(--surface3);
-            border-radius: 7px;
-            padding: 3px;
-            gap: 3px;
-            margin-bottom: 16px;
-          "
-        >
-          <div
-            id="lm-tab-away"
-            onclick="switchLineupModalTab('away')"
-            style="
-              flex: 1;
-              padding: 6px;
-              text-align: center;
-              font-family: 'Barlow Condensed', sans-serif;
-              font-weight: 700;
-              font-size: 13px;
-              letter-spacing: 1px;
-              cursor: pointer;
-              border-radius: 5px;
-              background: var(--accent);
-              color: var(--bg);
-              transition: all 0.14s;
-            "
-          >
-            AWAY
-          </div>
-          <div
-            id="lm-tab-home"
-            onclick="switchLineupModalTab('home')"
-            style="
-              flex: 1;
-              padding: 6px;
-              text-align: center;
-              font-family: 'Barlow Condensed', sans-serif;
-              font-weight: 700;
-              font-size: 13px;
-              letter-spacing: 1px;
-              cursor: pointer;
-              border-radius: 5px;
-              color: var(--text3);
-              transition: all 0.14s;
-            "
-          >
-            HOME
-          </div>
-        </div>
-        <!-- Column headers -->
-        <div
-          style="
-            display: grid;
-            grid-template-columns: 24px 44px 1fr 52px 36px 36px;
-            gap: 5px;
-            align-items: center;
-            padding: 0 4px;
-            margin-bottom: 5px;
-          "
-        >
-          <div
-            style="
-              font-size: 8px;
-              letter-spacing: 2px;
-              color: var(--text3);
-              text-transform: uppercase;
-            "
-          >
-            #
-          </div>
-          <div
-            style="
-              font-size: 8px;
-              letter-spacing: 2px;
-              color: var(--text3);
-              text-transform: uppercase;
-            "
-          >
-            Jersey
-          </div>
-          <div
-            style="
-              font-size: 8px;
-              letter-spacing: 2px;
-              color: var(--text3);
-              text-transform: uppercase;
-            "
-          >
-            Name
-          </div>
-          <div
-            style="
-              font-size: 8px;
-              letter-spacing: 2px;
-              color: var(--text3);
-              text-transform: uppercase;
-            "
-          >
-            Pos
-          </div>
-          <div
-            style="
-              font-size: 8px;
-              letter-spacing: 2px;
-              color: var(--text3);
-              text-transform: uppercase;
-            "
-          >
-            B/T
-          </div>
-          <div></div>
-        </div>
-        <div id="lineup-modal-rows"></div>
-        <!-- Pitcher section in lineup modal -->
-        <div
-          style="
-            margin-top: 14px;
-            padding-top: 12px;
-            border-top: 1px solid var(--border);
+            flex: 1;
+            min-width: 0;
+            padding: 24px;
+            overflow-y: auto;
+            max-height: 92vh;
           "
         >
           <div
@@ -6423,158 +6319,411 @@
               display: flex;
               align-items: center;
               justify-content: space-between;
-              margin-bottom: 8px;
+              margin-bottom: 16px;
+            "
+          >
+            <div>
+              <div
+                id="lineup-modal-title"
+                style="
+                  font-family: 'Barlow Condensed', sans-serif;
+                  font-weight: 900;
+                  font-size: 22px;
+                  color: var(--text);
+                "
+              >
+                Edit Lineup
+              </div>
+              <div
+                style="font-size: 11px; color: var(--text3); margin-top: 2px"
+              >
+                Edit both lineups — changes apply immediately
+              </div>
+            </div>
+            <button
+              onclick="closeLineupModal()"
+              onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--text3)'"
+              onmouseover="this.style.borderColor='var(--red)';this.style.color='var(--red)'"
+              style="
+                background: none;
+                border: 1px solid var(--border);
+                border-radius: 6px;
+                color: var(--text3);
+                font-size: 14px;
+                padding: 4px 10px;
+                cursor: pointer;
+                transition: all 0.14s;
+              "
+            >
+              <svg
+                fill="none"
+                height="12"
+                stroke="currentColor"
+                stroke-linecap="round"
+                stroke-width="2"
+                viewbox="0 0 12 12"
+                width="12"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <line x1="1" x2="11" y1="1" y2="11"></line>
+                <line x1="11" x2="1" y1="1" y2="11"></line>
+              </svg>
+            </button>
+          </div>
+          <!-- Team tabs -->
+          <div
+            style="
+              display: flex;
+              background: var(--surface3);
+              border-radius: 7px;
+              padding: 3px;
+              gap: 3px;
+              margin-bottom: 16px;
             "
           >
             <div
-              id="lm-pitcher-label"
+              id="lm-tab-away"
+              onclick="switchLineupModalTab('away')"
+              style="
+                flex: 1;
+                padding: 6px;
+                text-align: center;
+                font-family: 'Barlow Condensed', sans-serif;
+                font-weight: 700;
+                font-size: 13px;
+                letter-spacing: 1px;
+                cursor: pointer;
+                border-radius: 5px;
+                background: var(--accent);
+                color: var(--bg);
+                transition: all 0.14s;
+              "
+            >
+              AWAY
+            </div>
+            <div
+              id="lm-tab-home"
+              onclick="switchLineupModalTab('home')"
+              style="
+                flex: 1;
+                padding: 6px;
+                text-align: center;
+                font-family: 'Barlow Condensed', sans-serif;
+                font-weight: 700;
+                font-size: 13px;
+                letter-spacing: 1px;
+                cursor: pointer;
+                border-radius: 5px;
+                color: var(--text3);
+                transition: all 0.14s;
+              "
+            >
+              HOME
+            </div>
+          </div>
+          <!-- Column headers -->
+          <div
+            style="
+              display: grid;
+              grid-template-columns: 24px 44px 1fr 52px 36px 36px;
+              gap: 5px;
+              align-items: center;
+              padding: 0 4px;
+              margin-bottom: 5px;
+            "
+          >
+            <div
               style="
                 font-size: 8px;
                 letter-spacing: 2px;
                 color: var(--text3);
                 text-transform: uppercase;
-                font-weight: 700;
               "
             >
-              PITCHER
+              #
             </div>
-            <button
-              onclick="toggleLmAddPitcherForm()"
-              onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--text3)'"
-              onmouseover="this.style.borderColor='var(--accent)';this.style.color='var(--accent)'"
+            <div
               style="
-                background: none;
-                border: 1px solid var(--border);
-                border-radius: 4px;
+                font-size: 8px;
+                letter-spacing: 2px;
                 color: var(--text3);
-                font-size: 10px;
-                padding: 2px 7px;
-                cursor: pointer;
-                transition: all 0.14s;
+                text-transform: uppercase;
               "
             >
-              + Add
-            </button>
+              Jersey
+            </div>
+            <div
+              style="
+                font-size: 8px;
+                letter-spacing: 2px;
+                color: var(--text3);
+                text-transform: uppercase;
+              "
+            >
+              Name
+            </div>
+            <div
+              style="
+                font-size: 8px;
+                letter-spacing: 2px;
+                color: var(--text3);
+                text-transform: uppercase;
+              "
+            >
+              Pos
+            </div>
+            <div
+              style="
+                font-size: 8px;
+                letter-spacing: 2px;
+                color: var(--text3);
+                text-transform: uppercase;
+              "
+            >
+              B/T
+            </div>
+            <div></div>
           </div>
+          <div id="lineup-modal-rows"></div>
+          <!-- Pitcher section in lineup modal -->
           <div
-            id="lm-add-pitcher-form"
             style="
-              display: none;
-              background: var(--surface2);
-              border: 1px solid var(--border);
-              border-radius: 7px;
-              padding: 8px;
-              margin-bottom: 8px;
+              margin-top: 14px;
+              padding-top: 12px;
+              border-top: 1px solid var(--border);
             "
           >
-            <div class="add-p-row">
-              <input
-                class="setup-input num-in"
-                id="lm-new-num"
-                placeholder="#"
-                style="width: 38px; flex-shrink: 0"
-              />
-              <input
-                class="setup-input"
-                id="lm-new-name"
-                placeholder="Name..."
-                style="flex: 1"
-              />
-              <select
-                id="lm-new-hand"
+            <div
+              style="
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                margin-bottom: 8px;
+              "
+            >
+              <div
+                id="lm-pitcher-label"
                 style="
-                  background: var(--surface2);
-                  border: 1px solid var(--border);
-                  border-radius: 5px;
-                  color: var(--text);
-                  font-family: 'Barlow Condensed', sans-serif;
-                  font-size: 13px;
-                  padding: 3px 5px;
-                  outline: none;
-                  cursor: pointer;
-                  flex-shrink: 0;
+                  font-size: 8px;
+                  letter-spacing: 2px;
+                  color: var(--text3);
+                  text-transform: uppercase;
+                  font-weight: 700;
                 "
               >
-                <option value="R">R</option>
-                <option value="L">L</option>
-              </select>
-              <button class="add-p-btn" onclick="lmAddPitcher()">Add</button>
+                PITCHER
+              </div>
               <button
-                class="cancel-p-btn"
                 onclick="toggleLmAddPitcherForm()"
+                onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--text3)'"
+                onmouseover="this.style.borderColor='var(--accent)';this.style.color='var(--accent)'"
                 style="
-                  display: flex;
-                  align-items: center;
-                  justify-content: center;
+                  background: none;
+                  border: 1px solid var(--border);
+                  border-radius: 4px;
+                  color: var(--text3);
+                  font-size: 10px;
+                  padding: 2px 7px;
+                  cursor: pointer;
+                  transition: all 0.14s;
                 "
               >
-                <svg
-                  fill="none"
-                  height="12"
-                  stroke="currentColor"
-                  stroke-linecap="round"
-                  stroke-width="2"
-                  viewbox="0 0 12 12"
-                  width="12"
-                  xmlns="http://www.w3.org/2000/svg"
-                >
-                  <line x1="1" x2="11" y1="1" y2="11"></line>
-                  <line x1="11" x2="1" y1="1" y2="11"></line>
-                </svg>
+                + Add
               </button>
             </div>
+            <div
+              id="lm-add-pitcher-form"
+              style="
+                display: none;
+                background: var(--surface2);
+                border: 1px solid var(--border);
+                border-radius: 7px;
+                padding: 8px;
+                margin-bottom: 8px;
+              "
+            >
+              <div class="add-p-row">
+                <input
+                  class="setup-input num-in"
+                  id="lm-new-num"
+                  placeholder="#"
+                  style="width: 38px; flex-shrink: 0"
+                />
+                <input
+                  class="setup-input"
+                  id="lm-new-name"
+                  placeholder="Name..."
+                  style="flex: 1"
+                />
+                <select
+                  id="lm-new-hand"
+                  style="
+                    background: var(--surface2);
+                    border: 1px solid var(--border);
+                    border-radius: 5px;
+                    color: var(--text);
+                    font-family: 'Barlow Condensed', sans-serif;
+                    font-size: 13px;
+                    padding: 3px 5px;
+                    outline: none;
+                    cursor: pointer;
+                    flex-shrink: 0;
+                  "
+                >
+                  <option value="R">R</option>
+                  <option value="L">L</option>
+                </select>
+                <button class="add-p-btn" onclick="lmAddPitcher()">Add</button>
+                <button
+                  class="cancel-p-btn"
+                  onclick="toggleLmAddPitcherForm()"
+                  style="
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                  "
+                >
+                  <svg
+                    fill="none"
+                    height="12"
+                    stroke="currentColor"
+                    stroke-linecap="round"
+                    stroke-width="2"
+                    viewbox="0 0 12 12"
+                    width="12"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <line x1="1" x2="11" y1="1" y2="11"></line>
+                    <line x1="11" x2="1" y1="1" y2="11"></line>
+                  </svg>
+                </button>
+              </div>
+            </div>
+            <div
+              id="lm-pitcher-list"
+              style="
+                min-height: 36px;
+                border-radius: 6px;
+                transition: outline 0.1s;
+              "
+            ></div>
+            <div
+              id="lm-pitcher-drop-hint"
+              style="
+                font-size: 10px;
+                color: var(--text3);
+                font-family: 'Barlow', sans-serif;
+                text-align: center;
+                padding: 4px 0;
+                display: none;
+              "
+            >
+              ⬆ drag pitchers from roster here
+            </div>
           </div>
-          <div id="lm-pitcher-list"></div>
+          <div
+            style="
+              display: flex;
+              gap: 8px;
+              margin-top: 16px;
+              padding-top: 14px;
+              border-top: 1px solid var(--border);
+            "
+          >
+            <button
+              onclick="randomizeLineupModal()"
+              onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--text2)'"
+              onmouseover="this.style.borderColor='var(--green)';this.style.color='var(--green)'"
+              style="
+                flex: 1;
+                background: var(--surface3);
+                border: 1px solid var(--border);
+                border-radius: 7px;
+                color: var(--text2);
+                font-family: 'Barlow Condensed', sans-serif;
+                font-weight: 700;
+                font-size: 14px;
+                padding: 9px;
+                cursor: pointer;
+                transition: all 0.14s;
+                letter-spacing: 0.5px;
+              "
+            >
+              🎲 Random Names
+            </button>
+            <button
+              onclick="closeLineupModal()"
+              style="
+                flex: 1;
+                background: var(--accent);
+                border: none;
+                border-radius: 7px;
+                color: var(--bg);
+                font-family: 'Barlow Condensed', sans-serif;
+                font-weight: 900;
+                font-size: 14px;
+                padding: 9px;
+                cursor: pointer;
+                transition: all 0.14s;
+                letter-spacing: 0.5px;
+              "
+            >
+              Done
+            </button>
+          </div>
         </div>
+        <!-- /lm-left-col -->
+
+        <!-- RIGHT: My Team roster panel (shown when Use My Team is active) -->
         <div
+          id="lm-roster-panel"
           style="
-            display: flex;
-            gap: 8px;
-            margin-top: 16px;
-            padding-top: 14px;
-            border-top: 1px solid var(--border);
+            display: none;
+            width: 320px;
+            flex-shrink: 0;
+            border-left: 1px solid var(--border);
+            background: var(--surface3);
+            overflow-y: auto;
+            max-height: 92vh;
           "
         >
-          <button
-            onclick="randomizeLineupModal()"
-            onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--text2)'"
-            onmouseover="this.style.borderColor='var(--green)';this.style.color='var(--green)'"
+          <div
             style="
-              flex: 1;
-              background: var(--surface3);
-              border: 1px solid var(--border);
-              border-radius: 7px;
-              color: var(--text2);
-              font-family: 'Barlow Condensed', sans-serif;
-              font-weight: 700;
-              font-size: 14px;
-              padding: 9px;
-              cursor: pointer;
-              transition: all 0.14s;
-              letter-spacing: 0.5px;
+              padding: 10px 12px;
+              border-bottom: 1px solid var(--border);
+              background: var(--surface2);
+              display: flex;
+              align-items: center;
+              justify-content: space-between;
+              position: sticky;
+              top: 0;
+              z-index: 1;
             "
           >
-            🎲 Random Names
-          </button>
-          <button
-            onclick="closeLineupModal()"
-            style="
-              flex: 1;
-              background: var(--accent);
-              border: none;
-              border-radius: 7px;
-              color: var(--bg);
-              font-family: 'Barlow Condensed', sans-serif;
-              font-weight: 900;
-              font-size: 14px;
-              padding: 9px;
-              cursor: pointer;
-              transition: all 0.14s;
-              letter-spacing: 0.5px;
-            "
-          >
-            Done
-          </button>
+            <div
+              style="
+                font-family: 'Barlow Condensed', sans-serif;
+                font-weight: 800;
+                font-size: 11px;
+                letter-spacing: 1.5px;
+                text-transform: uppercase;
+                color: var(--accent);
+              "
+              id="lm-roster-title"
+            >
+              Roster
+            </div>
+            <div
+              style="
+                font-size: 10px;
+                color: var(--text3);
+                font-family: 'Barlow', sans-serif;
+              "
+            >
+              drag or click → slot
+            </div>
+          </div>
+          <div id="lm-roster-cards" style="padding: 8px"></div>
         </div>
       </div>
     </div>
@@ -12680,9 +12829,10 @@
             renderLineupModal();
           }
           function closeLineupModal() {
-            // Save any unsaved inputs before closing
             saveLineupModalInputs();
             qs("lineup-modal").style.display = "none";
+            var rp = document.getElementById("lm-roster-panel");
+            if (rp) rp.style.display = "none";
             renderLineup();
             updateScoreBug();
           }
@@ -12756,8 +12906,60 @@
               };font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:10px;padding:4px 4px;cursor:pointer;transition:all .14s;width:100%;letter-spacing:.5px">PH</button>
       <button onclick="randomizeSingleRow(${i})" title="Random player" style="background:none;border:1px solid var(--border);border-radius:4px;color:var(--text3);font-size:12px;padding:4px 6px;cursor:pointer;transition:all .14s;width:100%" onmouseover="this.style.borderColor='var(--green)';this.style.color='var(--green)'" onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--text3)'">🎲</button>
     `;
+              // Make row a drop target for roster cards
+              div.addEventListener("dragover", function (e) {
+                e.preventDefault();
+                this.style.background = "rgba(204,26,26,.12)";
+                this.style.outline = "2px solid var(--accent)";
+              });
+              div.addEventListener("dragleave", function () {
+                this.style.background = "";
+                this.style.outline = "";
+              });
+              div.addEventListener("drop", function (e) {
+                e.preventDefault();
+                this.style.background = "";
+                this.style.outline = "";
+                const pid =
+                  e.dataTransfer.getData("text/plain") || _dragPlayerId;
+                lmDropPlayerIntoSlot(pid, i);
+              });
               rows.appendChild(div);
             });
+          }
+
+          function lmDropPlayerIntoSlot(playerId, slotIdx) {
+            const p = myTeamRoster.find(function (x) {
+              return x.id === playerId;
+            });
+            if (!p) return;
+            const lineup =
+              lineupModalSide === "away" ? S.lineupAway : S.lineupHome;
+            lineup[slotIdx] = {
+              name: p.name,
+              num: p.num || String(slotIdx + 1),
+              pos: p.pos || "OF",
+              hand: p.bat || "R",
+              isPH: false,
+              isPR: false,
+              isDEF: false,
+            };
+            renderLineupModal();
+            // Briefly highlight the pos field as a reminder to verify position
+            setTimeout(function () {
+              var posEl = document.getElementById("lm-pos-" + slotIdx);
+              if (posEl) {
+                posEl.style.borderColor = "var(--accent)";
+                posEl.style.background = "rgba(204,26,26,.08)";
+                posEl.title = "Verify position";
+                posEl.focus();
+                setTimeout(function () {
+                  posEl.style.borderColor = "";
+                  posEl.style.background = "";
+                  posEl.title = "";
+                }, 3500);
+              }
+            }, 60);
           }
 
           function togglePH(i) {
@@ -18386,7 +18588,7 @@
         <button onclick="promptDeleteGame('${g.id}','${escHtml(
               g.awayTeam
             )} vs ${escHtml(g.homeTeam)} (${g.date})')"
-          style="padding:7px 14px;background:transparent;border:1.5px solid #d4d8e0;border-radius:8px;color:#8a909e;font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:13px;cursor:pointer;transition:all .14s;white-space:nowrap"
+          style="padding:7px 14px;background:transparent;border:1.5px solid #d4d8e0;border-radius:8px;color:#8a909e;font-family:Barlow Condensed,sans-serif;font-weight:700;font-size:13px;cursor:pointer;transition:all .14s;white-space:nowrap"
           onmouseover="this.style.borderColor='#cc1a1a';this.style.color='#cc1a1a';this.style.background='rgba(204,26,26,.05)'"
           onmouseout="this.style.borderColor='#d4d8e0';this.style.color='#8a909e';this.style.background='transparent'"style="display:inline-flex;align-items:center;gap:6px"><svg xmlns="http://www.w3.org/2000/svg" width="13" height="14" viewBox="0 0 13 14" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><polyline points="1,3 12,3"/><path d="M4,3V2a1,1,0,0,1,1-1h3a1,1,0,0,1,1,1V3"/><path d="M2,3l.7,8.5A1,1,0,0,0,3.7,12.5h5.6a1,1,0,0,0,1-.99L11,3"/><line x1="5" y1="6" x2="5" y2="10"/><line x1="8" y1="6" x2="8" y2="10"/></svg> Delete Game</button>
       </div>
@@ -18424,7 +18626,7 @@
           (e) => `
         <div style="display:flex;align-items:flex-start;gap:10px;padding:8px 14px;border-bottom:1px solid var(--surface2)">
           <div style="font-size:14px;flex-shrink:0">${e.icon}</div>
-          <div style="flex:1"><div style="font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:13px">${escHtml(
+          <div style="flex:1"><div style="font-family:Barlow Condensed,sans-serif;font-weight:700;font-size:13px">${escHtml(
             e.main
           )}</div>${
             e.meta
@@ -19311,7 +19513,7 @@
           // ===== BOOT =====
           async function hubBoot() {
             document.getElementById("hub-content").innerHTML =
-              '<div id="hub-loading" style="display:flex;align-items:center;justify-content:center;height:200px;color:#8a909e;font-family:\'Barlow Condensed\',sans-serif;font-size:16px;letter-spacing:1px;gap:10px">\u26be Loading saved games...</div>';
+              '<div id="hub-loading" style="display:flex;align-items:center;justify-content:center;height:200px;color:#8a909e;font-family:Barlow Condensed,sans-serif;font-size:16px;letter-spacing:1px;gap:10px">\u26be Loading saved games...</div>';
             await hubRefreshAll();
             if (allGames.length === 0) {
               document.getElementById("hub-welcome").style.display = "block";
@@ -19932,7 +20134,7 @@
       <input class="lm-input" id="lm-p-name-${i}" value="${
                 p.name || ""
               }" placeholder="Pitcher name..." oninput="lmSyncPitcher(${i})">
-      <div class="lm-input" style="text-align:center;background:var(--surface3);color:var(--text3);display:flex;align-items:center;justify-content:center;font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:13px">P</div>
+      <div class="lm-input" style="text-align:center;background:var(--surface3);color:var(--text3);display:flex;align-items:center;justify-content:center;font-family:Barlow Condensed,sans-serif;font-weight:700;font-size:13px">P</div>
       <select class="lm-select" id="lm-p-hand-${i}" onchange="lmSyncPitcher(${i})">
         <option value="R"${
           (p.hand || "R") === "R" ? " selected" : ""
@@ -19957,6 +20159,83 @@
               });
               el.appendChild(div);
             });
+
+            // Make the pitcher list container a drop zone
+            el.addEventListener("dragover", function (e) {
+              e.preventDefault();
+              el.style.outline = "2px dashed var(--accent)";
+              el.style.borderRadius = "6px";
+            });
+            el.addEventListener("dragleave", function () {
+              el.style.outline = "";
+            });
+            el.addEventListener("drop", function (e) {
+              e.preventDefault();
+              el.style.outline = "";
+              const pid = e.dataTransfer.getData("text/plain") || _dragPlayerId;
+              lmDropPitcherFromRoster(pid);
+            });
+          }
+
+          function lmDropPitcherFromRoster(playerId) {
+            const p = myTeamRoster.find(function (x) {
+              return x.id === playerId;
+            });
+            if (!p) return;
+            const side =
+              typeof lineupModalSide !== "undefined" ? lineupModalSide : "away";
+            const list = side === "away" ? S.pitchersAway : S.pitchersHome;
+            // Don't duplicate by name
+            if (
+              list.find(function (x) {
+                return x.name === p.name;
+              })
+            ) {
+              toast(p.name + " already in pitcher list");
+              return;
+            }
+            // If only one pitcher and it's the default placeholder, replace it
+            const isDefault =
+              list.length === 1 &&
+              (!list[0].name ||
+                list[0].name === "Pitcher" ||
+                /^Pitcher/.test(list[0].name)) &&
+              list[0].pitches === 0;
+            if (isDefault) {
+              list[0] = {
+                name: p.name,
+                num: p.num || "",
+                hand: p.throw || "R",
+                pitches: 0,
+                strikes: 0,
+                k: 0,
+                bb: 0,
+                swings: 0,
+                looks: 0,
+                hits: 0,
+                active: true,
+              };
+            } else {
+              list.forEach(function (x) {
+                x.active = false;
+              });
+              list.push({
+                name: p.name,
+                num: p.num || "",
+                hand: p.throw || "R",
+                pitches: 0,
+                strikes: 0,
+                k: 0,
+                bb: 0,
+                swings: 0,
+                looks: 0,
+                hits: 0,
+                active: true,
+              });
+            }
+            renderLmPitchers();
+            renderPitcherList();
+            updateScoreBug();
           }
 
           function lmSyncPitcher(i) {
@@ -22236,55 +22515,578 @@
           }
 
           function myTeamUseAsAway() {
-            const name =
-              document.getElementById("myteam-name-input").value.trim() ||
-              "My Team";
+            const name = (
+              document.getElementById("myteam-name-input")?.value || "My Team"
+            ).trim();
             const inp = document.getElementById("away-name-input");
             if (inp) {
               inp.value = name;
               updateTeamNames();
             }
-            myTeamFillLineup(true);
-            // If called from tracker already, just apply; if from My Team page, go to tracker
             if (currentPanel === "myteam") openPanel("tracker");
+            setTimeout(
+              function () {
+                lineupModalSide = "away";
+                qs("lineup-modal").style.display = "flex";
+                renderLineupModal();
+                lmShowRosterPanel(true);
+              },
+              currentPanel === "myteam" ? 250 : 0
+            );
           }
 
           function myTeamUseAsHome() {
-            const name =
-              document.getElementById("myteam-name-input").value.trim() ||
-              "My Team";
+            const name = (
+              document.getElementById("myteam-name-input")?.value || "My Team"
+            ).trim();
             const inp = document.getElementById("home-name-input");
             if (inp) {
               inp.value = name;
               updateTeamNames();
             }
-            myTeamFillLineup(false);
             if (currentPanel === "myteam") openPanel("tracker");
+            setTimeout(
+              function () {
+                lineupModalSide = "home";
+                qs("lineup-modal").style.display = "flex";
+                renderLineupModal();
+                lmShowRosterPanel(false);
+              },
+              currentPanel === "myteam" ? 250 : 0
+            );
           }
 
-          function myTeamFillLineup(isAway) {
-            // Fill the first 9 batters from roster (position players first, then pitchers)
-            const posPlayers = myTeamRoster.filter(
-              (p) => !["RHP", "LHP", "P"].includes(p.pos)
-            );
-            const pitchers = myTeamRoster.filter((p) =>
-              ["RHP", "LHP", "P"].includes(p.pos)
-            );
-            const ordered = [...posPlayers, ...pitchers];
-            const lineup = isAway ? S.lineupAway : S.lineupHome;
-            for (let i = 0; i < Math.min(lineup.length, ordered.length); i++) {
-              lineup[i] = {
-                name: ordered[i].name,
-                num: ordered[i].num || String(i + 1),
-                pos: ordered[i].pos || "OF",
-                hand: ordered[i].bat || "R",
-                isPH: false,
-                isPR: false,
-                isDEF: false,
-              };
+          // In-game sub menu — shown when clicking a roster card during a live game
+          var _lmSubPlayer = null;
+          var _lmSubMenu = null;
+
+          function lmShowSubMenu(p, anchorEl) {
+            _lmSubPlayer = p;
+            // Remove any existing menu
+            if (_lmSubMenu) {
+              _lmSubMenu.remove();
+              _lmSubMenu = null;
             }
+
+            var menu = document.createElement("div");
+            _lmSubMenu = menu;
+            menu.style.cssText =
+              "position:absolute;right:0;top:100%;z-index:9999;background:var(--surface2);border:1.5px solid var(--border2);border-radius:10px;box-shadow:0 8px 24px rgba(0,0,0,.25);padding:8px;min-width:200px;animation:fadeIn .15s";
+            menu.innerHTML =
+              '<div style="font-family:Barlow Condensed,sans-serif;font-weight:800;font-size:13px;color:var(--text);padding:4px 6px 8px;border-bottom:1px solid var(--border);margin-bottom:6px">' +
+              "#" +
+              (p.num || "—") +
+              " " +
+              p.name +
+              '<div style="font-size:10px;color:var(--text3);font-weight:500">' +
+              (p.pos || "—") +
+              " · " +
+              (p.bat || "R") +
+              "/" +
+              (p.throw || "R") +
+              "</div></div>" +
+              '<div style="font-size:9px;color:var(--text3);font-family:Barlow,sans-serif;font-weight:600;letter-spacing:1px;text-transform:uppercase;padding:2px 6px 4px">Substitute as:</div>';
+
+            var opts = [
+              {
+                label: "🔄 Pinch Hitter",
+                sub: "PH",
+                desc: "Replace current batter",
+              },
+              {
+                label: "🏃 Pinch Runner",
+                sub: "PR",
+                desc: "Replace a baserunner",
+              },
+              {
+                label: "🛡 Defensive Sub",
+                sub: "DEF",
+                desc: "Replace a fielder",
+              },
+            ];
+            opts.forEach(function (opt) {
+              var btn = document.createElement("button");
+              btn.style.cssText =
+                "display:flex;flex-direction:column;width:100%;text-align:left;background:none;border:none;padding:7px 8px;border-radius:7px;cursor:pointer;transition:background .12s;font-family:Barlow Condensed,sans-serif";
+              btn.innerHTML =
+                '<span style="font-weight:700;font-size:13px;color:var(--text)">' +
+                opt.label +
+                "</span>" +
+                '<span style="font-size:10px;color:var(--text3)">' +
+                opt.desc +
+                "</span>";
+              btn.addEventListener("mouseover", function () {
+                this.style.background = "var(--surface3)";
+              });
+              btn.addEventListener("mouseout", function () {
+                this.style.background = "none";
+              });
+              btn.addEventListener("click", function (e) {
+                e.stopPropagation();
+                lmApplySub(_lmSubPlayer, opt.sub);
+                menu.remove();
+                _lmSubMenu = null;
+              });
+              menu.appendChild(btn);
+            });
+
+            // Also offer "Set in lineup slot" for pre-game edits fallback
+            var slotBtn = document.createElement("button");
+            slotBtn.style.cssText =
+              "display:flex;flex-direction:column;width:100%;text-align:left;background:none;border:none;padding:7px 8px;border-radius:7px;cursor:pointer;transition:background .12s;font-family:Barlow Condensed,sans-serif;border-top:1px solid var(--border);margin-top:4px";
+            slotBtn.innerHTML =
+              '<span style="font-weight:700;font-size:13px;color:var(--text2)">📋 Set in lineup</span><span style="font-size:10px;color:var(--text3)">Fill next empty slot</span>';
+            slotBtn.addEventListener("mouseover", function () {
+              this.style.background = "var(--surface3)";
+            });
+            slotBtn.addEventListener("mouseout", function () {
+              this.style.background = "none";
+            });
+            slotBtn.addEventListener("click", function (e) {
+              e.stopPropagation();
+              var lineup =
+                lineupModalSide === "away" ? S.lineupAway : S.lineupHome;
+              var emptyIdx = lineup.findIndex(function (b) {
+                return !b.name || /^Player \d/.test(b.name);
+              });
+              if (emptyIdx < 0) emptyIdx = 0;
+              lmDropPlayerIntoSlot(_lmSubPlayer.id, emptyIdx);
+              menu.remove();
+              _lmSubMenu = null;
+            });
+            menu.appendChild(slotBtn);
+
+            // Position menu relative to card
+            anchorEl.style.position = "relative";
+            anchorEl.appendChild(menu);
+
+            // Close on outside click
+            setTimeout(function () {
+              document.addEventListener("click", function closer(e) {
+                if (!menu.contains(e.target)) {
+                  menu.remove();
+                  _lmSubMenu = null;
+                  document.removeEventListener("click", closer);
+                }
+              });
+            }, 10);
+          }
+
+          function lmApplySub(p, subType) {
+            saveLineupModalInputs();
+            const side = lineupModalSide;
+            const lineup = side === "away" ? S.lineupAway : S.lineupHome;
+            const player = {
+              name: p.name,
+              num: p.num || "0",
+              pos: p.pos || "OF",
+              hand: p.bat || "R",
+              isPH: false,
+              isPR: false,
+              isDEF: false,
+            };
+
+            if (subType === "PH") {
+              // Replace the currently active batter
+              const batIdx =
+                side === "away" ? S.awayBatterIdx : S.homeBatterIdx;
+              const activeIdx = batIdx % lineup.length;
+              player.isPH = true;
+              lineup[activeIdx] = player;
+              clearAtBat();
+              renderLineup();
+              updateScoreBug();
+              toast(p.name + " in as Pinch Hitter");
+              closeLineupModal();
+            } else if (subType === "PR") {
+              // Replace a baserunner — show which base
+              lmShowBaseSelector(p);
+            } else if (subType === "DEF") {
+              // Replace fielder — find by slot selection
+              player.isDEF = true;
+              var emptyIdx = lineup.findIndex(function (b) {
+                return !b.name || /^Player \d/.test(b.name);
+              });
+              if (emptyIdx < 0) emptyIdx = 0;
+              lineup[emptyIdx] = player;
+              renderLineup();
+              renderLineupModal();
+              toast(p.name + " in as Defensive Sub");
+            }
+          }
+
+          function lmShowBaseSelector(p) {
+            var existing = document.getElementById("lm-base-selector");
+            if (existing) existing.remove();
+            var sel = document.createElement("div");
+            sel.id = "lm-base-selector";
+            sel.style.cssText =
+              "position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:9999;display:flex;align-items:center;justify-content:center";
+            var inner = document.createElement("div");
+            inner.style.cssText =
+              "background:var(--surface2);border:1.5px solid var(--border2);border-radius:12px;padding:20px;text-align:center;min-width:240px";
+            inner.innerHTML =
+              '<div style="font-family:Barlow Condensed,sans-serif;font-weight:800;font-size:16px;color:var(--text);margin-bottom:4px">' +
+              p.name +
+              "</div>" +
+              '<div style="font-size:11px;color:var(--text3);margin-bottom:14px">Which base runner to replace?</div>';
+            var btnRow = document.createElement("div");
+            btnRow.style.cssText =
+              "display:flex;gap:8px;justify-content:center;margin-bottom:12px";
+            ["1st", "2nd", "3rd"].forEach(function (base) {
+              var b = document.createElement("button");
+              b.textContent = base;
+              b.style.cssText =
+                "padding:10px 16px;background:var(--surface3);border:1px solid var(--border2);border-radius:8px;font-family:Barlow Condensed,sans-serif;font-weight:700;font-size:14px;color:var(--text);cursor:pointer";
+              b.addEventListener("click", function () {
+                lmApplyPR(p.id, base);
+                sel.remove();
+              });
+              btnRow.appendChild(b);
+            });
+            inner.appendChild(btnRow);
+            var cancel = document.createElement("button");
+            cancel.textContent = "Cancel";
+            cancel.style.cssText =
+              "padding:6px 16px;background:none;border:1px solid var(--border);border-radius:6px;font-size:12px;color:var(--text3);cursor:pointer";
+            cancel.addEventListener("click", function () {
+              sel.remove();
+            });
+            inner.appendChild(cancel);
+            sel.appendChild(inner);
+            document.body.appendChild(sel);
+          }
+          function lmApplyPR(playerId, base) {
+            const p = myTeamRoster.find(function (x) {
+              return x.id === playerId;
+            });
+            if (!p || !S.bases[base]) {
+              toast("No runner on " + base);
+              return;
+            }
+            S.runnerNames[base] = p.name;
+            const side = lineupModalSide;
+            const lineup = side === "away" ? S.lineupAway : S.lineupHome;
+            // Find the outgoing runner in lineup and replace with PR
+            const outgoing = S.runnerNames[base];
+            const idx = lineup.findIndex(function (b) {
+              return b.name === outgoing;
+            });
+            const player = {
+              name: p.name,
+              num: p.num || "0",
+              pos: p.pos || "OF",
+              hand: p.bat || "R",
+              isPR: true,
+              isPH: false,
+              isDEF: false,
+            };
+            if (idx >= 0) lineup[idx] = player;
+            updateScoreBug();
             renderLineup();
-            toast("My Team lineup loaded!");
+            toast(p.name + " in as Pinch Runner on " + base);
+            closeLineupModal();
+          }
+
+          function lmShowRosterPanel(isAway) {
+            const panel = document.getElementById("lm-roster-panel");
+            const cards = document.getElementById("lm-roster-cards");
+            const title = document.getElementById("lm-roster-title");
+            if (!panel || !cards) return;
+            if (!myTeamRoster.length) {
+              panel.style.display = "none";
+              return;
+            }
+
+            const teamName = (
+              document.getElementById("myteam-name-input")?.value || "My Team"
+            ).trim();
+            if (title) title.textContent = teamName;
+
+            const POS_ORDER = [
+              "C",
+              "C/RHP",
+              "C/2B",
+              "1B",
+              "2B",
+              "3B",
+              "SS",
+              "INF",
+              "INF/OF",
+              "1B/OF",
+              "SS/2B",
+              "3B/RHP",
+              "OF",
+              "LF",
+              "CF",
+              "RF",
+              "DH",
+              "UTL",
+              "RHP",
+              "LHP",
+              "P",
+              "UTL/RHP",
+            ];
+            const isPitch = function (p) {
+              return ["RHP", "LHP", "P", "UTL/RHP", "C/RHP", "3B/RHP"].includes(
+                p.pos
+              );
+            };
+            const sorted = myTeamRoster.slice().sort(function (a, b) {
+              var ai = POS_ORDER.indexOf(a.pos),
+                bi = POS_ORDER.indexOf(b.pos);
+              if (ai < 0) ai = 50;
+              if (bi < 0) bi = 50;
+              if (ai !== bi) return ai - bi;
+              return parseInt(a.num || 99) - parseInt(b.num || 99);
+            });
+
+            // Group by section
+            const catchers = sorted.filter(function (p) {
+              return ["C", "C/RHP", "C/2B"].includes(p.pos);
+            });
+            const infielders = sorted.filter(function (p) {
+              return [
+                "1B",
+                "2B",
+                "3B",
+                "SS",
+                "INF",
+                "INF/OF",
+                "1B/OF",
+                "SS/2B",
+                "3B/RHP",
+              ].includes(p.pos);
+            });
+            const outfielders = sorted.filter(function (p) {
+              return ["OF", "LF", "CF", "RF"].includes(p.pos);
+            });
+            const dh = sorted.filter(function (p) {
+              return p.pos === "DH";
+            });
+            const pitchers = sorted.filter(function (p) {
+              return ["RHP", "LHP", "P", "UTL/RHP"].includes(p.pos);
+            });
+            const utility = sorted.filter(function (p) {
+              return p.pos === "UTL";
+            });
+
+            cards.innerHTML = "";
+            var groups = [
+              ["Catchers", catchers],
+              ["Infielders", infielders],
+              ["Outfielders", outfielders],
+              ["DH", dh],
+              ["Pitchers", pitchers],
+              ["Utility", utility],
+            ];
+            groups.forEach(function (g) {
+              var label = g[0],
+                players = g[1];
+              if (!players.length) return;
+              var sec = document.createElement("div");
+              sec.style.cssText = "margin-bottom:10px";
+              var lbl = document.createElement("div");
+              lbl.style.cssText =
+                "font-family:Barlow,sans-serif;font-weight:700;font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:var(--text3);padding:4px 0;margin-bottom:4px;border-bottom:1px solid var(--border)";
+              lbl.textContent = label + " (" + players.length + ")";
+              sec.appendChild(lbl);
+              players.forEach(function (p) {
+                var pitch = isPitch(p);
+                var col = pitch ? "var(--blue)" : "var(--accent)";
+                var card = document.createElement("div");
+                card.draggable = true;
+                card.style.cssText =
+                  "display:flex;align-items:center;gap:8px;padding:6px 8px;background:var(--surface);border:1px solid var(--border);border-radius:7px;cursor:grab;user-select:none;transition:all .12s;margin-bottom:4px";
+                card.innerHTML =
+                  '<div style="font-family:Barlow Condensed,sans-serif;font-weight:900;font-size:15px;color:' +
+                  col +
+                  ';width:30px;text-align:right;flex-shrink:0">#' +
+                  (p.num || "—") +
+                  "</div>" +
+                  '<div style="flex:1;min-width:0">' +
+                  '<div style="font-family:Barlow Condensed,sans-serif;font-weight:700;font-size:13px;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' +
+                  p.name +
+                  "</div>" +
+                  '<div style="font-size:9px;color:var(--text3)">' +
+                  (p.pos || "—") +
+                  " · " +
+                  (p.bat || "R") +
+                  "/" +
+                  (p.throw || "R") +
+                  (p.ht ? " · " + p.ht : "") +
+                  "</div>" +
+                  "</div>" +
+                  '<div style="font-size:10px;color:var(--text3);opacity:.4">⠿</div>';
+                card.addEventListener("dragstart", function (e) {
+                  _dragPlayerId = p.id;
+                  e.dataTransfer.setData("text/plain", p.id);
+                  e.dataTransfer.effectAllowed = "copy";
+                });
+                card.addEventListener("click", function () {
+                  var isPitcherPos = ["RHP", "LHP", "P", "UTL/RHP"].includes(
+                    p.pos
+                  );
+                  if (isPitcherPos) {
+                    lmDropPitcherFromRoster(p.id);
+                  } else {
+                    var gameActive = S.pitchLog && S.pitchLog.length > 0;
+                    if (gameActive) {
+                      // In-game: show sub options
+                      lmShowSubMenu(p, card);
+                    } else {
+                      var lineup =
+                        lineupModalSide === "away"
+                          ? S.lineupAway
+                          : S.lineupHome;
+                      var emptyIdx = lineup.findIndex(function (b) {
+                        return !b.name || /^Player \d/.test(b.name);
+                      });
+                      if (emptyIdx < 0) emptyIdx = 0;
+                      lmDropPlayerIntoSlot(p.id, emptyIdx);
+                    }
+                  }
+                });
+                card.addEventListener("mouseover", function () {
+                  this.style.borderColor = col;
+                  this.style.background = "var(--surface3)";
+                  this.style.transform = "translateX(2px)";
+                });
+                card.addEventListener("mouseout", function () {
+                  this.style.borderColor = "var(--border)";
+                  this.style.background = "var(--surface)";
+                  this.style.transform = "";
+                });
+                sec.appendChild(card);
+              });
+              cards.appendChild(sec);
+            });
+
+            panel.style.display = "block";
+            // Show pitcher drop hint
+            var pdh = document.getElementById("lm-pitcher-drop-hint");
+            if (pdh) pdh.style.display = "block";
+            // Switch the lineup modal tab to the correct side
+            switchLineupModalTab(isAway ? "away" : "home");
+          }
+
+          function openMyTeamDrawer(isAway) {
+            if (!myTeamRoster.length) {
+              toast("No players in My Team roster");
+              return;
+            }
+            const drawer = document.getElementById("myteam-drawer");
+            const cards = document.getElementById("myteam-drawer-cards");
+            const label = document.getElementById("myteam-drawer-label");
+            if (!drawer || !cards) return;
+            const teamName = (
+              document.getElementById("myteam-name-input")?.value || "My Team"
+            ).trim();
+            if (label) label.textContent = teamName + " · drag or click to add";
+            const sideKey = isAway ? "away" : "home";
+            const isPitch = function (p) {
+              return ["RHP", "LHP", "P", "UTL/RHP", "C/RHP", "3B/RHP"].includes(
+                p.pos
+              );
+            };
+            const sorted = myTeamRoster.slice().sort(function (a, b) {
+              if (isPitch(a) !== isPitch(b)) return isPitch(a) ? 1 : -1;
+              return parseInt(a.num || 99) - parseInt(b.num || 99);
+            });
+            cards.innerHTML = "";
+            sorted.forEach(function (p) {
+              const pitch = isPitch(p);
+              const col = pitch ? "var(--blue)" : "var(--accent)";
+              const el = document.createElement("div");
+              el.draggable = true;
+              el.style.cssText =
+                "display:flex;align-items:center;gap:8px;padding:5px 8px;background:var(--surface2);border:1px solid var(--border);border-radius:6px;cursor:grab;user-select:none;transition:all .12s";
+              el.innerHTML =
+                '<div style="font-family:Barlow Condensed,sans-serif;font-weight:900;font-size:14px;color:' +
+                col +
+                ';width:26px;text-align:right;flex-shrink:0">#' +
+                (p.num || "—") +
+                "</div>" +
+                '<div style="flex:1;min-width:0"><div style="font-family:Barlow Condensed,sans-serif;font-weight:700;font-size:13px;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' +
+                p.name +
+                "</div>" +
+                '<div style="font-size:9px;color:var(--text3)">' +
+                (p.pos || "—") +
+                " · " +
+                (p.bat || "R") +
+                "/" +
+                (p.throw || "R") +
+                "</div></div>" +
+                '<div style="font-size:9px;color:var(--text3);opacity:.4">⠿</div>';
+              el.addEventListener("dragstart", function (e) {
+                myTeamDragStart(e, p.id);
+              });
+              el.addEventListener("click", function () {
+                myTeamDrawerClick(p.id, sideKey);
+              });
+              el.addEventListener("mouseover", function () {
+                this.style.borderColor = col;
+                this.style.background = "var(--surface3)";
+              });
+              el.addEventListener("mouseout", function () {
+                this.style.borderColor = "var(--border)";
+                this.style.background = "var(--surface2)";
+              });
+              cards.appendChild(el);
+            });
+            drawer.style.display = "block";
+          }
+
+          function closeMyTeamDrawer() {
+            const d = document.getElementById("myteam-drawer");
+            if (d) d.style.display = "none";
+          }
+
+          function myTeamDrawerClick(playerId, side) {
+            const p = myTeamRoster.find(function (x) {
+              return x.id === playerId;
+            });
+            if (!p) return;
+            const isAway = side === "away";
+            const lineup = isAway ? S.lineupAway : S.lineupHome;
+            const emptyIdx = lineup.findIndex(function (b) {
+              return !b.name || /^Player \d/.test(b.name);
+            });
+            const idx =
+              emptyIdx >= 0
+                ? emptyIdx
+                : (isAway ? S.awayBatterIdx : S.homeBatterIdx) % lineup.length;
+            lineup[idx] = {
+              name: p.name,
+              num: p.num || String(idx + 1),
+              pos: p.pos || "OF",
+              hand: p.bat || "R",
+              isPH: false,
+              isPR: false,
+              isDEF: false,
+            };
+            const isPitch = ["RHP", "LHP", "P", "UTL/RHP"].includes(p.pos);
+            if (isPitch) {
+              const pl = isAway ? S.pitchersAway : S.pitchersHome;
+              if (
+                !pl.find(function (x) {
+                  return x.name === p.name;
+                })
+              )
+                pl.push({
+                  name: p.name,
+                  num: p.num || "0",
+                  hand: (p.throw || "R") === "L" ? "L" : "R",
+                  pitches: 0,
+                  strikes: 0,
+                  k: 0,
+                  bb: 0,
+                  active: false,
+                });
+              renderPitcherList();
+            }
+            clearAtBat();
+            renderLineup();
           }
 
           // ── DRAG AND DROP INTO LINEUP ───────────────────────────────────────
@@ -22315,7 +23117,9 @@
             e.currentTarget.style.borderColor = "";
             const playerId =
               e.dataTransfer.getData("text/plain") || _dragPlayerId;
-            const p = myTeamRoster.find((x) => x.id === playerId);
+            const p = myTeamRoster.find(function (x) {
+              return x.id === playerId;
+            });
             if (!p) return;
             const lineup = isAway ? S.lineupAway : S.lineupHome;
             lineup[slotIdx] = {
@@ -22327,6 +23131,26 @@
               isPR: false,
               isDEF: false,
             };
+            const isPitch = ["RHP", "LHP", "P", "UTL/RHP"].includes(p.pos);
+            if (isPitch) {
+              const pl = isAway ? S.pitchersAway : S.pitchersHome;
+              if (
+                !pl.find(function (x) {
+                  return x.name === p.name;
+                })
+              )
+                pl.push({
+                  name: p.name,
+                  num: p.num || "0",
+                  hand: (p.throw || "R") === "L" ? "L" : "R",
+                  pitches: 0,
+                  strikes: 0,
+                  k: 0,
+                  bb: 0,
+                  active: false,
+                });
+              renderPitcherList();
+            }
             clearAtBat();
             renderLineup();
             _dragPlayerId = null;
@@ -22339,55 +23163,59 @@
             if (!file) return;
             const ext = file.name.split(".").pop().toLowerCase();
             const reader = new FileReader();
-
-            reader.onload = (e) => {
-              let players = [];
+            reader.onload = function (e) {
+              if (ext === "pdf") {
+                myTeamParsePDF(e.target.result).then(function (players) {
+                  _myTeamFinishImport(players, input);
+                });
+                return;
+              }
+              var players = [];
               try {
                 if (ext === "trx") players = myTeamParseTRX(e.target.result);
                 else if (ext === "csv")
                   players = myTeamParseCSV(e.target.result);
                 else if (ext === "xlsx")
                   players = myTeamParseXLSX(e.target.result);
-                else if (ext === "pdf")
-                  players = myTeamParsePDF(e.target.result);
               } catch (err) {
                 alert("Import failed: " + err.message);
                 return;
               }
-
-              if (!players.length) {
-                alert("No players found in file.");
-                return;
-              }
-
-              // Merge: add new, update existing by number
-              let added = 0,
-                updated = 0;
-              for (const p of players) {
-                const existing = myTeamRoster.find(
-                  (x) => x.num === p.num && p.num
-                );
-                if (existing) {
-                  Object.assign(existing, p, { id: existing.id });
-                  updated++;
-                } else {
-                  p.id =
-                    "p_" +
-                    Date.now() +
-                    "_" +
-                    Math.random().toString(36).slice(2, 6);
-                  myTeamRoster.push(p);
-                  added++;
-                }
-              }
-              myTeamSave();
-              myTeamRender();
-              toast(`Imported: ${added} added, ${updated} updated`);
-              input.value = "";
+              _myTeamFinishImport(players, input);
             };
+            if (ext === "xlsx" || ext === "pdf") reader.readAsArrayBuffer(file);
+            else reader.readAsText(file);
+          }
 
-            if (ext === "xlsx") reader.readAsArrayBuffer(file);
-            else reader.readAsText(file); // works for TRX, CSV; PDF text extraction from binary is limited
+          function _myTeamFinishImport(players, input) {
+            if (!players || !players.length) {
+              alert("No players found in file.");
+              return;
+            }
+            var added = 0,
+              updated = 0;
+            for (var i = 0; i < players.length; i++) {
+              var p = players[i];
+              var existing = myTeamRoster.find(function (x) {
+                return x.num === p.num && p.num;
+              });
+              if (existing) {
+                Object.assign(existing, p, { id: existing.id });
+                updated++;
+              } else {
+                p.id =
+                  "p_" +
+                  Date.now() +
+                  "_" +
+                  Math.random().toString(36).slice(2, 6);
+                myTeamRoster.push(p);
+                added++;
+              }
+            }
+            myTeamSave();
+            myTeamRender();
+            toast("Imported: " + added + " added, " + updated + " updated");
+            if (input) input.value = "";
           }
 
           function myTeamParseTRX(text) {
@@ -22548,113 +23376,141 @@
           }
 
           // PDF roster parser — extracts text patterns matching roster formats
-          function myTeamParsePDF(text) {
-            const players = [];
-            const lines = text
-              .split("\n")
-              .map((l) => l.trim())
-              .filter(Boolean);
+          function myTeamParsePDF(arrayBuffer) {
+            return new Promise(function (resolve) {
+              if (!window.pdfjsLib) {
+                alert("PDF.js is loading, try again in 2 seconds.");
+                resolve([]);
+                return;
+              }
+              window.pdfjsLib.GlobalWorkerOptions.workerSrc =
+                "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
+              window.pdfjsLib
+                .getDocument({ data: arrayBuffer })
+                .promise.then(function (pdf) {
+                  var pages = [];
+                  for (var p = 1; p <= pdf.numPages; p++) pages.push(p);
+                  return Promise.all(
+                    pages.map(function (pn) {
+                      return pdf.getPage(pn).then(function (page) {
+                        return page.getTextContent().then(function (tc) {
+                          var sorted = tc.items.slice().sort(function (a, b) {
+                            var dy =
+                              Math.round(b.transform[5]) -
+                              Math.round(a.transform[5]);
+                            return dy !== 0
+                              ? dy
+                              : a.transform[4] - b.transform[4];
+                          });
+                          return sorted
+                            .map(function (it) {
+                              return it.str;
+                            })
+                            .join(" ");
+                        });
+                      });
+                    })
+                  );
+                })
+                .then(function (pages) {
+                  resolve(_parsePDFRosterText(pages.join(" ")));
+                })
+                .catch(function (err) {
+                  alert("PDF error: " + err.message);
+                  resolve([]);
+                });
+            });
+          }
 
-            // JWU/NCAA PDF roster format:
-            // "NO. NAME CL. POS. HT. WT. B/T HOMETOWN..."
-            // Rows: "1 Yedan Diaz So. INF 5-10 165 R/R Worcester..."
-            // Also handles: "17 Nevin Belanger Jr. P 5-10 170 L/L Wilton..."
-
-            const btPat = /^[RLSB]\/[RL]$/;
-            const htPat = /^\d+-\d+$/;
-
-            let i = 0;
-            while (i < lines.length) {
-              const line = lines[i];
-              // Try to parse: number name [class] pos [ht] [wt] [b/t]
-              // Match lines starting with a jersey number
-              const m = line.match(/^(\d{1,3})\s+(.+)/);
-              if (!m) {
+          function _parsePDFRosterText(text) {
+            var players = [];
+            var txt = text.replace(/\s+/g, " ").trim();
+            var CLASS = /^(Fr\.|So\.|Jr\.|Sr\.|Gr\.|R-Fr\.|R-Sr\.|R-Jr\.)$/;
+            var POS =
+              /^(C|1B|2B|3B|SS|OF|LF|CF|RF|INF|DH|RHP|LHP|P|UTL|1B\/OF|INF\/OF|C\/RHP|C\/2B|SS\/2B|3B\/RHP|UTL\/RHP)$/i;
+            var HT = /^\d+-\d+$/;
+            var WT = /^\d{3}$/;
+            var BT = /^([RLSB])\/([RL])$/;
+            var JNUM = /^\d{1,2}$/;
+            var tokens = txt.split(/\s+/);
+            var i = 0;
+            while (i < tokens.length) {
+              if (!JNUM.test(tokens[i])) {
                 i++;
                 continue;
               }
-
-              const num = m[1];
-              const rest = m[2].split(/\s+/);
-              if (rest.length < 2) {
-                i++;
-                continue;
-              }
-
-              // Detect name vs other tokens
-              // Name words: capitalized, no digits, not class/pos codes
-              const classCodes = new Set([
-                "Fr.",
-                "So.",
-                "Jr.",
-                "Sr.",
-                "Gr.",
-                "R-Fr.",
-                "R-Sr.",
-                "R-Jr.",
-              ]);
-              const posCodes =
-                /^(C|1B|2B|3B|SS|OF|LF|CF|RF|INF|DH|RHP|LHP|P|UTL|1B\/OF|INF\/OF|C\/RHP|C\/2B|SS\/2B|3B\/RHP|UTL\/RHP)/i;
-
-              let nameParts = [],
-                pos = "",
-                ht = "",
-                wt = "",
-                bat = "R",
-                thr = "R";
-              let stage = "name";
-
-              for (const tok of rest) {
-                if (stage === "name") {
-                  if (classCodes.has(tok)) {
-                    stage = "pos";
-                    continue;
-                  }
-                  if (posCodes.test(tok)) {
-                    pos = tok;
-                    stage = "size";
-                    continue;
-                  }
-                  if (/^[A-Z]/.test(tok) && !/^\d/.test(tok))
-                    nameParts.push(tok);
-                  else if (posCodes.test(tok)) {
-                    pos = tok;
-                    stage = "size";
-                  }
-                } else if (stage === "pos") {
-                  if (posCodes.test(tok)) {
-                    pos = tok;
-                    stage = "size";
-                  }
-                } else if (stage === "size") {
-                  if (htPat.test(tok)) ht = tok;
-                  else if (/^\d{3}$/.test(tok)) wt = tok;
-                  else if (btPat.test(tok)) {
-                    const bt = tok.split("/");
-                    bat = bt[0];
-                    thr = bt[1];
-                    break;
-                  }
-                }
-              }
-
-              // Also check if B/T is in the line
-              const btMatch = line.match(/([RLSB])\/([RL])/);
-              if (btMatch) {
-                bat = btMatch[1];
-                thr = btMatch[2];
-              }
-
-              const name = nameParts.join(" ");
-              if (name.length > 1 && pos) {
-                players.push({ name, num, pos, bat, throw: thr, ht, wt });
-              }
+              var num = tokens[i];
               i++;
+              var nameParts = [];
+              while (i < tokens.length) {
+                var t = tokens[i];
+                if (
+                  CLASS.test(t) ||
+                  POS.test(t) ||
+                  HT.test(t) ||
+                  WT.test(t) ||
+                  BT.test(t) ||
+                  JNUM.test(t)
+                )
+                  break;
+                if (/^[A-Z]/.test(t) && !/^\d/.test(t)) nameParts.push(t);
+                else break;
+                i++;
+              }
+              if (!nameParts.length) continue;
+              if (i < tokens.length && CLASS.test(tokens[i])) i++;
+              if (i >= tokens.length || !POS.test(tokens[i])) continue;
+              var pos = tokens[i];
+              i++;
+              var ht = "",
+                wt = "";
+              if (i < tokens.length && HT.test(tokens[i])) {
+                ht = tokens[i];
+                i++;
+              }
+              if (i < tokens.length && WT.test(tokens[i])) {
+                wt = tokens[i];
+                i++;
+              }
+              var bat = "R",
+                thr = "R";
+              if (i < tokens.length && BT.test(tokens[i])) {
+                var bm = tokens[i].match(BT);
+                bat = bm[1];
+                thr = bm[2];
+                i++;
+              }
+              var name = nameParts.join(" ").replace(/,$/, "").trim();
+              if (name.length > 1)
+                players.push({
+                  name: name,
+                  num: num,
+                  pos: pos,
+                  bat: bat,
+                  throw: thr,
+                  ht: ht,
+                  wt: wt,
+                });
             }
             return players;
           }
 
-          // Load SheetJS dynamically for XLSX import
+          // Load SheetJS + PDF.js dynamically
+          (function () {
+            if (!window.XLSX) {
+              var s = document.createElement("script");
+              s.src =
+                "https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js";
+              document.head.appendChild(s);
+            }
+            if (!window.pdfjsLib) {
+              var p = document.createElement("script");
+              p.src =
+                "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js";
+              document.head.appendChild(p);
+            }
+          })();
+          // Legacy SheetJS loader reference kept for compat
           (function loadSheetJS() {
             if (window.XLSX) return;
             const s = document.createElement("script");
