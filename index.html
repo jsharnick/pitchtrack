@@ -3507,8 +3507,8 @@ function renderBatterStats(){
   const mk=(isAway,lineup)=> lineup.map((b,i)=>{
     const bs=getBatterStats(getBatterKey(isAway,i));
     const pa=bs.pa||0;
-    const avg=bs.ab>0?'.'+(bs.hits/bs.ab*1000|0).toString().padStart(3,'0'):'—';
-    const obp=pa>0?'.'+(((bs.hits+(bs.bb||0)+(bs.hbp||0)+(bs.ci||0))/pa)*1000|0).toString().padStart(3,'0'):'—';
+    const avg=bs.ab>0?_fmtRate(bs.hits/bs.ab):'—';
+    const obp=pa>0?_fmtRate((bs.hits+(bs.bb||0)+(bs.hbp||0)+(bs.ci||0))/pa):'—';
     return `<tr><td>#${b.num||'—'} ${b.name}</td><td>${pa}</td><td>${bs.ab}</td><td>${bs.hits}</td><td>${bs.bb||0}</td><td>${bs.hbp||0}</td><td>${bs.k}</td><td>${avg}</td><td>${obp}</td></tr>`;
   }).join('');
   qs('batter-stats-wrap').innerHTML=`
@@ -5433,7 +5433,7 @@ function buildBatterTable(players, teamName){
         const obp = pa>0 ? ((p.hits+(p.bb||0)+(p.hbp||0)+(p.ci||0))/pa) : 0;
         const slg = p.ab>0 ? ((p.hits-p.doubles-p.triples-p.hr + p.doubles*2 + p.triples*3 + p.hr*4)/p.ab) : 0;
         const ops = obp+slg;
-        const fmtAvg = n => n===0?'.000':'.'+Math.round(n*1000).toString().padStart(3,'0');
+        const fmtAvg = n => _fmtRate(n);
         const avgClass = avg>=.300?'good':avg<.200?'dim':'';
         return `<tr class="player-row" data-team="${escAttr(teamName)}" data-name="${escAttr(p.name)}" onclick="hubNavPlayer(this,'player')">
           <td>${escHtml(p.name)}</td>
@@ -5601,14 +5601,14 @@ function buildTeamDefenseTable(teamName, games){
   let tPO=0,tA=0,tE=0;
   Object.values(byPlayer).forEach(p=>{tPO+=p.po;tA+=p.a;tE+=p.e;});
   const tTC=tPO+tA+tE;
-  const tFpct=tTC>0?'.'+(Math.round((tPO+tA)/tTC*1000)).toString().padStart(3,'0'):'—';
+  const tFpct=tTC>0?_fmtRate((tPO+tA)/tTC):'—';
 
   const rows=Object.values(byPlayer)
     .filter(p=>p.po+p.a+p.e>0)
     .sort((a,b)=>(b.po+b.a)-(a.po+a.a))
     .map(p=>{
       const tc=p.po+p.a+p.e;
-      const fpct=tc>0?'.'+(Math.round((p.po+p.a)/tc*1000)).toString().padStart(3,'0'):'—';
+      const fpct=tc>0?_fmtRate((p.po+p.a)/tc):'—';
       return `<tr>
         <td><strong>${escHtml(p.name)}</strong></td>
         <td class="dim">${p.pos||'—'}</td>
@@ -6289,7 +6289,7 @@ function buildPitchTypeDetail(pitches){
     const pct=Math.round(d.count/total*100);
     const avgV=d.vels.length?(d.vels.reduce((a,b)=>a+b,0)/d.vels.length).toFixed(1):'—';
     const maxV=d.vels.length?Math.max(...d.vels).toFixed(1):'—';
-    const ba=d.ab>0?'.'+Math.round(d.hits/d.ab*1000).toString().padStart(3,'0'):'.---';
+    const ba=d.ab>0?_fmtRate(d.hits/d.ab):'.---';
     const whiffPct=d.swings>0?Math.round(d.whiffs/d.swings*100)+'%':'—';
     const color=typeColors[t]||'#8a909e';
     return `
@@ -6528,7 +6528,7 @@ function buildHotColdZone(pitches, perspective='pitcher'){
   };
   const fmtBA=(ab,hits)=>{
     if(ab===0) return '';
-    return '.'+Math.round(hits/ab*1000).toString().padStart(3,'0');
+    return _fmtRate(hits/ab);
   };
 
   // Draw 9 inner zone cells
@@ -6919,12 +6919,21 @@ function _sumStats(rows){
   return s;
 }
 
-function _fmtAvg(h,ab){ return ab>0?'.'+(Math.round(h/ab*1000)).toString().padStart(3,'0'):'.---'; }
-function _fmtOBP(h,bb,hbp,pa){ return pa>0?'.'+(Math.round((h+bb+hbp)/pa*1000)).toString().padStart(3,'0'):'.---'; }
-function _fmtSLG(tb,ab){ return ab>0?'.'+(Math.round(tb/ab*1000)).toString().padStart(3,'0'):'.---'; }
+// Format a rate stat (AVG, OBP, SLG, OPS, FPCT) correctly:
+// values < 1 → .XXX, values >= 1 → 1.XXX (e.g. 1.000, 1.234), values >= 2 → 2.XXX, etc.
+function _fmtRate(n){
+  if(n===null||n===undefined||isNaN(n)) return '.---';
+  const rounded = Math.round(n * 1000);
+  const whole   = Math.floor(rounded / 1000);
+  const frac    = (rounded % 1000).toString().padStart(3, '0');
+  return whole > 0 ? whole + '.' + frac : '.' + frac;
+}
+function _fmtAvg(h,ab){ return ab>0?_fmtRate(h/ab):'.---'; }
+function _fmtOBP(h,bb,hbp,pa){ return pa>0?_fmtRate((h+bb+hbp)/pa):'.---'; }
+function _fmtSLG(tb,ab){ return ab>0?_fmtRate(tb/ab):'.---'; }
 function _fmtOPS(h,bb,hbp,tb,pa,ab){
   if(pa===0||ab===0) return '.---';
-  return '.'+(Math.round(((h+bb+hbp)/pa + tb/ab)*1000)).toString().padStart(3,'0');
+  return _fmtRate((h+bb+hbp)/pa + tb/ab);
 }
 
 function _statsRow(label, s, accent){
@@ -7157,7 +7166,7 @@ function renderPlayer(teamName, playerName){
   const obp = pa>0?((stats.hits+(stats.bb||0)+(stats.hbp||0)+(stats.ci||0))/pa):0;
   const tb  = stats.hits-stats.doubles-stats.triples-stats.hr + stats.doubles*2+stats.triples*3+stats.hr*4;
   const slg = stats.ab>0?tb/stats.ab:0;
-  const fmt=n=>n===0?'.000':'.'+Math.round(n*1000).toString().padStart(3,'0');
+  const fmt=n=>_fmtRate(n);
 
   const _rosterSidebar = buildRosterSidebar(teamName, playerName, games, 'batter');
   c.innerHTML=`<div style="display:flex;gap:0;align-items:flex-start;min-height:100%"><div style="flex:1;min-width:0">
@@ -7448,7 +7457,7 @@ function buildPlayerGameLog(teamName, playerName, games){
     const batters = isHome ? g.homeBatters : g.awayBatters;
     const p = batters?.find(b=>b.name===playerName);
     if(!p||(p.ab||0)+(p.bb||0)+(p.hbp||0)===0) return;
-    const avg=p.ab>0?'.'+Math.round(p.hits/p.ab*1000).toString().padStart(3,'0'):'.---';
+    const avg=p.ab>0?_fmtRate(p.hits/p.ab):'.---';
     const opp = isHome?g.awayTeam:g.homeTeam;
     const gpa = p.pa!=null ? p.pa : (p.ab+(p.bb||0)+(p.hbp||0));
     rows.push(`<tr>
@@ -7595,7 +7604,7 @@ function buildRosterSidebar(teamName, currentName, games, type){
     const isCurrent = p.name === currentName;
     const meta = type==='pitcher'
       ? `${p.games}G · ${p.pitches}P · ${p.k}K`
-      : `${p.games}G · ${p.ab>0?'.'+(Math.round(p.hits/p.ab*1000)).toString().padStart(3,'0'):'.---'}`;
+      : `${p.games}G · ${p.ab>0?_fmtRate(p.hits/p.ab):'.---'}`;
     return `<button
       onclick="showView('${type==='pitcher'?'pitcher':'player'}',JSON.stringify({team:'${escAttr(teamName)}',name:'${escAttr(p.name)}'}),true)"
       style="width:100%;display:flex;align-items:center;gap:8px;padding:7px 10px;background:${isCurrent?'rgba(204,26,26,.07)':'transparent'};border:none;border-left:3px solid ${isCurrent?'var(--accent)':'transparent'};border-radius:0;cursor:pointer;text-align:left;transition:all .13s"
@@ -7662,7 +7671,7 @@ function buildBaserunningTab(stats, games, teamName, playerName){
     });
   });
   const tc=fPO+fA+fE;
-  const fpct=tc>0?'.'+(Math.round((fPO+fA)/tc*1000)).toString().padStart(3,'0'):'—';
+  const fpct=tc>0?_fmtRate((fPO+fA)/tc):'—';
 
   const card=(val,lbl,accent=false)=>`<div class="stat-card${accent?' accent':''}"><div class="stat-card-val">${val}</div><div class="stat-card-lbl">${lbl}</div></div>`;
 
@@ -8612,7 +8621,7 @@ function buildHitterScoutingReport(teamName, playerName, games){
   const avg=ab>0?h/ab:0, obp=pa>0?(h+(stats.bb||0)+(stats.hbp||0))/pa:0;
   const slg=ab>0?tb/ab:0, ops=obp+slg;
   const kpct=pa>0?(stats.k||0)/pa:0, bbpct=pa>0?(stats.bb||0)/pa:0;
-  const f=n=>n===0?'.000':'.'+Math.round(n*1000).toString().padStart(3,'0');
+  const f=n=>_fmtRate(n);
   const fp=n=>Math.round(n*100)+'%';
 
   // Plate discipline from pitches
@@ -8996,7 +9005,7 @@ function buildPitcherScoutingReport(teamName, pitcherName, games){
     const avgV=d.vels.length?(d.vels.reduce((a,b)=>a+b,0)/d.vels.length).toFixed(1):'—';
     const strPct=d.total>0?Math.round(d.strikes/d.total*100)+'%':'—';
     const whiffPct=d.swings>0?Math.round(d.whiffs/d.swings*100)+'%':'—';
-    const ba=d.ab>0?'.'+(Math.round(d.hits/d.ab*1000)).toString().padStart(3,'0'):'.---';
+    const ba=d.ab>0?_fmtRate(d.hits/d.ab):'.---';
     const fpPct=d.fp>0?Math.round(d.fpStr/d.fp*100)+'%':'—';
     return `<tr>
       <td><span style="font-weight:900;color:${typeColors[t]||'#8a909e'}">${t}</span></td>
@@ -9401,7 +9410,7 @@ function buildScoutHotColdZone(pitches, perspective){
     const hot=`rgba(220,50,50,${(0.15+norm*0.7).toFixed(2)})`;
     const cold=`rgba(50,80,220,${(0.15+(1-norm)*0.7).toFixed(2)})`;
     const fill=avg===null?'rgba(200,200,200,0.15)':norm>=0.5?hot:cold;
-    const label=avg!==null?'.'+(Math.round(avg*1000)).toString().padStart(3,'0'):'-';
+    const label=avg!==null?_fmtRate(avg):'-';
     return `<rect x="${x}" y="${y}" width="${cw}" height="${ch}" fill="${fill}" stroke="white" stroke-width="0.5"/>
       <text x="${x+cw/2}" y="${y+ch/2+4}" text-anchor="middle" font-family="monospace" font-size="8" font-weight="700" fill="${avg!==null?(norm>=0.5?'white':'white'):'#aaa'}">${label}</text>`;
   }).join('');
