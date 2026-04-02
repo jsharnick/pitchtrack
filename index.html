@@ -4267,6 +4267,33 @@
         overflow: hidden;
         background: #f0f2f5;
       }
+      #panel-opponents {
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+        background: #f0f2f5;
+      }
+      .opp-card {
+        background: var(--surface);
+        border: 1.5px solid var(--border2);
+        border-radius: 14px;
+        margin-bottom: 18px;
+        overflow: hidden;
+        box-shadow: 0 2px 12px rgba(0,0,0,.06);
+      }
+      .opp-card-header {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 12px 16px;
+        background: var(--surface2);
+        border-bottom: 1px solid var(--border);
+        flex-wrap: wrap;
+      }
+      .opp-card-roster {
+        padding: 12px 16px;
+        min-height: 60px;
+      }
     </style>
   </head>
   <body>
@@ -4336,6 +4363,23 @@
             </div>
             <div class="hs-cta">Manage Roster</div>
           </div>
+          <div class="hs-card" onclick="openPanel('opponents')">
+            <div class="hs-card-icon"></div>
+            <div>
+              <div class="hs-card-title">Opponents</div>
+              <div class="hs-card-desc">
+                Build a scouting library of opponent rosters. Load a new
+                opponent for each team you face — import from PDF, XLSX, CSV, or
+                TRX, or enter players manually.
+              </div>
+            </div>
+            <div class="hs-tags">
+              <span class="hs-tag">SCOUTING</span
+              ><span class="hs-tag">ROSTERS</span>
+              <span class="hs-tag">IMPORT</span><span class="hs-tag">MULTIPLE TEAMS</span>
+            </div>
+            <div class="hs-cta">Manage Opponents</div>
+          </div>
         </div>
         <div class="hs-footer">
           PITCHTRACK PRO · SAVE GAMES IN THE TRACKER TO BUILD YOUR DATABASE
@@ -4352,6 +4396,9 @@
       </div>
       <div class="sn-tab" id="sntab-myteam" onclick="openPanel('myteam')">
         My Team
+      </div>
+      <div class="sn-tab" id="sntab-opponents" onclick="openPanel('opponents')">
+        Opponents
       </div>
       <div class="sn-spacer"></div>
       <button
@@ -6369,6 +6416,46 @@
         ></div>
       </div>
     </div>
+
+    <!-- ══ OPPONENTS PANEL ══════════════════════════════════════════════════ -->
+    <div class="app-panel" id="panel-opponents">
+      <div id="opponents-header" style="padding:10px 16px;border-bottom:1px solid var(--border);background:var(--surface);flex-shrink:0;display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+        <div style="font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:20px;color:var(--text);flex-shrink:0">Opponents</div>
+        <div id="opponents-subtitle" style="font-size:11px;color:var(--text3);font-family:'Barlow',sans-serif;flex:1;min-width:120px">0 teams</div>
+        <button onclick="oppLoadNew()" style="padding:6px 14px;background:var(--accent);border:none;border-radius:6px;font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:12px;color:#fff;cursor:pointer">+ Load New Opponent</button>
+      </div>
+      <div id="opponents-list" style="flex:1;overflow-y:auto;padding:16px 20px"></div>
+    </div>
+
+    <!-- Opponent player add/edit modal (mirrors myteam-modal) -->
+    <div id="opp-player-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:2100;align-items:center;justify-content:center">
+      <div style="background:var(--surface2);border:1px solid var(--border2);border-radius:14px;padding:24px;width:420px;max-width:95vw;max-height:90vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.5)">
+        <div id="opp-player-modal-title" style="font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:20px;color:var(--text);margin-bottom:16px">Add Player</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">
+          <div><label style="font-size:10px;color:var(--text3);font-family:'Barlow',sans-serif;letter-spacing:1px;text-transform:uppercase">Name *</label><input id="opp-mtp-name" placeholder="Player Name" style="width:100%;padding:7px 10px;border:1px solid var(--border2);border-radius:6px;background:var(--surface3);color:var(--text);font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:14px;margin-top:3px;box-sizing:border-box"/></div>
+          <div><label style="font-size:10px;color:var(--text3);font-family:'Barlow',sans-serif;letter-spacing:1px;text-transform:uppercase">#</label><input id="opp-mtp-num" placeholder="0" style="width:100%;padding:7px 10px;border:1px solid var(--border2);border-radius:6px;background:var(--surface3);color:var(--text);font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:14px;margin-top:3px;box-sizing:border-box"/></div>
+          <div><label style="font-size:10px;color:var(--text3);font-family:'Barlow',sans-serif;letter-spacing:1px;text-transform:uppercase">Position</label>
+            <select id="opp-mtp-pos" style="width:100%;padding:7px 10px;border:1px solid var(--border2);border-radius:6px;background:var(--surface3);color:var(--text);font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:14px;margin-top:3px;box-sizing:border-box">
+              <option>C</option><option>1B</option><option>2B</option><option>3B</option><option>SS</option><option>OF</option><option>LF</option><option>CF</option><option>RF</option><option>INF</option><option>INF/OF</option><option>1B/OF</option><option>DH</option><option>RHP</option><option>LHP</option><option>P</option><option>UTL</option><option>UTL/RHP</option><option>C/RHP</option><option>C/2B</option><option>SS/2B</option><option>3B/RHP</option>
+            </select>
+          </div>
+          <div><label style="font-size:10px;color:var(--text3);font-family:'Barlow',sans-serif;letter-spacing:1px;text-transform:uppercase">Bats / Throws</label>
+            <div style="display:flex;gap:6px;margin-top:3px">
+              <select id="opp-mtp-bat" style="flex:1;padding:7px 6px;border:1px solid var(--border2);border-radius:6px;background:var(--surface3);color:var(--text);font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:14px;box-sizing:border-box"><option value="R">R</option><option value="L">L</option><option value="S">S</option></select>
+              <select id="opp-mtp-throw" style="flex:1;padding:7px 6px;border:1px solid var(--border2);border-radius:6px;background:var(--surface3);color:var(--text);font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:14px;box-sizing:border-box"><option value="R">R</option><option value="L">L</option></select>
+            </div>
+          </div>
+          <div><label style="font-size:10px;color:var(--text3);font-family:'Barlow',sans-serif;letter-spacing:1px;text-transform:uppercase">Height</label><input id="opp-mtp-ht" placeholder="6-0" style="width:100%;padding:7px 10px;border:1px solid var(--border2);border-radius:6px;background:var(--surface3);color:var(--text);font-family:'Barlow Condensed',sans-serif;font-size:13px;margin-top:3px;box-sizing:border-box"/></div>
+          <div><label style="font-size:10px;color:var(--text3);font-family:'Barlow',sans-serif;letter-spacing:1px;text-transform:uppercase">Weight</label><input id="opp-mtp-wt" placeholder="185" style="width:100%;padding:7px 10px;border:1px solid var(--border2);border-radius:6px;background:var(--surface3);color:var(--text);font-family:'Barlow Condensed',sans-serif;font-size:13px;margin-top:3px;box-sizing:border-box"/></div>
+        </div>
+        <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:16px">
+          <button onclick="document.getElementById('opp-player-modal').style.display='none'" style="padding:8px 18px;background:var(--surface3);border:1px solid var(--border2);border-radius:7px;font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:14px;color:var(--text2);cursor:pointer">Cancel</button>
+          <button id="opp-player-modal-delete" onclick="oppDeletePlayer()" style="padding:8px 18px;background:rgba(204,26,26,.1);border:1px solid rgba(204,26,26,.3);border-radius:7px;font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:14px;color:#cc1a1a;cursor:pointer;display:none">Delete</button>
+          <button onclick="oppSavePlayer()" style="padding:8px 18px;background:var(--accent);border:none;border-radius:7px;font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:14px;color:#fff;cursor:pointer">Save Player</button>
+        </div>
+      </div>
+    </div>
+
     <div
       id="lineup-modal"
       style="
@@ -9247,6 +9334,13 @@
               myTeamLoad();
             } catch (e) {
               console.warn("myteam", e);
+            }
+          }
+          if (name === "opponents") {
+            try {
+              oppLoad();
+            } catch (e) {
+              console.warn("opponents", e);
             }
           }
         }
@@ -22788,6 +22882,305 @@
               true
             );
           } catch (e) {}
+        }
+
+        // ══════════════════════════════════════════════════════════════════════
+        //  OPPONENTS
+        //  Storage layout:
+        //    "pitchtrack_opponents"       → JSON array of {id, name}  (index)
+        //    "pitchtrack_opp_<id>"        → JSON {id, name, roster[]} (full data)
+        // ══════════════════════════════════════════════════════════════════════
+        let _opponents = [];          // [{id, name, roster:[]}]  — in-memory
+        let _oppEditingId   = null;   // opponent id currently open in player modal
+        let _oppEditingPid  = null;   // player id being edited (null = new)
+
+        // ── Persistence ──────────────────────────────────────────────────────
+        async function oppLoad() {
+          try {
+            const idxRaw = await window.storage.get("pitchtrack_opponents", true);
+            const index = idxRaw ? JSON.parse(idxRaw.value) : [];
+            _opponents = [];
+            for (const entry of index) {
+              try {
+                const raw = await window.storage.get("pitchtrack_opp_" + entry.id, true);
+                if (raw?.value) {
+                  _opponents.push(JSON.parse(raw.value));
+                } else {
+                  _opponents.push({ id: entry.id, name: entry.name, roster: [] });
+                }
+              } catch (e) {
+                _opponents.push({ id: entry.id, name: entry.name, roster: [] });
+              }
+            }
+          } catch (e) { _opponents = []; }
+          oppRenderAll();
+        }
+
+        async function oppSaveIndex() {
+          await window.storage.set(
+            "pitchtrack_opponents",
+            JSON.stringify(_opponents.map(o => ({ id: o.id, name: o.name }))),
+            true
+          );
+        }
+
+        async function oppSaveOne(opp) {
+          await window.storage.set(
+            "pitchtrack_opp_" + opp.id,
+            JSON.stringify(opp),
+            true
+          );
+          await oppSaveIndex();
+        }
+
+        async function oppDeleteOne(id) {
+          _opponents = _opponents.filter(o => o.id !== id);
+          try { await window.storage.delete("pitchtrack_opp_" + id, true); } catch(e){}
+          await oppSaveIndex();
+          oppRenderAll();
+        }
+
+        // ── Create new opponent ───────────────────────────────────────────────
+        function oppLoadNew() {
+          const id = "opp_" + Date.now() + "_" + Math.random().toString(36).slice(2,6);
+          const opp = { id, name: "New Opponent", roster: [] };
+          _opponents.push(opp);
+          oppSaveOne(opp);
+          oppRenderAll();
+          // Auto-focus the name field of the new card
+          setTimeout(() => {
+            const inp = document.getElementById("opp-name-" + id);
+            if (inp) { inp.focus(); inp.select(); }
+          }, 50);
+        }
+
+        // ── Render all opponent cards ─────────────────────────────────────────
+        function oppRenderAll() {
+          const list = document.getElementById("opponents-list");
+          const sub  = document.getElementById("opponents-subtitle");
+          if (!list) return;
+          const n = _opponents.length;
+          if (sub) sub.textContent = n === 0 ? "No opponents yet" : n + " team" + (n !== 1 ? "s" : "");
+          if (!n) {
+            list.innerHTML = `<div style="text-align:center;padding:64px 20px;color:var(--text3)">
+              <div style="font-size:40px;margin-bottom:12px">🎯</div>
+              <div style="font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:18px;margin-bottom:6px">No opponents loaded</div>
+              <div style="font-size:13px">Click <strong>+ Load New Opponent</strong> to start building your scouting library.</div>
+            </div>`;
+            return;
+          }
+          list.innerHTML = "";
+          _opponents.forEach(opp => list.appendChild(_oppBuildCard(opp)));
+        }
+
+        function _oppBuildCard(opp) {
+          const card = document.createElement("div");
+          card.className = "opp-card";
+          card.id = "opp-card-" + opp.id;
+
+          // ── Header ──
+          const hdr = document.createElement("div");
+          hdr.className = "opp-card-header";
+          hdr.innerHTML = `
+            <div style="font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:13px;color:var(--text3);letter-spacing:2px;text-transform:uppercase;flex-shrink:0">Opponent</div>
+            <input id="opp-name-${opp.id}" value="${escHtml(opp.name)}"
+              oninput="oppRenameLive('${opp.id}', this.value)"
+              onblur="oppRename('${opp.id}', this.value)"
+              style="padding:5px 10px;border:1px solid var(--border2);border-radius:6px;background:var(--surface3);color:var(--text);font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:15px;width:200px;flex-shrink:0"/>
+            <div id="opp-sub-${opp.id}" style="font-size:11px;color:var(--text3);flex:1">${opp.roster.length} player${opp.roster.length !== 1 ? "s" : ""}</div>
+            <div style="display:flex;gap:6px;flex-shrink:0">
+              <button onclick="oppAddPlayer('${opp.id}')" style="padding:5px 11px;background:var(--accent);border:none;border-radius:6px;font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:11px;color:#fff;cursor:pointer">+ Add Player</button>
+              <button onclick="document.getElementById('opp-import-${opp.id}').click()" style="padding:5px 11px;background:var(--surface2);border:1px solid var(--border2);border-radius:6px;font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:11px;color:var(--text2);cursor:pointer">⬆ Import</button>
+              <input type="file" id="opp-import-${opp.id}" accept=".xlsx,.csv,.trx,.TRX,.pdf" style="display:none" onchange="oppImport('${opp.id}', this)"/>
+              <button onclick="oppConfirmDelete('${opp.id}')" title="Remove opponent" style="padding:5px 9px;background:none;border:1px solid var(--border2);border-radius:6px;font-size:12px;color:var(--text3);cursor:pointer;transition:all .13s" onmouseover="this.style.borderColor='#cc1a1a';this.style.color='#cc1a1a'" onmouseout="this.style.borderColor='var(--border2)';this.style.color='var(--text3)'">🗑</button>
+            </div>`;
+          card.appendChild(hdr);
+
+          // ── Roster body ──
+          const body = document.createElement("div");
+          body.className = "opp-card-roster";
+          body.id = "opp-roster-" + opp.id;
+          _oppRenderRoster(opp, body);
+          card.appendChild(body);
+
+          return card;
+        }
+
+        function _oppRenderRoster(opp, container) {
+          if (!opp.roster.length) {
+            container.innerHTML = `<div style="padding:20px 0;text-align:center;color:var(--text3);font-size:12px">No players yet — add manually or import a file.</div>`;
+            return;
+          }
+          container.innerHTML = "";
+          let remaining = [...opp.roster];
+          for (const grp of POS_GROUPS) {
+            const players = remaining.filter(grp.match);
+            if (!players.length) continue;
+            remaining = remaining.filter(p => !grp.match(p));
+            const sec = document.createElement("div");
+            sec.style.marginBottom = "16px";
+            sec.innerHTML = `<div style="font-family:'Barlow',sans-serif;font-weight:700;font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--text3);margin-bottom:8px;padding-bottom:4px;border-bottom:1px solid var(--border)">${grp.label} <span style="font-weight:400">(${players.length})</span></div><div style="display:flex;flex-wrap:wrap;gap:8px"></div>`;
+            const row = sec.querySelector("div > div");
+            players.sort((a,b) => parseInt(a.num||999)-parseInt(b.num||999)).forEach(p => {
+              const isPitcher = ["RHP","LHP","P","UTL/RHP","C/RHP","3B/RHP"].some(x => p.pos === x);
+              const numCol = isPitcher ? "color:#1a5acc" : "color:var(--accent)";
+              const borderCol = isPitcher ? "border-color:rgba(26,90,204,.35)" : "";
+              const el = document.createElement("div");
+              el.style.cssText = `background:var(--surface);border:1.5px solid var(--border2);${borderCol};border-radius:10px;padding:10px 12px;cursor:pointer;transition:all .14s;min-width:110px;position:relative`;
+              el.innerHTML = `<div style="font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:20px;${numCol};line-height:1">#${p.num||"—"}</div>
+                <div style="font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:13px;color:var(--text);margin-top:2px;white-space:nowrap">${p.name}</div>
+                <div style="font-size:10px;color:var(--text3);margin-top:2px">${p.pos||"—"} · ${p.bat||"R"}/${p.throw||"R"}</div>
+                ${p.ht||p.wt ? `<div style="font-size:9px;color:var(--text3);margin-top:1px">${[p.ht,p.wt].filter(Boolean).join(" · ")}</div>` : ""}`;
+              el.addEventListener("mouseover", () => { el.style.borderColor = isPitcher ? "#1a5acc" : "var(--accent)"; el.style.transform = "translateY(-1px)"; });
+              el.addEventListener("mouseout",  () => { el.style.borderColor = isPitcher ? "rgba(26,90,204,.35)" : "var(--border2)"; el.style.transform = ""; });
+              el.addEventListener("click", () => oppEditPlayer(opp.id, p.id));
+              row.appendChild(el);
+            });
+            container.appendChild(sec);
+          }
+        }
+
+        // ── Rename ────────────────────────────────────────────────────────────
+        function oppRenameLive(id, val) {
+          const opp = _opponents.find(o => o.id === id);
+          if (opp) opp.name = val.trim() || "New Opponent";
+        }
+        function oppRename(id, val) {
+          const opp = _opponents.find(o => o.id === id);
+          if (!opp) return;
+          opp.name = val.trim() || "New Opponent";
+          oppSaveOne(opp);
+          const sub = document.getElementById("opp-sub-" + id);
+          // sub line doesn't need refresh, just persist
+        }
+
+        // ── Delete card ───────────────────────────────────────────────────────
+        function oppConfirmDelete(id) {
+          const opp = _opponents.find(o => o.id === id);
+          if (!opp) return;
+          const n = opp.roster.length;
+          const msg = n > 0
+            ? `Remove "${opp.name}" and their ${n} player${n!==1?"s":""}?`
+            : `Remove "${opp.name}"?`;
+          if (confirm(msg)) oppDeleteOne(id);
+        }
+
+        // ── Add / Edit player modal ───────────────────────────────────────────
+        function oppAddPlayer(oppId) {
+          _oppEditingId  = oppId;
+          _oppEditingPid = null;
+          document.getElementById("opp-player-modal-title").textContent = "Add Player";
+          document.getElementById("opp-player-modal-delete").style.display = "none";
+          ["name","num","ht","wt"].forEach(f => document.getElementById("opp-mtp-"+f).value = "");
+          document.getElementById("opp-mtp-pos").value = "C";
+          document.getElementById("opp-mtp-bat").value = "R";
+          document.getElementById("opp-mtp-throw").value = "R";
+          document.getElementById("opp-player-modal").style.display = "flex";
+          document.getElementById("opp-mtp-name").focus();
+        }
+
+        function oppEditPlayer(oppId, playerId) {
+          const opp = _opponents.find(o => o.id === oppId);
+          if (!opp) return;
+          const p = opp.roster.find(x => x.id === playerId);
+          if (!p) return;
+          _oppEditingId  = oppId;
+          _oppEditingPid = playerId;
+          document.getElementById("opp-player-modal-title").textContent = "Edit Player";
+          document.getElementById("opp-player-modal-delete").style.display = "inline-flex";
+          document.getElementById("opp-mtp-name").value  = p.name  || "";
+          document.getElementById("opp-mtp-num").value   = p.num   || "";
+          document.getElementById("opp-mtp-pos").value   = p.pos   || "C";
+          document.getElementById("opp-mtp-bat").value   = p.bat   || "R";
+          document.getElementById("opp-mtp-throw").value = p.throw || "R";
+          document.getElementById("opp-mtp-ht").value    = p.ht    || "";
+          document.getElementById("opp-mtp-wt").value    = p.wt    || "";
+          document.getElementById("opp-player-modal").style.display = "flex";
+        }
+
+        function oppSavePlayer() {
+          const name = document.getElementById("opp-mtp-name").value.trim();
+          if (!name) { document.getElementById("opp-mtp-name").focus(); return; }
+          const opp = _opponents.find(o => o.id === _oppEditingId);
+          if (!opp) return;
+          const player = {
+            id:    _oppEditingPid || "p_" + Date.now() + "_" + Math.random().toString(36).slice(2,6),
+            name,
+            num:   document.getElementById("opp-mtp-num").value.trim(),
+            pos:   document.getElementById("opp-mtp-pos").value,
+            bat:   document.getElementById("opp-mtp-bat").value,
+            throw: document.getElementById("opp-mtp-throw").value,
+            ht:    document.getElementById("opp-mtp-ht").value.trim(),
+            wt:    document.getElementById("opp-mtp-wt").value.trim(),
+          };
+          if (_oppEditingPid) {
+            const idx = opp.roster.findIndex(x => x.id === _oppEditingPid);
+            if (idx >= 0) opp.roster[idx] = player;
+          } else {
+            opp.roster.push(player);
+          }
+          document.getElementById("opp-player-modal").style.display = "none";
+          oppSaveOne(opp);
+          // Re-render just this card's roster
+          const body = document.getElementById("opp-roster-" + opp.id);
+          if (body) _oppRenderRoster(opp, body);
+          const sub = document.getElementById("opp-sub-" + opp.id);
+          if (sub) sub.textContent = opp.roster.length + " player" + (opp.roster.length !== 1 ? "s" : "");
+        }
+
+        function oppDeletePlayer() {
+          if (!_oppEditingId || !_oppEditingPid) return;
+          const opp = _opponents.find(o => o.id === _oppEditingId);
+          if (!opp) return;
+          opp.roster = opp.roster.filter(p => p.id !== _oppEditingPid);
+          document.getElementById("opp-player-modal").style.display = "none";
+          oppSaveOne(opp);
+          const body = document.getElementById("opp-roster-" + opp.id);
+          if (body) _oppRenderRoster(opp, body);
+          const sub = document.getElementById("opp-sub-" + opp.id);
+          if (sub) sub.textContent = opp.roster.length + " player" + (opp.roster.length !== 1 ? "s" : "");
+        }
+
+        // ── Import (reuse myTeam parsers) ─────────────────────────────────────
+        function oppImport(oppId, input) {
+          const file = input.files[0];
+          if (!file) return;
+          const ext = file.name.split(".").pop().toLowerCase();
+          const reader = new FileReader();
+          reader.onload = function(e) {
+            if (ext === "pdf") {
+              myTeamParsePDF(e.target.result).then(players => _oppFinishImport(oppId, players, input));
+              return;
+            }
+            let players = [];
+            try {
+              if      (ext === "trx")  players = myTeamParseTRX(e.target.result);
+              else if (ext === "csv")  players = myTeamParseCSV(e.target.result);
+              else if (ext === "xlsx") players = myTeamParseXLSX(e.target.result);
+            } catch(err) { alert("Import failed: " + err.message); return; }
+            _oppFinishImport(oppId, players, input);
+          };
+          if (ext === "xlsx" || ext === "pdf") reader.readAsArrayBuffer(file);
+          else reader.readAsText(file);
+        }
+
+        function _oppFinishImport(oppId, players, input) {
+          if (!players || !players.length) { alert("No players found in file."); return; }
+          const opp = _opponents.find(o => o.id === oppId);
+          if (!opp) return;
+          let added = 0, updated = 0;
+          for (const p of players) {
+            const existing = opp.roster.find(x => x.num === p.num && p.num);
+            if (existing) { Object.assign(existing, p, { id: existing.id }); updated++; }
+            else { p.id = "p_" + Date.now() + "_" + Math.random().toString(36).slice(2,6); opp.roster.push(p); added++; }
+          }
+          oppSaveOne(opp);
+          const body = document.getElementById("opp-roster-" + opp.id);
+          if (body) _oppRenderRoster(opp, body);
+          const sub = document.getElementById("opp-sub-" + opp.id);
+          if (sub) sub.textContent = opp.roster.length + " player" + (opp.roster.length !== 1 ? "s" : "");
+          toast("Imported: " + added + " added, " + updated + " updated");
+          if (input) input.value = "";
         }
 
         function myTeamRender() {
