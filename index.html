@@ -3295,6 +3295,41 @@
         border-color: var(--accent);
         background: rgba(204, 26, 26, 0.03);
       }
+      .game-row.gh-selected {
+        border-color: var(--accent);
+        background: rgba(204, 26, 26, 0.07);
+      }
+      .gh-checkbox {
+        width: 18px;
+        height: 18px;
+        border-radius: 5px;
+        border: 2px solid var(--border2);
+        background: var(--surface2);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+        transition: all .13s;
+        cursor: pointer;
+        color: #fff;
+        font-size: 11px;
+        font-weight: 900;
+      }
+      .gh-checkbox.checked {
+        background: var(--accent);
+        border-color: var(--accent);
+      }
+      .gh-select-bar {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 10px 14px;
+        background: var(--surface2);
+        border: 1.5px solid var(--border2);
+        border-radius: 9px;
+        margin-bottom: 12px;
+        animation: fadeIn .15s;
+      }
       .game-date {
         font-family: "Share Tech Mono", monospace;
         font-size: 10px;
@@ -15005,20 +15040,34 @@
 
         function cancelDelete() {
           _pendingDeleteId = null;
-          document.getElementById("delete-confirm-modal").style.display =
-            "none";
+          // Reset modal title back to singular for next use
+          const titleEl = document.querySelector("#delete-confirm-modal [style*='font-size: 21px']");
+          if (titleEl) titleEl.textContent = "Delete this game?";
+          document.getElementById("delete-confirm-modal").style.display = "none";
         }
 
         async function confirmDelete() {
-          document.getElementById("delete-confirm-modal").style.display =
-            "none";
+          document.getElementById("delete-confirm-modal").style.display = "none";
+          // Reset modal title back to singular for future single-deletes
+          const titleEl = document.querySelector("#delete-confirm-modal [style*='font-size: 21px']");
+          if (titleEl) titleEl.textContent = "Delete this game?";
           const gameId = _pendingDeleteId;
           _pendingDeleteId = null;
           if (!gameId) return;
           try {
-            await window.storage.delete(gameId, true);
+            if (gameId === "__multi__") {
+              // Batch delete all selected
+              const ids = Array.from(_ghSelected);
+              for (const id of ids) {
+                await window.storage.delete(id, true);
+              }
+              _ghSelected.clear();
+              _ghSelectMode = false;
+              window._ghSelectMode = false;
+            } else {
+              await window.storage.delete(gameId, true);
+            }
             await hubRefreshAll();
-            // If we were viewing this game or a team page, go back to all games
             showView("games");
           } catch (e) {
             alert("Delete failed — " + (e?.message || "unknown error"));
@@ -15189,6 +15238,12 @@
             } catch (e) {}
           }
           currentView = { type, data };
+          // Reset multi-select state when leaving the all-games view
+          if (type !== "games" && _ghSelectMode) {
+            _ghSelectMode = false;
+            window._ghSelectMode = false;
+            _ghSelected.clear();
+          }
           document.getElementById("hub-welcome").style.display = "none";
           document.getElementById("hub-content").style.display = "block";
           renderSidebar();
@@ -15206,6 +15261,9 @@
         }
 
         // ===== ALL GAMES VIEW =====
+        let _ghSelectMode = false;
+        let _ghSelected = new Set();
+
         function renderAllGames() {
           const c = document.getElementById("hub-content");
           if (!allGames.length) {
@@ -15218,36 +15276,120 @@
       <div><div class="page-title">Game History</div><div class="page-sub">${
         allGames.length
       } game${allGames.length !== 1 ? "s" : ""} saved</div></div>
+      <div style="display:flex;gap:8px;align-items:center">
+        <button id="gh-select-btn" onclick="ghToggleSelectMode()" style="padding:6px 14px;border:1.5px solid var(--border2);border-radius:7px;background:none;color:var(--text2);font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:13px;cursor:pointer;transition:all .13s" onmouseover="this.style.borderColor='var(--accent)';this.style.color='var(--accent)'" onmouseout="if(!window._ghSelectMode){this.style.borderColor='var(--border2)';this.style.color='var(--text2)'}">Select</button>
+      </div>
+    </div>
+    <div id="gh-select-bar" style="display:none" class="gh-select-bar">
+      <span id="gh-sel-count" style="font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:14px;color:var(--text);flex:1">0 selected</span>
+      <button onclick="ghSelectAll()" style="padding:5px 12px;border:1.5px solid var(--border2);border-radius:6px;background:none;color:var(--text2);font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:12px;cursor:pointer">Select All</button>
+      <button onclick="ghSelectNone()" style="padding:5px 12px;border:1.5px solid var(--border2);border-radius:6px;background:none;color:var(--text2);font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:12px;cursor:pointer">Deselect All</button>
+      <button id="gh-del-sel-btn" onclick="ghPromptDeleteSelected()" disabled style="padding:5px 14px;border:1.5px solid var(--border2);border-radius:6px;background:none;color:var(--text3);font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:12px;cursor:not-allowed;opacity:.45;transition:all .13s">Delete Selected</button>
     </div>
     <div id="hub-games-list"></div>`;
 
+          _renderGameRows();
+        }
+
+        function _renderGameRows() {
           const gl = document.getElementById("hub-games-list");
+          if (!gl) return;
+          gl.innerHTML = "";
           allGames.forEach((g) => {
             const div = document.createElement("div");
-            div.className = "game-row";
+            div.className = "game-row" + (_ghSelected.has(g.id) ? " gh-selected" : "");
+            div.dataset.gid = g.id;
+
+            const chkDiv = document.createElement("div");
+            chkDiv.className = "gh-checkbox" + (_ghSelected.has(g.id) ? " checked" : "");
+            chkDiv.style.display = _ghSelectMode ? "flex" : "none";
+            chkDiv.innerHTML = _ghSelected.has(g.id) ? "✓" : "";
+
             div.innerHTML = `
       <div class="game-date">${g.date}</div>
-      <div class="game-teams">${escHtml(
-        g.awayTeam
-      )} <span style="color:var(--text3);font-weight:400">vs</span> ${escHtml(
-              g.homeTeam
-            )}</div>
-      <div style="flex:1;font-size:11px;color:var(--text3)">${
-        g.totalPitches || 0
-      } pitches · ${g.innings} inn</div>
+      <div class="game-teams">${escHtml(g.awayTeam)} <span style="color:var(--text3);font-weight:400">vs</span> ${escHtml(g.homeTeam)}</div>
+      <div style="flex:1;font-size:11px;color:var(--text3)">${g.totalPitches || 0} pitches · ${g.innings} inn</div>
       <div class="game-score">${g.awayScore}–${g.homeScore}</div>
-      <button onclick="event.stopPropagation();exportGameData('${
-        g.id
-      }')" title="Export this game" style="background:none;border:none;color:var(--text3);cursor:pointer;font-size:12px;padding:3px 5px;border-radius:4px;transition:all .13s" onmouseover="this.style.color='var(--accent)'" onmouseout="this.style.color='var(--text3)'">⬇</button>
-      <button class="del-btn" onclick="event.stopPropagation();promptDeleteGame('${
-        g.id
-      }','${escHtml(g.awayTeam)} vs ${escHtml(g.homeTeam)} (${
-              g.date
-            })')"><svg xmlns="http://www.w3.org/2000/svg" width="13" height="14" viewBox="0 0 13 14" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><polyline points="1,3 12,3"/><path d="M4,3V2a1,1,0,0,1,1-1h3a1,1,0,0,1,1,1V3"/><path d="M2,3l.7,8.5A1,1,0,0,0,3.7,12.5h5.6a1,1,0,0,0,1-.99L11,3"/><line x1="5" y1="6" x2="5" y2="10"/><line x1="8" y1="6" x2="8" y2="10"/></svg></button>
+      <button onclick="event.stopPropagation();exportGameData('${g.id}')" title="Export this game" style="background:none;border:none;color:var(--text3);cursor:pointer;font-size:12px;padding:3px 5px;border-radius:4px;transition:all .13s" onmouseover="this.style.color='var(--accent)'" onmouseout="this.style.color='var(--text3)'">⬇</button>
+      <button class="del-btn" id="gh-del-${g.id}" onclick="event.stopPropagation();promptDeleteGame('${g.id}','${escHtml(g.awayTeam)} vs ${escHtml(g.homeTeam)} (${g.date})')"><svg xmlns="http://www.w3.org/2000/svg" width="13" height="14" viewBox="0 0 13 14" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><polyline points="1,3 12,3"/><path d="M4,3V2a1,1,0,0,1,1-1h3a1,1,0,0,1,1,1V3"/><path d="M2,3l.7,8.5A1,1,0,0,0,3.7,12.5h5.6a1,1,0,0,0,1-.99L11,3"/><line x1="5" y1="6" x2="5" y2="10"/><line x1="8" y1="6" x2="8" y2="10"/></svg></button>
     `;
-            div.onclick = () => showView("game", g.id);
+            div.insertBefore(chkDiv, div.firstChild);
+            div.onclick = (e) => {
+              if (_ghSelectMode) {
+                ghToggleRow(g.id);
+              } else {
+                showView("game", g.id);
+              }
+            };
             gl.appendChild(div);
           });
+        }
+
+        function ghToggleSelectMode() {
+          _ghSelectMode = !_ghSelectMode;
+          _ghSelected.clear();
+          window._ghSelectMode = _ghSelectMode; // keep in sync for mouseover guard
+          const bar = document.getElementById("gh-select-bar");
+          const btn = document.getElementById("gh-select-btn");
+          if (bar) bar.style.display = _ghSelectMode ? "flex" : "none";
+          if (btn) {
+            btn.textContent = _ghSelectMode ? "Cancel" : "Select";
+            btn.style.borderColor = _ghSelectMode ? "var(--accent)" : "var(--border2)";
+            btn.style.color = _ghSelectMode ? "var(--accent)" : "var(--text2)";
+          }
+          _renderGameRows();
+          _ghUpdateSelBar();
+        }
+
+        function ghToggleRow(id) {
+          if (_ghSelected.has(id)) _ghSelected.delete(id);
+          else _ghSelected.add(id);
+          // Update just this row visually without full re-render
+          const row = document.querySelector(`.game-row[data-gid="${id}"]`);
+          if (row) {
+            const chk = row.querySelector(".gh-checkbox");
+            const sel = _ghSelected.has(id);
+            row.classList.toggle("gh-selected", sel);
+            if (chk) { chk.classList.toggle("checked", sel); chk.innerHTML = sel ? "✓" : ""; }
+          }
+          _ghUpdateSelBar();
+        }
+
+        function ghSelectAll() {
+          allGames.forEach(g => _ghSelected.add(g.id));
+          _renderGameRows();
+          _ghUpdateSelBar();
+        }
+
+        function ghSelectNone() {
+          _ghSelected.clear();
+          _renderGameRows();
+          _ghUpdateSelBar();
+        }
+
+        function _ghUpdateSelBar() {
+          const n = _ghSelected.size;
+          const countEl = document.getElementById("gh-sel-count");
+          const delBtn = document.getElementById("gh-del-sel-btn");
+          if (countEl) countEl.textContent = n === 0 ? "0 selected" : `${n} game${n !== 1 ? "s" : ""} selected`;
+          if (delBtn) {
+            delBtn.disabled = n === 0;
+            delBtn.style.opacity = n === 0 ? ".45" : "1";
+            delBtn.style.cursor = n === 0 ? "not-allowed" : "pointer";
+            delBtn.style.borderColor = n === 0 ? "var(--border2)" : "var(--accent)";
+            delBtn.style.color = n === 0 ? "var(--text3)" : "var(--accent)";
+          }
+        }
+
+        function ghPromptDeleteSelected() {
+          const n = _ghSelected.size;
+          if (!n) return;
+          const sub = document.getElementById("delete-confirm-sub");
+          if (sub) sub.textContent = `${n} game${n !== 1 ? "s" : ""} will be permanently removed. This cannot be undone.`;
+          const titleEl = document.querySelector("#delete-confirm-modal [style*='font-size: 21px']");
+          if (titleEl) titleEl.textContent = `Delete ${n} game${n !== 1 ? "s" : ""}?`;
+          _pendingDeleteId = "__multi__";
+          document.getElementById("delete-confirm-modal").style.display = "flex";
         }
 
         // ===== TEAM VIEW =====
