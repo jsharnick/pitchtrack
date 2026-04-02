@@ -11683,17 +11683,112 @@
         }
 
         // ===================== PITCHERS =====================
+
+        // Returns the opponent object whose name matches a given team-name input value, or null.
+        function _getOppByTeamName(name) {
+          if (!name || !_opponents || !_opponents.length) return null;
+          return _opponents.find(function(o) { return o.name === name; }) || null;
+        }
+
         function toggleAddPitcherForm() {
-          var pitchers = (myTeamRoster || []).filter(function (p) {
-            return ["RHP", "LHP", "P", "UTL/RHP", "C/RHP", "3B/RHP"].includes(
-              p.pos
-            );
-          });
-          if (pitchers.length > 0) {
-            showPitcherPicker(pitchers);
+          var _myTN = window._myTeamNameCache || "";
+          // The PITCHING side is the opposite of the batting side
+          var pitchingTeamName = S.isTop ? homeName() : awayName();
+          var isMyTeamPitching = _myTN && pitchingTeamName === _myTN;
+          var oppPitching = _getOppByTeamName(pitchingTeamName);
+
+          if (isMyTeamPitching) {
+            // My Team is pitching — show My Team pitcher picker
+            var pitchers = (myTeamRoster || []).filter(function (p) {
+              return ["RHP", "LHP", "P", "UTL/RHP", "C/RHP", "3B/RHP"].includes(p.pos);
+            });
+            if (pitchers.length > 0) {
+              showPitcherPicker(pitchers);
+            } else {
+              qs("add-pitcher-form").classList.toggle("open");
+            }
+          } else if (oppPitching && oppPitching.roster && oppPitching.roster.length > 0) {
+            // An opponent is pitching — show opponent pitcher picker
+            var oppPitchers = oppPitching.roster.filter(function(p) {
+              return ["RHP", "LHP", "P", "UTL/RHP", "C/RHP", "3B/RHP"].includes(p.pos);
+            });
+            if (oppPitchers.length > 0) {
+              showOppPitcherPicker(oppPitchers, activePitcherList());
+            } else {
+              qs("add-pitcher-form").classList.toggle("open");
+            }
           } else {
+            // No roster loaded — fall back to manual entry form
             qs("add-pitcher-form").classList.toggle("open");
           }
+        }
+
+        function showOppPitcherPicker(pitchers, pitcherList) {
+          var existing = document.getElementById("pitcher-picker-overlay");
+          if (existing) { existing.remove(); return; }
+          var overlay = document.createElement("div");
+          overlay.id = "pitcher-picker-overlay";
+          overlay.style.cssText = "position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:2000;display:flex;align-items:center;justify-content:center";
+          var panel = document.createElement("div");
+          panel.style.cssText = "background:var(--surface2);border:1.5px solid var(--border2);border-radius:14px;width:min(400px,95vw);max-height:80vh;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,.5)";
+          var hdr = document.createElement("div");
+          hdr.style.cssText = "padding:14px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-shrink:0";
+          hdr.innerHTML = '<div><div style="font-family:Barlow Condensed,sans-serif;font-weight:900;font-size:18px;color:var(--text)">Bring In Pitcher</div>' +
+            '<div style="font-size:11px;color:var(--text3);margin-top:2px">Select from opponent roster</div></div>';
+          var xBtn = document.createElement("button");
+          xBtn.textContent = "×";
+          xBtn.style.cssText = "background:none;border:none;font-size:22px;color:var(--text3);cursor:pointer;padding:0 6px;line-height:1";
+          xBtn.onclick = function() { overlay.remove(); };
+          hdr.appendChild(xBtn);
+          panel.appendChild(hdr);
+          var list = document.createElement("div");
+          list.style.cssText = "overflow-y:auto;flex:1;padding:8px";
+          var sorted = pitchers.slice().sort(function(a, b) { return parseInt(a.num || 99) - parseInt(b.num || 99); });
+          sorted.forEach(function(p) {
+            var hand = (p.throw || "R") === "L" ? "LHP" : "RHP";
+            var card = document.createElement("div");
+            card.style.cssText = "display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:8px;cursor:pointer;transition:background .1s;border-bottom:1px solid var(--border)";
+            card.innerHTML =
+              '<div style="font-family:Barlow Condensed,sans-serif;font-weight:900;font-size:17px;color:#1a5acc;width:32px;text-align:right;flex-shrink:0">#' + (p.num || "—") + "</div>" +
+              '<div style="flex:1"><div style="font-family:Barlow Condensed,sans-serif;font-weight:700;font-size:14px;color:var(--text)">' + p.name + "</div>" +
+              '<div style="font-size:10px;color:var(--text3)">' + hand + (p.ht ? " · " + p.ht : "") + "</div></div>" +
+              '<div style="font-size:11px;color:#1a5acc;font-family:Barlow Condensed,sans-serif;font-weight:700">Bring In →</div>';
+            card.addEventListener("mouseover", function() { this.style.background = "var(--surface3)"; });
+            card.addEventListener("mouseout",  function() { this.style.background = ""; });
+            card.addEventListener("click", function() {
+              overlay.remove();
+              pitcherList.forEach(function(x) { x.active = false; });
+              // Replace default placeholder if it has no pitches
+              var isDefault = pitcherList.length === 1 &&
+                (!pitcherList[0].name || /^Pitcher/.test(pitcherList[0].name)) &&
+                pitcherList[0].pitches === 0;
+              var entry = { name: p.name, num: p.num || "", hand: p.throw || "R",
+                pitches: 0, strikes: 0, k: 0, bb: 0, swings: 0, looks: 0,
+                hits: 0, outs: 0, r: 0, hbp: 0, bf: 0, active: true };
+              if (isDefault) { pitcherList[0] = entry; }
+              else { pitcherList.push(entry); }
+              renderPitcherList();
+              updateScoreBug();
+              logEvent("🔄", "Pitching Change", "#" + (p.num || "?") + " " + p.name + " now pitching");
+              toast(p.name + " now pitching");
+            });
+            list.appendChild(card);
+          });
+          panel.appendChild(list);
+          var footer = document.createElement("div");
+          footer.style.cssText = "padding:10px;border-top:1px solid var(--border);flex-shrink:0";
+          var manualBtn = document.createElement("button");
+          manualBtn.textContent = "+ Enter manually";
+          manualBtn.style.cssText = "width:100%;padding:8px;background:none;border:1px dashed var(--border2);border-radius:7px;color:var(--text3);font-family:Barlow Condensed,sans-serif;font-weight:700;font-size:12px;cursor:pointer";
+          manualBtn.addEventListener("click", function() {
+            overlay.remove();
+            qs("add-pitcher-form").classList.add("open");
+          });
+          footer.appendChild(manualBtn);
+          panel.appendChild(footer);
+          overlay.appendChild(panel);
+          document.body.appendChild(overlay);
+          overlay.addEventListener("click", function(e) { if (e.target === overlay) overlay.remove(); });
         }
 
         function showPitcherPicker(pitchers) {
@@ -12143,15 +12238,18 @@
         }
 
         function toggleInlineSub(type, i) {
-          // Only show the My Team roster picker when the slot being subbed
-          // belongs to My Team's side of the lineup. Determine this by
-          // comparing the batting team's name to the cached My Team name.
           var _myTN = window._myTeamNameCache || "";
           var battingTeamName = S.isTop ? awayName() : homeName();
           var isMyTeamBatting = _myTN && battingTeamName === _myTN;
-          // If My Team is batting and has position players, show roster picker
+          // If My Team is batting and has position players, show My Team roster picker
           if (isMyTeamBatting && myTeamRoster && myTeamRoster.length > 0) {
             showInlineSubPicker(type, i);
+            return;
+          }
+          // If an opponent is batting and has a roster, show opponent roster picker
+          var oppBatting = _getOppByTeamName(battingTeamName);
+          if (oppBatting && oppBatting.roster && oppBatting.roster.length > 0) {
+            showOppInlineSubPicker(type, i, oppBatting);
             return;
           }
           // Fallback: just toggle flag
@@ -12178,6 +12276,78 @@
         // Legacy alias
         function toggleInlinePH(i) {
           toggleInlineSub("PH", i);
+        }
+
+        function showOppInlineSubPicker(type, slotIdx, opp) {
+          var existing = document.getElementById("inline-sub-picker");
+          if (existing) { existing.remove(); return; }
+          var labels = { PH: "Pinch Hitter", PR: "Pinch Runner", DEF: "Defensive Sub" };
+          var isPitch = function(p) {
+            return ["RHP","LHP","P","UTL/RHP","C/RHP","3B/RHP"].includes(p.pos);
+          };
+          var posOrder = ["C","C/2B","1B","2B","3B","SS","INF","INF/OF","1B/OF","OF","LF","CF","RF","DH","UTL"];
+          var players = (opp.roster || []).filter(function(p) { return !isPitch(p); })
+            .sort(function(a, b) {
+              var ai = posOrder.indexOf(a.pos), bi = posOrder.indexOf(b.pos);
+              if (ai < 0) ai = 50; if (bi < 0) bi = 50;
+              return ai !== bi ? ai - bi : parseInt(a.num || 99) - parseInt(b.num || 99);
+            });
+          var overlay = document.createElement("div");
+          overlay.id = "inline-sub-picker";
+          overlay.style.cssText = "position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:2000;display:flex;align-items:center;justify-content:center";
+          var panel = document.createElement("div");
+          panel.style.cssText = "background:var(--surface2);border:1.5px solid var(--border2);border-radius:14px;width:min(400px,95vw);max-height:80vh;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,.5)";
+          var hdr = document.createElement("div");
+          hdr.style.cssText = "padding:14px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-shrink:0";
+          var outgoing = currentLineup()[slotIdx];
+          hdr.innerHTML = '<div><div style="font-family:Barlow Condensed,sans-serif;font-weight:900;font-size:18px;color:var(--text)">Select ' + (labels[type] || type) + '</div>' +
+            '<div style="font-size:11px;color:var(--text3);margin-top:2px">Replacing: <strong>' + ((outgoing && outgoing.name) || "slot " + (slotIdx + 1)) + '</strong> · ' + opp.name + '</div></div>';
+          var xBtn = document.createElement("button");
+          xBtn.textContent = "×";
+          xBtn.style.cssText = "background:none;border:none;font-size:22px;color:var(--text3);cursor:pointer;padding:0 6px;line-height:1";
+          xBtn.onclick = function() { overlay.remove(); };
+          hdr.appendChild(xBtn);
+          panel.appendChild(hdr);
+          var list = document.createElement("div");
+          list.style.cssText = "overflow-y:auto;flex:1;padding:8px";
+          if (!players.length) {
+            list.innerHTML = '<div style="padding:24px;text-align:center;color:var(--text3);font-size:13px">No position players in ' + opp.name + '\'s roster</div>';
+          } else {
+            players.forEach(function(p) {
+              var card = document.createElement("div");
+              card.style.cssText = "display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:8px;cursor:pointer;transition:background .1s;border-bottom:1px solid var(--border)";
+              card.innerHTML =
+                '<div style="font-family:Barlow Condensed,sans-serif;font-weight:900;font-size:17px;color:#1a5acc;width:32px;text-align:right;flex-shrink:0">#' + (p.num || "—") + "</div>" +
+                '<div style="flex:1"><div style="font-family:Barlow Condensed,sans-serif;font-weight:700;font-size:14px;color:var(--text)">' + p.name + "</div>" +
+                '<div style="font-size:10px;color:var(--text3)">' + (p.pos || "—") + " · " + (p.bat || "R") + "/" + (p.throw || "R") + (p.ht ? " · " + p.ht : "") + "</div></div>" +
+                '<div style="font-size:11px;color:#1a5acc;font-family:Barlow Condensed,sans-serif;font-weight:700">Select →</div>';
+              card.addEventListener("mouseover", function() { this.style.background = "var(--surface3)"; });
+              card.addEventListener("mouseout",  function() { this.style.background = ""; });
+              card.addEventListener("click", function() {
+                overlay.remove();
+                var lineup = currentLineup();
+                var outName = (lineup[slotIdx] && lineup[slotIdx].name) || "";
+                lineup[slotIdx] = {
+                  name: p.name, num: p.num || String(slotIdx + 1),
+                  pos: p.pos || "OF", hand: p.bat || "R",
+                  isPH: type === "PH", isPR: type === "PR", isDEF: type === "DEF",
+                };
+                if (type === "PR" && outName) {
+                  ["1st","2nd","3rd"].forEach(function(base) {
+                    if (S.runnerNames[base] === outName) S.runnerNames[base] = p.name;
+                  });
+                }
+                renderLineup();
+                updateScoreBug();
+                toast(p.name + " in as " + (labels[type] || type) + (outName ? " for " + outName : ""));
+              });
+              list.appendChild(card);
+            });
+          }
+          panel.appendChild(list);
+          overlay.appendChild(panel);
+          document.body.appendChild(overlay);
+          overlay.addEventListener("click", function(e) { if (e.target === overlay) overlay.remove(); });
         }
 
         function showInlineSubPicker(type, slotIdx) {
@@ -15800,8 +15970,9 @@
           setPlayBlurb(
             '<span style="color:var(--text3);font-size:13px">Game not yet started — first pitch pending</span>'
           );
-          // Load My Team roster so Use buttons appear immediately
+          // Load My Team roster and opponents so Use buttons appear immediately
           myTeamLoad();
+          oppLoad();
         }
         /* HUB */
         // ===== STATE =====
@@ -20933,6 +21104,7 @@
         // ===== BOOT =====
         async function hubBoot() {
           myTeamLoad();
+          oppLoad();
           document.getElementById("hub-content").innerHTML =
             '<div id="hub-loading" style="display:flex;align-items:center;justify-content:center;height:200px;color:#8a909e;font-family:Barlow Condensed,sans-serif;font-size:16px;letter-spacing:1px;gap:10px">\u26be Loading saved games...</div>';
           await hubRefreshAll();
