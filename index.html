@@ -4842,6 +4842,29 @@
                   >
                     USE MY TEAM ▸
                   </button>
+                  <button
+                    id="use-opp-away-btn"
+                    onclick="oppPickerOpen('away')"
+                    onmouseout="this.style.borderColor='var(--border2)';this.style.color='var(--text3)'"
+                    onmouseover="this.style.borderColor='#1a5acc';this.style.color='#1a5acc'"
+                    style="
+                      margin-top: 3px;
+                      width: 100%;
+                      padding: 4px 8px;
+                      background: var(--surface3);
+                      border: 1px dashed var(--border2);
+                      border-radius: 5px;
+                      font-family: 'Barlow Condensed', sans-serif;
+                      font-weight: 700;
+                      font-size: 10px;
+                      color: var(--text3);
+                      cursor: pointer;
+                      letter-spacing: 0.5px;
+                      display: none;
+                    "
+                  >
+                    USE OPPONENT ▸
+                  </button>
                 </div>
                 <div class="setup-field">
                   <label>Home Team</label>
@@ -4874,6 +4897,29 @@
                     "
                   >
                     USE MY TEAM ▸
+                  </button>
+                  <button
+                    id="use-opp-home-btn"
+                    onclick="oppPickerOpen('home')"
+                    onmouseout="this.style.borderColor='var(--border2)';this.style.color='var(--text3)'"
+                    onmouseover="this.style.borderColor='#1a5acc';this.style.color='#1a5acc'"
+                    style="
+                      margin-top: 3px;
+                      width: 100%;
+                      padding: 4px 8px;
+                      background: var(--surface3);
+                      border: 1px dashed var(--border2);
+                      border-radius: 5px;
+                      font-family: 'Barlow Condensed', sans-serif;
+                      font-weight: 700;
+                      font-size: 10px;
+                      color: var(--text3);
+                      cursor: pointer;
+                      letter-spacing: 0.5px;
+                      display: none;
+                    "
+                  >
+                    USE OPPONENT ▸
                   </button>
                 </div>
               </div>
@@ -7046,6 +7092,20 @@
             Save Player
           </button>
         </div>
+      </div>
+    </div>
+
+    <!-- ══ OPPONENT PICKER MODAL ══════════════════════════════════════════ -->
+    <div id="opp-picker-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:2200;align-items:center;justify-content:center;backdrop-filter:blur(4px)">
+      <div style="background:var(--surface2);border:1px solid var(--border2);border-radius:14px;width:420px;max-width:95vw;max-height:80vh;display:flex;flex-direction:column;box-shadow:0 20px 60px rgba(0,0,0,.5);overflow:hidden">
+        <div style="padding:16px 18px 12px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-shrink:0">
+          <div>
+            <div id="opp-picker-title" style="font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:18px;color:var(--text)">Select Opponent</div>
+            <div style="font-size:11px;color:var(--text3);margin-top:1px">Click a team to load their roster</div>
+          </div>
+          <button onclick="oppPickerClose()" style="background:none;border:none;font-size:20px;color:var(--text3);cursor:pointer;line-height:1;padding:2px 6px">×</button>
+        </div>
+        <div id="opp-picker-list" style="overflow-y:auto;padding:12px 14px;display:flex;flex-direction:column;gap:8px"></div>
       </div>
     </div>
 
@@ -23798,6 +23858,7 @@
 
         // ── Render tile grid (list view) ──────────────────────────────────────
         function oppRenderAll() {
+          oppRefreshUseButtons();
           const list = document.getElementById("opponents-list");
           const sub = document.getElementById("opponents-subtitle");
           if (!list) return;
@@ -24768,6 +24829,227 @@
           const d = document.getElementById("myteam-drawer");
           if (d) d.style.display = "none";
         }
+
+        // ── Show/hide "Use Opponent" buttons based on whether opponents exist ─
+        function oppRefreshUseButtons() {
+          const hasOpps = _opponents && _opponents.length > 0;
+          const disp = hasOpps ? "block" : "none";
+          const awayBtn = document.getElementById("use-opp-away-btn");
+          const homeBtn = document.getElementById("use-opp-home-btn");
+          if (awayBtn) awayBtn.style.display = disp;
+          if (homeBtn) homeBtn.style.display = disp;
+        }
+
+        // ══════════════════════════════════════════════════════════════════════
+        //  USE OPPONENT — Picker + Roster Panel
+        // ══════════════════════════════════════════════════════════════════════
+
+        var _oppPickerSide = null; // 'away' | 'home'
+
+        function oppPickerOpen(side) {
+          if (!_opponents || !_opponents.length) {
+            toast("No opponents loaded — add teams in the Opponents panel first");
+            return;
+          }
+          _oppPickerSide = side;
+          const list = document.getElementById("opp-picker-list");
+          const title = document.getElementById("opp-picker-title");
+          title.textContent = "Select Opponent (" + (side === "away" ? "Away" : "Home") + ")";
+          list.innerHTML = "";
+          _opponents.forEach(function(opp) {
+            const btn = document.createElement("div");
+            btn.style.cssText = "display:flex;align-items:center;gap:12px;padding:11px 14px;background:var(--surface);border:1.5px solid var(--border2);border-radius:10px;cursor:pointer;transition:all .14s;user-select:none";
+            btn.innerHTML =
+              '<div style="flex:1;min-width:0">' +
+                '<div style="font-family:\'Barlow Condensed\',sans-serif;font-weight:900;font-size:17px;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' + escHtml(opp.name) + '</div>' +
+                '<div style="font-size:10px;color:var(--text3);margin-top:1px">' + opp.roster.length + ' player' + (opp.roster.length !== 1 ? 's' : '') + '</div>' +
+              '</div>' +
+              '<div style="font-size:18px;color:var(--text3)">›</div>';
+            btn.addEventListener("mouseover", function() { this.style.borderColor = "#1a5acc"; this.style.transform = "translateX(2px)"; });
+            btn.addEventListener("mouseout",  function() { this.style.borderColor = "var(--border2)"; this.style.transform = ""; });
+            btn.addEventListener("click", function() {
+              oppPickerClose();
+              oppUseAsLineup(opp, _oppPickerSide);
+            });
+            list.appendChild(btn);
+          });
+          document.getElementById("opp-picker-modal").style.display = "flex";
+        }
+
+        function oppPickerClose() {
+          document.getElementById("opp-picker-modal").style.display = "none";
+        }
+
+        function oppUseAsLineup(opp, side) {
+          // Set the team name input
+          const inp = document.getElementById(side + "-name-input");
+          if (inp) { inp.value = opp.name; updateTeamNames(); }
+          // Open lineup modal on the right side with opponent roster panel
+          if (currentPanel !== "tracker") openPanel("tracker");
+          setTimeout(function() {
+            lineupModalSide = side;
+            document.getElementById("lineup-modal").style.display = "flex";
+            renderLineupModal();
+            lmShowOpponentRosterPanel(opp, side === "away");
+          }, currentPanel !== "tracker" ? 250 : 0);
+        }
+
+        function lmShowOpponentRosterPanel(opp, isAway) {
+          const panel = document.getElementById("lm-roster-panel");
+          const cards = document.getElementById("lm-roster-cards");
+          const title = document.getElementById("lm-roster-title");
+          if (!panel || !cards) return;
+          if (!opp.roster.length) {
+            toast(opp.name + " has no players — add some in the Opponents panel");
+            panel.style.display = "none";
+            return;
+          }
+
+          if (title) {
+            title.textContent = opp.name;
+            title.style.color = "#1a5acc";
+          }
+
+          const POS_ORDER = ["C","C/RHP","C/2B","1B","2B","3B","SS","INF","INF/OF","1B/OF","SS/2B","3B/RHP","OF","LF","CF","RF","DH","UTL","RHP","LHP","P","UTL/RHP"];
+          const isPitch = function(p) { return ["RHP","LHP","P","UTL/RHP","C/RHP","3B/RHP"].includes(p.pos); };
+          const sorted = opp.roster.slice().sort(function(a, b) {
+            var ai = POS_ORDER.indexOf(a.pos), bi = POS_ORDER.indexOf(b.pos);
+            if (ai < 0) ai = 50; if (bi < 0) bi = 50;
+            if (ai !== bi) return ai - bi;
+            return parseInt(a.num || 99) - parseInt(b.num || 99);
+          });
+
+          const groups = [
+            ["Catchers",    sorted.filter(function(p){ return ["C","C/RHP","C/2B"].includes(p.pos); })],
+            ["Infielders",  sorted.filter(function(p){ return ["1B","2B","3B","SS","INF","INF/OF","1B/OF","SS/2B","3B/RHP"].includes(p.pos); })],
+            ["Outfielders", sorted.filter(function(p){ return ["OF","LF","CF","RF"].includes(p.pos); })],
+            ["DH",          sorted.filter(function(p){ return p.pos === "DH"; })],
+            ["Pitchers",    sorted.filter(function(p){ return ["RHP","LHP","P","UTL/RHP"].includes(p.pos); })],
+            ["Utility",     sorted.filter(function(p){ return p.pos === "UTL"; })],
+          ];
+
+          cards.innerHTML = "";
+          groups.forEach(function(g) {
+            var label = g[0], players = g[1];
+            if (!players.length) return;
+            var sec = document.createElement("div");
+            sec.style.cssText = "margin-bottom:10px";
+            var lbl = document.createElement("div");
+            lbl.style.cssText = "font-family:Barlow,sans-serif;font-weight:700;font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:var(--text3);padding:4px 0;margin-bottom:4px;border-bottom:1px solid var(--border)";
+            lbl.textContent = label + " (" + players.length + ")";
+            sec.appendChild(lbl);
+            players.forEach(function(p) {
+              var pitch = isPitch(p);
+              var col = pitch ? "#1a5acc" : "var(--accent)";
+              var card = document.createElement("div");
+              card.draggable = true;
+              card.style.cssText = "display:flex;align-items:center;gap:8px;padding:6px 8px;background:var(--surface);border:1px solid var(--border);border-radius:7px;cursor:grab;user-select:none;transition:all .12s;margin-bottom:4px";
+              card.innerHTML =
+                '<div style="font-family:\'Barlow Condensed\',sans-serif;font-weight:900;font-size:15px;color:' + col + ';width:30px;text-align:right;flex-shrink:0">#' + (p.num || "—") + "</div>" +
+                '<div style="flex:1;min-width:0">' +
+                  '<div style="font-family:\'Barlow Condensed\',sans-serif;font-weight:700;font-size:13px;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' + p.name + "</div>" +
+                  '<div style="font-size:9px;color:var(--text3)">' + (p.pos||"—") + " · " + (p.bat||"R") + "/" + (p.throw||"R") + (p.ht ? " · "+p.ht : "") + "</div>" +
+                "</div>" +
+                '<div style="font-size:10px;color:var(--text3);opacity:.4">⠿</div>';
+
+              card.addEventListener("dragstart", function(e) {
+                // Store player data on a temp global so drop handlers can find it
+                window._oppDragPlayer = p;
+                _dragPlayerId = p.id;
+                e.dataTransfer.setData("text/plain", "opp::" + p.id);
+                e.dataTransfer.effectAllowed = "copy";
+              });
+              card.addEventListener("click", function() {
+                if (pitch) {
+                  lmDropOppPitcherFromRoster(p, opp);
+                } else {
+                  var lineup = lineupModalSide === "away" ? S.lineupAway : S.lineupHome;
+                  var emptyIdx = lineup.findIndex(function(b){ return !b.name || /^Player \d/.test(b.name); });
+                  if (emptyIdx < 0) emptyIdx = 0;
+                  lmDropOppPlayerIntoSlot(p, emptyIdx);
+                }
+              });
+              card.addEventListener("mouseover", function() { this.style.borderColor = col; this.style.background = "var(--surface3)"; this.style.transform = "translateX(2px)"; });
+              card.addEventListener("mouseout",  function() { this.style.borderColor = "var(--border)"; this.style.background = "var(--surface)"; this.style.transform = ""; });
+              sec.appendChild(card);
+            });
+            cards.appendChild(sec);
+          });
+
+          panel.style.display = "block";
+          var pdh = document.getElementById("lm-pitcher-drop-hint");
+          if (pdh) pdh.style.display = "block";
+          switchLineupModalTab(isAway ? "away" : "home");
+        }
+
+        function lmDropOppPlayerIntoSlot(p, slotIdx) {
+          const lineup = lineupModalSide === "away" ? S.lineupAway : S.lineupHome;
+          lineup[slotIdx] = {
+            name:  p.name,
+            num:   p.num  || String(slotIdx + 1),
+            pos:   p.pos  || "OF",
+            hand:  p.bat  || "R",
+            isPH: false, isPR: false, isDEF: false,
+          };
+          renderLineupModal();
+          setTimeout(function() {
+            var posEl = document.getElementById("lm-pos-" + slotIdx);
+            if (posEl) {
+              posEl.style.borderColor = "#1a5acc";
+              posEl.style.background = "rgba(26,90,204,.08)";
+              posEl.focus();
+              setTimeout(function() { posEl.style.borderColor = ""; posEl.style.background = ""; }, 1200);
+            }
+          }, 40);
+        }
+
+        function lmDropOppPitcherFromRoster(p, opp) {
+          const side = typeof lineupModalSide !== "undefined" ? lineupModalSide : "away";
+          const list = side === "away" ? S.pitchersAway : S.pitchersHome;
+          if (list.find(function(x){ return x.name === p.name; })) {
+            toast(p.name + " already in pitcher list");
+            return;
+          }
+          const isDefault = list.length === 1 &&
+            (!list[0].name || /^Pitcher/.test(list[0].name)) &&
+            list[0].pitches === 0;
+          const entry = { name:p.name, num:p.num||"", hand:p.throw||"R", pitches:0, strikes:0, k:0, bb:0, swings:0, looks:0, hits:0, outs:0, r:0, er:0 };
+          if (isDefault) { list[0] = entry; }
+          else { list.push(entry); }
+          renderLineupModal();
+          toast(p.name + " added to pitchers");
+        }
+
+        // ── Wire drop target for opp players in lineup-modal drop zones ──────
+        // Patch lmDropPlayerIntoSlot to also handle opp:: prefixed drag IDs
+        var _origLmDrop = null;
+        (function patchLmDrop() {
+          // We rely on the drag handler setting window._oppDragPlayer
+          // and the drop handler calling lmDropPlayerIntoSlot with "opp::id"
+          // Override: if playerId starts with "opp::", use opponent player
+          var _orig = lmDropPlayerIntoSlot;
+          lmDropPlayerIntoSlot = function(playerId, slotIdx) {
+            if (typeof playerId === "string" && playerId.startsWith("opp::")) {
+              if (window._oppDragPlayer) {
+                lmDropOppPlayerIntoSlot(window._oppDragPlayer, slotIdx);
+                window._oppDragPlayer = null;
+              }
+              return;
+            }
+            _orig(playerId, slotIdx);
+          };
+          var _origPitch = lmDropPitcherFromRoster;
+          lmDropPitcherFromRoster = function(playerId) {
+            if (typeof playerId === "string" && playerId.startsWith("opp::")) {
+              if (window._oppDragPlayer) {
+                lmDropOppPitcherFromRoster(window._oppDragPlayer, null);
+                window._oppDragPlayer = null;
+              }
+              return;
+            }
+            _origPitch(playerId);
+          };
+        })();
 
         function myTeamDrawerClick(playerId, side) {
           const p = myTeamRoster.find(function (x) {
