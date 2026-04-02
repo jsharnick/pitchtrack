@@ -3330,6 +3330,22 @@
         margin-bottom: 12px;
         animation: fadeIn .15s;
       }
+      .ts-selected-row {
+        background: rgba(204,26,26,.07) !important;
+        border-left-color: var(--accent) !important;
+      }
+      .ts-select-action-bar {
+        display: none;
+        align-items: center;
+        gap: 6px;
+        padding: 8px 10px;
+        margin: 6px 0 0;
+        background: var(--surface2);
+        border: 1.5px solid var(--border2);
+        border-radius: 8px;
+        animation: fadeIn .15s;
+      }
+      .ts-select-action-bar.visible { display: flex; }
       .game-date {
         font-family: "Share Tech Mono", monospace;
         font-size: 10px;
@@ -6100,7 +6116,28 @@
               "
             >
               <span class="sidebar-label" style="padding: 0">Teams</span>
-              <div style="display: flex; gap: 5px">
+              <div style="display: flex; gap: 5px; align-items:center">
+                <button
+                  id="ts-select-btn"
+                  onclick="tsToggleSelectMode()"
+                  style="
+                    padding: 3px 8px;
+                    background: var(--surface2);
+                    border: 1px solid var(--border2);
+                    border-radius: 5px;
+                    font-family: 'Barlow Condensed', sans-serif;
+                    font-weight: 700;
+                    font-size: 10px;
+                    letter-spacing: 1px;
+                    color: var(--text3);
+                    cursor: pointer;
+                    transition: all 0.14s;
+                    white-space: nowrap;
+                  "
+                  title="Select teams to delete"
+                  onmouseover="this.style.borderColor='var(--accent)';this.style.color='var(--accent)'"
+                  onmouseout="if(!window._tsSelectMode){this.style.borderColor='var(--border2)';this.style.color='var(--text3)'}"
+                >Select</button>
                 <button
                   onclick="exportAllData()"
                   onmouseout="this.style.borderColor='var(--border2)';this.style.color='var(--text3)'"
@@ -6162,6 +6199,12 @@
             </div>
             <div id="hub-team-list">
               <div class="sidebar-empty">No teams yet — save a game first</div>
+            </div>
+            <div id="ts-action-bar" class="ts-select-action-bar">
+              <span id="ts-sel-count" style="font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:12px;color:var(--text);flex:1">0 selected</span>
+              <button onclick="tsSelectAll()" style="padding:3px 8px;border:1px solid var(--border2);border-radius:5px;background:none;color:var(--text3);font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:10px;cursor:pointer;white-space:nowrap">All</button>
+              <button onclick="tsSelectNone()" style="padding:3px 8px;border:1px solid var(--border2);border-radius:5px;background:none;color:var(--text3);font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:10px;cursor:pointer;white-space:nowrap">None</button>
+              <button id="ts-del-btn" onclick="tsPromptDeleteSelected()" disabled style="padding:3px 9px;border:1px solid var(--border2);border-radius:5px;background:none;color:var(--text3);font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:10px;cursor:not-allowed;opacity:.45;white-space:nowrap;transition:all .13s">Remove</button>
             </div>
             <div
               style="
@@ -15043,20 +15086,24 @@
           // Reset modal title back to singular for next use
           const titleEl = document.querySelector("#delete-confirm-modal [style*='font-size: 21px']");
           if (titleEl) titleEl.textContent = "Delete this game?";
+          const sub = document.getElementById("delete-confirm-sub");
+          if (sub) sub.textContent = `This will permanently remove the game and all its stats from the Hub. This cannot be undone.`;
           document.getElementById("delete-confirm-modal").style.display = "none";
         }
 
         async function confirmDelete() {
           document.getElementById("delete-confirm-modal").style.display = "none";
-          // Reset modal title back to singular for future single-deletes
+          // Reset modal title/sub back to singular for future single-deletes
           const titleEl = document.querySelector("#delete-confirm-modal [style*='font-size: 21px']");
           if (titleEl) titleEl.textContent = "Delete this game?";
+          const sub = document.getElementById("delete-confirm-sub");
+          if (sub) sub.textContent = `This will permanently remove the game and all its stats from the Hub. This cannot be undone.`;
           const gameId = _pendingDeleteId;
           _pendingDeleteId = null;
           if (!gameId) return;
           try {
             if (gameId === "__multi__") {
-              // Batch delete all selected
+              // Batch delete all selected games
               const ids = Array.from(_ghSelected);
               for (const id of ids) {
                 await window.storage.delete(id, true);
@@ -15064,6 +15111,17 @@
               _ghSelected.clear();
               _ghSelectMode = false;
               window._ghSelectMode = false;
+            } else if (gameId === "__teams__") {
+              // Remove selected teams from the pitchtrack_teams index only — games are kept
+              const toRemove = Array.from(_tsSelected);
+              let teamsRaw;
+              try { teamsRaw = await window.storage.get("pitchtrack_teams", true); } catch (e) {}
+              const current = teamsRaw ? JSON.parse(teamsRaw.value) : [];
+              const updated = current.filter(t => !toRemove.includes(typeof t === "string" ? t : t.name));
+              await window.storage.set("pitchtrack_teams", JSON.stringify(updated), true);
+              _tsSelected.clear();
+              _tsSelectMode = false;
+              window._tsSelectMode = false;
             } else {
               await window.storage.delete(gameId, true);
             }
@@ -15101,8 +15159,91 @@
           else if (allGames.length > 0) showView("games");
         }
 
+        // ===== TEAM SELECT MODE =====
+        let _tsSelectMode = false;
+        let _tsSelected = new Set();
+
+        function tsToggleSelectMode() {
+          _tsSelectMode = !_tsSelectMode;
+          _tsSelected.clear();
+          window._tsSelectMode = _tsSelectMode;
+          const btn = document.getElementById("ts-select-btn");
+          const bar = document.getElementById("ts-action-bar");
+          if (btn) {
+            btn.textContent = _tsSelectMode ? "Cancel" : "Select";
+            btn.style.borderColor = _tsSelectMode ? "var(--accent)" : "var(--border2)";
+            btn.style.color = _tsSelectMode ? "var(--accent)" : "var(--text3)";
+          }
+          if (bar) bar.classList.toggle("visible", _tsSelectMode);
+          renderSidebar();
+          _tsUpdateBar();
+        }
+
+        function tsToggleTeam(name) {
+          if (_tsSelected.has(name)) _tsSelected.delete(name);
+          else _tsSelected.add(name);
+          // Update just this row without full re-render
+          const row = document.querySelector(`.ts-team-row[data-team="${CSS.escape(name)}"]`);
+          if (row) {
+            const sel = _tsSelected.has(name);
+            row.classList.toggle("ts-selected-row", sel);
+            const chk = row.querySelector(".gh-checkbox");
+            if (chk) { chk.classList.toggle("checked", sel); chk.innerHTML = sel ? "✓" : ""; }
+          }
+          _tsUpdateBar();
+        }
+
+        function tsSelectAll() {
+          // Select all non-My-Team teams
+          const myTN = window._myTeamNameCache || "";
+          allTeams.filter(t => t !== myTN).forEach(t => _tsSelected.add(t));
+          renderSidebar();
+          _tsUpdateBar();
+        }
+
+        function tsSelectNone() {
+          _tsSelected.clear();
+          renderSidebar();
+          _tsUpdateBar();
+        }
+
+        function _tsUpdateBar() {
+          const n = _tsSelected.size;
+          const countEl = document.getElementById("ts-sel-count");
+          const delBtn = document.getElementById("ts-del-btn");
+          if (countEl) countEl.textContent = n === 0 ? "0 selected" : `${n} team${n !== 1 ? "s" : ""} selected`;
+          if (delBtn) {
+            delBtn.disabled = n === 0;
+            delBtn.style.opacity = n === 0 ? ".45" : "1";
+            delBtn.style.cursor = n === 0 ? "not-allowed" : "pointer";
+            delBtn.style.borderColor = n === 0 ? "var(--border2)" : "var(--accent)";
+            delBtn.style.color = n === 0 ? "var(--text3)" : "var(--accent)";
+          }
+        }
+
+        function tsPromptDeleteSelected() {
+          const n = _tsSelected.size;
+          if (!n) return;
+          const titleEl = document.querySelector("#delete-confirm-modal [style*='font-size: 21px']");
+          if (titleEl) titleEl.textContent = `Remove ${n} team${n !== 1 ? "s" : ""}?`;
+          const sub = document.getElementById("delete-confirm-sub");
+          if (sub) sub.textContent = `${n} team${n !== 1 ? "s" : ""} will be removed from the sidebar. Their saved games are kept and can still be found in Game History.`;
+          _pendingDeleteId = "__teams__";
+          document.getElementById("delete-confirm-modal").style.display = "flex";
+        }
+
         function renderSidebar() {
           const list = document.getElementById("hub-team-list");
+
+          // Sync the select button / action bar state
+          const tsBtn = document.getElementById("ts-select-btn");
+          const tsBar = document.getElementById("ts-action-bar");
+          if (tsBtn) {
+            tsBtn.textContent = _tsSelectMode ? "Cancel" : "Select";
+            tsBtn.style.borderColor = _tsSelectMode ? "var(--accent)" : "var(--border2)";
+            tsBtn.style.color = _tsSelectMode ? "var(--accent)" : "var(--text3)";
+          }
+          if (tsBar) tsBar.classList.toggle("visible", _tsSelectMode);
 
           // Always render mobile bar regardless of team count
           const mobTeams = document.getElementById("hub-mob-teams");
@@ -15121,38 +15262,23 @@
             mobTeams.innerHTML = mobMyTeamBtn + allTeams
               .filter(t => t !== _mobMyTeamName)
               .map((t) => {
-                const isActive =
-                  currentView?.type === "team" && currentView?.data === t;
-                return `<button class="hub-mob-team-btn${
-                  isActive ? " active" : ""
-                }" data-team="${escAttr(
-                  t
-                )}" onclick="hubMobNav('team',this.getAttribute('data-team'))">${escHtml(
-                  t
-                )}</button>`;
+                const isActive = currentView?.type === "team" && currentView?.data === t;
+                return `<button class="hub-mob-team-btn${isActive ? " active" : ""}" data-team="${escAttr(t)}" onclick="hubMobNav('team',this.getAttribute('data-team'))">${escHtml(t)}</button>`;
               })
               .join("");
           }
           const allBtn = document.getElementById("hub-mob-all");
           if (allBtn)
-            allBtn.classList.toggle(
-              "active",
-              currentView?.type === "games" || !currentView?.type
-            );
+            allBtn.classList.toggle("active", currentView?.type === "games" || !currentView?.type);
 
           // Desktop sidebar
-          // Prepend My Team pinned entry
           const myTeamName = (function () {
             try {
               const ni = document.getElementById("myteam-name-input");
               if (ni && ni.value.trim()) return ni.value.trim();
-              // Try from storage synchronously via cached value
               return window._myTeamNameCache || "My Team";
-            } catch (e) {
-              return "My Team";
-            }
+            } catch (e) { return "My Team"; }
           })();
-          // Filter out My Team from the regular list to avoid duplicates
           const otherTeams = allTeams.filter(t => t !== myTeamName);
           const hasMyTeam = myTeamRoster && myTeamRoster.length > 0;
           if (!otherTeams.length && !hasMyTeam) {
@@ -15162,8 +15288,10 @@
           const myTeamGames = hasMyTeam ? getTeamGames(myTeamName) : [];
           const myTeamRecord = myTeamGames.length > 0 ? getTeamRecord(myTeamName, myTeamGames) : null;
           const myTeamIsActive = currentView?.type === "team" && currentView?.data === myTeamName;
+
+          // My Team pinned entry — never selectable for deletion
           const myTeamEntry = hasMyTeam
-              ? `<div style="display:flex;align-items:center;border-left:3px solid var(--accent);margin-bottom:4px;background:rgba(204,26,26,.04);border-radius:0 6px 6px 0" class="${myTeamIsActive ? 'team-row-active' : ''}">
+            ? `<div style="display:flex;align-items:center;border-left:3px solid var(--accent);margin-bottom:4px;background:rgba(204,26,26,.04);border-radius:0 6px 6px 0">
       <button class="team-btn${myTeamIsActive ? ' active' : ''}" data-team="${escAttr(myTeamName)}" onclick="showView('team',this.getAttribute('data-team'))" style="flex:1;border-left:none">
         <div class="team-icon" style="font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:9px;letter-spacing:0.5px;color:var(--accent);border-color:rgba(204,26,26,.3)">MY</div>
         <div>
@@ -15172,43 +15300,33 @@
         </div>
       </button>
     </div>`
-              : "";
-          list.innerHTML =
-            myTeamEntry +
-            otherTeams
-              .map((t) => {
-                const games = getTeamGames(t);
-                const record = getTeamRecord(t, games);
-                return `<div style="display:flex;align-items:center;border-left:3px solid transparent" class="${
-                  currentView?.type === "team" && currentView?.data === t
-                    ? "team-row-active"
-                    : ""
-                }">
-      <button class="team-btn${
-        currentView?.type === "team" && currentView?.data === t ? " active" : ""
-      }" data-team="${escAttr(
-                  t
-                )}" onclick="showView('team',this.getAttribute('data-team'))" style="flex:1;border-left:none">
-        <div class="team-icon" style="font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:11px;letter-spacing:0.5px;color:var(--text2)">${escHtml(
-          t
-        )
-          .slice(0, 3)
-          .toUpperCase()}</div>
+            : "";
+
+          const teamRows = otherTeams.map((t) => {
+            const games = getTeamGames(t);
+            const record = getTeamRecord(t, games);
+            const isSel = _tsSelected.has(t);
+            const isActive = currentView?.type === "team" && currentView?.data === t;
+            const chkHTML = _tsSelectMode
+              ? `<div class="gh-checkbox${isSel ? ' checked' : ''}" style="margin-left:10px;flex-shrink:0">${isSel ? '✓' : ''}</div>`
+              : '';
+            const exportBtn = !_tsSelectMode
+              ? `<button onclick="event.stopPropagation();exportTeamData('${escAttr(t)}')" title="Export ${escHtml(t)} games" style="flex-shrink:0;padding:6px 10px;background:none;border:none;color:var(--text3);cursor:pointer;font-size:11px;transition:color .14s" onmouseover="this.style.color='var(--accent)'" onmouseout="this.style.color='var(--text3)'">⬇</button>`
+              : '';
+            return `<div class="ts-team-row${isSel ? ' ts-selected-row' : ''}" data-team="${escAttr(t)}" style="display:flex;align-items:center;border-left:3px solid ${isSel ? 'var(--accent)' : 'transparent'};cursor:${_tsSelectMode ? 'pointer' : 'default'}" ${_tsSelectMode ? `onclick="tsToggleTeam('${escAttr(t)}')"` : ''}>
+      ${chkHTML}
+      <button class="team-btn${isActive && !_tsSelectMode ? ' active' : ''}" data-team="${escAttr(t)}" ${_tsSelectMode ? '' : `onclick="showView('team',this.getAttribute('data-team'))"`} style="flex:1;border-left:none;pointer-events:${_tsSelectMode ? 'none' : 'auto'}">
+        <div class="team-icon" style="font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:11px;letter-spacing:0.5px;color:var(--text2)">${escHtml(t).slice(0,3).toUpperCase()}</div>
         <div>
           <div class="team-name">${escHtml(t)}</div>
-          <div class="team-meta">${games.length} game${
-                  games.length !== 1 ? "s" : ""
-                } · ${record.w}-${record.l}${
-                  record.t ? "-" + record.t : ""
-                }</div>
+          <div class="team-meta">${games.length} game${games.length !== 1 ? "s" : ""} · ${record.w}-${record.l}${record.t ? "-" + record.t : ""}</div>
         </div>
       </button>
-      <button onclick="exportTeamData('${escAttr(t)}')" title="Export ${escHtml(
-                  t
-                )} games" style="flex-shrink:0;padding:6px 10px;background:none;border:none;color:var(--text3);cursor:pointer;font-size:11px;transition:color .14s" onmouseover="this.style.color='var(--accent)'" onmouseout="this.style.color='var(--text3)'">⬇</button>
+      ${exportBtn}
     </div>`;
-              })
-              .join("");
+          }).join("");
+
+          list.innerHTML = myTeamEntry + teamRows;
         }
 
         function hubMobNav(type, data) {
@@ -15243,6 +15361,12 @@
             _ghSelectMode = false;
             window._ghSelectMode = false;
             _ghSelected.clear();
+          }
+          // Reset team select mode when navigating anywhere
+          if (_tsSelectMode) {
+            _tsSelectMode = false;
+            window._tsSelectMode = false;
+            _tsSelected.clear();
           }
           document.getElementById("hub-welcome").style.display = "none";
           document.getElementById("hub-content").style.display = "block";
