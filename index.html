@@ -257,17 +257,17 @@ body{background:var(--bg);color:var(--text);font-family:'Barlow',sans-serif;min-
 
 /* SCOUT REPORT */
     .scout-section{margin-bottom:18px;break-inside:avoid;}
-    .scout-section-title{font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:11px;letter-spacing:3px;text-transform:uppercase;color:var(--text3);border-bottom:2px solid var(--border);padding-bottom:4px;margin-bottom:10px;}
+    .scout-section-title{font-family:'Barlow',sans-serif;font-weight:700;font-size:10px;letter-spacing:1px;text-transform:uppercase;color:var(--text3);border-bottom:2px solid var(--border);padding-bottom:4px;margin-bottom:10px;}
     .scout-big-stat{font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:36px;line-height:1;}
     .scout-big-lbl{font-size:8px;letter-spacing:2px;text-transform:uppercase;color:var(--text3);margin-top:2px;}
     .scout-stat-grid{display:grid;gap:8px;}
     .scout-card{background:#fff;border:1px solid #e0e4ea;border-radius:8px;padding:8px 10px;text-align:center;}
     .scout-card-val{font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:20px;}
     .scout-card-lbl{font-size:7px;letter-spacing:2px;text-transform:uppercase;color:#8a909e;margin-top:1px;}
-    .scout-table{width:100%;border-collapse:collapse;font-size:11px;}
-    .scout-table th{font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:8px;letter-spacing:2px;text-transform:uppercase;color:#8a909e;padding:4px 6px;border-bottom:1.5px solid #d4d8e0;text-align:center;background:#f8f9fb;}
-    .scout-table td{padding:5px 6px;border-bottom:1px solid #e8eaee;text-align:center;font-family:'Barlow Condensed',sans-serif;font-size:12px;}
-    .scout-table td:first-child{text-align:left;font-weight:600;}
+    .scout-table{width:100%;border-collapse:collapse;font-size:11px;font-family:'Barlow',sans-serif;}
+    .scout-table th{font-family:'Barlow',sans-serif;font-weight:700;font-size:9px;letter-spacing:0.5px;text-transform:uppercase;color:#8a909e;padding:4px 6px;border-bottom:1.5px solid #d4d8e0;text-align:center;background:#f8f9fb;}
+    .scout-table td{padding:5px 6px;border-bottom:1px solid #e8eaee;text-align:center;font-family:'Barlow',sans-serif;font-size:11px;}
+    .scout-table td:first-child{text-align:left;font-weight:600;color:#4a5060;}
     .scout-table tr:last-child td{border-bottom:none;}
     .scout-highlight{color:#cc1a1a;font-weight:800;}
     .scout-dim{color:#8a909e;}
@@ -1438,7 +1438,7 @@ th.sorted{color:var(--accent);}
           <button class="outcome-btn inplay-toggle" data-outcome="inplay" onclick="toggleInPlay()" id="inplay-toggle-btn" data-hotkey="P" style="grid-column:span 2">In Play <span class="outcome-sub">hit · out · sac · error</span><span class="outcome-hotkey">P</span></button>
         </div>
 
-        <!-- In Play — two-level selector -->
+        <!-- In Play — two-level selector  -->
         <div id="inplay-grid" style="display:none;margin-top:6px">
           <!-- Category row -->
           <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:4px;margin-bottom:5px">
@@ -6842,43 +6842,72 @@ function pitchZoneLegend(){
 // ===================== SPLITS & SPANS ENGINE =====================
 
 // Derive AB-level records from pitch log for a specific batter in a game
+// Determine if a pitch entry was the FINAL pitch of an at-bat.
+// Uses the post-pitch count (balls/strikes stored after increment) to decide.
+function _isAbEnding(p){
+  if(!p) return false;
+  const o = p.outcome;
+  // Contact outcomes always end the AB
+  if(['single','double','triple','homerun',
+      'groundout','flyout','lineout','sacfly','sacbunt',
+      'error','hbp','ci'].includes(o)) return true;
+  // Strikeout: only when strikes reached 3 (post-pitch strikes === 3)
+  if((o==='strike-swinging' || o==='strike-looking') && (p.strikes||0) >= 3) return true;
+  // Walk: only when balls reached 4 (post-pitch balls === 4)
+  if(o==='ball' && (p.balls||0) >= 4) return true;
+  // Foul and mid-AB balls/strikes never end the AB
+  return false;
+}
+
 function _extractABs(pitchLog, batterName, teamName, game){
-  // Group pitches into at-bats by batter name, in reverse (log is newest-first)
+  // pitchLog is newest-first; reverse so we process in chronological order
   const pitches = [...pitchLog].reverse().filter(p=>p.batter===batterName);
   const abs = [];
   let cur = null;
+  let prevEnded = false; // did the previous pitch end an AB?
+
   pitches.forEach(p=>{
-    if(!cur || p.balls===0 && p.strikes===0 && abs.length>0 && cur.pitches.length>0){
-      // New AB starts when count resets to 0-0 (after previous AB ended)
-      // Check: this is first pitch (0-0) and previous AB had a result
-      const lastAB = abs[abs.length-1];
-      const lastEnded = lastAB && ['single','double','triple','homerun',
-        'groundout','flyout','lineout','sacfly','sacbunt','error',
-        'strike-swinging','strike-looking','ball','hbp','ci'].includes(lastAB.result);
-      if(!cur || (p.balls===0 && p.strikes===0 && cur.pitches.length>0)){
-        cur = {
-          pitches:[], result:null, inning:p.inning, isTop:p.isTop,
-          pitcherHand:p.pitcherHand||'R', pitcher:p.pitcher,
-          runnersOn:p.runnersOn||{'1st':false,'2nd':false,'3rd':false},
-          outs:p.outs||0, abNum:abs.length+1,
-          isHome: game.homeTeam===teamName,
-          date: game.date, gameId: game.id,
-        };
-        abs.push(cur);
-      }
+    // Start a new AB when there is no current AB, or the previous pitch ended one
+    if(!cur || prevEnded){
+      cur = {
+        pitches:[], result:null,
+        inning:     p.inning,
+        isTop:      p.isTop,
+        pitcherHand:p.pitcherHand||'R',
+        pitcher:    p.pitcher,
+        runnersOn:  p.runnersOn||{'1st':false,'2nd':false,'3rd':false},
+        outs:       p.outs||0,
+        abNum:      abs.length+1,
+        isHome:     game.homeTeam===teamName,
+        date:       game.date,
+        gameId:     game.id,
+      };
+      abs.push(cur);
     }
-    if(cur){ cur.pitches.push(p); cur.result=p.outcome; }
+
+    p._abPitchIndex = cur.pitches.length; // 0 = first pitch of this AB
+    cur.pitches.push(p);
+    cur.result = p.outcome;
+    prevEnded = _isAbEnding(p); // check AFTER adding — did THIS pitch end the AB?
   });
+
   return abs;
 }
 
 function _abToStats(ab){
   const o = ab.result;
+  const lastPitch = ab.pitches[ab.pitches.length-1];
+  // Walk: outcome stored as 'ball' when balls reached 4
+  const isWalk = (o==='ball' && (lastPitch?.balls||0)>=4) || o==='bb';
   const hit = ['single','double','triple','homerun'].includes(o);
-  const isAB = !['bb','hbp','ci','sacfly','sacbunt'].includes(o);
+  const isSac = o==='sacfly' || o==='sacbunt';
+  const isHBP = o==='hbp';
+  const isCI  = o==='ci';
+  // Not an official AB: walk, HBP, CI, sac fly, sac bunt
+  const isAB = !isWalk && !isHBP && !isCI && !isSac;
   const h2b = o==='double'?1:0, h3b=o==='triple'?1:0, hr=o==='homerun'?1:0;
   const k = ['strike-swinging','strike-looking'].includes(o)?1:0;
-  const bb = o==='bb'?1:0, hbp = o==='hbp'?1:0;
+  const bb = isWalk?1:0, hbp = isHBP?1:0;
   const tb = (hit?1:0)+h2b+h3b*2+hr*3;
   return {pa:1, ab:isAB?1:0, h:hit?1:0, h2b, h3b, hr, k, bb, hbp, tb,
           pitches:ab.pitches.length};
@@ -7312,9 +7341,18 @@ function buildBattedBallBreakdown(pitches){
 // Strike outcomes: called K, swinging K, foul, any ball in play (batted ball = pitcher threw a strike)
 function _isStrike(o){ return ['strike-swinging','strike-looking','foul','single','double','triple','homerun','groundout','flyout','lineout','sacfly','sacbunt','error'].includes(o); }
 
-// First pitch of an at-bat: pitch num===1 within the at-bat context
-// We detect this by looking for pitches where balls===0 && strikes===0 at time of throw
-function _isFirstPitch(p){ return (p.balls||0)===0 && (p.strikes||0)===0; }
+// First pitch of an at-bat: tagged by _extractABs with _abPitchIndex===0
+// Falls back to checking if balls+strikes post-pitch === 1 (only possible on first pitch)
+function _isFirstPitch(p){
+  if(p._abPitchIndex !== undefined) return p._abPitchIndex === 0;
+  // Fallback for pitch log entries not processed through _extractABs:
+  // After first pitch, total count increments are exactly 1 (ball OR strike, but not both)
+  const b = p.balls||0, s = p.strikes||0;
+  // On first pitch: either b===1,s===0 (ball) or b===0,s===1 (strike/looking/swinging)
+  // or b===0,s===0 for foul on 0-0 (count stays 0-0 after foul on 0-0... wait no, s would be 1)
+  // Simple heuristic: first pitch has b+s <= 1
+  return (b + s) <= 1;
+}
 
 function buildZoneTendencies(pitches){
   if(!pitches.length) return '<div class="empty-state" style="padding:20px 0">No data</div>';
@@ -8741,7 +8779,7 @@ function buildHitterScoutingReport(teamName, playerName, games){
     return `<path d="M${BIP_CX},${BIP_CY} L${x1.toFixed(1)},${y1.toFixed(1)} A${BIP_R},${BIP_R} 0 ${large},1 ${x2.toFixed(1)},${y2.toFixed(1)} Z" fill="${s.col}" stroke="white" stroke-width="1.5"/>
       ${p2>=7?`<text x="${lx.toFixed(1)}" y="${ly.toFixed(1)}" text-anchor="middle" dominant-baseline="middle" font-size="9" font-weight="700" fill="white">${p2}%</text>`:''}`;
   }).join('');
-  const bipPieLegend=bipSlices.map(s=>`<div style="display:flex;align-items:center;gap:4px;margin-bottom:3px"><div style="width:9px;height:9px;border-radius:2px;background:${s.col};flex-shrink:0"></div><span style="font-size:11px;color:#4a5060">${s.label}</span><span style="margin-left:auto;font-size:11px;font-weight:700;color:#111318;padding-left:8px">${Math.round(btCounts[s.key]/bipTotal*100)}%</span></div>`).join('');
+  const bipPieLegend=bipSlices.map(s=>`<div style="display:flex;align-items:center;gap:5px;margin-bottom:4px"><div style="width:9px;height:9px;border-radius:2px;background:${s.col};flex-shrink:0"></div><span style="font-family:'Barlow',sans-serif;font-size:11px;font-weight:500;color:#4a5060">${s.label}</span><span style="margin-left:auto;font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;color:#111318;padding-left:8px">${Math.round(btCounts[s.key]/bipTotal*100)}%</span></div>`).join('');
   const bipPie=bipSlices.length?`<div style="display:flex;gap:12px;align-items:center"><svg viewBox="0 0 150 150" style="width:130px;flex-shrink:0">${bipPaths}</svg><div style="flex:1">${bipPieLegend}</div></div>`:'<div style="color:#8a909e;font-size:11px">No batted ball data</div>';
 
   // ── Baseball Savant-style batted ball breakdown ──
@@ -8775,12 +8813,12 @@ function buildHitterScoutingReport(teamName, playerName, games){
   <!-- Header -->
   <div style="display:flex;align-items:flex-start;justify-content:space-between;border-bottom:3px solid #cc1a1a;padding-bottom:8px;margin-bottom:12px">
     <div>
-      <div style="font-weight:900;font-size:9px;letter-spacing:3px;text-transform:uppercase;color:#cc1a1a;margin-bottom:1px">Hitter Scouting Report</div>
-      <div style="font-weight:900;font-size:26px;color:#111318;line-height:1">#${stats.num||'—'} ${escHtml(playerName)}</div>
-      <div style="font-size:11px;color:#8a909e;margin-top:2px">${stats.pos||'—'} · ${stats.hand||'R'}HH · ${escHtml(teamName)} · ${stats.games}G · ${pa} PA · ${today}</div>
+      <div style="font-family:'Barlow',sans-serif;font-weight:700;font-size:10px;letter-spacing:1px;text-transform:uppercase;color:#cc1a1a;margin-bottom:2px">Hitter Scouting Report</div>
+      <div style="font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:28px;color:#111318;line-height:1">#${stats.num||'—'} ${escHtml(playerName)}</div>
+      <div style="font-family:'Barlow',sans-serif;font-size:11px;font-weight:400;color:#8a909e;margin-top:3px">${stats.pos||'—'} · ${stats.hand||'R'}HH · ${escHtml(teamName)} · ${stats.games}G · ${pa} PA · ${today}</div>
     </div>
     <div style="display:flex;gap:20px;align-items:flex-end;flex-shrink:0">
-      ${[['AVG',f(avg),'#cc1a1a'],['OBP',f(obp),'#111318'],['SLG',f(slg),'#111318'],['OPS',f(ops),ops>=.800?'#1a8a3a':ops>=.700?'#b8860b':'#cc1a1a']].map(([l,v,c])=>`<div style="text-align:center"><div style="font-weight:900;font-size:28px;line-height:1;color:${c}">${v}</div><div style="font-size:7px;letter-spacing:2px;text-transform:uppercase;color:#8a909e">${l}</div></div>`).join('')}
+      ${[['AVG',f(avg),'#cc1a1a'],['OBP',f(obp),'#111318'],['SLG',f(slg),'#111318'],['OPS',f(ops),ops>=.800?'#1a8a3a':ops>=.700?'#b8860b':'#cc1a1a']].map(([l,v,c])=>`<div style="text-align:center"><div style="font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:28px;line-height:1;color:${c}">${v}</div><div style="font-family:'Barlow',sans-serif;font-size:9px;font-weight:600;letter-spacing:0.5px;text-transform:uppercase;color:#8a909e;margin-top:3px">${l}</div></div>`).join('')}
     </div>
   </div>
 
@@ -8790,14 +8828,14 @@ function buildHitterScoutingReport(teamName, playerName, games){
       <div class="scout-section-title">Production</div>
       <div style="display:grid;grid-template-columns:repeat(6,1fr);gap:5px">
         ${[['H',h],['2B',stats.doubles],['3B',stats.triples],['HR',stats.hr],['R',stats.r||0],['RBI',stats.rbi||0],['BB',stats.bb||0],['K',stats.k||0],['HBP',stats.hbp||0],['K%',fp(kpct)],['BB%',fp(bbpct)],['P/PA',pa>0?(total/pa).toFixed(1):'—']].map(([l,v])=>`
-          <div style="background:#f8f9fb;border:1px solid #e0e4ea;border-radius:6px;padding:6px 4px;text-align:center"><div style="font-weight:900;font-size:16px;color:${l==='HR'&&+v>0?'#cc1a1a':'#111318'}">${v}</div><div style="font-size:6px;letter-spacing:1.5px;text-transform:uppercase;color:#8a909e;margin-top:1px">${l}</div></div>`).join('')}
+          <div style="background:#f8f9fb;border:1px solid #e0e4ea;border-radius:6px;padding:7px 4px;text-align:center"><div style="font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:20px;line-height:1;color:${l==='HR'&&+v>0?'#cc1a1a':'#111318'}">${v}</div><div style="font-family:'Barlow',sans-serif;font-size:9px;font-weight:600;color:#8a909e;margin-top:3px;letter-spacing:0">${l}</div></div>`).join('')}
       </div>
     </div>
     <div class="scout-section" style="margin-bottom:0">
       <div class="scout-section-title">Plate Discipline</div>
       ${[['Swing%',swings,total,'#5baef5'],['Contact%',contact,swings,'#1a8a3a'],['Zone%',inZone.length,total,'#cc1a1a'],['Zone Swing%',inZone.filter(p=>swingOuts.includes(p.outcome)).length,inZone.length,'#e05c10'],['Chase%',chaseSwings,outZone.length,'#8a0000'],['Whiff%',whiffs,swings,'#c01a1a'],['Hard Hit%',hardHits,contact,'#d42828']].map(([lbl,n,d,col])=>`
         <div style="display:flex;align-items:center;gap:6px;margin-bottom:3px">
-          <div style="font-size:10px;font-weight:600;color:#4a5060;width:82px;flex-shrink:0">${lbl}</div>
+          <div style="font-family:'Barlow',sans-serif;font-size:11px;font-weight:500;color:#4a5060;width:82px;flex-shrink:0">${lbl}</div>
           <div style="flex:1;background:#e8eaee;border-radius:3px;height:8px;overflow:hidden"><div style="width:${d>0?Math.round(n/d*100):0}%;height:100%;background:${col};border-radius:3px"></div></div>
           <div style="font-size:10px;color:#8a909e;width:30px;text-align:right;flex-shrink:0">${d>0?Math.round(n/d*100)+'%':'—'}</div>
         </div>`).join('')}
@@ -8837,9 +8875,9 @@ function buildHitterScoutingReport(teamName, playerName, games){
           <div class="scout-section-title">Quality of Contact</div>
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:4px">
             ${[['Hard Hit%',hardPct,'#cc1a1a'],['LD%',ldContactPct,'#28a83a'],['Weak%',weakPct,'#8a6000'],['Solid Air%',solidPct,'#1a5acc']].map(([l,v,c])=>`
-              <div style="background:#f8f9fb;border:1px solid #e0e4ea;border-radius:5px;padding:4px;text-align:center">
-                <div style="font-weight:900;font-size:14px;color:${v>=30?c:'#111318'};line-height:1">${v}%</div>
-                <div style="font-size:6px;letter-spacing:1px;text-transform:uppercase;color:#8a909e;margin-top:1px">${l}</div>
+              <div style="background:#f8f9fb;border:1px solid #e0e4ea;border-radius:5px;padding:6px 4px;text-align:center">
+                <div style="font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:18px;color:${v>=30?c:'#111318'};line-height:1">${v}%</div>
+                <div style="font-family:'Barlow',sans-serif;font-size:9px;font-weight:500;color:#8a909e;margin-top:3px;letter-spacing:0">${l}</div>
               </div>`).join('')}
           </div>
         </div>
