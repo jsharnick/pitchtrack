@@ -9308,6 +9308,10 @@
               swings: 0,
               looks: 0,
               hits: 0,
+              outs: 0,
+              r: 0,
+              hbp: 0,
+              bf: 0,
               active: true,
             },
           ],
@@ -9323,6 +9327,10 @@
               swings: 0,
               looks: 0,
               hits: 0,
+              outs: 0,
+              r: 0,
+              hbp: 0,
+              bf: 0,
               active: true,
             },
           ],
@@ -9654,7 +9662,11 @@
           _takeSnapshot();
 
           S.pitchCount++;
-          if (p) p.pitches++;
+          if (p) {
+            p.pitches++;
+            // Count batter faced once per PA (first pitch of each AB)
+            if (S.currentAtBatPitches.length === 0) p.bf = (p.bf || 0) + 1;
+          }
 
           // Assign a stable game ID on the very first pitch so all saves overwrite the same record
           if (!S.gameId) S.gameId = `ptgame_${Date.now()}`;
@@ -9795,6 +9807,7 @@
           // ---- END-OF-AB CHECKS ----
           let abEnded = false;
           if (outcome === "hbp") {
+            if (p) p.hbp = (p.hbp || 0) + 1;
             toast("HBP — Batter takes first!");
             logEvent(
               "⚡",
@@ -9864,7 +9877,10 @@
             advanceOnWalk();
             abEnded = true;
           } else if (S.strikes >= 3) {
-            if (p) p.k++;
+            if (p) {
+              p.k++;
+              p.outs = (p.outs || 0) + 1;
+            }
             S.outs++;
             const isLooking = outcome === "strike-looking";
             toast(isLooking ? "Called Strike Three!" : "Strikeout Swinging!");
@@ -9921,6 +9937,7 @@
             });
           } else if (outcome === "sacfly") {
             S.outs++;
+            { const _cp = activePitcher(); if (_cp) _cp.outs = (_cp.outs || 0) + 1; }
             let sfRuns = 0;
             if (S.bases["3rd"]) {
               const _sfRunner = S.runnerNames["3rd"];
@@ -9965,6 +9982,7 @@
             });
           } else if (outcome === "sacbunt") {
             S.outs++;
+            { const _cp = activePitcher(); if (_cp) _cp.outs = (_cp.outs || 0) + 1; }
             toast("Sac Bunt — Batter out.");
             logEvent(
               "🟤",
@@ -10732,6 +10750,8 @@
               bs.r = (bs.r || 0) + 1;
             }
           }
+          // Credit R allowed to the current pitcher (the one pitching when the run scores)
+          { const _rp = activePitcher(); if (_rp) _rp.r = (_rp.r || 0) + 1; }
           updateScoreBug();
           renderBoxScore();
         }
@@ -10910,6 +10930,10 @@
                 swings: 0,
                 looks: 0,
                 hits: 0,
+                outs: 0,
+                r: 0,
+                hbp: 0,
+                bf: 0,
                 active: true,
               });
               renderPitcherList();
@@ -10956,6 +10980,10 @@
             swings: 0,
             looks: 0,
             hits: 0,
+            outs: 0,
+            r: 0,
+            hbp: 0,
+            bf: 0,
             active: true,
           });
           qs("new-p-name").value = "";
@@ -13914,6 +13942,8 @@
           const batter = currentBatter()?.name || "Batter";
           toast(`Out! (${logLabel})`);
           recordAtBatResult("O", logLabel);
+          // Credit out to the active pitcher
+          { const _cp = activePitcher(); if (_cp) _cp.outs = (_cp.outs || 0) + 1; }
           // Ask who made the play in the field — blurb is built AFTER so it has fielder info
           openFielderModal(outcome, logLabel, batter, (fielder) => {
             const posNum = {
@@ -14068,6 +14098,7 @@
           const batter = currentBatter()?.name || "Batter";
 
           S.outs++;
+          { const _cp = activePitcher(); if (_cp) _cp.outs = (_cp.outs || 0) + 1; }
           // Remove the retired runner
           S.bases[retiredBase] = false;
           // Batter reaches 1st (force — batter always goes to 1st on a FC groundball)
@@ -14231,6 +14262,7 @@
           // Remove the retired runner
           S.bases[retiredBase] = false;
           S.outs++; // second out (batter was already +1 out in commitPitch)
+          { const _cp = activePitcher(); if (_cp) _cp.outs = (_cp.outs || 0) + 1; }
 
           const batter = currentBatter()?.name || "Batter";
           const label = S.dpOutcome === "groundout" ? "GO" : "LO";
@@ -14713,6 +14745,10 @@
             swings: 0,
             looks: 0,
             hits: 0,
+            outs: 0,
+            r: 0,
+            hbp: 0,
+            bf: 0,
             active: true,
           });
           document.getElementById("mob-np-name").value = "";
@@ -15407,8 +15443,8 @@
     <div class="section-title">Pitching Stats</div>
     <table class="data-table">
       <thead><tr>
-        <th>Pitcher</th><th>#</th><th>T</th><th>G</th><th>P</th><th>K</th><th>BB</th>
-        <th>H</th><th>K/9</th><th>BB/9</th><th>K/BB</th><th>Str%</th>
+        <th>Pitcher</th><th>#</th><th>T</th><th>G</th><th>IP</th><th>BF</th><th>P</th><th>K</th><th>BB</th>
+        <th>H</th><th>R</th><th>HBP</th><th>K/9</th><th>BB/9</th><th>K/BB</th><th>Str%</th>
         <th>Swng%</th><th>Lk%</th>
       </tr></thead>
       <tbody>${sorted
@@ -15422,6 +15458,9 @@
           const k9 = p.outs > 0 ? ((p.k / (p.outs / 3)) * 9).toFixed(1) : "—";
           const bb9 = p.outs > 0 ? ((p.bb / (p.outs / 3)) * 9).toFixed(1) : "—";
           const kbb = p.bb > 0 ? (p.k / p.bb).toFixed(2) : p.k > 0 ? "∞" : "—";
+          const ipFull = Math.floor((p.outs || 0) / 3);
+          const ipRem = (p.outs || 0) % 3;
+          const ipStr = (p.outs || 0) > 0 ? (ipRem === 0 ? `${ipFull}.0` : `${ipFull}.${ipRem}`) : "0.0";
           const clickable = teamName
             ? `class="player-row" data-team="${escAttr(
                 teamName
@@ -15434,10 +15473,14 @@
           <td class="dim">${p.num || "—"}</td>
           <td class="dim">${p.hand || "R"}HP</td>
           <td>${p.games}</td>
+          <td class="accent">${ipStr}</td>
+          <td class="dim">${p.bf || 0}</td>
           <td>${p.pitches}</td>
           <td class="${p.k >= 5 ? "good" : ""}">${p.k}</td>
           <td class="${p.bb >= 4 ? "dim" : ""}">${p.bb}</td>
           <td>${p.hits}</td>
+          <td class="${(p.r || 0) > 0 ? "highlight" : ""}">${p.r || 0}</td>
+          <td class="dim">${p.hbp || 0}</td>
           <td>${k9}</td>
           <td>${bb9}</td>
           <td class="${parseFloat(kbb) >= 2 ? "good" : ""}">${kbb}</td>
@@ -18913,6 +18956,9 @@
                   swings: 0,
                   looks: 0,
                   outs: 0,
+                  r: 0,
+                  hbp: 0,
+                  bf: 0,
                 };
               const m = pitcherMap[p.name];
               if (p.pitches > 0) m.games++;
@@ -18923,6 +18969,10 @@
               m.hits += p.hits || 0;
               m.swings += p.swings || 0;
               m.looks += p.looks || 0;
+              m.outs += p.outs || 0;
+              m.r += p.r || 0;
+              m.hbp += p.hbp || 0;
+              m.bf += p.bf || 0;
             });
           });
           return Object.values(pitcherMap).filter((p) => p.pitches > 0);
@@ -19152,6 +19202,10 @@
               hits: 0,
               swings: 0,
               looks: 0,
+              outs: 0,
+              r: 0,
+              hbp: 0,
+              bf: 0,
             };
             games.forEach((g) => {
               const pitchers =
@@ -19168,6 +19222,10 @@
               career.hits += p.hits || 0;
               career.swings += p.swings || 0;
               career.looks += p.looks || 0;
+              career.outs += p.outs || 0;
+              career.r += p.r || 0;
+              career.hbp += p.hbp || 0;
+              career.bf += p.bf || 0;
             });
 
             const kbb =
@@ -19266,9 +19324,9 @@
       </div>
     </div>
     <div class="stat-cards">
-      <div class="stat-card accent"><div class="stat-card-val">${
-        career.pitches
-      }</div><div class="stat-card-lbl">Pitches</div></div>
+      <div class="stat-card accent"><div class="stat-card-val">${(function(){const f=Math.floor((career.outs||0)/3),r=(career.outs||0)%3;return (career.outs||0)>0?(r===0?f+'.0':f+'.'+r):'0.0';})()}</div><div class="stat-card-lbl">IP</div></div>
+      <div class="stat-card"><div class="stat-card-val">${career.bf||0}</div><div class="stat-card-lbl">BF</div></div>
+      <div class="stat-card"><div class="stat-card-val">${career.pitches}</div><div class="stat-card-lbl">Pitches</div></div>
       <div class="stat-card"><div class="stat-card-val">${sp}%</div><div class="stat-card-lbl">Strike%</div></div>
       <div class="stat-card"><div class="stat-card-val">${
         fpsPct !== null ? fpsPct + "%" : "—"
@@ -19282,6 +19340,8 @@
       <div class="stat-card"><div class="stat-card-val">${
         career.hits
       }</div><div class="stat-card-lbl">Hits Allowed</div></div>
+      <div class="stat-card"><div class="stat-card-val">${career.r||0}</div><div class="stat-card-lbl">Runs Allowed</div></div>
+      <div class="stat-card"><div class="stat-card-val">${career.hbp||0}</div><div class="stat-card-lbl">HBP</div></div>
       <div class="stat-card"><div class="stat-card-val">${kbb}</div><div class="stat-card-lbl">K/BB</div></div>
       <div class="stat-card"><div class="stat-card-val">${swp}%</div><div class="stat-card-lbl">Swing%</div></div>
       <div class="stat-card"><div class="stat-card-val">${lkp}%</div><div class="stat-card-lbl">Called K%</div></div>
@@ -20232,6 +20292,10 @@
             swings: 0,
             looks: 0,
             hits: 0,
+            outs: 0,
+            r: 0,
+            hbp: 0,
+            bf: 0,
             active: true,
           });
           document.getElementById("lp-new-name").value = "";
@@ -20353,6 +20417,10 @@
               swings: 0,
               looks: 0,
               hits: 0,
+              outs: 0,
+              r: 0,
+              hbp: 0,
+              bf: 0,
               active: true,
             };
           } else {
@@ -20370,6 +20438,10 @@
               swings: 0,
               looks: 0,
               hits: 0,
+              outs: 0,
+              r: 0,
+              hbp: 0,
+              bf: 0,
               active: true,
             });
           }
@@ -20455,6 +20527,10 @@
             swings: 0,
             looks: 0,
             hits: 0,
+            outs: 0,
+            r: 0,
+            hbp: 0,
+            bf: 0,
             active: true,
           });
           document.getElementById("lm-new-name").value = "";
@@ -21464,6 +21540,10 @@
             hits: 0,
             swings: 0,
             looks: 0,
+            outs: 0,
+            r: 0,
+            hbp: 0,
+            bf: 0,
           };
           sortedGames.forEach((g) => {
             const pitchers =
@@ -21479,6 +21559,10 @@
             career.hits += p.hits || 0;
             career.swings += p.swings || 0;
             career.looks += p.looks || 0;
+            career.outs += p.outs || 0;
+            career.r += p.r || 0;
+            career.hbp += p.hbp || 0;
+            career.bf += p.bf || 0;
           });
 
           const total = allPitches.length || 1;
@@ -23175,6 +23259,13 @@
                 strikes: 0,
                 k: 0,
                 bb: 0,
+                swings: 0,
+                looks: 0,
+                hits: 0,
+                outs: 0,
+                r: 0,
+                hbp: 0,
+                bf: 0,
                 active: false,
               });
             renderPitcherList();
@@ -23241,6 +23332,13 @@
                 strikes: 0,
                 k: 0,
                 bb: 0,
+                swings: 0,
+                looks: 0,
+                hits: 0,
+                outs: 0,
+                r: 0,
+                hbp: 0,
+                bf: 0,
                 active: false,
               });
             renderPitcherList();
