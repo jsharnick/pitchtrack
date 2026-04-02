@@ -9421,18 +9421,16 @@ function _scoutPrintCSS(){
     '*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }',
     'html, body { background: #fff; font-family: "Barlow Condensed", sans-serif; color: #111318;',
     '  -webkit-print-color-adjust: exact; print-color-adjust: exact; }',
-    // Scale the page to guarantee one-page fit — 0.72 scale fits a full report on 8.5x11 with 0.25in margins
-    '@page { size: 8.5in 11in portrait; margin: 0.2in; }',
-    // Each report page: fixed width, scaled to fit the printable area
+    '@page { size: 8.5in 11in portrait; margin: 0.25in; }',
+    // No transform here — JS will measure and inject exact scale per page
     '.scout-report-page {',
-    '  width: 10.16in;',  // 8.5in / 0.72 = effective unscaled width
+    '  width: 8in;',   // natural unscaled width — JS scales it to fit
     '  background: #fff;',
     '  font-family: "Barlow Condensed", sans-serif;',
     '  transform-origin: top left;',
-    '  transform: scale(0.72);',
     '  page-break-after: always;',
     '  break-after: page;',
-    '  overflow: hidden;',
+    '  overflow: visible;',
     '}',
     '.scout-report-page:last-child { page-break-after:auto; break-after:auto; }',
     '.scout-section-title { font-family:"Barlow",sans-serif; font-weight:700; font-size:10px;',
@@ -9470,13 +9468,44 @@ function _scoutPrintCSS(){
 function _openPrintWindow(html, title){
   const win = window.open('', '_blank', 'width=960,height=780');
   if(!win){ alert('Please allow popups to print scouting reports.'); return; }
+
+  // Auto-scale script: after fonts load, measure each report page and scale it
+  // to fit exactly within the printable area (8in wide x 10.5in tall at 96dpi)
+  const autoScaleScript = `
+    document.fonts.ready.then(function(){
+      var pages = document.querySelectorAll('.scout-report-page');
+      // Printable area at 96dpi: 8in wide x 10.5in tall = 768 x 1008px
+      var printW = 768;
+      var printH = 1008;
+      pages.forEach(function(page){
+        // Reset any previous transform so we measure natural size
+        page.style.transform = '';
+        page.style.marginBottom = '';
+        var w = page.scrollWidth;
+        var h = page.scrollHeight;
+        // Scale to fit both dimensions — use whichever axis is the tighter constraint
+        var scaleX = printW / w;
+        var scaleH = printH / h;
+        var scale  = Math.min(scaleX, scaleH, 1); // never scale up, only down
+        if(scale < 1){
+          page.style.transform = 'scale(' + scale + ')';
+          page.style.transformOrigin = 'top left';
+          // Collapse the space the scaled element leaves behind
+          // (scaled height = h*scale, but element still occupies h px)
+          page.style.marginBottom = (h * scale - h) + 'px';
+        }
+      });
+      window.print();
+    });
+  `;
+
   const fullHTML = '<!DOCTYPE html><html><head><meta charset="utf-8">' +
-    `<title>${title}</title>` +
+    '<title>' + title + '</title>' +
     '<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;800;900' +
     '&family=Barlow:wght@300;400;500;600&family=Share+Tech+Mono&display=swap" rel="stylesheet">' +
     '<style>' + _scoutPrintCSS() + '</style></head><body>' +
     html +
-    '<scr' + 'ipt>document.fonts.ready.then(function(){window.print();});</scr' + 'ipt>' +
+    '<scr' + 'ipt>' + autoScaleScript + '</scr' + 'ipt>' +
     '</body></html>';
   win.document.write(fullHTML);
   win.document.close();
