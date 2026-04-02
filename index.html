@@ -2366,7 +2366,7 @@ const qsa = sel => document.querySelectorAll(sel);
 
 function currentLineup()    { return S.isTop ? S.lineupAway : S.lineupHome; }
 function currentBatterIdx() { return S.isTop ? S.awayBatterIdx : S.homeBatterIdx; }
-function setBatterIdx(i)    { if(S.isTop) S.awayBatterIdx=i; else S.homeBatterIdx=i; }
+function setBatterIdx(i)    { if(S.isTop) S.awayBatterIdx=i; else S.homeBatterIdx=i; renderLiveScoutingTab(); }
 function currentBatter()    { const l=currentLineup(); return l[currentBatterIdx()%l.length]; }
 function getBatterKey(isAway,i){ return `${isAway?'a':'h'}_${i}`; }
 function currentBatterKey() { return getBatterKey(S.isTop, currentBatterIdx()%currentLineup().length); }
@@ -2615,7 +2615,7 @@ function commitPitch(){
   S.pitchLog.unshift(entry); try{ markUnsaved(); }catch(e){}
   S.currentAtBatPitches.push(entry);
   addAbChip(dotClass,logLabel,pitchType,velocity);
-  renderPitchLog(); renderPitcherList(); renderPitchMix(); updateScoreBug();
+  renderPitchLog(); renderPitcherList(); renderPitchMix(); updateScoreBug(); renderLiveScoutingTab();
   checkPitchCountWarning(p);
 
   // Build blurb for mid-AB pitches immediately; AB-ending ones update after resolution
@@ -3176,7 +3176,7 @@ function nextBatter(){
   S.balls=0; S.strikes=0; S.pitchCount=0;
   resetPitchControls(true);
   clearPlayBlurb();
-  renderLineup(); updateScoreBug();
+  renderLineup(); updateScoreBug(); renderLiveScoutingTab();
 }
 function handleThreeOuts(){
   toast('Three Outs! Switching sides.');
@@ -3187,7 +3187,7 @@ function handleThreeOuts(){
   S.outs=0; S.bases={'1st':false,'2nd':false,'3rd':false}; S.runnerNames={'1st':null,'2nd':null,'3rd':null};
   if(!S.isTop) S.inning++;
   S.isTop=!S.isTop;
-  clearAtBat(); clearPlayBlurb(); renderLineup(); renderPitcherList(); updateScoreBug();
+  clearAtBat(); clearPlayBlurb(); renderLineup(); renderPitcherList(); updateScoreBug(); renderLiveScoutingTab();
   try{ if(typeof _currentMobTab!=='undefined'&&_currentMobTab==='pitchers') renderMobPitchers(); }catch(e){}
 }
 function recordAtBatResult(type,label,rbi){
@@ -3637,13 +3637,43 @@ function switchTab(tab){
   if(tab==='boxscore')   renderBoxScore();
   if(tab==='pitchstats') renderPitchMix();
   if(tab==='gamelog')    renderGameLog();
-  if(tab==='scouting')   renderLiveScoutingTab();
+  if(tab==='scouting')   renderLiveScoutingTab(true); // force reload on tab open
 }
 
 // ── LIVE SCOUTING TAB ─────────────────────────────────────────────
-function renderLiveScoutingTab(){
+// Cache for scouting tab saved games — avoids re-fetching storage on every pitch
+let _scoutGamesCache = null;
+let _scoutGamesCacheKey = null; // invalidate when team names change
+
+function renderLiveScoutingTab(forceReload){
   const wrap = qs('live-scout-wrap');
   if(!wrap) return;
+
+  // Only show if the tab is active
+  const scoutContent = qs('content-scouting');
+  if(!scoutContent || !scoutContent.classList.contains('active')) return;
+
+  const cacheKey = awayName()+'|'+homeName();
+  if(forceReload || !_scoutGamesCache || _scoutGamesCacheKey !== cacheKey){
+    // Need fresh data — show loading only on first load, not on pitch updates
+    if(!_scoutGamesCache){
+      wrap.innerHTML = '<div style="padding:20px;color:var(--text3);font-family:Barlow,sans-serif;font-size:12px;text-align:center">Loading…</div>';
+    }
+    _scoutGamesCacheKey = cacheKey;
+    loadAllGames().then(saved=>{
+      _scoutGamesCache = saved;
+      _renderLiveScoutingTab(wrap, saved);
+    }).catch(()=>{
+      _scoutGamesCache = [];
+      _renderLiveScoutingTab(wrap, []);
+    });
+  } else {
+    // Use cache — instant render on every pitch
+    _renderLiveScoutingTab(wrap, _scoutGamesCache);
+  }
+}
+
+function _renderLiveScoutingTab(wrap, savedGames){
 
   const pitcher = activePitcher();
   const batter  = currentBatter();
@@ -3673,8 +3703,8 @@ function renderLiveScoutingTab(){
       homePitchers:S.pitchersHome.map(p=>({...p})),
     };
   })();
-  // Merge live snapshot with saved games, deduplicating by gameId
-  const _liveGames = [_liveSnap, ...allGames.filter(g=>g.id!==S.gameId)];
+  // Merge live snapshot with freshly-loaded saved games, deduplicating by gameId
+  const _liveGames = [_liveSnap, ...savedGames.filter(g=>g.id!==S.gameId)];
 
   // Pitcher career stats — scan pitch logs across all games
   let pitcherCareer = null;
@@ -3744,14 +3774,9 @@ function renderLiveScoutingTab(){
   try {
     if(batter?.name){
       // Search ALL games for this batter — _extractABs filters by name internally
-      console.log('[Scout] batter:', batter.name, 'battingTeam:', battingTeam);
-      console.log('[Scout] allGames count:', allGames.length, '_liveGames count:', _liveGames.length);
-      console.log('[Scout] _liveGames teams:', _liveGames.map(g=>g.awayTeam+'v'+g.homeTeam));
       const allABs = _liveGames.flatMap(g=>_extractABs(g.pitchLog||[], batter.name, battingTeam, g));
-      console.log('[Scout] allABs found:', allABs.length);
       if(allABs.length){
         const st = _sumStats(allABs.map(_abToStats));
-        console.log('[Scout] stats:', st);
         bpa=st.pa; bab=st.ab; bhits=st.h;
         bavg = _fmtAvg(st.h, st.ab);
         bobp = _fmtOBP(st.h, st.bb, st.hbp, st.pa);
