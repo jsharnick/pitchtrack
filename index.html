@@ -127,7 +127,7 @@
 
       .hs-cards {
         display: grid;
-        grid-template-columns: 1fr 1fr 1fr;
+        grid-template-columns: 1fr 1fr 1fr 1fr;
         gap: 18px;
         width: 100%;
       }
@@ -219,6 +219,7 @@
         text-align: center;
         text-transform: uppercase;
         transition: background 0.15s;
+        width: 100%;
       }
       .hs-card.red .hs-cta {
         background: linear-gradient(135deg, #bb1818, #d42020);
@@ -3309,7 +3310,7 @@
         align-items: center;
         justify-content: center;
         flex-shrink: 0;
-        transition: all .13s;
+        transition: all 0.13s;
         cursor: pointer;
         color: #fff;
         font-size: 11px;
@@ -3328,10 +3329,10 @@
         border: 1.5px solid var(--border2);
         border-radius: 9px;
         margin-bottom: 12px;
-        animation: fadeIn .15s;
+        animation: fadeIn 0.15s;
       }
       .ts-selected-row {
-        background: rgba(204,26,26,.07) !important;
+        background: rgba(204, 26, 26, 0.07) !important;
         border-left-color: var(--accent) !important;
       }
       .ts-select-action-bar {
@@ -3343,9 +3344,11 @@
         background: var(--surface2);
         border: 1.5px solid var(--border2);
         border-radius: 8px;
-        animation: fadeIn .15s;
+        animation: fadeIn 0.15s;
       }
-      .ts-select-action-bar.visible { display: flex; }
+      .ts-select-action-bar.visible {
+        display: flex;
+      }
       .game-date {
         font-family: "Share Tech Mono", monospace;
         font-size: 10px;
@@ -4273,26 +4276,94 @@
         overflow: hidden;
         background: #f0f2f5;
       }
-      .opp-card {
+      /* ── Opponents: list-of-tiles view ── */
+      .opp-tiles-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+        gap: 14px;
+      }
+      .opp-tile {
         background: var(--surface);
         border: 1.5px solid var(--border2);
         border-radius: 14px;
-        margin-bottom: 18px;
+        padding: 18px 18px 16px;
+        cursor: pointer;
+        transition: all 0.18s cubic-bezier(0.22, 1, 0.36, 1);
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        position: relative;
         overflow: hidden;
-        box-shadow: 0 2px 12px rgba(0,0,0,.06);
+        user-select: none;
       }
-      .opp-card-header {
+      .opp-tile:hover {
+        border-color: var(--accent);
+        transform: translateY(-2px);
+        box-shadow: 0 8px 28px rgba(0, 0, 0, 0.12);
+      }
+      .opp-tile-name {
+        font-family: "Barlow Condensed", sans-serif;
+        font-weight: 900;
+        font-size: 20px;
+        color: var(--text);
+        line-height: 1.1;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+      .opp-tile-meta {
+        font-family: "Barlow", sans-serif;
+        font-size: 11px;
+        color: var(--text3);
+      }
+      .opp-tile-arrow {
+        position: absolute;
+        top: 50%;
+        right: 14px;
+        transform: translateY(-50%);
+        font-size: 16px;
+        color: var(--text3);
+        transition: color 0.14s, right 0.14s;
+      }
+      .opp-tile:hover .opp-tile-arrow {
+        color: var(--accent);
+        right: 10px;
+      }
+      /* ── Opponents: detail view ── */
+      #opp-detail {
+        display: none;
+        flex-direction: column;
+        height: 100%;
+      }
+      #opp-detail.open {
+        display: flex;
+      }
+      .opp-detail-header {
+        padding: 10px 16px;
+        border-bottom: 1px solid var(--border);
+        background: var(--surface);
+        flex-shrink: 0;
         display: flex;
         align-items: center;
         gap: 10px;
-        padding: 12px 16px;
-        background: var(--surface2);
-        border-bottom: 1px solid var(--border);
         flex-wrap: wrap;
       }
-      .opp-card-roster {
-        padding: 12px 16px;
-        min-height: 60px;
+      .opp-back-btn {
+        padding: 5px 10px;
+        background: var(--surface2);
+        border: 1px solid var(--border2);
+        border-radius: 6px;
+        font-family: "Barlow Condensed", sans-serif;
+        font-weight: 700;
+        font-size: 13px;
+        color: var(--text2);
+        cursor: pointer;
+        flex-shrink: 0;
+        transition: all 0.13s;
+      }
+      .opp-back-btn:hover {
+        border-color: var(--accent);
+        color: var(--accent);
       }
     </style>
   </head>
@@ -4376,7 +4447,8 @@
             <div class="hs-tags">
               <span class="hs-tag">SCOUTING</span
               ><span class="hs-tag">ROSTERS</span>
-              <span class="hs-tag">IMPORT</span><span class="hs-tag">MULTIPLE TEAMS</span>
+              <span class="hs-tag">IMPORT</span
+              ><span class="hs-tag">MULTIPLE TEAMS</span>
             </div>
             <div class="hs-cta">Manage Opponents</div>
           </div>
@@ -6163,7 +6235,7 @@
               "
             >
               <span class="sidebar-label" style="padding: 0">Teams</span>
-              <div style="display: flex; gap: 5px; align-items:center">
+              <div style="display: flex; gap: 5px; align-items: center">
                 <button
                   id="ts-select-btn"
                   onclick="tsToggleSelectMode()"
@@ -6184,7 +6256,9 @@
                   title="Select teams to delete"
                   onmouseover="this.style.borderColor='var(--accent)';this.style.color='var(--accent)'"
                   onmouseout="if(!window._tsSelectMode){this.style.borderColor='var(--border2)';this.style.color='var(--text3)'}"
-                >Select</button>
+                >
+                  Select
+                </button>
                 <button
                   onclick="exportAllData()"
                   onmouseout="this.style.borderColor='var(--border2)';this.style.color='var(--text3)'"
@@ -6248,10 +6322,72 @@
               <div class="sidebar-empty">No teams yet — save a game first</div>
             </div>
             <div id="ts-action-bar" class="ts-select-action-bar">
-              <span id="ts-sel-count" style="font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:12px;color:var(--text);flex:1">0 selected</span>
-              <button onclick="tsSelectAll()" style="padding:3px 8px;border:1px solid var(--border2);border-radius:5px;background:none;color:var(--text3);font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:10px;cursor:pointer;white-space:nowrap">All</button>
-              <button onclick="tsSelectNone()" style="padding:3px 8px;border:1px solid var(--border2);border-radius:5px;background:none;color:var(--text3);font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:10px;cursor:pointer;white-space:nowrap">None</button>
-              <button id="ts-del-btn" onclick="tsPromptDeleteSelected()" disabled style="padding:3px 9px;border:1px solid var(--border2);border-radius:5px;background:none;color:var(--text3);font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:10px;cursor:not-allowed;opacity:.45;white-space:nowrap;transition:all .13s">Remove</button>
+              <span
+                id="ts-sel-count"
+                style="
+                  font-family: 'Barlow Condensed', sans-serif;
+                  font-weight: 700;
+                  font-size: 12px;
+                  color: var(--text);
+                  flex: 1;
+                "
+                >0 selected</span
+              >
+              <button
+                onclick="tsSelectAll()"
+                style="
+                  padding: 3px 8px;
+                  border: 1px solid var(--border2);
+                  border-radius: 5px;
+                  background: none;
+                  color: var(--text3);
+                  font-family: 'Barlow Condensed', sans-serif;
+                  font-weight: 700;
+                  font-size: 10px;
+                  cursor: pointer;
+                  white-space: nowrap;
+                "
+              >
+                All
+              </button>
+              <button
+                onclick="tsSelectNone()"
+                style="
+                  padding: 3px 8px;
+                  border: 1px solid var(--border2);
+                  border-radius: 5px;
+                  background: none;
+                  color: var(--text3);
+                  font-family: 'Barlow Condensed', sans-serif;
+                  font-weight: 700;
+                  font-size: 10px;
+                  cursor: pointer;
+                  white-space: nowrap;
+                "
+              >
+                None
+              </button>
+              <button
+                id="ts-del-btn"
+                onclick="tsPromptDeleteSelected()"
+                disabled
+                style="
+                  padding: 3px 9px;
+                  border: 1px solid var(--border2);
+                  border-radius: 5px;
+                  background: none;
+                  color: var(--text3);
+                  font-family: 'Barlow Condensed', sans-serif;
+                  font-weight: 800;
+                  font-size: 10px;
+                  cursor: not-allowed;
+                  opacity: 0.45;
+                  white-space: nowrap;
+                  transition: all 0.13s;
+                "
+              >
+                Remove
+              </button>
             </div>
             <div
               style="
@@ -6415,43 +6551,500 @@
           style="flex: 1; overflow-y: auto; padding: 14px 16px"
         ></div>
       </div>
-    </div>
 
-    <!-- ══ OPPONENTS PANEL ══════════════════════════════════════════════════ -->
-    <div class="app-panel" id="panel-opponents">
-      <div id="opponents-header" style="padding:10px 16px;border-bottom:1px solid var(--border);background:var(--surface);flex-shrink:0;display:flex;align-items:center;gap:12px;flex-wrap:wrap">
-        <div style="font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:20px;color:var(--text);flex-shrink:0">Opponents</div>
-        <div id="opponents-subtitle" style="font-size:11px;color:var(--text3);font-family:'Barlow',sans-serif;flex:1;min-width:120px">0 teams</div>
-        <button onclick="oppLoadNew()" style="padding:6px 14px;background:var(--accent);border:none;border-radius:6px;font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:12px;color:#fff;cursor:pointer">+ Load New Opponent</button>
+      <!-- ══ OPPONENTS PANEL ══════════════════════════════════════════════════ -->
+      <div class="app-panel" id="panel-opponents">
+        <!-- LIST VIEW -->
+        <div
+          id="opp-list-view"
+          style="display: flex; flex-direction: column; height: 100%"
+        >
+          <div
+            style="
+              padding: 10px 16px;
+              border-bottom: 1px solid var(--border);
+              background: var(--surface);
+              flex-shrink: 0;
+              display: flex;
+              align-items: center;
+              gap: 12px;
+              flex-wrap: wrap;
+            "
+          >
+            <div
+              style="
+                font-family: 'Barlow Condensed', sans-serif;
+                font-weight: 900;
+                font-size: 20px;
+                color: var(--text);
+                flex-shrink: 0;
+              "
+            >
+              Opponents
+            </div>
+            <div
+              id="opponents-subtitle"
+              style="
+                font-size: 11px;
+                color: var(--text3);
+                font-family: 'Barlow', sans-serif;
+                flex: 1;
+                min-width: 120px;
+              "
+            >
+              0 teams
+            </div>
+            <button
+              onclick="oppLoadNew()"
+              style="
+                padding: 6px 14px;
+                background: var(--accent);
+                border: none;
+                border-radius: 6px;
+                font-family: 'Barlow Condensed', sans-serif;
+                font-weight: 700;
+                font-size: 12px;
+                color: #fff;
+                cursor: pointer;
+              "
+            >
+              + Load New Opponent
+            </button>
+          </div>
+          <div
+            id="opponents-list"
+            style="flex: 1; overflow-y: auto; padding: 20px"
+          ></div>
+        </div>
+
+        <!-- DETAIL VIEW -->
+        <div id="opp-detail">
+          <div class="opp-detail-header">
+            <button class="opp-back-btn" onclick="oppCloseDetail()">
+              ← Back
+            </button>
+            <input
+              id="opp-detail-name"
+              placeholder="Team Name"
+              oninput="oppRenameLive(_oppOpenId, this.value)"
+              onblur="oppRename(_oppOpenId, this.value)"
+              style="
+                padding: 5px 10px;
+                border: 1px solid var(--border2);
+                border-radius: 6px;
+                background: var(--surface3);
+                color: var(--text);
+                font-family: 'Barlow Condensed', sans-serif;
+                font-weight: 700;
+                font-size: 15px;
+                width: 180px;
+                flex-shrink: 0;
+              "
+            />
+            <div
+              id="opp-detail-sub"
+              style="
+                font-size: 11px;
+                color: var(--text3);
+                font-family: 'Barlow', sans-serif;
+                flex: 1;
+                min-width: 80px;
+              "
+            >
+              0 players
+            </div>
+            <div
+              style="
+                display: flex;
+                gap: 6px;
+                align-items: center;
+                flex-shrink: 0;
+              "
+            >
+              <button
+                onclick="oppAddPlayer(_oppOpenId)"
+                style="
+                  padding: 6px 12px;
+                  background: var(--accent);
+                  border: none;
+                  border-radius: 6px;
+                  font-family: 'Barlow Condensed', sans-serif;
+                  font-weight: 700;
+                  font-size: 12px;
+                  color: #fff;
+                  cursor: pointer;
+                "
+              >
+                + Add Player
+              </button>
+              <button
+                onclick="document.getElementById('opp-detail-import-input').click()"
+                style="
+                  padding: 6px 12px;
+                  background: var(--surface2);
+                  border: 1px solid var(--border2);
+                  border-radius: 6px;
+                  font-family: 'Barlow Condensed', sans-serif;
+                  font-weight: 700;
+                  font-size: 12px;
+                  color: var(--text2);
+                  cursor: pointer;
+                "
+              >
+                ⬆ Import
+              </button>
+              <input
+                type="file"
+                id="opp-detail-import-input"
+                accept=".xlsx,.csv,.trx,.TRX,.pdf"
+                style="display: none"
+                onchange="oppImport(_oppOpenId, this)"
+              />
+              <button
+                onclick="oppConfirmDelete(_oppOpenId)"
+                onmouseover="this.style.borderColor='#cc1a1a';this.style.color='#cc1a1a'"
+                onmouseout="this.style.borderColor='var(--border2)';this.style.color='var(--text3)'"
+                title="Remove this opponent"
+                style="
+                  padding: 6px 10px;
+                  background: none;
+                  border: 1px solid var(--border2);
+                  border-radius: 6px;
+                  font-size: 13px;
+                  color: var(--text3);
+                  cursor: pointer;
+                  transition: all 0.13s;
+                "
+              >
+                🗑
+              </button>
+            </div>
+          </div>
+          <div
+            id="opp-detail-roster"
+            style="flex: 1; overflow-y: auto; padding: 14px 16px"
+          ></div>
+        </div>
       </div>
-      <div id="opponents-list" style="flex:1;overflow-y:auto;padding:16px 20px"></div>
     </div>
 
     <!-- Opponent player add/edit modal (mirrors myteam-modal) -->
-    <div id="opp-player-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:2100;align-items:center;justify-content:center">
-      <div style="background:var(--surface2);border:1px solid var(--border2);border-radius:14px;padding:24px;width:420px;max-width:95vw;max-height:90vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.5)">
-        <div id="opp-player-modal-title" style="font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:20px;color:var(--text);margin-bottom:16px">Add Player</div>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">
-          <div><label style="font-size:10px;color:var(--text3);font-family:'Barlow',sans-serif;letter-spacing:1px;text-transform:uppercase">Name *</label><input id="opp-mtp-name" placeholder="Player Name" style="width:100%;padding:7px 10px;border:1px solid var(--border2);border-radius:6px;background:var(--surface3);color:var(--text);font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:14px;margin-top:3px;box-sizing:border-box"/></div>
-          <div><label style="font-size:10px;color:var(--text3);font-family:'Barlow',sans-serif;letter-spacing:1px;text-transform:uppercase">#</label><input id="opp-mtp-num" placeholder="0" style="width:100%;padding:7px 10px;border:1px solid var(--border2);border-radius:6px;background:var(--surface3);color:var(--text);font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:14px;margin-top:3px;box-sizing:border-box"/></div>
-          <div><label style="font-size:10px;color:var(--text3);font-family:'Barlow',sans-serif;letter-spacing:1px;text-transform:uppercase">Position</label>
-            <select id="opp-mtp-pos" style="width:100%;padding:7px 10px;border:1px solid var(--border2);border-radius:6px;background:var(--surface3);color:var(--text);font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:14px;margin-top:3px;box-sizing:border-box">
-              <option>C</option><option>1B</option><option>2B</option><option>3B</option><option>SS</option><option>OF</option><option>LF</option><option>CF</option><option>RF</option><option>INF</option><option>INF/OF</option><option>1B/OF</option><option>DH</option><option>RHP</option><option>LHP</option><option>P</option><option>UTL</option><option>UTL/RHP</option><option>C/RHP</option><option>C/2B</option><option>SS/2B</option><option>3B/RHP</option>
+    <div
+      id="opp-player-modal"
+      style="
+        display: none;
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.7);
+        z-index: 2100;
+        align-items: center;
+        justify-content: center;
+      "
+    >
+      <div
+        style="
+          background: var(--surface2);
+          border: 1px solid var(--border2);
+          border-radius: 14px;
+          padding: 24px;
+          width: 420px;
+          max-width: 95vw;
+          max-height: 90vh;
+          overflow-y: auto;
+          box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+        "
+      >
+        <div
+          id="opp-player-modal-title"
+          style="
+            font-family: 'Barlow Condensed', sans-serif;
+            font-weight: 900;
+            font-size: 20px;
+            color: var(--text);
+            margin-bottom: 16px;
+          "
+        >
+          Add Player
+        </div>
+        <div
+          style="
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 10px;
+          "
+        >
+          <div>
+            <label
+              style="
+                font-size: 10px;
+                color: var(--text3);
+                font-family: 'Barlow', sans-serif;
+                letter-spacing: 1px;
+                text-transform: uppercase;
+              "
+              >Name *</label
+            ><input
+              id="opp-mtp-name"
+              placeholder="Player Name"
+              style="
+                width: 100%;
+                padding: 7px 10px;
+                border: 1px solid var(--border2);
+                border-radius: 6px;
+                background: var(--surface3);
+                color: var(--text);
+                font-family: 'Barlow Condensed', sans-serif;
+                font-weight: 700;
+                font-size: 14px;
+                margin-top: 3px;
+                box-sizing: border-box;
+              "
+            />
+          </div>
+          <div>
+            <label
+              style="
+                font-size: 10px;
+                color: var(--text3);
+                font-family: 'Barlow', sans-serif;
+                letter-spacing: 1px;
+                text-transform: uppercase;
+              "
+              >#</label
+            ><input
+              id="opp-mtp-num"
+              placeholder="0"
+              style="
+                width: 100%;
+                padding: 7px 10px;
+                border: 1px solid var(--border2);
+                border-radius: 6px;
+                background: var(--surface3);
+                color: var(--text);
+                font-family: 'Barlow Condensed', sans-serif;
+                font-weight: 700;
+                font-size: 14px;
+                margin-top: 3px;
+                box-sizing: border-box;
+              "
+            />
+          </div>
+          <div>
+            <label
+              style="
+                font-size: 10px;
+                color: var(--text3);
+                font-family: 'Barlow', sans-serif;
+                letter-spacing: 1px;
+                text-transform: uppercase;
+              "
+              >Position</label
+            >
+            <select
+              id="opp-mtp-pos"
+              style="
+                width: 100%;
+                padding: 7px 10px;
+                border: 1px solid var(--border2);
+                border-radius: 6px;
+                background: var(--surface3);
+                color: var(--text);
+                font-family: 'Barlow Condensed', sans-serif;
+                font-weight: 700;
+                font-size: 14px;
+                margin-top: 3px;
+                box-sizing: border-box;
+              "
+            >
+              <option>C</option>
+              <option>1B</option>
+              <option>2B</option>
+              <option>3B</option>
+              <option>SS</option>
+              <option>OF</option>
+              <option>LF</option>
+              <option>CF</option>
+              <option>RF</option>
+              <option>INF</option>
+              <option>INF/OF</option>
+              <option>1B/OF</option>
+              <option>DH</option>
+              <option>RHP</option>
+              <option>LHP</option>
+              <option>P</option>
+              <option>UTL</option>
+              <option>UTL/RHP</option>
+              <option>C/RHP</option>
+              <option>C/2B</option>
+              <option>SS/2B</option>
+              <option>3B/RHP</option>
             </select>
           </div>
-          <div><label style="font-size:10px;color:var(--text3);font-family:'Barlow',sans-serif;letter-spacing:1px;text-transform:uppercase">Bats / Throws</label>
-            <div style="display:flex;gap:6px;margin-top:3px">
-              <select id="opp-mtp-bat" style="flex:1;padding:7px 6px;border:1px solid var(--border2);border-radius:6px;background:var(--surface3);color:var(--text);font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:14px;box-sizing:border-box"><option value="R">R</option><option value="L">L</option><option value="S">S</option></select>
-              <select id="opp-mtp-throw" style="flex:1;padding:7px 6px;border:1px solid var(--border2);border-radius:6px;background:var(--surface3);color:var(--text);font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:14px;box-sizing:border-box"><option value="R">R</option><option value="L">L</option></select>
+          <div>
+            <label
+              style="
+                font-size: 10px;
+                color: var(--text3);
+                font-family: 'Barlow', sans-serif;
+                letter-spacing: 1px;
+                text-transform: uppercase;
+              "
+              >Bats / Throws</label
+            >
+            <div style="display: flex; gap: 6px; margin-top: 3px">
+              <select
+                id="opp-mtp-bat"
+                style="
+                  flex: 1;
+                  padding: 7px 6px;
+                  border: 1px solid var(--border2);
+                  border-radius: 6px;
+                  background: var(--surface3);
+                  color: var(--text);
+                  font-family: 'Barlow Condensed', sans-serif;
+                  font-weight: 700;
+                  font-size: 14px;
+                  box-sizing: border-box;
+                "
+              >
+                <option value="R">R</option>
+                <option value="L">L</option>
+                <option value="S">S</option>
+              </select>
+              <select
+                id="opp-mtp-throw"
+                style="
+                  flex: 1;
+                  padding: 7px 6px;
+                  border: 1px solid var(--border2);
+                  border-radius: 6px;
+                  background: var(--surface3);
+                  color: var(--text);
+                  font-family: 'Barlow Condensed', sans-serif;
+                  font-weight: 700;
+                  font-size: 14px;
+                  box-sizing: border-box;
+                "
+              >
+                <option value="R">R</option>
+                <option value="L">L</option>
+              </select>
             </div>
           </div>
-          <div><label style="font-size:10px;color:var(--text3);font-family:'Barlow',sans-serif;letter-spacing:1px;text-transform:uppercase">Height</label><input id="opp-mtp-ht" placeholder="6-0" style="width:100%;padding:7px 10px;border:1px solid var(--border2);border-radius:6px;background:var(--surface3);color:var(--text);font-family:'Barlow Condensed',sans-serif;font-size:13px;margin-top:3px;box-sizing:border-box"/></div>
-          <div><label style="font-size:10px;color:var(--text3);font-family:'Barlow',sans-serif;letter-spacing:1px;text-transform:uppercase">Weight</label><input id="opp-mtp-wt" placeholder="185" style="width:100%;padding:7px 10px;border:1px solid var(--border2);border-radius:6px;background:var(--surface3);color:var(--text);font-family:'Barlow Condensed',sans-serif;font-size:13px;margin-top:3px;box-sizing:border-box"/></div>
+          <div>
+            <label
+              style="
+                font-size: 10px;
+                color: var(--text3);
+                font-family: 'Barlow', sans-serif;
+                letter-spacing: 1px;
+                text-transform: uppercase;
+              "
+              >Height</label
+            ><input
+              id="opp-mtp-ht"
+              placeholder="6-0"
+              style="
+                width: 100%;
+                padding: 7px 10px;
+                border: 1px solid var(--border2);
+                border-radius: 6px;
+                background: var(--surface3);
+                color: var(--text);
+                font-family: 'Barlow Condensed', sans-serif;
+                font-size: 13px;
+                margin-top: 3px;
+                box-sizing: border-box;
+              "
+            />
+          </div>
+          <div>
+            <label
+              style="
+                font-size: 10px;
+                color: var(--text3);
+                font-family: 'Barlow', sans-serif;
+                letter-spacing: 1px;
+                text-transform: uppercase;
+              "
+              >Weight</label
+            ><input
+              id="opp-mtp-wt"
+              placeholder="185"
+              style="
+                width: 100%;
+                padding: 7px 10px;
+                border: 1px solid var(--border2);
+                border-radius: 6px;
+                background: var(--surface3);
+                color: var(--text);
+                font-family: 'Barlow Condensed', sans-serif;
+                font-size: 13px;
+                margin-top: 3px;
+                box-sizing: border-box;
+              "
+            />
+          </div>
         </div>
-        <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:16px">
-          <button onclick="document.getElementById('opp-player-modal').style.display='none'" style="padding:8px 18px;background:var(--surface3);border:1px solid var(--border2);border-radius:7px;font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:14px;color:var(--text2);cursor:pointer">Cancel</button>
-          <button id="opp-player-modal-delete" onclick="oppDeletePlayer()" style="padding:8px 18px;background:rgba(204,26,26,.1);border:1px solid rgba(204,26,26,.3);border-radius:7px;font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:14px;color:#cc1a1a;cursor:pointer;display:none">Delete</button>
-          <button onclick="oppSavePlayer()" style="padding:8px 18px;background:var(--accent);border:none;border-radius:7px;font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:14px;color:#fff;cursor:pointer">Save Player</button>
+        <div
+          style="
+            display: flex;
+            gap: 8px;
+            justify-content: flex-end;
+            margin-top: 16px;
+          "
+        >
+          <button
+            onclick="document.getElementById('opp-player-modal').style.display='none'"
+            style="
+              padding: 8px 18px;
+              background: var(--surface3);
+              border: 1px solid var(--border2);
+              border-radius: 7px;
+              font-family: 'Barlow Condensed', sans-serif;
+              font-weight: 700;
+              font-size: 14px;
+              color: var(--text2);
+              cursor: pointer;
+            "
+          >
+            Cancel
+          </button>
+          <button
+            id="opp-player-modal-delete"
+            onclick="oppDeletePlayer()"
+            style="
+              padding: 8px 18px;
+              background: rgba(204, 26, 26, 0.1);
+              border: 1px solid rgba(204, 26, 26, 0.3);
+              border-radius: 7px;
+              font-family: 'Barlow Condensed', sans-serif;
+              font-weight: 700;
+              font-size: 14px;
+              color: #cc1a1a;
+              cursor: pointer;
+              display: none;
+            "
+          >
+            Delete
+          </button>
+          <button
+            onclick="oppSavePlayer()"
+            style="
+              padding: 8px 18px;
+              background: var(--accent);
+              border: none;
+              border-radius: 7px;
+              font-family: 'Barlow Condensed', sans-serif;
+              font-weight: 700;
+              font-size: 14px;
+              color: #fff;
+              cursor: pointer;
+            "
+          >
+            Save Player
+          </button>
         </div>
       </div>
     </div>
@@ -9338,6 +9931,12 @@
           }
           if (name === "opponents") {
             try {
+              // Always return to list view when navigating to opponents
+              _oppOpenId = null;
+              const lv = document.getElementById("opp-list-view");
+              const dv = document.getElementById("opp-detail");
+              if (lv) lv.style.display = "flex";
+              if (dv) dv.classList.remove("open");
               oppLoad();
             } catch (e) {
               console.warn("opponents", e);
@@ -10109,7 +10708,10 @@
             });
           } else if (outcome === "sacfly") {
             S.outs++;
-            { const _cp = activePitcher(); if (_cp) _cp.outs = (_cp.outs || 0) + 1; }
+            {
+              const _cp = activePitcher();
+              if (_cp) _cp.outs = (_cp.outs || 0) + 1;
+            }
             let sfRuns = 0;
             if (S.bases["3rd"]) {
               const _sfRunner = S.runnerNames["3rd"];
@@ -10154,7 +10756,10 @@
             });
           } else if (outcome === "sacbunt") {
             S.outs++;
-            { const _cp = activePitcher(); if (_cp) _cp.outs = (_cp.outs || 0) + 1; }
+            {
+              const _cp = activePitcher();
+              if (_cp) _cp.outs = (_cp.outs || 0) + 1;
+            }
             toast("Sac Bunt — Batter out.");
             logEvent(
               "🟤",
@@ -10923,7 +11528,10 @@
             }
           }
           // Credit R allowed to the current pitcher (the one pitching when the run scores)
-          { const _rp = activePitcher(); if (_rp) _rp.r = (_rp.r || 0) + 1; }
+          {
+            const _rp = activePitcher();
+            if (_rp) _rp.r = (_rp.r || 0) + 1;
+          }
           updateScoreBug();
           renderBoxScore();
         }
@@ -14121,7 +14729,10 @@
           toast(`Out! (${logLabel})`);
           recordAtBatResult("O", logLabel);
           // Credit out to the active pitcher
-          { const _cp = activePitcher(); if (_cp) _cp.outs = (_cp.outs || 0) + 1; }
+          {
+            const _cp = activePitcher();
+            if (_cp) _cp.outs = (_cp.outs || 0) + 1;
+          }
           // Ask who made the play in the field — blurb is built AFTER so it has fielder info
           openFielderModal(outcome, logLabel, batter, (fielder) => {
             const posNum = {
@@ -14276,7 +14887,10 @@
           const batter = currentBatter()?.name || "Batter";
 
           S.outs++;
-          { const _cp = activePitcher(); if (_cp) _cp.outs = (_cp.outs || 0) + 1; }
+          {
+            const _cp = activePitcher();
+            if (_cp) _cp.outs = (_cp.outs || 0) + 1;
+          }
           // Remove the retired runner
           S.bases[retiredBase] = false;
           // Batter reaches 1st (force — batter always goes to 1st on a FC groundball)
@@ -14440,7 +15054,10 @@
           // Remove the retired runner
           S.bases[retiredBase] = false;
           S.outs++; // second out (batter was already +1 out in commitPitch)
-          { const _cp = activePitcher(); if (_cp) _cp.outs = (_cp.outs || 0) + 1; }
+          {
+            const _cp = activePitcher();
+            if (_cp) _cp.outs = (_cp.outs || 0) + 1;
+          }
 
           const batter = currentBatter()?.name || "Batter";
           const label = S.dpOutcome === "groundout" ? "GO" : "LO";
@@ -15178,20 +15795,28 @@
         function cancelDelete() {
           _pendingDeleteId = null;
           // Reset modal title back to singular for next use
-          const titleEl = document.querySelector("#delete-confirm-modal [style*='font-size: 21px']");
+          const titleEl = document.querySelector(
+            "#delete-confirm-modal [style*='font-size: 21px']"
+          );
           if (titleEl) titleEl.textContent = "Delete this game?";
           const sub = document.getElementById("delete-confirm-sub");
-          if (sub) sub.textContent = `This will permanently remove the game and all its stats from the Hub. This cannot be undone.`;
-          document.getElementById("delete-confirm-modal").style.display = "none";
+          if (sub)
+            sub.textContent = `This will permanently remove the game and all its stats from the Hub. This cannot be undone.`;
+          document.getElementById("delete-confirm-modal").style.display =
+            "none";
         }
 
         async function confirmDelete() {
-          document.getElementById("delete-confirm-modal").style.display = "none";
+          document.getElementById("delete-confirm-modal").style.display =
+            "none";
           // Reset modal title/sub back to singular for future single-deletes
-          const titleEl = document.querySelector("#delete-confirm-modal [style*='font-size: 21px']");
+          const titleEl = document.querySelector(
+            "#delete-confirm-modal [style*='font-size: 21px']"
+          );
           if (titleEl) titleEl.textContent = "Delete this game?";
           const sub = document.getElementById("delete-confirm-sub");
-          if (sub) sub.textContent = `This will permanently remove the game and all its stats from the Hub. This cannot be undone.`;
+          if (sub)
+            sub.textContent = `This will permanently remove the game and all its stats from the Hub. This cannot be undone.`;
           const gameId = _pendingDeleteId;
           _pendingDeleteId = null;
           if (!gameId) return;
@@ -15209,10 +15834,18 @@
               // Remove selected teams from the pitchtrack_teams index only — games are kept
               const toRemove = Array.from(_tsSelected);
               let teamsRaw;
-              try { teamsRaw = await window.storage.get("pitchtrack_teams", true); } catch (e) {}
+              try {
+                teamsRaw = await window.storage.get("pitchtrack_teams", true);
+              } catch (e) {}
               const current = teamsRaw ? JSON.parse(teamsRaw.value) : [];
-              const updated = current.filter(t => !toRemove.includes(typeof t === "string" ? t : t.name));
-              await window.storage.set("pitchtrack_teams", JSON.stringify(updated), true);
+              const updated = current.filter(
+                (t) => !toRemove.includes(typeof t === "string" ? t : t.name)
+              );
+              await window.storage.set(
+                "pitchtrack_teams",
+                JSON.stringify(updated),
+                true
+              );
               _tsSelected.clear();
               _tsSelectMode = false;
               window._tsSelectMode = false;
@@ -15265,7 +15898,9 @@
           const bar = document.getElementById("ts-action-bar");
           if (btn) {
             btn.textContent = _tsSelectMode ? "Cancel" : "Select";
-            btn.style.borderColor = _tsSelectMode ? "var(--accent)" : "var(--border2)";
+            btn.style.borderColor = _tsSelectMode
+              ? "var(--accent)"
+              : "var(--border2)";
             btn.style.color = _tsSelectMode ? "var(--accent)" : "var(--text3)";
           }
           if (bar) bar.classList.toggle("visible", _tsSelectMode);
@@ -15277,12 +15912,17 @@
           if (_tsSelected.has(name)) _tsSelected.delete(name);
           else _tsSelected.add(name);
           // Update just this row without full re-render
-          const row = document.querySelector(`.ts-team-row[data-team="${CSS.escape(name)}"]`);
+          const row = document.querySelector(
+            `.ts-team-row[data-team="${CSS.escape(name)}"]`
+          );
           if (row) {
             const sel = _tsSelected.has(name);
             row.classList.toggle("ts-selected-row", sel);
             const chk = row.querySelector(".gh-checkbox");
-            if (chk) { chk.classList.toggle("checked", sel); chk.innerHTML = sel ? "✓" : ""; }
+            if (chk) {
+              chk.classList.toggle("checked", sel);
+              chk.innerHTML = sel ? "✓" : "";
+            }
           }
           _tsUpdateBar();
         }
@@ -15290,7 +15930,7 @@
         function tsSelectAll() {
           // Select all non-My-Team teams
           const myTN = window._myTeamNameCache || "";
-          allTeams.filter(t => t !== myTN).forEach(t => _tsSelected.add(t));
+          allTeams.filter((t) => t !== myTN).forEach((t) => _tsSelected.add(t));
           renderSidebar();
           _tsUpdateBar();
         }
@@ -15305,12 +15945,17 @@
           const n = _tsSelected.size;
           const countEl = document.getElementById("ts-sel-count");
           const delBtn = document.getElementById("ts-del-btn");
-          if (countEl) countEl.textContent = n === 0 ? "0 selected" : `${n} team${n !== 1 ? "s" : ""} selected`;
+          if (countEl)
+            countEl.textContent =
+              n === 0
+                ? "0 selected"
+                : `${n} team${n !== 1 ? "s" : ""} selected`;
           if (delBtn) {
             delBtn.disabled = n === 0;
             delBtn.style.opacity = n === 0 ? ".45" : "1";
             delBtn.style.cursor = n === 0 ? "not-allowed" : "pointer";
-            delBtn.style.borderColor = n === 0 ? "var(--border2)" : "var(--accent)";
+            delBtn.style.borderColor =
+              n === 0 ? "var(--border2)" : "var(--accent)";
             delBtn.style.color = n === 0 ? "var(--text3)" : "var(--accent)";
           }
         }
@@ -15318,12 +15963,19 @@
         function tsPromptDeleteSelected() {
           const n = _tsSelected.size;
           if (!n) return;
-          const titleEl = document.querySelector("#delete-confirm-modal [style*='font-size: 21px']");
-          if (titleEl) titleEl.textContent = `Remove ${n} team${n !== 1 ? "s" : ""}?`;
+          const titleEl = document.querySelector(
+            "#delete-confirm-modal [style*='font-size: 21px']"
+          );
+          if (titleEl)
+            titleEl.textContent = `Remove ${n} team${n !== 1 ? "s" : ""}?`;
           const sub = document.getElementById("delete-confirm-sub");
-          if (sub) sub.textContent = `${n} team${n !== 1 ? "s" : ""} will be removed from the sidebar. Their saved games are kept and can still be found in Game History.`;
+          if (sub)
+            sub.textContent = `${n} team${
+              n !== 1 ? "s" : ""
+            } will be removed from the sidebar. Their saved games are kept and can still be found in Game History.`;
           _pendingDeleteId = "__teams__";
-          document.getElementById("delete-confirm-modal").style.display = "flex";
+          document.getElementById("delete-confirm-modal").style.display =
+            "flex";
         }
 
         function renderSidebar() {
@@ -15334,8 +15986,12 @@
           const tsBar = document.getElementById("ts-action-bar");
           if (tsBtn) {
             tsBtn.textContent = _tsSelectMode ? "Cancel" : "Select";
-            tsBtn.style.borderColor = _tsSelectMode ? "var(--accent)" : "var(--border2)";
-            tsBtn.style.color = _tsSelectMode ? "var(--accent)" : "var(--text3)";
+            tsBtn.style.borderColor = _tsSelectMode
+              ? "var(--accent)"
+              : "var(--border2)";
+            tsBtn.style.color = _tsSelectMode
+              ? "var(--accent)"
+              : "var(--text3)";
           }
           if (tsBar) tsBar.classList.toggle("visible", _tsSelectMode);
 
@@ -15348,22 +16004,46 @@
                 const ni = document.getElementById("myteam-name-input");
                 if (ni && ni.value.trim()) return ni.value.trim();
                 return window._myTeamNameCache || null;
-              } catch (e) { return null; }
+              } catch (e) {
+                return null;
+              }
             })();
-            const mobMyTeamBtn = (_mobMyTeamName && myTeamRoster && myTeamRoster.length > 0)
-              ? `<button class="hub-mob-team-btn${currentView?.type === 'team' && currentView?.data === _mobMyTeamName ? ' active' : ''}" data-team="${escAttr(_mobMyTeamName)}" onclick="hubMobNav('team',this.getAttribute('data-team'))" style="color:var(--accent);border-color:rgba(204,26,26,.4)">${escHtml(_mobMyTeamName)}</button>`
-              : '';
-            mobTeams.innerHTML = mobMyTeamBtn + allTeams
-              .filter(t => t !== _mobMyTeamName)
-              .map((t) => {
-                const isActive = currentView?.type === "team" && currentView?.data === t;
-                return `<button class="hub-mob-team-btn${isActive ? " active" : ""}" data-team="${escAttr(t)}" onclick="hubMobNav('team',this.getAttribute('data-team'))">${escHtml(t)}</button>`;
-              })
-              .join("");
+            const mobMyTeamBtn =
+              _mobMyTeamName && myTeamRoster && myTeamRoster.length > 0
+                ? `<button class="hub-mob-team-btn${
+                    currentView?.type === "team" &&
+                    currentView?.data === _mobMyTeamName
+                      ? " active"
+                      : ""
+                  }" data-team="${escAttr(
+                    _mobMyTeamName
+                  )}" onclick="hubMobNav('team',this.getAttribute('data-team'))" style="color:var(--accent);border-color:rgba(204,26,26,.4)">${escHtml(
+                    _mobMyTeamName
+                  )}</button>`
+                : "";
+            mobTeams.innerHTML =
+              mobMyTeamBtn +
+              allTeams
+                .filter((t) => t !== _mobMyTeamName)
+                .map((t) => {
+                  const isActive =
+                    currentView?.type === "team" && currentView?.data === t;
+                  return `<button class="hub-mob-team-btn${
+                    isActive ? " active" : ""
+                  }" data-team="${escAttr(
+                    t
+                  )}" onclick="hubMobNav('team',this.getAttribute('data-team'))">${escHtml(
+                    t
+                  )}</button>`;
+                })
+                .join("");
           }
           const allBtn = document.getElementById("hub-mob-all");
           if (allBtn)
-            allBtn.classList.toggle("active", currentView?.type === "games" || !currentView?.type);
+            allBtn.classList.toggle(
+              "active",
+              currentView?.type === "games" || !currentView?.type
+            );
 
           // Desktop sidebar
           const myTeamName = (function () {
@@ -15371,54 +16051,109 @@
               const ni = document.getElementById("myteam-name-input");
               if (ni && ni.value.trim()) return ni.value.trim();
               return window._myTeamNameCache || "My Team";
-            } catch (e) { return "My Team"; }
+            } catch (e) {
+              return "My Team";
+            }
           })();
-          const otherTeams = allTeams.filter(t => t !== myTeamName);
+          const otherTeams = allTeams.filter((t) => t !== myTeamName);
           const hasMyTeam = myTeamRoster && myTeamRoster.length > 0;
           if (!otherTeams.length && !hasMyTeam) {
             list.innerHTML = '<div class="sidebar-empty">No teams yet</div>';
             return;
           }
           const myTeamGames = hasMyTeam ? getTeamGames(myTeamName) : [];
-          const myTeamRecord = myTeamGames.length > 0 ? getTeamRecord(myTeamName, myTeamGames) : null;
-          const myTeamIsActive = currentView?.type === "team" && currentView?.data === myTeamName;
+          const myTeamRecord =
+            myTeamGames.length > 0
+              ? getTeamRecord(myTeamName, myTeamGames)
+              : null;
+          const myTeamIsActive =
+            currentView?.type === "team" && currentView?.data === myTeamName;
 
           // My Team pinned entry — never selectable for deletion
           const myTeamEntry = hasMyTeam
             ? `<div style="display:flex;align-items:center;border-left:3px solid var(--accent);margin-bottom:4px;background:rgba(204,26,26,.04);border-radius:0 6px 6px 0">
-      <button class="team-btn${myTeamIsActive ? ' active' : ''}" data-team="${escAttr(myTeamName)}" onclick="showView('team',this.getAttribute('data-team'))" style="flex:1;border-left:none">
+      <button class="team-btn${
+        myTeamIsActive ? " active" : ""
+      }" data-team="${escAttr(
+                myTeamName
+              )}" onclick="showView('team',this.getAttribute('data-team'))" style="flex:1;border-left:none">
         <div class="team-icon" style="font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:9px;letter-spacing:0.5px;color:var(--accent);border-color:rgba(204,26,26,.3)">MY</div>
         <div>
-          <div class="team-name" style="color:var(--accent)">${escHtml(myTeamName)}</div>
-          <div class="team-meta">${myTeamGames.length} game${myTeamGames.length !== 1 ? 's' : ''}${myTeamRecord ? ' · ' + myTeamRecord.w + '-' + myTeamRecord.l + (myTeamRecord.t ? '-' + myTeamRecord.t : '') : ' · My Roster'}</div>
+          <div class="team-name" style="color:var(--accent)">${escHtml(
+            myTeamName
+          )}</div>
+          <div class="team-meta">${myTeamGames.length} game${
+                myTeamGames.length !== 1 ? "s" : ""
+              }${
+                myTeamRecord
+                  ? " · " +
+                    myTeamRecord.w +
+                    "-" +
+                    myTeamRecord.l +
+                    (myTeamRecord.t ? "-" + myTeamRecord.t : "")
+                  : " · My Roster"
+              }</div>
         </div>
       </button>
     </div>`
             : "";
 
-          const teamRows = otherTeams.map((t) => {
-            const games = getTeamGames(t);
-            const record = getTeamRecord(t, games);
-            const isSel = _tsSelected.has(t);
-            const isActive = currentView?.type === "team" && currentView?.data === t;
-            const chkHTML = _tsSelectMode
-              ? `<div class="gh-checkbox${isSel ? ' checked' : ''}" style="margin-left:10px;flex-shrink:0">${isSel ? '✓' : ''}</div>`
-              : '';
-            const exportBtn = !_tsSelectMode
-              ? `<button onclick="event.stopPropagation();exportTeamData('${escAttr(t)}')" title="Export ${escHtml(t)} games" style="flex-shrink:0;padding:6px 10px;background:none;border:none;color:var(--text3);cursor:pointer;font-size:11px;transition:color .14s" onmouseover="this.style.color='var(--accent)'" onmouseout="this.style.color='var(--text3)'">⬇</button>`
-              : '';
-            return `<div class="ts-team-row${isSel ? ' ts-selected-row' : ''}" data-team="${escAttr(t)}" style="display:flex;align-items:center;border-left:3px solid ${isSel ? 'var(--accent)' : 'transparent'};cursor:${_tsSelectMode ? 'pointer' : 'default'}" ${_tsSelectMode ? `onclick="tsToggleTeam('${escAttr(t)}')"` : ''}>
+          const teamRows = otherTeams
+            .map((t) => {
+              const games = getTeamGames(t);
+              const record = getTeamRecord(t, games);
+              const isSel = _tsSelected.has(t);
+              const isActive =
+                currentView?.type === "team" && currentView?.data === t;
+              const chkHTML = _tsSelectMode
+                ? `<div class="gh-checkbox${
+                    isSel ? " checked" : ""
+                  }" style="margin-left:10px;flex-shrink:0">${
+                    isSel ? "✓" : ""
+                  }</div>`
+                : "";
+              const exportBtn = !_tsSelectMode
+                ? `<button onclick="event.stopPropagation();exportTeamData('${escAttr(
+                    t
+                  )}')" title="Export ${escHtml(
+                    t
+                  )} games" style="flex-shrink:0;padding:6px 10px;background:none;border:none;color:var(--text3);cursor:pointer;font-size:11px;transition:color .14s" onmouseover="this.style.color='var(--accent)'" onmouseout="this.style.color='var(--text3)'">⬇</button>`
+                : "";
+              return `<div class="ts-team-row${
+                isSel ? " ts-selected-row" : ""
+              }" data-team="${escAttr(
+                t
+              )}" style="display:flex;align-items:center;border-left:3px solid ${
+                isSel ? "var(--accent)" : "transparent"
+              };cursor:${_tsSelectMode ? "pointer" : "default"}" ${
+                _tsSelectMode ? `onclick="tsToggleTeam('${escAttr(t)}')"` : ""
+              }>
       ${chkHTML}
-      <button class="team-btn${isActive && !_tsSelectMode ? ' active' : ''}" data-team="${escAttr(t)}" ${_tsSelectMode ? '' : `onclick="showView('team',this.getAttribute('data-team'))"`} style="flex:1;border-left:none;pointer-events:${_tsSelectMode ? 'none' : 'auto'}">
-        <div class="team-icon" style="font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:11px;letter-spacing:0.5px;color:var(--text2)">${escHtml(t).slice(0,3).toUpperCase()}</div>
+      <button class="team-btn${
+        isActive && !_tsSelectMode ? " active" : ""
+      }" data-team="${escAttr(t)}" ${
+                _tsSelectMode
+                  ? ""
+                  : `onclick="showView('team',this.getAttribute('data-team'))"`
+              } style="flex:1;border-left:none;pointer-events:${
+                _tsSelectMode ? "none" : "auto"
+              }">
+        <div class="team-icon" style="font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:11px;letter-spacing:0.5px;color:var(--text2)">${escHtml(
+          t
+        )
+          .slice(0, 3)
+          .toUpperCase()}</div>
         <div>
           <div class="team-name">${escHtml(t)}</div>
-          <div class="team-meta">${games.length} game${games.length !== 1 ? "s" : ""} · ${record.w}-${record.l}${record.t ? "-" + record.t : ""}</div>
+          <div class="team-meta">${games.length} game${
+                games.length !== 1 ? "s" : ""
+              } · ${record.w}-${record.l}${record.t ? "-" + record.t : ""}</div>
         </div>
       </button>
       ${exportBtn}
     </div>`;
-          }).join("");
+            })
+            .join("");
 
           list.innerHTML = myTeamEntry + teamRows;
         }
@@ -15515,21 +16250,37 @@
           gl.innerHTML = "";
           allGames.forEach((g) => {
             const div = document.createElement("div");
-            div.className = "game-row" + (_ghSelected.has(g.id) ? " gh-selected" : "");
+            div.className =
+              "game-row" + (_ghSelected.has(g.id) ? " gh-selected" : "");
             div.dataset.gid = g.id;
 
             const chkDiv = document.createElement("div");
-            chkDiv.className = "gh-checkbox" + (_ghSelected.has(g.id) ? " checked" : "");
+            chkDiv.className =
+              "gh-checkbox" + (_ghSelected.has(g.id) ? " checked" : "");
             chkDiv.style.display = _ghSelectMode ? "flex" : "none";
             chkDiv.innerHTML = _ghSelected.has(g.id) ? "✓" : "";
 
             div.innerHTML = `
       <div class="game-date">${g.date}</div>
-      <div class="game-teams">${escHtml(g.awayTeam)} <span style="color:var(--text3);font-weight:400">vs</span> ${escHtml(g.homeTeam)}</div>
-      <div style="flex:1;font-size:11px;color:var(--text3)">${g.totalPitches || 0} pitches · ${g.innings} inn</div>
+      <div class="game-teams">${escHtml(
+        g.awayTeam
+      )} <span style="color:var(--text3);font-weight:400">vs</span> ${escHtml(
+              g.homeTeam
+            )}</div>
+      <div style="flex:1;font-size:11px;color:var(--text3)">${
+        g.totalPitches || 0
+      } pitches · ${g.innings} inn</div>
       <div class="game-score">${g.awayScore}–${g.homeScore}</div>
-      <button onclick="event.stopPropagation();exportGameData('${g.id}')" title="Export this game" style="background:none;border:none;color:var(--text3);cursor:pointer;font-size:12px;padding:3px 5px;border-radius:4px;transition:all .13s" onmouseover="this.style.color='var(--accent)'" onmouseout="this.style.color='var(--text3)'">⬇</button>
-      <button class="del-btn" id="gh-del-${g.id}" onclick="event.stopPropagation();promptDeleteGame('${g.id}','${escHtml(g.awayTeam)} vs ${escHtml(g.homeTeam)} (${g.date})')"><svg xmlns="http://www.w3.org/2000/svg" width="13" height="14" viewBox="0 0 13 14" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><polyline points="1,3 12,3"/><path d="M4,3V2a1,1,0,0,1,1-1h3a1,1,0,0,1,1,1V3"/><path d="M2,3l.7,8.5A1,1,0,0,0,3.7,12.5h5.6a1,1,0,0,0,1-.99L11,3"/><line x1="5" y1="6" x2="5" y2="10"/><line x1="8" y1="6" x2="8" y2="10"/></svg></button>
+      <button onclick="event.stopPropagation();exportGameData('${
+        g.id
+      }')" title="Export this game" style="background:none;border:none;color:var(--text3);cursor:pointer;font-size:12px;padding:3px 5px;border-radius:4px;transition:all .13s" onmouseover="this.style.color='var(--accent)'" onmouseout="this.style.color='var(--text3)'">⬇</button>
+      <button class="del-btn" id="gh-del-${
+        g.id
+      }" onclick="event.stopPropagation();promptDeleteGame('${g.id}','${escHtml(
+              g.awayTeam
+            )} vs ${escHtml(g.homeTeam)} (${
+              g.date
+            })')"><svg xmlns="http://www.w3.org/2000/svg" width="13" height="14" viewBox="0 0 13 14" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><polyline points="1,3 12,3"/><path d="M4,3V2a1,1,0,0,1,1-1h3a1,1,0,0,1,1,1V3"/><path d="M2,3l.7,8.5A1,1,0,0,0,3.7,12.5h5.6a1,1,0,0,0,1-.99L11,3"/><line x1="5" y1="6" x2="5" y2="10"/><line x1="8" y1="6" x2="8" y2="10"/></svg></button>
     `;
             div.insertBefore(chkDiv, div.firstChild);
             div.onclick = (e) => {
@@ -15552,7 +16303,9 @@
           if (bar) bar.style.display = _ghSelectMode ? "flex" : "none";
           if (btn) {
             btn.textContent = _ghSelectMode ? "Cancel" : "Select";
-            btn.style.borderColor = _ghSelectMode ? "var(--accent)" : "var(--border2)";
+            btn.style.borderColor = _ghSelectMode
+              ? "var(--accent)"
+              : "var(--border2)";
             btn.style.color = _ghSelectMode ? "var(--accent)" : "var(--text2)";
           }
           _renderGameRows();
@@ -15568,13 +16321,16 @@
             const chk = row.querySelector(".gh-checkbox");
             const sel = _ghSelected.has(id);
             row.classList.toggle("gh-selected", sel);
-            if (chk) { chk.classList.toggle("checked", sel); chk.innerHTML = sel ? "✓" : ""; }
+            if (chk) {
+              chk.classList.toggle("checked", sel);
+              chk.innerHTML = sel ? "✓" : "";
+            }
           }
           _ghUpdateSelBar();
         }
 
         function ghSelectAll() {
-          allGames.forEach(g => _ghSelected.add(g.id));
+          allGames.forEach((g) => _ghSelected.add(g.id));
           _renderGameRows();
           _ghUpdateSelBar();
         }
@@ -15589,12 +16345,17 @@
           const n = _ghSelected.size;
           const countEl = document.getElementById("gh-sel-count");
           const delBtn = document.getElementById("gh-del-sel-btn");
-          if (countEl) countEl.textContent = n === 0 ? "0 selected" : `${n} game${n !== 1 ? "s" : ""} selected`;
+          if (countEl)
+            countEl.textContent =
+              n === 0
+                ? "0 selected"
+                : `${n} game${n !== 1 ? "s" : ""} selected`;
           if (delBtn) {
             delBtn.disabled = n === 0;
             delBtn.style.opacity = n === 0 ? ".45" : "1";
             delBtn.style.cursor = n === 0 ? "not-allowed" : "pointer";
-            delBtn.style.borderColor = n === 0 ? "var(--border2)" : "var(--accent)";
+            delBtn.style.borderColor =
+              n === 0 ? "var(--border2)" : "var(--accent)";
             delBtn.style.color = n === 0 ? "var(--text3)" : "var(--accent)";
           }
         }
@@ -15603,11 +16364,18 @@
           const n = _ghSelected.size;
           if (!n) return;
           const sub = document.getElementById("delete-confirm-sub");
-          if (sub) sub.textContent = `${n} game${n !== 1 ? "s" : ""} will be permanently removed. This cannot be undone.`;
-          const titleEl = document.querySelector("#delete-confirm-modal [style*='font-size: 21px']");
-          if (titleEl) titleEl.textContent = `Delete ${n} game${n !== 1 ? "s" : ""}?`;
+          if (sub)
+            sub.textContent = `${n} game${
+              n !== 1 ? "s" : ""
+            } will be permanently removed. This cannot be undone.`;
+          const titleEl = document.querySelector(
+            "#delete-confirm-modal [style*='font-size: 21px']"
+          );
+          if (titleEl)
+            titleEl.textContent = `Delete ${n} game${n !== 1 ? "s" : ""}?`;
           _pendingDeleteId = "__multi__";
-          document.getElementById("delete-confirm-modal").style.display = "flex";
+          document.getElementById("delete-confirm-modal").style.display =
+            "flex";
         }
 
         // ===== TEAM VIEW =====
@@ -15826,7 +16594,12 @@
           const kbb = p.bb > 0 ? (p.k / p.bb).toFixed(2) : p.k > 0 ? "∞" : "—";
           const ipFull = Math.floor((p.outs || 0) / 3);
           const ipRem = (p.outs || 0) % 3;
-          const ipStr = (p.outs || 0) > 0 ? (ipRem === 0 ? `${ipFull}.0` : `${ipFull}.${ipRem}`) : "0.0";
+          const ipStr =
+            (p.outs || 0) > 0
+              ? ipRem === 0
+                ? `${ipFull}.0`
+                : `${ipFull}.${ipRem}`
+              : "0.0";
           const clickable = teamName
             ? `class="player-row" data-team="${escAttr(
                 teamName
@@ -19690,9 +20463,21 @@
       </div>
     </div>
     <div class="stat-cards">
-      <div class="stat-card accent"><div class="stat-card-val">${(function(){const f=Math.floor((career.outs||0)/3),r=(career.outs||0)%3;return (career.outs||0)>0?(r===0?f+'.0':f+'.'+r):'0.0';})()}</div><div class="stat-card-lbl">IP</div></div>
-      <div class="stat-card"><div class="stat-card-val">${career.bf||0}</div><div class="stat-card-lbl">BF</div></div>
-      <div class="stat-card"><div class="stat-card-val">${career.pitches}</div><div class="stat-card-lbl">Pitches</div></div>
+      <div class="stat-card accent"><div class="stat-card-val">${(function () {
+        const f = Math.floor((career.outs || 0) / 3),
+          r = (career.outs || 0) % 3;
+        return (career.outs || 0) > 0
+          ? r === 0
+            ? f + ".0"
+            : f + "." + r
+          : "0.0";
+      })()}</div><div class="stat-card-lbl">IP</div></div>
+      <div class="stat-card"><div class="stat-card-val">${
+        career.bf || 0
+      }</div><div class="stat-card-lbl">BF</div></div>
+      <div class="stat-card"><div class="stat-card-val">${
+        career.pitches
+      }</div><div class="stat-card-lbl">Pitches</div></div>
       <div class="stat-card"><div class="stat-card-val">${sp}%</div><div class="stat-card-lbl">Strike%</div></div>
       <div class="stat-card"><div class="stat-card-val">${
         fpsPct !== null ? fpsPct + "%" : "—"
@@ -19706,8 +20491,12 @@
       <div class="stat-card"><div class="stat-card-val">${
         career.hits
       }</div><div class="stat-card-lbl">Hits Allowed</div></div>
-      <div class="stat-card"><div class="stat-card-val">${career.r||0}</div><div class="stat-card-lbl">Runs Allowed</div></div>
-      <div class="stat-card"><div class="stat-card-val">${career.hbp||0}</div><div class="stat-card-lbl">HBP</div></div>
+      <div class="stat-card"><div class="stat-card-val">${
+        career.r || 0
+      }</div><div class="stat-card-lbl">Runs Allowed</div></div>
+      <div class="stat-card"><div class="stat-card-val">${
+        career.hbp || 0
+      }</div><div class="stat-card-lbl">HBP</div></div>
       <div class="stat-card"><div class="stat-card-val">${kbb}</div><div class="stat-card-lbl">K/BB</div></div>
       <div class="stat-card"><div class="stat-card-val">${swp}%</div><div class="stat-card-lbl">Swing%</div></div>
       <div class="stat-card"><div class="stat-card-val">${lkp}%</div><div class="stat-card-lbl">Called K%</div></div>
@@ -22890,36 +23679,49 @@
         //    "pitchtrack_opponents"       → JSON array of {id, name}  (index)
         //    "pitchtrack_opp_<id>"        → JSON {id, name, roster[]} (full data)
         // ══════════════════════════════════════════════════════════════════════
-        let _opponents = [];          // [{id, name, roster:[]}]  — in-memory
-        let _oppEditingId   = null;   // opponent id currently open in player modal
-        let _oppEditingPid  = null;   // player id being edited (null = new)
+        let _opponents = [];
+        let _oppEditingId = null;
+        let _oppEditingPid = null;
+        let _oppOpenId = null; // which opponent is open in detail view
 
         // ── Persistence ──────────────────────────────────────────────────────
         async function oppLoad() {
           try {
-            const idxRaw = await window.storage.get("pitchtrack_opponents", true);
+            const idxRaw = await window.storage.get(
+              "pitchtrack_opponents",
+              true
+            );
             const index = idxRaw ? JSON.parse(idxRaw.value) : [];
             _opponents = [];
             for (const entry of index) {
               try {
-                const raw = await window.storage.get("pitchtrack_opp_" + entry.id, true);
+                const raw = await window.storage.get(
+                  "pitchtrack_opp_" + entry.id,
+                  true
+                );
                 if (raw?.value) {
                   _opponents.push(JSON.parse(raw.value));
                 } else {
-                  _opponents.push({ id: entry.id, name: entry.name, roster: [] });
+                  _opponents.push({
+                    id: entry.id,
+                    name: entry.name,
+                    roster: [],
+                  });
                 }
               } catch (e) {
                 _opponents.push({ id: entry.id, name: entry.name, roster: [] });
               }
             }
-          } catch (e) { _opponents = []; }
+          } catch (e) {
+            _opponents = [];
+          }
           oppRenderAll();
         }
 
         async function oppSaveIndex() {
           await window.storage.set(
             "pitchtrack_opponents",
-            JSON.stringify(_opponents.map(o => ({ id: o.id, name: o.name }))),
+            JSON.stringify(_opponents.map((o) => ({ id: o.id, name: o.name }))),
             true
           );
         }
@@ -22934,33 +23736,75 @@
         }
 
         async function oppDeleteOne(id) {
-          _opponents = _opponents.filter(o => o.id !== id);
-          try { await window.storage.delete("pitchtrack_opp_" + id, true); } catch(e){}
+          _opponents = _opponents.filter((o) => o.id !== id);
+          try {
+            await window.storage.delete("pitchtrack_opp_" + id, true);
+          } catch (e) {}
           await oppSaveIndex();
           oppRenderAll();
         }
 
         // ── Create new opponent ───────────────────────────────────────────────
         function oppLoadNew() {
-          const id = "opp_" + Date.now() + "_" + Math.random().toString(36).slice(2,6);
+          const id =
+            "opp_" + Date.now() + "_" + Math.random().toString(36).slice(2, 6);
           const opp = { id, name: "New Opponent", roster: [] };
           _opponents.push(opp);
           oppSaveOne(opp);
           oppRenderAll();
-          // Auto-focus the name field of the new card
+          // Open detail immediately so user can rename
+          oppOpenDetail(id);
           setTimeout(() => {
-            const inp = document.getElementById("opp-name-" + id);
-            if (inp) { inp.focus(); inp.select(); }
+            const inp = document.getElementById("opp-detail-name");
+            if (inp) {
+              inp.focus();
+              inp.select();
+            }
           }, 50);
         }
 
-        // ── Render all opponent cards ─────────────────────────────────────────
+        // ── Open / close detail view ──────────────────────────────────────────
+        function oppOpenDetail(id) {
+          const opp = _opponents.find((o) => o.id === id);
+          if (!opp) return;
+          _oppOpenId = id;
+          document.getElementById("opp-list-view").style.display = "none";
+          const detail = document.getElementById("opp-detail");
+          detail.classList.add("open");
+          document.getElementById("opp-detail-name").value = opp.name;
+          oppRefreshDetail();
+        }
+
+        function oppCloseDetail() {
+          _oppOpenId = null;
+          document.getElementById("opp-list-view").style.display = "flex";
+          document.getElementById("opp-detail").classList.remove("open");
+          oppRenderAll();
+        }
+
+        // ── Refresh the open detail panel ─────────────────────────────────────
+        function oppRefreshDetail() {
+          const opp = _opponents.find((o) => o.id === _oppOpenId);
+          if (!opp) return;
+          const sub = document.getElementById("opp-detail-sub");
+          if (sub)
+            sub.textContent =
+              opp.roster.length +
+              " player" +
+              (opp.roster.length !== 1 ? "s" : "");
+          const body = document.getElementById("opp-detail-roster");
+          if (body) _oppRenderRoster(opp, body);
+        }
+
+        // ── Render tile grid (list view) ──────────────────────────────────────
         function oppRenderAll() {
           const list = document.getElementById("opponents-list");
-          const sub  = document.getElementById("opponents-subtitle");
+          const sub = document.getElementById("opponents-subtitle");
           if (!list) return;
           const n = _opponents.length;
-          if (sub) sub.textContent = n === 0 ? "No opponents yet" : n + " team" + (n !== 1 ? "s" : "");
+          if (sub)
+            sub.textContent =
+              n === 0 ? "No opponents yet" : n + " team" + (n !== 1 ? "s" : "");
           if (!n) {
             list.innerHTML = `<div style="text-align:center;padding:64px 20px;color:var(--text3)">
               <div style="font-size:40px;margin-bottom:12px">🎯</div>
@@ -22969,41 +23813,20 @@
             </div>`;
             return;
           }
-          list.innerHTML = "";
-          _opponents.forEach(opp => list.appendChild(_oppBuildCard(opp)));
-        }
-
-        function _oppBuildCard(opp) {
-          const card = document.createElement("div");
-          card.className = "opp-card";
-          card.id = "opp-card-" + opp.id;
-
-          // ── Header ──
-          const hdr = document.createElement("div");
-          hdr.className = "opp-card-header";
-          hdr.innerHTML = `
-            <div style="font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:13px;color:var(--text3);letter-spacing:2px;text-transform:uppercase;flex-shrink:0">Opponent</div>
-            <input id="opp-name-${opp.id}" value="${escHtml(opp.name)}"
-              oninput="oppRenameLive('${opp.id}', this.value)"
-              onblur="oppRename('${opp.id}', this.value)"
-              style="padding:5px 10px;border:1px solid var(--border2);border-radius:6px;background:var(--surface3);color:var(--text);font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:15px;width:200px;flex-shrink:0"/>
-            <div id="opp-sub-${opp.id}" style="font-size:11px;color:var(--text3);flex:1">${opp.roster.length} player${opp.roster.length !== 1 ? "s" : ""}</div>
-            <div style="display:flex;gap:6px;flex-shrink:0">
-              <button onclick="oppAddPlayer('${opp.id}')" style="padding:5px 11px;background:var(--accent);border:none;border-radius:6px;font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:11px;color:#fff;cursor:pointer">+ Add Player</button>
-              <button onclick="document.getElementById('opp-import-${opp.id}').click()" style="padding:5px 11px;background:var(--surface2);border:1px solid var(--border2);border-radius:6px;font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:11px;color:var(--text2);cursor:pointer">⬆ Import</button>
-              <input type="file" id="opp-import-${opp.id}" accept=".xlsx,.csv,.trx,.TRX,.pdf" style="display:none" onchange="oppImport('${opp.id}', this)"/>
-              <button onclick="oppConfirmDelete('${opp.id}')" title="Remove opponent" style="padding:5px 9px;background:none;border:1px solid var(--border2);border-radius:6px;font-size:12px;color:var(--text3);cursor:pointer;transition:all .13s" onmouseover="this.style.borderColor='#cc1a1a';this.style.color='#cc1a1a'" onmouseout="this.style.borderColor='var(--border2)';this.style.color='var(--text3)'">🗑</button>
-            </div>`;
-          card.appendChild(hdr);
-
-          // ── Roster body ──
-          const body = document.createElement("div");
-          body.className = "opp-card-roster";
-          body.id = "opp-roster-" + opp.id;
-          _oppRenderRoster(opp, body);
-          card.appendChild(body);
-
-          return card;
+          list.innerHTML = `<div class="opp-tiles-grid">${_opponents
+            .map(
+              (opp) => `
+            <div class="opp-tile" onclick="oppOpenDetail('${opp.id}')">
+              <div style="font-family:'Share Tech Mono',monospace;font-size:9px;letter-spacing:2px;color:var(--text3);text-transform:uppercase;margin-bottom:2px">Opponent</div>
+              <div class="opp-tile-name">${escHtml(opp.name)}</div>
+              <div class="opp-tile-meta">${opp.roster.length} player${
+                opp.roster.length !== 1 ? "s" : ""
+              }</div>
+              <div class="opp-tile-arrow">›</div>
+            </div>`
+            )
+            .join("")}
+          </div>`;
         }
 
         function _oppRenderRoster(opp, container) {
@@ -23011,67 +23834,111 @@
             container.innerHTML = `<div style="padding:20px 0;text-align:center;color:var(--text3);font-size:12px">No players yet — add manually or import a file.</div>`;
             return;
           }
-          container.innerHTML = "";
+          let html = "";
           let remaining = [...opp.roster];
           for (const grp of POS_GROUPS) {
             const players = remaining.filter(grp.match);
             if (!players.length) continue;
-            remaining = remaining.filter(p => !grp.match(p));
-            const sec = document.createElement("div");
-            sec.style.marginBottom = "16px";
-            sec.innerHTML = `<div style="font-family:'Barlow',sans-serif;font-weight:700;font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--text3);margin-bottom:8px;padding-bottom:4px;border-bottom:1px solid var(--border)">${grp.label} <span style="font-weight:400">(${players.length})</span></div><div style="display:flex;flex-wrap:wrap;gap:8px"></div>`;
-            const row = sec.querySelector("div > div");
-            players.sort((a,b) => parseInt(a.num||999)-parseInt(b.num||999)).forEach(p => {
-              const isPitcher = ["RHP","LHP","P","UTL/RHP","C/RHP","3B/RHP"].some(x => p.pos === x);
-              const numCol = isPitcher ? "color:#1a5acc" : "color:var(--accent)";
-              const borderCol = isPitcher ? "border-color:rgba(26,90,204,.35)" : "";
-              const el = document.createElement("div");
-              el.style.cssText = `background:var(--surface);border:1.5px solid var(--border2);${borderCol};border-radius:10px;padding:10px 12px;cursor:pointer;transition:all .14s;min-width:110px;position:relative`;
-              el.innerHTML = `<div style="font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:20px;${numCol};line-height:1">#${p.num||"—"}</div>
-                <div style="font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:13px;color:var(--text);margin-top:2px;white-space:nowrap">${p.name}</div>
-                <div style="font-size:10px;color:var(--text3);margin-top:2px">${p.pos||"—"} · ${p.bat||"R"}/${p.throw||"R"}</div>
-                ${p.ht||p.wt ? `<div style="font-size:9px;color:var(--text3);margin-top:1px">${[p.ht,p.wt].filter(Boolean).join(" · ")}</div>` : ""}`;
-              el.addEventListener("mouseover", () => { el.style.borderColor = isPitcher ? "#1a5acc" : "var(--accent)"; el.style.transform = "translateY(-1px)"; });
-              el.addEventListener("mouseout",  () => { el.style.borderColor = isPitcher ? "rgba(26,90,204,.35)" : "var(--border2)"; el.style.transform = ""; });
-              el.addEventListener("click", () => oppEditPlayer(opp.id, p.id));
-              row.appendChild(el);
-            });
-            container.appendChild(sec);
+            remaining = remaining.filter((p) => !grp.match(p));
+            html += `<div style="margin-bottom:20px">
+              <div style="font-family:'Barlow',sans-serif;font-weight:700;font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--text3);margin-bottom:8px;padding-bottom:4px;border-bottom:1px solid var(--border)">${grp.label} <span style="color:var(--text3);font-weight:400">(${players.length})</span></div>
+              <div style="display:flex;flex-wrap:wrap;gap:8px">`;
+            for (const p of players.sort(
+              (a, b) => parseInt(a.num || 999) - parseInt(b.num || 999)
+            )) {
+              const isPitcher = [
+                "RHP",
+                "LHP",
+                "P",
+                "UTL/RHP",
+                "C/RHP",
+                "3B/RHP",
+              ].some((x) => p.pos === x);
+              const cardBorder = isPitcher
+                ? "border-color:rgba(26,90,204,.35);"
+                : "";
+              const numColor = isPitcher
+                ? "color:#1a5acc"
+                : "color:var(--accent)";
+              const hoverBorder = isPitcher ? "#1a5acc" : "var(--accent)";
+              const resetBorder = isPitcher
+                ? "rgba(26,90,204,.35)"
+                : "var(--border2)";
+              html += `<div
+                onclick="oppEditPlayer('${opp.id}','${p.id}')"
+                onmouseover="this.style.borderColor='${hoverBorder}';this.style.transform='translateY(-1px)'"
+                onmouseout="this.style.borderColor='${resetBorder}';this.style.transform=''"
+                style="background:var(--surface);border:1.5px solid var(--border2);${cardBorder}border-radius:10px;padding:10px 12px;cursor:pointer;transition:all .14s;min-width:120px;position:relative;user-select:none">
+                <div style="font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:22px;${numColor};line-height:1">#${
+                p.num || "—"
+              }</div>
+                <div style="font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:14px;color:var(--text);margin-top:2px;white-space:nowrap">${
+                  p.name
+                }</div>
+                <div style="font-family:'Barlow',sans-serif;font-size:10px;color:var(--text3);margin-top:2px">${
+                  p.pos || "—"
+                } · ${p.bat || "R"}/${p.throw || "R"}</div>
+                ${
+                  p.ht || p.wt
+                    ? `<div style="font-size:9px;color:var(--text3);margin-top:1px">${[
+                        p.ht,
+                        p.wt,
+                      ]
+                        .filter(Boolean)
+                        .join(" · ")}</div>`
+                    : ""
+                }
+              </div>`;
+            }
+            html += "</div></div>";
           }
+          container.innerHTML = html;
         }
 
         // ── Rename ────────────────────────────────────────────────────────────
         function oppRenameLive(id, val) {
-          const opp = _opponents.find(o => o.id === id);
+          const opp = _opponents.find((o) => o.id === id);
           if (opp) opp.name = val.trim() || "New Opponent";
         }
         function oppRename(id, val) {
-          const opp = _opponents.find(o => o.id === id);
+          const opp = _opponents.find((o) => o.id === id);
           if (!opp) return;
           opp.name = val.trim() || "New Opponent";
           oppSaveOne(opp);
-          const sub = document.getElementById("opp-sub-" + id);
-          // sub line doesn't need refresh, just persist
         }
 
         // ── Delete card ───────────────────────────────────────────────────────
         function oppConfirmDelete(id) {
-          const opp = _opponents.find(o => o.id === id);
+          const opp = _opponents.find((o) => o.id === id);
           if (!opp) return;
           const n = opp.roster.length;
-          const msg = n > 0
-            ? `Remove "${opp.name}" and their ${n} player${n!==1?"s":""}?`
-            : `Remove "${opp.name}"?`;
-          if (confirm(msg)) oppDeleteOne(id);
+          const msg =
+            n > 0
+              ? `Remove "${opp.name}" and their ${n} player${
+                  n !== 1 ? "s" : ""
+                }?`
+              : `Remove "${opp.name}"?`;
+          if (!confirm(msg)) return;
+          if (_oppOpenId === id) {
+            // Close detail first, then delete
+            _oppOpenId = null;
+            document.getElementById("opp-list-view").style.display = "flex";
+            document.getElementById("opp-detail").classList.remove("open");
+          }
+          oppDeleteOne(id);
         }
 
         // ── Add / Edit player modal ───────────────────────────────────────────
         function oppAddPlayer(oppId) {
-          _oppEditingId  = oppId;
+          _oppEditingId = oppId;
           _oppEditingPid = null;
-          document.getElementById("opp-player-modal-title").textContent = "Add Player";
-          document.getElementById("opp-player-modal-delete").style.display = "none";
-          ["name","num","ht","wt"].forEach(f => document.getElementById("opp-mtp-"+f).value = "");
+          document.getElementById("opp-player-modal-title").textContent =
+            "Add Player";
+          document.getElementById("opp-player-modal-delete").style.display =
+            "none";
+          ["name", "num", "ht", "wt"].forEach(
+            (f) => (document.getElementById("opp-mtp-" + f).value = "")
+          );
           document.getElementById("opp-mtp-pos").value = "C";
           document.getElementById("opp-mtp-bat").value = "R";
           document.getElementById("opp-mtp-throw").value = "R";
@@ -23080,65 +23947,65 @@
         }
 
         function oppEditPlayer(oppId, playerId) {
-          const opp = _opponents.find(o => o.id === oppId);
+          const opp = _opponents.find((o) => o.id === oppId);
           if (!opp) return;
-          const p = opp.roster.find(x => x.id === playerId);
+          const p = opp.roster.find((x) => x.id === playerId);
           if (!p) return;
-          _oppEditingId  = oppId;
+          _oppEditingId = oppId;
           _oppEditingPid = playerId;
-          document.getElementById("opp-player-modal-title").textContent = "Edit Player";
-          document.getElementById("opp-player-modal-delete").style.display = "inline-flex";
-          document.getElementById("opp-mtp-name").value  = p.name  || "";
-          document.getElementById("opp-mtp-num").value   = p.num   || "";
-          document.getElementById("opp-mtp-pos").value   = p.pos   || "C";
-          document.getElementById("opp-mtp-bat").value   = p.bat   || "R";
+          document.getElementById("opp-player-modal-title").textContent =
+            "Edit Player";
+          document.getElementById("opp-player-modal-delete").style.display =
+            "inline-flex";
+          document.getElementById("opp-mtp-name").value = p.name || "";
+          document.getElementById("opp-mtp-num").value = p.num || "";
+          document.getElementById("opp-mtp-pos").value = p.pos || "C";
+          document.getElementById("opp-mtp-bat").value = p.bat || "R";
           document.getElementById("opp-mtp-throw").value = p.throw || "R";
-          document.getElementById("opp-mtp-ht").value    = p.ht    || "";
-          document.getElementById("opp-mtp-wt").value    = p.wt    || "";
+          document.getElementById("opp-mtp-ht").value = p.ht || "";
+          document.getElementById("opp-mtp-wt").value = p.wt || "";
           document.getElementById("opp-player-modal").style.display = "flex";
         }
 
         function oppSavePlayer() {
           const name = document.getElementById("opp-mtp-name").value.trim();
-          if (!name) { document.getElementById("opp-mtp-name").focus(); return; }
-          const opp = _opponents.find(o => o.id === _oppEditingId);
+          if (!name) {
+            document.getElementById("opp-mtp-name").focus();
+            return;
+          }
+          const opp = _opponents.find((o) => o.id === _oppEditingId);
           if (!opp) return;
           const player = {
-            id:    _oppEditingPid || "p_" + Date.now() + "_" + Math.random().toString(36).slice(2,6),
+            id:
+              _oppEditingPid ||
+              "p_" + Date.now() + "_" + Math.random().toString(36).slice(2, 6),
             name,
-            num:   document.getElementById("opp-mtp-num").value.trim(),
-            pos:   document.getElementById("opp-mtp-pos").value,
-            bat:   document.getElementById("opp-mtp-bat").value,
+            num: document.getElementById("opp-mtp-num").value.trim(),
+            pos: document.getElementById("opp-mtp-pos").value,
+            bat: document.getElementById("opp-mtp-bat").value,
             throw: document.getElementById("opp-mtp-throw").value,
-            ht:    document.getElementById("opp-mtp-ht").value.trim(),
-            wt:    document.getElementById("opp-mtp-wt").value.trim(),
+            ht: document.getElementById("opp-mtp-ht").value.trim(),
+            wt: document.getElementById("opp-mtp-wt").value.trim(),
           };
           if (_oppEditingPid) {
-            const idx = opp.roster.findIndex(x => x.id === _oppEditingPid);
+            const idx = opp.roster.findIndex((x) => x.id === _oppEditingPid);
             if (idx >= 0) opp.roster[idx] = player;
           } else {
             opp.roster.push(player);
           }
           document.getElementById("opp-player-modal").style.display = "none";
           oppSaveOne(opp);
-          // Re-render just this card's roster
-          const body = document.getElementById("opp-roster-" + opp.id);
-          if (body) _oppRenderRoster(opp, body);
-          const sub = document.getElementById("opp-sub-" + opp.id);
-          if (sub) sub.textContent = opp.roster.length + " player" + (opp.roster.length !== 1 ? "s" : "");
+          oppRefreshDetail();
         }
 
         function oppDeletePlayer() {
           if (!_oppEditingId || !_oppEditingPid) return;
-          const opp = _opponents.find(o => o.id === _oppEditingId);
+          const opp = _opponents.find((o) => o.id === _oppEditingId);
           if (!opp) return;
-          opp.roster = opp.roster.filter(p => p.id !== _oppEditingPid);
+          opp.roster = opp.roster.filter((p) => p.id !== _oppEditingPid);
           document.getElementById("opp-player-modal").style.display = "none";
           oppSaveOne(opp);
-          const body = document.getElementById("opp-roster-" + opp.id);
-          if (body) _oppRenderRoster(opp, body);
-          const sub = document.getElementById("opp-sub-" + opp.id);
-          if (sub) sub.textContent = opp.roster.length + " player" + (opp.roster.length !== 1 ? "s" : "");
+          oppRefreshDetail();
         }
 
         // ── Import (reuse myTeam parsers) ─────────────────────────────────────
@@ -23147,17 +24014,23 @@
           if (!file) return;
           const ext = file.name.split(".").pop().toLowerCase();
           const reader = new FileReader();
-          reader.onload = function(e) {
+          reader.onload = function (e) {
             if (ext === "pdf") {
-              myTeamParsePDF(e.target.result).then(players => _oppFinishImport(oppId, players, input));
+              myTeamParsePDF(e.target.result).then((players) =>
+                _oppFinishImport(oppId, players, input)
+              );
               return;
             }
             let players = [];
             try {
-              if      (ext === "trx")  players = myTeamParseTRX(e.target.result);
-              else if (ext === "csv")  players = myTeamParseCSV(e.target.result);
-              else if (ext === "xlsx") players = myTeamParseXLSX(e.target.result);
-            } catch(err) { alert("Import failed: " + err.message); return; }
+              if (ext === "trx") players = myTeamParseTRX(e.target.result);
+              else if (ext === "csv") players = myTeamParseCSV(e.target.result);
+              else if (ext === "xlsx")
+                players = myTeamParseXLSX(e.target.result);
+            } catch (err) {
+              alert("Import failed: " + err.message);
+              return;
+            }
             _oppFinishImport(oppId, players, input);
           };
           if (ext === "xlsx" || ext === "pdf") reader.readAsArrayBuffer(file);
@@ -23165,20 +24038,31 @@
         }
 
         function _oppFinishImport(oppId, players, input) {
-          if (!players || !players.length) { alert("No players found in file."); return; }
-          const opp = _opponents.find(o => o.id === oppId);
+          if (!players || !players.length) {
+            alert("No players found in file.");
+            return;
+          }
+          const opp = _opponents.find((o) => o.id === oppId);
           if (!opp) return;
-          let added = 0, updated = 0;
+          let added = 0,
+            updated = 0;
           for (const p of players) {
-            const existing = opp.roster.find(x => x.num === p.num && p.num);
-            if (existing) { Object.assign(existing, p, { id: existing.id }); updated++; }
-            else { p.id = "p_" + Date.now() + "_" + Math.random().toString(36).slice(2,6); opp.roster.push(p); added++; }
+            const existing = opp.roster.find((x) => x.num === p.num && p.num);
+            if (existing) {
+              Object.assign(existing, p, { id: existing.id });
+              updated++;
+            } else {
+              p.id =
+                "p_" +
+                Date.now() +
+                "_" +
+                Math.random().toString(36).slice(2, 6);
+              opp.roster.push(p);
+              added++;
+            }
           }
           oppSaveOne(opp);
-          const body = document.getElementById("opp-roster-" + opp.id);
-          if (body) _oppRenderRoster(opp, body);
-          const sub = document.getElementById("opp-sub-" + opp.id);
-          if (sub) sub.textContent = opp.roster.length + " player" + (opp.roster.length !== 1 ? "s" : "");
+          oppRefreshDetail();
           toast("Imported: " + added + " added, " + updated + " updated");
           if (input) input.value = "";
         }
