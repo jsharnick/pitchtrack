@@ -11303,8 +11303,14 @@
         }
 
         function toggleInlineSub(type, i) {
-          // If My Team has position players, show roster picker
-          if (myTeamRoster && myTeamRoster.length > 0) {
+          // Only show the My Team roster picker when the slot being subbed
+          // belongs to My Team's side of the lineup. Determine this by
+          // comparing the batting team's name to the cached My Team name.
+          var _myTN = window._myTeamNameCache || "";
+          var battingTeamName = S.isTop ? awayName() : homeName();
+          var isMyTeamBatting = _myTN && battingTeamName === _myTN;
+          // If My Team is batting and has position players, show roster picker
+          if (isMyTeamBatting && myTeamRoster && myTeamRoster.length > 0) {
             showInlineSubPicker(type, i);
             return;
           }
