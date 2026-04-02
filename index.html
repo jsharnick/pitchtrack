@@ -8813,32 +8813,32 @@ function buildHitterScoutingReport(teamName, playerName, games){
   const weakPct=contactPitches.length>0?Math.round(contactPitches.filter(p=>p.spray?.btype==='weakgrounder'||p.spray?.btype==='popup').length/contactPitches.length*100):0;
   const solidPct=contactPitches.length>0?Math.round(contactPitches.filter(p=>['flyball','linedrive'].includes(p.spray?.btype)&&p.spray?.hardHit).length/contactPitches.length*100):0;
 
-  return `<div class="scout-report-page" id="scout-hitter-report" style="padding:20px;background:#fff;font-family:'Barlow Condensed',sans-serif;overflow:hidden;max-width:100%;container-type:inline-size">
+  return `<div class="scout-report-page" id="scout-hitter-report" style="padding:16px;background:#fff;font-family:'Barlow Condensed',sans-serif;overflow:hidden;max-width:100%">
   <!-- Header -->
-  <div style="display:flex;align-items:flex-start;justify-content:space-between;border-bottom:3px solid #cc1a1a;padding-bottom:8px;margin-bottom:12px">
+  <div style="display:flex;align-items:flex-start;justify-content:space-between;border-bottom:3px solid #cc1a1a;padding-bottom:6px;margin-bottom:8px">
     <div>
       <div style="font-family:'Barlow',sans-serif;font-weight:700;font-size:10px;letter-spacing:1px;text-transform:uppercase;color:#cc1a1a;margin-bottom:2px">Hitter Scouting Report</div>
-      <div style="font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:28px;color:#111318;line-height:1">#${stats.num||'—'} ${escHtml(playerName)}</div>
+      <div style="font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:24px;color:#111318;line-height:1">#${stats.num||'—'} ${escHtml(playerName)}</div>
       <div style="font-family:'Barlow',sans-serif;font-size:11px;font-weight:400;color:#8a909e;margin-top:3px">${stats.pos||'—'} · ${stats.hand||'R'}HH · ${escHtml(teamName)} · ${stats.games}G · ${pa} PA · ${today}</div>
     </div>
     <div style="display:flex;gap:20px;align-items:flex-end;flex-shrink:0">
-      ${[['AVG',f(avg),'#cc1a1a'],['OBP',f(obp),'#111318'],['SLG',f(slg),'#111318'],['OPS',f(ops),ops>=.800?'#1a8a3a':ops>=.700?'#b8860b':'#cc1a1a']].map(([l,v,c])=>`<div style="text-align:center"><div style="font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:28px;line-height:1;color:${c}">${v}</div><div style="font-family:'Barlow',sans-serif;font-size:9px;font-weight:600;letter-spacing:0.5px;text-transform:uppercase;color:#8a909e;margin-top:3px">${l}</div></div>`).join('')}
+      ${[['AVG',f(avg),'#cc1a1a'],['OBP',f(obp),'#111318'],['SLG',f(slg),'#111318'],['OPS',f(ops),ops>=.800?'#1a8a3a':ops>=.700?'#b8860b':'#cc1a1a']].map(([l,v,c])=>`<div style="text-align:center"><div style="font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:24px;line-height:1;color:${c}">${v}</div><div style="font-family:'Barlow',sans-serif;font-size:9px;font-weight:600;letter-spacing:0.5px;text-transform:uppercase;color:#8a909e;margin-top:3px">${l}</div></div>`).join('')}
     </div>
   </div>
 
   <!-- Row 1: Production stats + Plate Discipline bars (50/50) -->
-  <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px">
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:8px">
     <div class="scout-section" style="margin-bottom:0">
       <div class="scout-section-title">Production</div>
       <div style="display:grid;grid-template-columns:repeat(6,1fr);gap:5px">
         ${[['H',h],['2B',stats.doubles],['3B',stats.triples],['HR',stats.hr],['R',stats.r||0],['RBI',stats.rbi||0],['BB',stats.bb||0],['K',stats.k||0],['HBP',stats.hbp||0],['K%',fp(kpct)],['BB%',fp(bbpct)],['P/PA',pa>0?(total/pa).toFixed(1):'—']].map(([l,v])=>`
-          <div style="background:#f8f9fb;border:1px solid #e0e4ea;border-radius:6px;padding:7px 4px;text-align:center"><div style="font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:20px;line-height:1;color:${l==='HR'&&+v>0?'#cc1a1a':'#111318'}">${v}</div><div style="font-family:'Barlow',sans-serif;font-size:9px;font-weight:600;color:#8a909e;margin-top:3px;letter-spacing:0">${l}</div></div>`).join('')}
+          <div style="background:#f8f9fb;border:1px solid #e0e4ea;border-radius:5px;padding:5px 3px;text-align:center"><div style="font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:17px;line-height:1;color:${l==='HR'&&+v>0?'#cc1a1a':'#111318'}">${v}</div><div style="font-family:'Barlow',sans-serif;font-size:8px;font-weight:600;color:#8a909e;margin-top:2px;letter-spacing:0">${l}</div></div>`).join('')}
       </div>
     </div>
     <div class="scout-section" style="margin-bottom:0">
       <div class="scout-section-title">Plate Discipline</div>
       ${[['Swing%',swings,total,'#5baef5'],['Contact%',contact,swings,'#1a8a3a'],['Zone%',inZone.length,total,'#cc1a1a'],['Zone Swing%',inZone.filter(p=>swingOuts.includes(p.outcome)).length,inZone.length,'#e05c10'],['Chase%',chaseSwings,outZone.length,'#8a0000'],['Whiff%',whiffs,swings,'#c01a1a'],['Hard Hit%',hardHits,contact,'#d42828']].map(([lbl,n,d,col])=>`
-        <div style="display:flex;align-items:center;gap:6px;margin-bottom:3px">
+        <div style="display:flex;align-items:center;gap:5px;margin-bottom:2px">
           <div style="font-family:'Barlow',sans-serif;font-size:11px;font-weight:500;color:#4a5060;width:82px;flex-shrink:0">${lbl}</div>
           <div style="flex:1;background:#e8eaee;border-radius:3px;height:8px;overflow:hidden"><div style="width:${d>0?Math.round(n/d*100):0}%;height:100%;background:${col};border-radius:3px"></div></div>
           <div style="font-size:10px;color:#8a909e;width:30px;text-align:right;flex-shrink:0">${d>0?Math.round(n/d*100)+'%':'—'}</div>
@@ -8847,7 +8847,7 @@ function buildHitterScoutingReport(teamName, playerName, games){
   </div>
 
   <!-- Row 2: Spray | Batted Ball Profile | Field Heat Map | Hot/Cold -->
-  <div style="display:grid;grid-template-columns:1.4fr 1fr 1fr 0.85fr;gap:10px;margin-bottom:12px;align-items:start">
+  <div style="display:grid;grid-template-columns:1.4fr 1fr 1fr 0.85fr;gap:8px;margin-bottom:8px;align-items:start">
 
     <!-- Spray chart -->
     <div class="scout-section" style="margin-bottom:0">
@@ -8879,9 +8879,9 @@ function buildHitterScoutingReport(teamName, playerName, games){
           <div class="scout-section-title">Quality of Contact</div>
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:4px">
             ${[['Hard Hit%',hardPct,'#cc1a1a'],['LD%',ldContactPct,'#28a83a'],['Weak%',weakPct,'#8a6000'],['Solid Air%',solidPct,'#1a5acc']].map(([l,v,c])=>`
-              <div style="background:#f8f9fb;border:1px solid #e0e4ea;border-radius:5px;padding:6px 4px;text-align:center">
-                <div style="font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:18px;color:${v>=30?c:'#111318'};line-height:1">${v}%</div>
-                <div style="font-family:'Barlow',sans-serif;font-size:9px;font-weight:500;color:#8a909e;margin-top:3px;letter-spacing:0">${l}</div>
+              <div style="background:#f8f9fb;border:1px solid #e0e4ea;border-radius:4px;padding:4px 3px;text-align:center">
+                <div style="font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:15px;color:${v>=30?c:'#111318'};line-height:1">${v}%</div>
+                <div style="font-family:'Barlow',sans-serif;font-size:8px;font-weight:500;color:#8a909e;margin-top:2px;letter-spacing:0">${l}</div>
               </div>`).join('')}
           </div>
         </div>
@@ -8903,7 +8903,7 @@ function buildHitterScoutingReport(teamName, playerName, games){
 
 
   <!-- Row 3: Count/Situation + vs Pitch Type (50/50) -->
-  <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px">
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:8px">
     <div class="scout-section" style="margin-bottom:0">
       <div class="scout-section-title">Performance by Count / Situation</div>
       <table class="scout-table">
@@ -8921,7 +8921,7 @@ function buildHitterScoutingReport(teamName, playerName, games){
   </div>
 
   <!-- Row 4: Key Splits + By Lineup Slot (50/50) -->
-  <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
     <div class="scout-section" style="margin-bottom:0">
       <div class="scout-section-title">Key Splits</div>
       <table class="scout-table">
@@ -9421,36 +9421,47 @@ function _scoutPrintCSS(){
     '*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }',
     'html, body { background: #fff; font-family: "Barlow Condensed", sans-serif; color: #111318;',
     '  -webkit-print-color-adjust: exact; print-color-adjust: exact; }',
-    '@page { size: 8.5in 11in portrait; margin: 0.35in; }',
-    '.scout-report-page { width:100%; background:#fff; font-family:"Barlow Condensed",sans-serif; page-break-after:always; break-after:page; }',
+    // Scale the page to guarantee one-page fit — 0.72 scale fits a full report on 8.5x11 with 0.25in margins
+    '@page { size: 8.5in 11in portrait; margin: 0.2in; }',
+    // Each report page: fixed width, scaled to fit the printable area
+    '.scout-report-page {',
+    '  width: 10.16in;',  // 8.5in / 0.72 = effective unscaled width
+    '  background: #fff;',
+    '  font-family: "Barlow Condensed", sans-serif;',
+    '  transform-origin: top left;',
+    '  transform: scale(0.72);',
+    '  page-break-after: always;',
+    '  break-after: page;',
+    '  overflow: hidden;',
+    '}',
     '.scout-report-page:last-child { page-break-after:auto; break-after:auto; }',
     '.scout-section-title { font-family:"Barlow",sans-serif; font-weight:700; font-size:10px;',
-    '  letter-spacing:1px; text-transform:uppercase; color:#8a909e;',
-    '  border-bottom:2px solid #d4d8e0; padding-bottom:2px; margin-bottom:5px; }',
+    '  letter-spacing:0.5px; text-transform:uppercase; color:#8a909e;',
+    '  border-bottom:2px solid #d4d8e0; padding-bottom:2px; margin-bottom:4px; }',
     '.scout-table { width:100%; border-collapse:collapse; font-size:9px; font-family:"Barlow",sans-serif; }',
-    '.scout-table th { font-family:"Barlow",sans-serif; font-weight:700; font-size:9px;',
-    '  letter-spacing:0.5px; text-transform:uppercase; color:#8a909e; padding:2px 4px;',
+    '.scout-table th { font-family:"Barlow",sans-serif; font-weight:700; font-size:8px;',
+    '  letter-spacing:0; text-transform:uppercase; color:#8a909e; padding:2px 3px;',
     '  border-bottom:1.5px solid #d4d8e0; text-align:center; background:#f8f9fb; }',
-    '.scout-table td { padding:3px 4px; border-bottom:1px solid #e8eaee; text-align:center;',
+    '.scout-table td { padding:2px 3px; border-bottom:1px solid #e8eaee; text-align:center;',
     '  font-family:"Barlow",sans-serif; font-size:9px; }',
     '.scout-table td:first-child { text-align:left; font-weight:600; color:#4a5060; }',
     '.scout-table tr:last-child td { border-bottom:none; }',
     '.scout-highlight { color:#cc1a1a; font-weight:800; }',
     '.scout-dim { color:#8a909e; }',
     '.scout-good { color:#1a8a3a; font-weight:700; }',
-    '.scout-bar-row { display:flex; align-items:center; gap:6px; margin-bottom:2px; }',
+    '.scout-bar-row { display:flex; align-items:center; gap:5px; margin-bottom:2px; }',
     '.scout-bar-label { font-family:"Barlow",sans-serif; font-size:10px; font-weight:500;',
-    '  color:#4a5060; width:90px; flex-shrink:0; }',
+    '  color:#4a5060; width:82px; flex-shrink:0; }',
     '.scout-bar-track { flex:1; background:#e8eaee; border-radius:3px; height:6px; overflow:hidden; }',
     '.scout-bar-fill { height:100%; border-radius:3px; }',
     '.scout-bar-val { font-family:"Share Tech Mono",monospace; font-size:8px; color:#8a909e;',
-    '  width:32px; text-align:right; flex-shrink:0; }',
-    '.scout-big-stat { font-family:"Barlow Condensed",sans-serif; font-weight:900; font-size:28px; line-height:1; }',
-    '.scout-big-lbl { font-family:"Barlow",sans-serif; font-size:9px; font-weight:600; letter-spacing:0.5px; text-transform:uppercase; color:#8a909e; margin-top:2px; }',
-    '.scout-section { margin-bottom:8px; break-inside:avoid; }',
-    '.scout-card { background:#fff; border:1px solid #e0e4ea; border-radius:6px; padding:5px 4px; text-align:center; }',
-    '.scout-card-val { font-family:"Barlow Condensed",sans-serif; font-weight:800; font-size:18px; }',
-    '.scout-card-lbl { font-family:"Barlow",sans-serif; font-size:9px; font-weight:500; color:#8a909e; margin-top:2px; }',
+    '  width:30px; text-align:right; flex-shrink:0; }',
+    '.scout-big-stat { font-family:"Barlow Condensed",sans-serif; font-weight:900; font-size:26px; line-height:1; }',
+    '.scout-big-lbl { font-family:"Barlow",sans-serif; font-size:8px; font-weight:600; letter-spacing:0; text-transform:uppercase; color:#8a909e; margin-top:2px; }',
+    '.scout-section { margin-bottom:6px; break-inside:avoid; }',
+    '.scout-card { background:#fff; border:1px solid #e0e4ea; border-radius:5px; padding:4px 3px; text-align:center; }',
+    '.scout-card-val { font-family:"Barlow Condensed",sans-serif; font-weight:800; font-size:16px; }',
+    '.scout-card-lbl { font-family:"Barlow",sans-serif; font-size:8px; font-weight:500; color:#8a909e; margin-top:1px; }',
     '.scout-print-hide { display:none !important; }',
     'svg { max-width:100%; height:auto; }'
   ].join('\n');
