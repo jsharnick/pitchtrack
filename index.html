@@ -25422,6 +25422,7 @@
             const name = parts[4];
             const pos = parts[5];
             const ht = parts[6] || "";
+            const wt = parts[7] || "";
             if (!name || name.length < 2) continue;
             // Derive bat/throw from position name (RHP/LHP/LHH etc.)
             let bat = "R",
@@ -25437,7 +25438,7 @@
               bat,
               throw: thr,
               ht,
-              wt: "",
+              wt,
             });
           }
           return players;
@@ -25567,7 +25568,7 @@
           return players;
         }
 
-        // PDF roster parser — extracts text patterns matching roster formats
+        // PDF roster parser — uses coordinate-aware row/column extraction
         function myTeamParsePDF(arrayBuffer) {
           return new Promise(function (resolve) {
             if (!window.pdfjsLib) {
@@ -25586,26 +25587,20 @@
                   pages.map(function (pn) {
                     return pdf.getPage(pn).then(function (page) {
                       return page.getTextContent().then(function (tc) {
-                        var sorted = tc.items.slice().sort(function (a, b) {
-                          var dy =
-                            Math.round(b.transform[5]) -
-                            Math.round(a.transform[5]);
-                          return dy !== 0
-                            ? dy
-                            : a.transform[4] - b.transform[4];
+                        // Return raw items with position data
+                        return tc.items.map(function (it) {
+                          return { str: it.str, x: it.transform[4], y: it.transform[5] };
                         });
-                        return sorted
-                          .map(function (it) {
-                            return it.str;
-                          })
-                          .join(" ");
                       });
                     });
                   })
                 );
               })
-              .then(function (pages) {
-                resolve(_parsePDFRosterText(pages.join(" ")));
+              .then(function (pageItems) {
+                // Flatten all items from all pages
+                var allItems = [];
+                pageItems.forEach(function (items) { allItems = allItems.concat(items); });
+                resolve(_parsePDFRosterItems(allItems));
               })
               .catch(function (err) {
                 alert("PDF error: " + err.message);
@@ -25614,76 +25609,162 @@
           });
         }
 
-        function _parsePDFRosterText(text) {
-          var players = [];
-          var txt = text.replace(/\s+/g, " ").trim();
-          var CLASS = /^(Fr\.|So\.|Jr\.|Sr\.|Gr\.|R-Fr\.|R-Sr\.|R-Jr\.)$/;
-          var POS =
-            /^(C|1B|2B|3B|SS|OF|LF|CF|RF|INF|DH|RHP|LHP|P|UTL|1B\/OF|INF\/OF|C\/RHP|C\/2B|SS\/2B|3B\/RHP|UTL\/RHP)$/i;
-          var HT = /^\d+-\d+$/;
-          var WT = /^\d{3}$/;
-          var BT = /^([RLSB])\/([RL])$/;
+        function _parsePDFRosterItems(items) {
+          // ── Regexes ─────────────────────────────────────────────────────────
+          var POS  = /^(C|1B|2B|3B|SS|OF|LF|CF|RF|INF|DH|RHP|LHP|P|UTL|1B\/OF|INF\/OF|C\/RHP|C\/2B|SS\/2B|3B\/RHP|UTL\/RHP)$/i;
+          var HT   = /^\d[-']\d+["']?$/;
+          var WT   = /^\d{2,3}$/;
+          var BT   = /^[RLSBrlsb]\/[RLrl]$/;
           var JNUM = /^\d{1,2}$/;
-          var tokens = txt.split(/\s+/);
-          var i = 0;
-          while (i < tokens.length) {
-            if (!JNUM.test(tokens[i])) {
-              i++;
-              continue;
-            }
-            var num = tokens[i];
-            i++;
-            var nameParts = [];
-            while (i < tokens.length) {
-              var t = tokens[i];
-              if (
-                CLASS.test(t) ||
-                POS.test(t) ||
-                HT.test(t) ||
-                WT.test(t) ||
-                BT.test(t) ||
-                JNUM.test(t)
-              )
-                break;
-              if (/^[A-Z]/.test(t) && !/^\d/.test(t)) nameParts.push(t);
-              else break;
-              i++;
-            }
-            if (!nameParts.length) continue;
-            if (i < tokens.length && CLASS.test(tokens[i])) i++;
-            if (i >= tokens.length || !POS.test(tokens[i])) continue;
-            var pos = tokens[i];
-            i++;
-            var ht = "",
-              wt = "";
-            if (i < tokens.length && HT.test(tokens[i])) {
-              ht = tokens[i];
-              i++;
-            }
-            if (i < tokens.length && WT.test(tokens[i])) {
-              wt = tokens[i];
-              i++;
-            }
-            var bat = "R",
-              thr = "R";
-            if (i < tokens.length && BT.test(tokens[i])) {
-              var bm = tokens[i].match(BT);
-              bat = bm[1];
-              thr = bm[2];
-              i++;
-            }
-            var name = nameParts.join(" ").replace(/,$/, "").trim();
-            if (name.length > 1)
-              players.push({
-                name: name,
-                num: num,
-                pos: pos,
-                bat: bat,
-                throw: thr,
-                ht: ht,
-                wt: wt,
+          var YEAR_TOKEN = /^(Fr\.|So\.|Jr\.|Sr\.|Gr\.|FY|FR|SO|JR|SR|GR|R-Fr\.|R-Jr\.|R-Sr\.|Fy\.|Fy|1st|2nd|3rd|4th|5th|Freshman|Sophomore|Junior|Senior|Graduate|Yr\.|Year)$/i;
+
+          // ── 1. Group raw items into Y-rows (3pt tolerance) ───────────────────
+          var ROW_TOLERANCE = 3;
+          var rows = [];
+          items.forEach(function (item) {
+            if (!item.str.trim()) return;
+            var y = Math.round(item.y);
+            var row = rows.find(function (r) { return Math.abs(r.y - y) <= ROW_TOLERANCE; });
+            if (!row) { row = { y: y, cells: [] }; rows.push(row); }
+            row.cells.push({ str: item.str.trim(), x: item.x });
+          });
+          rows.sort(function (a, b) { return b.y - a.y; }); // top-to-bottom
+
+          // ── 2. Detect column header row ──────────────────────────────────────
+          var colX = { num: -1, name: -1, pos: -1, ht: -1, wt: -1, bt: -1 };
+          var headerRowIdx = -1;
+          for (var ri = 0; ri < Math.min(rows.length, 15); ri++) {
+            var row = rows[ri];
+            var strs = row.cells.map(function (c) { return c.str.toLowerCase(); });
+            var hasNum  = strs.some(function (s) { return s === "no." || s === "#" || s === "no" || s === "jersey"; });
+            var hasName = strs.some(function (s) { return s === "name" || s === "player"; });
+            var hasPos  = strs.some(function (s) { return s === "pos" || s === "position"; });
+            if ((hasNum || hasName) && hasPos) {
+              headerRowIdx = ri;
+              row.cells.forEach(function (c) {
+                var sl = c.str.toLowerCase();
+                if (sl === "no." || sl === "#" || sl === "no" || sl === "jersey") colX.num  = c.x;
+                if (sl === "name" || sl === "player")   colX.name = c.x;
+                if (sl === "pos"  || sl === "position") colX.pos  = c.x;
+                if (sl === "ht"   || sl === "height")   colX.ht   = c.x;
+                if (sl === "wt"   || sl === "weight")   colX.wt   = c.x;
+                if (sl === "b/t"  || sl === "b-t" || sl === "bat/thr") colX.bt = c.x;
               });
+              break;
+            }
           }
+
+          // ── 3. Detect page column width (for multi-column grid PDFs) ─────────
+          // If the header only covers part of the page width, many PDFs repeat
+          // the same column set across the page (e.g. 2 or 3 player columns).
+          // We detect this by finding the maximum x of any cell and computing
+          // how many times the single-column width fits across the page.
+          var COL_SNAP = 30;
+          var pageWidth = 0;
+          items.forEach(function (it) { if (it.x > pageWidth) pageWidth = it.x; });
+          // Estimate single-column width: from left edge to the rightmost anchor + some padding
+          var singleColWidth = 0;
+          if (colX.bt >= 0)  singleColWidth = Math.max(singleColWidth, colX.bt  + 60);
+          if (colX.wt >= 0)  singleColWidth = Math.max(singleColWidth, colX.wt  + 60);
+          if (colX.ht >= 0)  singleColWidth = Math.max(singleColWidth, colX.ht  + 60);
+          if (colX.pos >= 0) singleColWidth = Math.max(singleColWidth, colX.pos + 60);
+          // Number of repeated column sets on the page
+          var numCols = (singleColWidth > 0 && pageWidth > singleColWidth * 1.5)
+            ? Math.round(pageWidth / singleColWidth)
+            : 1;
+
+          // ── 4. Helper: parse a single set of cells as one player ─────────────
+          function extractPlayer(cells) {
+            var num = "", name = "", pos = "", ht = "", wt = "", bt = "";
+            if (colX.num >= 0) {
+              // Tightly-anchored columns checked first; name is the catch-all between
+              // the name anchor and the pos anchor.
+              cells.forEach(function (c) {
+                if (colX.num >= 0 && Math.abs(c.x - colX.num) < COL_SNAP) { if (!num) num = c.str; return; }
+                if (colX.bt  >= 0 && Math.abs(c.x - colX.bt)  < COL_SNAP) { if (!bt)  bt  = c.str; return; }
+                if (colX.ht  >= 0 && Math.abs(c.x - colX.ht)  < COL_SNAP) { if (!ht)  ht  = c.str; return; }
+                if (colX.wt  >= 0 && Math.abs(c.x - colX.wt)  < COL_SNAP) { if (!wt)  wt  = c.str; return; }
+                if (colX.pos >= 0 && Math.abs(c.x - colX.pos) < COL_SNAP) { if (!pos) pos = c.str; return; }
+                // Name: from name anchor up to (but not including) pos anchor
+                var nameEnd = colX.pos >= 0 ? colX.pos - COL_SNAP : Infinity;
+                if (colX.name >= 0 && c.x >= colX.name - COL_SNAP && c.x < nameEnd) {
+                  name = (name ? name + " " : "") + c.str; return;
+                }
+              });
+            } else {
+              // No header — sequential token parse
+              var tokens = [];
+              cells.forEach(function (c) { tokens = tokens.concat(c.str.split(/\s+/)); });
+              tokens = tokens.filter(function (t) { return t.trim(); });
+              var ti = 0;
+              if (!JNUM.test(tokens[0])) return null;
+              num = tokens[ti++];
+              var nameParts = [];
+              while (ti < tokens.length) {
+                var t = tokens[ti];
+                if (YEAR_TOKEN.test(t) || POS.test(t) || HT.test(t) || BT.test(t) || JNUM.test(t)) break;
+                if (/^[A-Za-z]/.test(t)) nameParts.push(t);
+                else break;
+                ti++;
+              }
+              name = nameParts.join(" ");
+              if (ti < tokens.length && YEAR_TOKEN.test(tokens[ti])) ti++;
+              if (ti < tokens.length && POS.test(tokens[ti])) pos = tokens[ti++];
+              if (ti < tokens.length && HT.test(tokens[ti]))  ht  = tokens[ti++];
+              if (ti < tokens.length && WT.test(tokens[ti]))  wt  = tokens[ti++];
+              if (ti < tokens.length && BT.test(tokens[ti]))  bt  = tokens[ti++];
+            }
+
+            // Clean up
+            num  = num.replace(/[^\d]/g, "").trim();
+            name = name.replace(/,$/, "").trim();
+            name = name.split(/\s+/).filter(function (w) {
+              return !YEAR_TOKEN.test(w) && !POS.test(w) && !HT.test(w) && !JNUM.test(w);
+            }).join(" ").trim();
+            pos = pos.toUpperCase().trim();
+            bt  = bt.toUpperCase().trim();
+
+            if (!JNUM.test(num) || !name || name.length < 2) return null;
+            if (pos && !POS.test(pos)) pos = "";
+            if (YEAR_TOKEN.test(name) || POS.test(name)) return null;
+
+            var bat = "R", thr = "R";
+            if (bt) {
+              var bm = bt.match(/^([RLSB])\/([RL])$/i);
+              if (bm) { bat = bm[1].toUpperCase(); thr = bm[2].toUpperCase(); }
+            }
+            return { name: name, num: num, pos: pos || "OF", bat: bat, throw: thr, ht: ht, wt: wt };
+          }
+
+          // ── 5. Parse each row, splitting into sub-columns when needed ────────
+          var players = [];
+          var dataStart = headerRowIdx >= 0 ? headerRowIdx + 1 : 0;
+
+          for (var ri = dataStart; ri < rows.length; ri++) {
+            var row = rows[ri];
+            var cells = row.cells.slice().sort(function (a, b) { return a.x - b.x; });
+
+            if (numCols > 1 && colX.num >= 0 && singleColWidth > 0) {
+              // Multi-column grid: split cells into per-column buckets by X offset
+              var buckets = [];
+              for (var ci = 0; ci < numCols; ci++) buckets.push([]);
+              cells.forEach(function (c) {
+                var colIdx = Math.min(Math.floor(c.x / singleColWidth), numCols - 1);
+                // Normalize x to the first column's coordinate space
+                buckets[colIdx].push({ str: c.str, x: c.x - colIdx * singleColWidth });
+              });
+              buckets.forEach(function (bucket) {
+                if (!bucket.length) return;
+                var p = extractPlayer(bucket);
+                if (p) players.push(p);
+              });
+            } else {
+              // Single-column — parse the whole row as one player
+              var p = extractPlayer(cells);
+              if (p) players.push(p);
+            }
+          }
+
           return players;
         }
 
