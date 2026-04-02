@@ -5265,7 +5265,7 @@ function renderSidebar(){
   if(mobTeams){
     mobTeams.innerHTML = allTeams.map(t=>{
       const isActive = currentView?.type==='team' && currentView?.data===t;
-      return `<button class="hub-mob-team-btn${isActive?' active':''}" data-team="${escAttr(t)}" onclick="hubMobNav('team',this.getAttribute('data-team'))">${teamEmoji(t)} ${escHtml(t)}</button>`;
+      return `<button class="hub-mob-team-btn${isActive?' active':''}" data-team="${escAttr(t)}" onclick="hubMobNav('team',this.getAttribute('data-team'))">${escHtml(t)}</button>`;
     }).join('');
   }
   const allBtn = document.getElementById('hub-mob-all');
@@ -5278,7 +5278,7 @@ function renderSidebar(){
     const record = getTeamRecord(t, games);
     return `<div style="display:flex;align-items:center;border-left:3px solid transparent" class="${currentView?.type==='team'&&currentView?.data===t?'team-row-active':''}">
       <button class="team-btn${currentView?.type==='team'&&currentView?.data===t?' active':''}" data-team="${escAttr(t)}" onclick="showView('team',this.getAttribute('data-team'))" style="flex:1;border-left:none">
-        <div class="team-icon">${teamEmoji(t)}</div>
+        <div class="team-icon" style="font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:14px;color:var(--text2)">${escHtml(t).charAt(0)}</div>
         <div>
           <div class="team-name">${escHtml(t)}</div>
           <div class="team-meta">${games.length} game${games.length!==1?'s':''} · ${record.w}-${record.l}${record.t?'-'+record.t:''}</div>
