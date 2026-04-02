@@ -15016,7 +15016,19 @@
           // Always render mobile bar regardless of team count
           const mobTeams = document.getElementById("hub-mob-teams");
           if (mobTeams) {
-            mobTeams.innerHTML = allTeams
+            // Resolve myTeamName for mobile (same logic as desktop, runs before desktop block)
+            const _mobMyTeamName = (function () {
+              try {
+                const ni = document.getElementById("myteam-name-input");
+                if (ni && ni.value.trim()) return ni.value.trim();
+                return window._myTeamNameCache || null;
+              } catch (e) { return null; }
+            })();
+            const mobMyTeamBtn = (_mobMyTeamName && myTeamRoster && myTeamRoster.length > 0)
+              ? `<button class="hub-mob-team-btn${currentView?.type === 'team' && currentView?.data === _mobMyTeamName ? ' active' : ''}" data-team="${escAttr(_mobMyTeamName)}" onclick="hubMobNav('team',this.getAttribute('data-team'))" style="color:var(--accent);border-color:rgba(204,26,26,.4)">${escHtml(_mobMyTeamName)}</button>`
+              : '';
+            mobTeams.innerHTML = mobMyTeamBtn + allTeams
+              .filter(t => t !== _mobMyTeamName)
               .map((t) => {
                 const isActive =
                   currentView?.type === "team" && currentView?.data === t;
@@ -15038,10 +15050,6 @@
             );
 
           // Desktop sidebar
-          if (!allTeams.length) {
-            list.innerHTML = '<div class="sidebar-empty">No teams yet</div>';
-            return;
-          }
           // Prepend My Team pinned entry
           const myTeamName = (function () {
             try {
@@ -15053,25 +15061,30 @@
               return "My Team";
             }
           })();
-          const myTeamEntry =
-            myTeamRoster && myTeamRoster.length > 0
-              ? `<div style="border-left:3px solid var(--accent);margin-bottom:4px;background:rgba(204,26,26,.04);border-radius:0 6px 6px 0">
-      <button class="team-btn" onclick="openPanel('myteam')" style="flex:1;border-left:none;width:100%">
+          // Filter out My Team from the regular list to avoid duplicates
+          const otherTeams = allTeams.filter(t => t !== myTeamName);
+          const hasMyTeam = myTeamRoster && myTeamRoster.length > 0;
+          if (!otherTeams.length && !hasMyTeam) {
+            list.innerHTML = '<div class="sidebar-empty">No teams yet</div>';
+            return;
+          }
+          const myTeamGames = hasMyTeam ? getTeamGames(myTeamName) : [];
+          const myTeamRecord = myTeamGames.length > 0 ? getTeamRecord(myTeamName, myTeamGames) : null;
+          const myTeamIsActive = currentView?.type === "team" && currentView?.data === myTeamName;
+          const myTeamEntry = hasMyTeam
+              ? `<div style="display:flex;align-items:center;border-left:3px solid var(--accent);margin-bottom:4px;background:rgba(204,26,26,.04);border-radius:0 6px 6px 0" class="${myTeamIsActive ? 'team-row-active' : ''}">
+      <button class="team-btn${myTeamIsActive ? ' active' : ''}" data-team="${escAttr(myTeamName)}" onclick="showView('team',this.getAttribute('data-team'))" style="flex:1;border-left:none">
         <div class="team-icon" style="font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:9px;letter-spacing:0.5px;color:var(--accent);border-color:rgba(204,26,26,.3)">MY</div>
         <div>
-          <div class="team-name" style="color:var(--accent)">${escHtml(
-            myTeamName
-          )}</div>
-          <div class="team-meta">${myTeamRoster.length} player${
-                  myTeamRoster.length !== 1 ? "s" : ""
-                } · My Roster</div>
+          <div class="team-name" style="color:var(--accent)">${escHtml(myTeamName)}</div>
+          <div class="team-meta">${myTeamGames.length} game${myTeamGames.length !== 1 ? 's' : ''}${myTeamRecord ? ' · ' + myTeamRecord.w + '-' + myTeamRecord.l + (myTeamRecord.t ? '-' + myTeamRecord.t : '') : ' · My Roster'}</div>
         </div>
       </button>
     </div>`
               : "";
           list.innerHTML =
             myTeamEntry +
-            allTeams
+            otherTeams
               .map((t) => {
                 const games = getTeamGames(t);
                 const record = getTeamRecord(t, games);
