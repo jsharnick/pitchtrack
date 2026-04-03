@@ -18376,8 +18376,8 @@
           },${H / 2})">OUT</text>
     <!-- Pitch dots -->
     ${dots}
-    <!-- Home plate indicator -->
-    <circle cx="${W / 2}" cy="${H * 0.93}" r="5" fill="#111318" opacity="0.4"/>
+    <!-- Home plate (catcher's view — tip points down toward catcher) -->
+    ${_homePlateSVG(W / 2, H * 0.925, W / 155)}
   </svg>`;
         }
 
@@ -19680,6 +19680,18 @@
         }
 
         // ===== PITCH ZONE LEGEND =====
+        // ── Home plate SVG snippet — catcher's view (tip points DOWN) ──────────
+        // cx/cy = center of the plate pentagon, sz = scale (default 1 = ~22px wide)
+        function _homePlateSVG(cx, cy, sz = 1, color = "rgba(80,80,100,0.55)") {
+          // Standard home plate shape (5-sided): flat top, two angled sides, pointed tip at bottom
+          // Unscaled relative coords (width=22, height=20):
+          //   top-left(-11,-8), top-right(11,-8), right(11,3), tip(0,12), left(-11,3)
+          const pts = [
+            [-11, -8], [11, -8], [11, 3], [0, 12], [-11, 3]
+          ].map(([x, y]) => `${(cx + x * sz).toFixed(1)},${(cy + y * sz).toFixed(1)}`).join(" ");
+          return `<polygon points="${pts}" fill="${color}" stroke="${color.replace(/[\d.]+\)$/, "0.85)")}"/>`;
+        }
+
         function pitchZoneLegend() {
           const items = [
             { col: "#5baef5", label: "Fastball (4SFB/CUT/SNK)" },
@@ -24629,12 +24641,10 @@
           return `<svg viewBox="0 0 ${W} ${H}" style="width:100%;border-radius:6px;background:#f0f2f5">
     <rect x="${ZX1}" y="${ZY1}" width="${ZW}" height="${ZH}" fill="none" stroke="#999" stroke-width="1"/>
     ${cellSVG}
-    <text x="${W / 2}" y="${
-            H - 4
-          }" text-anchor="middle" font-size="7" fill="#999">LOW</text>
-    <text x="${
-      W / 2
-    }" y="10" text-anchor="middle" font-size="7" fill="#999">HIGH</text>
+    <text x="${W / 2}" y="${H - 4}" text-anchor="middle" font-size="7" fill="#999">LOW</text>
+    <text x="${W / 2}" y="10" text-anchor="middle" font-size="7" fill="#999">HIGH</text>
+    <!-- Home plate (catcher's view — tip points down toward catcher) -->
+    ${_homePlateSVG(W / 2, H - 4, 0.62)}
   </svg>`;
         }
 
