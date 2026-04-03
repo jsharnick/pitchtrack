@@ -5221,7 +5221,7 @@
                         color: var(--text3);
                         letter-spacing: 1px;
                       "
-                      >FB/CT/SI</span
+                      >4SFB/CUT/SNK</span
                     >
                   </div>
                   <div style="display: flex; align-items: center; gap: 4px">
@@ -5240,7 +5240,7 @@
                         color: var(--text3);
                         letter-spacing: 1px;
                       "
-                      >CB/SL/SP</span
+                      >CRV/SLD/SPL</span
                     >
                   </div>
                   <div style="display: flex; align-items: center; gap: 4px">
@@ -6980,6 +6980,8 @@
             />
           </div>
         </div>
+        <!-- Pitch repertoire editor — shown only for pitcher positions -->
+        <div id="opp-mtp-pitch-section" style="display: none"></div>
         <div
           style="
             display: flex;
@@ -6988,8 +6990,6 @@
             margin-top: 16px;
           "
         >
-          <!-- Pitch repertoire editor — shown only for pitcher positions -->
-          <div id="opp-mtp-pitch-section" style="display: none"></div>
           <button
             onclick="document.getElementById('opp-player-modal').style.display='none'"
             style="
@@ -10292,8 +10292,8 @@
           return ["groundout", "flyout", "lineout"].includes(o);
         }
         function pitchTypeFamily(t) {
-          if (["FB", "CT", "SI"].includes(t)) return "fb";
-          if (["CB", "SL", "SP"].includes(t)) return "br";
+          if (["4SFB", "2SFB", "CUT", "SNK"].includes(t)) return "fb";
+          if (["CRV", "SLD", "SLV", "SPL"].includes(t)) return "br";
           if (["CH", "KN"].includes(t)) return "os";
           return "un";
         }
@@ -10496,29 +10496,29 @@
         }
         // ── Pitch type catalog ──────────────────────────────────────────────────
         const ALL_PITCH_TYPES = [
-          { key: "FB", label: "FB", name: "4-Seam Fastball" },
-          { key: "2FB", label: "2FB", name: "2-Seam Fastball" },
-          { key: "SI", label: "SI", name: "Sinker" },
-          { key: "CT", label: "CT", name: "Cutter" },
-          { key: "CB", label: "CB", name: "Curveball" },
-          { key: "SL", label: "SL", name: "Slider" },
+          { key: "4SFB", label: "4SFB", name: "4-Seam Fastball" },
+          { key: "2SFB", label: "2SFB", name: "2-Seam Fastball" },
+          { key: "SNK", label: "SNK", name: "Sinker" },
+          { key: "CUT", label: "CUT", name: "Cutter" },
+          { key: "CRV", label: "CRV", name: "Curveball" },
+          { key: "SLD", label: "SLD", name: "Slider" },
           { key: "SW", label: "SW", name: "Sweeper" },
-          { key: "SV", label: "SV", name: "Slurve" },
+          { key: "SLV", label: "SLV", name: "Slurve" },
           { key: "CH", label: "CH", name: "Changeup" },
-          { key: "SP", label: "SP", name: "Splitter" },
+          { key: "SPL", label: "SPL", name: "Splitter" },
           { key: "VC", label: "VC", name: "Vulcan Change" },
           { key: "KN", label: "KN", name: "Knuckleball" },
-          { key: "SC", label: "SC", name: "Screwball" },
+          { key: "SCR", label: "SCR", name: "Screwball" },
         ];
         // Keys used for keyboard shortcuts 1-8 (updated whenever grid renders)
         let _currentPitchKeys = [
-          "FB",
-          "CB",
-          "SL",
+          "4SFB",
+          "CRV",
+          "SLD",
           "CH",
-          "CT",
-          "SP",
-          "SI",
+          "CUT",
+          "SPL",
+          "SNK",
           "KN",
         ];
 
@@ -10529,13 +10529,13 @@
           if (!container) return;
 
           const DEFAULT_EIGHT = [
-            { key: "FB", label: "FB" },
-            { key: "CB", label: "CB" },
-            { key: "SL", label: "SL" },
+            { key: "4SFB", label: "4SFB" },
+            { key: "CRV", label: "CRV" },
+            { key: "SLD", label: "SLD" },
             { key: "CH", label: "CH" },
-            { key: "CT", label: "CT" },
-            { key: "SP", label: "SP" },
-            { key: "SI", label: "SI" },
+            { key: "CUT", label: "CUT" },
+            { key: "SPL", label: "SPL" },
+            { key: "SNK", label: "SNK" },
             { key: "KN", label: "KN" },
           ];
           const types =
@@ -14255,7 +14255,16 @@
         }
 
         // ===================== KEYBOARD SHORTCUTS =====================
-        const PITCH_TYPES = ["FB", "CB", "SL", "CH", "CT", "SP", "SI", "KN"];
+        const PITCH_TYPES = [
+          "4SFB",
+          "CRV",
+          "SLD",
+          "CH",
+          "CUT",
+          "SPL",
+          "SNK",
+          "KN",
+        ];
         let kbdOpen = false;
         function toggleKbd() {
           kbdOpen = !kbdOpen;
@@ -15064,14 +15073,19 @@
         // Pitch type → readable name
         function pitchTypeName(t) {
           const m = {
-            FB: "fastball",
-            CB: "curveball",
-            SL: "slider",
+            "4SFB": "fastball",
+            "2SFB": "fastball",
+            SNK: "sinker",
+            CUT: "cutter",
+            CRV: "curveball",
+            SLD: "slider",
+            SW: "sweeper",
+            SLV: "slurve",
             CH: "changeup",
-            CT: "cutter",
-            SP: "splitter",
-            SI: "sinker",
+            SPL: "splitter",
+            VC: "vulcan change",
             KN: "knuckleball",
+            SCR: "screwball",
           };
           return m[t] || "pitch";
         }
@@ -19536,7 +19550,7 @@
         // ===== PITCH ZONE LEGEND =====
         function pitchZoneLegend() {
           const items = [
-            { col: "#5baef5", label: "Fastball (FB/CT/SI)" },
+            { col: "#5baef5", label: "Fastball (4SFB/CUT/SNK)" },
             { col: "#f57a7a", label: "Breaking (CB/SL/SP)" },
             { col: "#6ae87a", label: "Off-speed (CH/KN)" },
             { col: "#e8c84a", label: "In Play Hit" },
