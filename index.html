@@ -7096,16 +7096,84 @@
     </div>
 
     <!-- ══ OPPONENT PICKER MODAL ══════════════════════════════════════════ -->
-    <div id="opp-picker-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:2200;align-items:center;justify-content:center;backdrop-filter:blur(4px)">
-      <div style="background:var(--surface2);border:1px solid var(--border2);border-radius:14px;width:420px;max-width:95vw;max-height:80vh;display:flex;flex-direction:column;box-shadow:0 20px 60px rgba(0,0,0,.5);overflow:hidden">
-        <div style="padding:16px 18px 12px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-shrink:0">
+    <div
+      id="opp-picker-modal"
+      style="
+        display: none;
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.7);
+        z-index: 2200;
+        align-items: center;
+        justify-content: center;
+        backdrop-filter: blur(4px);
+      "
+    >
+      <div
+        style="
+          background: var(--surface2);
+          border: 1px solid var(--border2);
+          border-radius: 14px;
+          width: 420px;
+          max-width: 95vw;
+          max-height: 80vh;
+          display: flex;
+          flex-direction: column;
+          box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+          overflow: hidden;
+        "
+      >
+        <div
+          style="
+            padding: 16px 18px 12px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-shrink: 0;
+          "
+        >
           <div>
-            <div id="opp-picker-title" style="font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:18px;color:var(--text)">Select Opponent</div>
-            <div style="font-size:11px;color:var(--text3);margin-top:1px">Click a team to load their roster</div>
+            <div
+              id="opp-picker-title"
+              style="
+                font-family: 'Barlow Condensed', sans-serif;
+                font-weight: 900;
+                font-size: 18px;
+                color: var(--text);
+              "
+            >
+              Select Opponent
+            </div>
+            <div style="font-size: 11px; color: var(--text3); margin-top: 1px">
+              Click a team to load their roster
+            </div>
           </div>
-          <button onclick="oppPickerClose()" style="background:none;border:none;font-size:20px;color:var(--text3);cursor:pointer;line-height:1;padding:2px 6px">×</button>
+          <button
+            onclick="oppPickerClose()"
+            style="
+              background: none;
+              border: none;
+              font-size: 20px;
+              color: var(--text3);
+              cursor: pointer;
+              line-height: 1;
+              padding: 2px 6px;
+            "
+          >
+            ×
+          </button>
         </div>
-        <div id="opp-picker-list" style="overflow-y:auto;padding:12px 14px;display:flex;flex-direction:column;gap:8px"></div>
+        <div
+          id="opp-picker-list"
+          style="
+            overflow-y: auto;
+            padding: 12px 14px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+          "
+        ></div>
       </div>
     </div>
 
@@ -11687,7 +11755,11 @@
         // Returns the opponent object whose name matches a given team-name input value, or null.
         function _getOppByTeamName(name) {
           if (!name || !_opponents || !_opponents.length) return null;
-          return _opponents.find(function(o) { return o.name === name; }) || null;
+          return (
+            _opponents.find(function (o) {
+              return o.name === name;
+            }) || null
+          );
         }
 
         function toggleAddPitcherForm() {
@@ -11700,17 +11772,25 @@
           if (isMyTeamPitching) {
             // My Team is pitching — show My Team pitcher picker
             var pitchers = (myTeamRoster || []).filter(function (p) {
-              return ["RHP", "LHP", "P", "UTL/RHP", "C/RHP", "3B/RHP"].includes(p.pos);
+              return ["RHP", "LHP", "P", "UTL/RHP", "C/RHP", "3B/RHP"].includes(
+                p.pos
+              );
             });
             if (pitchers.length > 0) {
               showPitcherPicker(pitchers);
             } else {
               qs("add-pitcher-form").classList.toggle("open");
             }
-          } else if (oppPitching && oppPitching.roster && oppPitching.roster.length > 0) {
+          } else if (
+            oppPitching &&
+            oppPitching.roster &&
+            oppPitching.roster.length > 0
+          ) {
             // An opponent is pitching — show opponent pitcher picker
-            var oppPitchers = oppPitching.roster.filter(function(p) {
-              return ["RHP", "LHP", "P", "UTL/RHP", "C/RHP", "3B/RHP"].includes(p.pos);
+            var oppPitchers = oppPitching.roster.filter(function (p) {
+              return ["RHP", "LHP", "P", "UTL/RHP", "C/RHP", "3B/RHP"].includes(
+                p.pos
+              );
             });
             if (oppPitchers.length > 0) {
               showOppPitcherPicker(oppPitchers, activePitcherList());
@@ -11725,62 +11805,113 @@
 
         function showOppPitcherPicker(pitchers, pitcherList) {
           var existing = document.getElementById("pitcher-picker-overlay");
-          if (existing) { existing.remove(); return; }
+          if (existing) {
+            existing.remove();
+            return;
+          }
           var overlay = document.createElement("div");
           overlay.id = "pitcher-picker-overlay";
-          overlay.style.cssText = "position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:2000;display:flex;align-items:center;justify-content:center";
+          overlay.style.cssText =
+            "position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:2000;display:flex;align-items:center;justify-content:center";
           var panel = document.createElement("div");
-          panel.style.cssText = "background:var(--surface2);border:1.5px solid var(--border2);border-radius:14px;width:min(400px,95vw);max-height:80vh;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,.5)";
+          panel.style.cssText =
+            "background:var(--surface2);border:1.5px solid var(--border2);border-radius:14px;width:min(400px,95vw);max-height:80vh;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,.5)";
           var hdr = document.createElement("div");
-          hdr.style.cssText = "padding:14px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-shrink:0";
-          hdr.innerHTML = '<div><div style="font-family:Barlow Condensed,sans-serif;font-weight:900;font-size:18px;color:var(--text)">Bring In Pitcher</div>' +
+          hdr.style.cssText =
+            "padding:14px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-shrink:0";
+          hdr.innerHTML =
+            '<div><div style="font-family:Barlow Condensed,sans-serif;font-weight:900;font-size:18px;color:var(--text)">Bring In Pitcher</div>' +
             '<div style="font-size:11px;color:var(--text3);margin-top:2px">Select from opponent roster</div></div>';
           var xBtn = document.createElement("button");
           xBtn.textContent = "×";
-          xBtn.style.cssText = "background:none;border:none;font-size:22px;color:var(--text3);cursor:pointer;padding:0 6px;line-height:1";
-          xBtn.onclick = function() { overlay.remove(); };
+          xBtn.style.cssText =
+            "background:none;border:none;font-size:22px;color:var(--text3);cursor:pointer;padding:0 6px;line-height:1";
+          xBtn.onclick = function () {
+            overlay.remove();
+          };
           hdr.appendChild(xBtn);
           panel.appendChild(hdr);
           var list = document.createElement("div");
           list.style.cssText = "overflow-y:auto;flex:1;padding:8px";
-          var sorted = pitchers.slice().sort(function(a, b) { return parseInt(a.num || 99) - parseInt(b.num || 99); });
-          sorted.forEach(function(p) {
+          var sorted = pitchers.slice().sort(function (a, b) {
+            return parseInt(a.num || 99) - parseInt(b.num || 99);
+          });
+          sorted.forEach(function (p) {
             var hand = (p.throw || "R") === "L" ? "LHP" : "RHP";
             var card = document.createElement("div");
-            card.style.cssText = "display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:8px;cursor:pointer;transition:background .1s;border-bottom:1px solid var(--border)";
+            card.style.cssText =
+              "display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:8px;cursor:pointer;transition:background .1s;border-bottom:1px solid var(--border)";
             card.innerHTML =
-              '<div style="font-family:Barlow Condensed,sans-serif;font-weight:900;font-size:17px;color:#1a5acc;width:32px;text-align:right;flex-shrink:0">#' + (p.num || "—") + "</div>" +
-              '<div style="flex:1"><div style="font-family:Barlow Condensed,sans-serif;font-weight:700;font-size:14px;color:var(--text)">' + p.name + "</div>" +
-              '<div style="font-size:10px;color:var(--text3)">' + hand + (p.ht ? " · " + p.ht : "") + "</div></div>" +
+              '<div style="font-family:Barlow Condensed,sans-serif;font-weight:900;font-size:17px;color:#1a5acc;width:32px;text-align:right;flex-shrink:0">#' +
+              (p.num || "—") +
+              "</div>" +
+              '<div style="flex:1"><div style="font-family:Barlow Condensed,sans-serif;font-weight:700;font-size:14px;color:var(--text)">' +
+              p.name +
+              "</div>" +
+              '<div style="font-size:10px;color:var(--text3)">' +
+              hand +
+              (p.ht ? " · " + p.ht : "") +
+              "</div></div>" +
               '<div style="font-size:11px;color:#1a5acc;font-family:Barlow Condensed,sans-serif;font-weight:700">Bring In →</div>';
-            card.addEventListener("mouseover", function() { this.style.background = "var(--surface3)"; });
-            card.addEventListener("mouseout",  function() { this.style.background = ""; });
-            card.addEventListener("click", function() {
+            card.addEventListener("mouseover", function () {
+              this.style.background = "var(--surface3)";
+            });
+            card.addEventListener("mouseout", function () {
+              this.style.background = "";
+            });
+            card.addEventListener("click", function () {
               overlay.remove();
-              pitcherList.forEach(function(x) { x.active = false; });
+              pitcherList.forEach(function (x) {
+                x.active = false;
+              });
               // Replace default placeholder if it has no pitches
-              var isDefault = pitcherList.length === 1 &&
-                (!pitcherList[0].name || /^Pitcher/.test(pitcherList[0].name)) &&
+              var isDefault =
+                pitcherList.length === 1 &&
+                (!pitcherList[0].name ||
+                  /^Pitcher/.test(pitcherList[0].name)) &&
                 pitcherList[0].pitches === 0;
-              var entry = { name: p.name, num: p.num || "", hand: p.throw || "R",
-                pitches: 0, strikes: 0, k: 0, bb: 0, swings: 0, looks: 0,
-                hits: 0, outs: 0, r: 0, hbp: 0, bf: 0, active: true };
-              if (isDefault) { pitcherList[0] = entry; }
-              else { pitcherList.push(entry); }
+              var entry = {
+                name: p.name,
+                num: p.num || "",
+                hand: p.throw || "R",
+                pitches: 0,
+                strikes: 0,
+                k: 0,
+                bb: 0,
+                swings: 0,
+                looks: 0,
+                hits: 0,
+                outs: 0,
+                r: 0,
+                hbp: 0,
+                bf: 0,
+                active: true,
+              };
+              if (isDefault) {
+                pitcherList[0] = entry;
+              } else {
+                pitcherList.push(entry);
+              }
               renderPitcherList();
               updateScoreBug();
-              logEvent("🔄", "Pitching Change", "#" + (p.num || "?") + " " + p.name + " now pitching");
+              logEvent(
+                "🔄",
+                "Pitching Change",
+                "#" + (p.num || "?") + " " + p.name + " now pitching"
+              );
               toast(p.name + " now pitching");
             });
             list.appendChild(card);
           });
           panel.appendChild(list);
           var footer = document.createElement("div");
-          footer.style.cssText = "padding:10px;border-top:1px solid var(--border);flex-shrink:0";
+          footer.style.cssText =
+            "padding:10px;border-top:1px solid var(--border);flex-shrink:0";
           var manualBtn = document.createElement("button");
           manualBtn.textContent = "+ Enter manually";
-          manualBtn.style.cssText = "width:100%;padding:8px;background:none;border:1px dashed var(--border2);border-radius:7px;color:var(--text3);font-family:Barlow Condensed,sans-serif;font-weight:700;font-size:12px;cursor:pointer";
-          manualBtn.addEventListener("click", function() {
+          manualBtn.style.cssText =
+            "width:100%;padding:8px;background:none;border:1px dashed var(--border2);border-radius:7px;color:var(--text3);font-family:Barlow Condensed,sans-serif;font-weight:700;font-size:12px;cursor:pointer";
+          manualBtn.addEventListener("click", function () {
             overlay.remove();
             qs("add-pitcher-form").classList.add("open");
           });
@@ -11788,7 +11919,9 @@
           panel.appendChild(footer);
           overlay.appendChild(panel);
           document.body.appendChild(overlay);
-          overlay.addEventListener("click", function(e) { if (e.target === overlay) overlay.remove(); });
+          overlay.addEventListener("click", function (e) {
+            if (e.target === overlay) overlay.remove();
+          });
         }
 
         function showPitcherPicker(pitchers) {
@@ -12280,66 +12413,140 @@
 
         function showOppInlineSubPicker(type, slotIdx, opp) {
           var existing = document.getElementById("inline-sub-picker");
-          if (existing) { existing.remove(); return; }
-          var labels = { PH: "Pinch Hitter", PR: "Pinch Runner", DEF: "Defensive Sub" };
-          var isPitch = function(p) {
-            return ["RHP","LHP","P","UTL/RHP","C/RHP","3B/RHP"].includes(p.pos);
+          if (existing) {
+            existing.remove();
+            return;
+          }
+          var labels = {
+            PH: "Pinch Hitter",
+            PR: "Pinch Runner",
+            DEF: "Defensive Sub",
           };
-          var posOrder = ["C","C/2B","1B","2B","3B","SS","INF","INF/OF","1B/OF","OF","LF","CF","RF","DH","UTL"];
-          var players = (opp.roster || []).filter(function(p) { return !isPitch(p); })
-            .sort(function(a, b) {
-              var ai = posOrder.indexOf(a.pos), bi = posOrder.indexOf(b.pos);
-              if (ai < 0) ai = 50; if (bi < 0) bi = 50;
-              return ai !== bi ? ai - bi : parseInt(a.num || 99) - parseInt(b.num || 99);
+          var isPitch = function (p) {
+            return ["RHP", "LHP", "P", "UTL/RHP", "C/RHP", "3B/RHP"].includes(
+              p.pos
+            );
+          };
+          var posOrder = [
+            "C",
+            "C/2B",
+            "1B",
+            "2B",
+            "3B",
+            "SS",
+            "INF",
+            "INF/OF",
+            "1B/OF",
+            "OF",
+            "LF",
+            "CF",
+            "RF",
+            "DH",
+            "UTL",
+          ];
+          var players = (opp.roster || [])
+            .filter(function (p) {
+              return !isPitch(p);
+            })
+            .sort(function (a, b) {
+              var ai = posOrder.indexOf(a.pos),
+                bi = posOrder.indexOf(b.pos);
+              if (ai < 0) ai = 50;
+              if (bi < 0) bi = 50;
+              return ai !== bi
+                ? ai - bi
+                : parseInt(a.num || 99) - parseInt(b.num || 99);
             });
           var overlay = document.createElement("div");
           overlay.id = "inline-sub-picker";
-          overlay.style.cssText = "position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:2000;display:flex;align-items:center;justify-content:center";
+          overlay.style.cssText =
+            "position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:2000;display:flex;align-items:center;justify-content:center";
           var panel = document.createElement("div");
-          panel.style.cssText = "background:var(--surface2);border:1.5px solid var(--border2);border-radius:14px;width:min(400px,95vw);max-height:80vh;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,.5)";
+          panel.style.cssText =
+            "background:var(--surface2);border:1.5px solid var(--border2);border-radius:14px;width:min(400px,95vw);max-height:80vh;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,.5)";
           var hdr = document.createElement("div");
-          hdr.style.cssText = "padding:14px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-shrink:0";
+          hdr.style.cssText =
+            "padding:14px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-shrink:0";
           var outgoing = currentLineup()[slotIdx];
-          hdr.innerHTML = '<div><div style="font-family:Barlow Condensed,sans-serif;font-weight:900;font-size:18px;color:var(--text)">Select ' + (labels[type] || type) + '</div>' +
-            '<div style="font-size:11px;color:var(--text3);margin-top:2px">Replacing: <strong>' + ((outgoing && outgoing.name) || "slot " + (slotIdx + 1)) + '</strong> · ' + opp.name + '</div></div>';
+          hdr.innerHTML =
+            '<div><div style="font-family:Barlow Condensed,sans-serif;font-weight:900;font-size:18px;color:var(--text)">Select ' +
+            (labels[type] || type) +
+            "</div>" +
+            '<div style="font-size:11px;color:var(--text3);margin-top:2px">Replacing: <strong>' +
+            ((outgoing && outgoing.name) || "slot " + (slotIdx + 1)) +
+            "</strong> · " +
+            opp.name +
+            "</div></div>";
           var xBtn = document.createElement("button");
           xBtn.textContent = "×";
-          xBtn.style.cssText = "background:none;border:none;font-size:22px;color:var(--text3);cursor:pointer;padding:0 6px;line-height:1";
-          xBtn.onclick = function() { overlay.remove(); };
+          xBtn.style.cssText =
+            "background:none;border:none;font-size:22px;color:var(--text3);cursor:pointer;padding:0 6px;line-height:1";
+          xBtn.onclick = function () {
+            overlay.remove();
+          };
           hdr.appendChild(xBtn);
           panel.appendChild(hdr);
           var list = document.createElement("div");
           list.style.cssText = "overflow-y:auto;flex:1;padding:8px";
           if (!players.length) {
-            list.innerHTML = '<div style="padding:24px;text-align:center;color:var(--text3);font-size:13px">No position players in ' + opp.name + '\'s roster</div>';
+            list.innerHTML =
+              '<div style="padding:24px;text-align:center;color:var(--text3);font-size:13px">No position players in ' +
+              opp.name +
+              "'s roster</div>";
           } else {
-            players.forEach(function(p) {
+            players.forEach(function (p) {
               var card = document.createElement("div");
-              card.style.cssText = "display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:8px;cursor:pointer;transition:background .1s;border-bottom:1px solid var(--border)";
+              card.style.cssText =
+                "display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:8px;cursor:pointer;transition:background .1s;border-bottom:1px solid var(--border)";
               card.innerHTML =
-                '<div style="font-family:Barlow Condensed,sans-serif;font-weight:900;font-size:17px;color:#1a5acc;width:32px;text-align:right;flex-shrink:0">#' + (p.num || "—") + "</div>" +
-                '<div style="flex:1"><div style="font-family:Barlow Condensed,sans-serif;font-weight:700;font-size:14px;color:var(--text)">' + p.name + "</div>" +
-                '<div style="font-size:10px;color:var(--text3)">' + (p.pos || "—") + " · " + (p.bat || "R") + "/" + (p.throw || "R") + (p.ht ? " · " + p.ht : "") + "</div></div>" +
+                '<div style="font-family:Barlow Condensed,sans-serif;font-weight:900;font-size:17px;color:#1a5acc;width:32px;text-align:right;flex-shrink:0">#' +
+                (p.num || "—") +
+                "</div>" +
+                '<div style="flex:1"><div style="font-family:Barlow Condensed,sans-serif;font-weight:700;font-size:14px;color:var(--text)">' +
+                p.name +
+                "</div>" +
+                '<div style="font-size:10px;color:var(--text3)">' +
+                (p.pos || "—") +
+                " · " +
+                (p.bat || "R") +
+                "/" +
+                (p.throw || "R") +
+                (p.ht ? " · " + p.ht : "") +
+                "</div></div>" +
                 '<div style="font-size:11px;color:#1a5acc;font-family:Barlow Condensed,sans-serif;font-weight:700">Select →</div>';
-              card.addEventListener("mouseover", function() { this.style.background = "var(--surface3)"; });
-              card.addEventListener("mouseout",  function() { this.style.background = ""; });
-              card.addEventListener("click", function() {
+              card.addEventListener("mouseover", function () {
+                this.style.background = "var(--surface3)";
+              });
+              card.addEventListener("mouseout", function () {
+                this.style.background = "";
+              });
+              card.addEventListener("click", function () {
                 overlay.remove();
                 var lineup = currentLineup();
                 var outName = (lineup[slotIdx] && lineup[slotIdx].name) || "";
                 lineup[slotIdx] = {
-                  name: p.name, num: p.num || String(slotIdx + 1),
-                  pos: p.pos || "OF", hand: p.bat || "R",
-                  isPH: type === "PH", isPR: type === "PR", isDEF: type === "DEF",
+                  name: p.name,
+                  num: p.num || String(slotIdx + 1),
+                  pos: p.pos || "OF",
+                  hand: p.bat || "R",
+                  isPH: type === "PH",
+                  isPR: type === "PR",
+                  isDEF: type === "DEF",
                 };
                 if (type === "PR" && outName) {
-                  ["1st","2nd","3rd"].forEach(function(base) {
-                    if (S.runnerNames[base] === outName) S.runnerNames[base] = p.name;
+                  ["1st", "2nd", "3rd"].forEach(function (base) {
+                    if (S.runnerNames[base] === outName)
+                      S.runnerNames[base] = p.name;
                   });
                 }
                 renderLineup();
                 updateScoreBug();
-                toast(p.name + " in as " + (labels[type] || type) + (outName ? " for " + outName : ""));
+                toast(
+                  p.name +
+                    " in as " +
+                    (labels[type] || type) +
+                    (outName ? " for " + outName : "")
+                );
               });
               list.appendChild(card);
             });
@@ -12347,7 +12554,9 @@
           panel.appendChild(list);
           overlay.appendChild(panel);
           document.body.appendChild(overlay);
-          overlay.addEventListener("click", function(e) { if (e.target === overlay) overlay.remove(); });
+          overlay.addEventListener("click", function (e) {
+            if (e.target === overlay) overlay.remove();
+          });
         }
 
         function showInlineSubPicker(type, slotIdx) {
@@ -25020,26 +25229,42 @@
 
         function oppPickerOpen(side) {
           if (!_opponents || !_opponents.length) {
-            toast("No opponents loaded — add teams in the Opponents panel first");
+            toast(
+              "No opponents loaded — add teams in the Opponents panel first"
+            );
             return;
           }
           _oppPickerSide = side;
           const list = document.getElementById("opp-picker-list");
           const title = document.getElementById("opp-picker-title");
-          title.textContent = "Select Opponent (" + (side === "away" ? "Away" : "Home") + ")";
+          title.textContent =
+            "Select Opponent (" + (side === "away" ? "Away" : "Home") + ")";
           list.innerHTML = "";
-          _opponents.forEach(function(opp) {
+          _opponents.forEach(function (opp) {
             const btn = document.createElement("div");
-            btn.style.cssText = "display:flex;align-items:center;gap:12px;padding:11px 14px;background:var(--surface);border:1.5px solid var(--border2);border-radius:10px;cursor:pointer;transition:all .14s;user-select:none";
+            btn.style.cssText =
+              "display:flex;align-items:center;gap:12px;padding:11px 14px;background:var(--surface);border:1.5px solid var(--border2);border-radius:10px;cursor:pointer;transition:all .14s;user-select:none";
             btn.innerHTML =
               '<div style="flex:1;min-width:0">' +
-                '<div style="font-family:\'Barlow Condensed\',sans-serif;font-weight:900;font-size:17px;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' + escHtml(opp.name) + '</div>' +
-                '<div style="font-size:10px;color:var(--text3);margin-top:1px">' + opp.roster.length + ' player' + (opp.roster.length !== 1 ? 's' : '') + '</div>' +
-              '</div>' +
+              "<div style=\"font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:17px;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis\">" +
+              escHtml(opp.name) +
+              "</div>" +
+              '<div style="font-size:10px;color:var(--text3);margin-top:1px">' +
+              opp.roster.length +
+              " player" +
+              (opp.roster.length !== 1 ? "s" : "") +
+              "</div>" +
+              "</div>" +
               '<div style="font-size:18px;color:var(--text3)">›</div>';
-            btn.addEventListener("mouseover", function() { this.style.borderColor = "#1a5acc"; this.style.transform = "translateX(2px)"; });
-            btn.addEventListener("mouseout",  function() { this.style.borderColor = "var(--border2)"; this.style.transform = ""; });
-            btn.addEventListener("click", function() {
+            btn.addEventListener("mouseover", function () {
+              this.style.borderColor = "#1a5acc";
+              this.style.transform = "translateX(2px)";
+            });
+            btn.addEventListener("mouseout", function () {
+              this.style.borderColor = "var(--border2)";
+              this.style.transform = "";
+            });
+            btn.addEventListener("click", function () {
               oppPickerClose();
               oppUseAsLineup(opp, _oppPickerSide);
             });
@@ -25055,15 +25280,21 @@
         function oppUseAsLineup(opp, side) {
           // Set the team name input
           const inp = document.getElementById(side + "-name-input");
-          if (inp) { inp.value = opp.name; updateTeamNames(); }
+          if (inp) {
+            inp.value = opp.name;
+            updateTeamNames();
+          }
           // Open lineup modal on the right side with opponent roster panel
           if (currentPanel !== "tracker") openPanel("tracker");
-          setTimeout(function() {
-            lineupModalSide = side;
-            document.getElementById("lineup-modal").style.display = "flex";
-            renderLineupModal();
-            lmShowOpponentRosterPanel(opp, side === "away");
-          }, currentPanel !== "tracker" ? 250 : 0);
+          setTimeout(
+            function () {
+              lineupModalSide = side;
+              document.getElementById("lineup-modal").style.display = "flex";
+              renderLineupModal();
+              lmShowOpponentRosterPanel(opp, side === "away");
+            },
+            currentPanel !== "tracker" ? 250 : 0
+          );
         }
 
         function lmShowOpponentRosterPanel(opp, isAway) {
@@ -25072,7 +25303,9 @@
           const title = document.getElementById("lm-roster-title");
           if (!panel || !cards) return;
           if (!opp.roster.length) {
-            toast(opp.name + " has no players — add some in the Opponents panel");
+            toast(
+              opp.name + " has no players — add some in the Opponents panel"
+            );
             panel.style.display = "none";
             return;
           }
@@ -25082,67 +25315,163 @@
             title.style.color = "#1a5acc";
           }
 
-          const POS_ORDER = ["C","C/RHP","C/2B","1B","2B","3B","SS","INF","INF/OF","1B/OF","SS/2B","3B/RHP","OF","LF","CF","RF","DH","UTL","RHP","LHP","P","UTL/RHP"];
-          const isPitch = function(p) { return ["RHP","LHP","P","UTL/RHP","C/RHP","3B/RHP"].includes(p.pos); };
-          const sorted = opp.roster.slice().sort(function(a, b) {
-            var ai = POS_ORDER.indexOf(a.pos), bi = POS_ORDER.indexOf(b.pos);
-            if (ai < 0) ai = 50; if (bi < 0) bi = 50;
+          const POS_ORDER = [
+            "C",
+            "C/RHP",
+            "C/2B",
+            "1B",
+            "2B",
+            "3B",
+            "SS",
+            "INF",
+            "INF/OF",
+            "1B/OF",
+            "SS/2B",
+            "3B/RHP",
+            "OF",
+            "LF",
+            "CF",
+            "RF",
+            "DH",
+            "UTL",
+            "RHP",
+            "LHP",
+            "P",
+            "UTL/RHP",
+          ];
+          const isPitch = function (p) {
+            return ["RHP", "LHP", "P", "UTL/RHP", "C/RHP", "3B/RHP"].includes(
+              p.pos
+            );
+          };
+          const sorted = opp.roster.slice().sort(function (a, b) {
+            var ai = POS_ORDER.indexOf(a.pos),
+              bi = POS_ORDER.indexOf(b.pos);
+            if (ai < 0) ai = 50;
+            if (bi < 0) bi = 50;
             if (ai !== bi) return ai - bi;
             return parseInt(a.num || 99) - parseInt(b.num || 99);
           });
 
           const groups = [
-            ["Catchers",    sorted.filter(function(p){ return ["C","C/RHP","C/2B"].includes(p.pos); })],
-            ["Infielders",  sorted.filter(function(p){ return ["1B","2B","3B","SS","INF","INF/OF","1B/OF","SS/2B","3B/RHP"].includes(p.pos); })],
-            ["Outfielders", sorted.filter(function(p){ return ["OF","LF","CF","RF"].includes(p.pos); })],
-            ["DH",          sorted.filter(function(p){ return p.pos === "DH"; })],
-            ["Pitchers",    sorted.filter(function(p){ return ["RHP","LHP","P","UTL/RHP"].includes(p.pos); })],
-            ["Utility",     sorted.filter(function(p){ return p.pos === "UTL"; })],
+            [
+              "Catchers",
+              sorted.filter(function (p) {
+                return ["C", "C/RHP", "C/2B"].includes(p.pos);
+              }),
+            ],
+            [
+              "Infielders",
+              sorted.filter(function (p) {
+                return [
+                  "1B",
+                  "2B",
+                  "3B",
+                  "SS",
+                  "INF",
+                  "INF/OF",
+                  "1B/OF",
+                  "SS/2B",
+                  "3B/RHP",
+                ].includes(p.pos);
+              }),
+            ],
+            [
+              "Outfielders",
+              sorted.filter(function (p) {
+                return ["OF", "LF", "CF", "RF"].includes(p.pos);
+              }),
+            ],
+            [
+              "DH",
+              sorted.filter(function (p) {
+                return p.pos === "DH";
+              }),
+            ],
+            [
+              "Pitchers",
+              sorted.filter(function (p) {
+                return ["RHP", "LHP", "P", "UTL/RHP"].includes(p.pos);
+              }),
+            ],
+            [
+              "Utility",
+              sorted.filter(function (p) {
+                return p.pos === "UTL";
+              }),
+            ],
           ];
 
           cards.innerHTML = "";
-          groups.forEach(function(g) {
-            var label = g[0], players = g[1];
+          groups.forEach(function (g) {
+            var label = g[0],
+              players = g[1];
             if (!players.length) return;
             var sec = document.createElement("div");
             sec.style.cssText = "margin-bottom:10px";
             var lbl = document.createElement("div");
-            lbl.style.cssText = "font-family:Barlow,sans-serif;font-weight:700;font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:var(--text3);padding:4px 0;margin-bottom:4px;border-bottom:1px solid var(--border)";
+            lbl.style.cssText =
+              "font-family:Barlow,sans-serif;font-weight:700;font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:var(--text3);padding:4px 0;margin-bottom:4px;border-bottom:1px solid var(--border)";
             lbl.textContent = label + " (" + players.length + ")";
             sec.appendChild(lbl);
-            players.forEach(function(p) {
+            players.forEach(function (p) {
               var pitch = isPitch(p);
               var col = pitch ? "#1a5acc" : "var(--accent)";
               var card = document.createElement("div");
               card.draggable = true;
-              card.style.cssText = "display:flex;align-items:center;gap:8px;padding:6px 8px;background:var(--surface);border:1px solid var(--border);border-radius:7px;cursor:grab;user-select:none;transition:all .12s;margin-bottom:4px";
+              card.style.cssText =
+                "display:flex;align-items:center;gap:8px;padding:6px 8px;background:var(--surface);border:1px solid var(--border);border-radius:7px;cursor:grab;user-select:none;transition:all .12s;margin-bottom:4px";
               card.innerHTML =
-                '<div style="font-family:\'Barlow Condensed\',sans-serif;font-weight:900;font-size:15px;color:' + col + ';width:30px;text-align:right;flex-shrink:0">#' + (p.num || "—") + "</div>" +
+                "<div style=\"font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:15px;color:" +
+                col +
+                ';width:30px;text-align:right;flex-shrink:0">#' +
+                (p.num || "—") +
+                "</div>" +
                 '<div style="flex:1;min-width:0">' +
-                  '<div style="font-family:\'Barlow Condensed\',sans-serif;font-weight:700;font-size:13px;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' + p.name + "</div>" +
-                  '<div style="font-size:9px;color:var(--text3)">' + (p.pos||"—") + " · " + (p.bat||"R") + "/" + (p.throw||"R") + (p.ht ? " · "+p.ht : "") + "</div>" +
+                "<div style=\"font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:13px;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis\">" +
+                p.name +
+                "</div>" +
+                '<div style="font-size:9px;color:var(--text3)">' +
+                (p.pos || "—") +
+                " · " +
+                (p.bat || "R") +
+                "/" +
+                (p.throw || "R") +
+                (p.ht ? " · " + p.ht : "") +
+                "</div>" +
                 "</div>" +
                 '<div style="font-size:10px;color:var(--text3);opacity:.4">⠿</div>';
 
-              card.addEventListener("dragstart", function(e) {
+              card.addEventListener("dragstart", function (e) {
                 // Store player data on a temp global so drop handlers can find it
                 window._oppDragPlayer = p;
                 _dragPlayerId = p.id;
                 e.dataTransfer.setData("text/plain", "opp::" + p.id);
                 e.dataTransfer.effectAllowed = "copy";
               });
-              card.addEventListener("click", function() {
+              card.addEventListener("click", function () {
                 if (pitch) {
                   lmDropOppPitcherFromRoster(p, opp);
                 } else {
-                  var lineup = lineupModalSide === "away" ? S.lineupAway : S.lineupHome;
-                  var emptyIdx = lineup.findIndex(function(b){ return !b.name || /^Player \d/.test(b.name); });
+                  var lineup =
+                    lineupModalSide === "away" ? S.lineupAway : S.lineupHome;
+                  var emptyIdx = lineup.findIndex(function (b) {
+                    return !b.name || /^Player \d/.test(b.name);
+                  });
                   if (emptyIdx < 0) emptyIdx = 0;
                   lmDropOppPlayerIntoSlot(p, emptyIdx);
                 }
               });
-              card.addEventListener("mouseover", function() { this.style.borderColor = col; this.style.background = "var(--surface3)"; this.style.transform = "translateX(2px)"; });
-              card.addEventListener("mouseout",  function() { this.style.borderColor = "var(--border)"; this.style.background = "var(--surface)"; this.style.transform = ""; });
+              card.addEventListener("mouseover", function () {
+                this.style.borderColor = col;
+                this.style.background = "var(--surface3)";
+                this.style.transform = "translateX(2px)";
+              });
+              card.addEventListener("mouseout", function () {
+                this.style.borderColor = "var(--border)";
+                this.style.background = "var(--surface)";
+                this.style.transform = "";
+              });
               sec.appendChild(card);
             });
             cards.appendChild(sec);
@@ -25155,39 +25484,68 @@
         }
 
         function lmDropOppPlayerIntoSlot(p, slotIdx) {
-          const lineup = lineupModalSide === "away" ? S.lineupAway : S.lineupHome;
+          const lineup =
+            lineupModalSide === "away" ? S.lineupAway : S.lineupHome;
           lineup[slotIdx] = {
-            name:  p.name,
-            num:   p.num  || String(slotIdx + 1),
-            pos:   p.pos  || "OF",
-            hand:  p.bat  || "R",
-            isPH: false, isPR: false, isDEF: false,
+            name: p.name,
+            num: p.num || String(slotIdx + 1),
+            pos: p.pos || "OF",
+            hand: p.bat || "R",
+            isPH: false,
+            isPR: false,
+            isDEF: false,
           };
           renderLineupModal();
-          setTimeout(function() {
+          setTimeout(function () {
             var posEl = document.getElementById("lm-pos-" + slotIdx);
             if (posEl) {
               posEl.style.borderColor = "#1a5acc";
               posEl.style.background = "rgba(26,90,204,.08)";
               posEl.focus();
-              setTimeout(function() { posEl.style.borderColor = ""; posEl.style.background = ""; }, 1200);
+              setTimeout(function () {
+                posEl.style.borderColor = "";
+                posEl.style.background = "";
+              }, 1200);
             }
           }, 40);
         }
 
         function lmDropOppPitcherFromRoster(p, opp) {
-          const side = typeof lineupModalSide !== "undefined" ? lineupModalSide : "away";
+          const side =
+            typeof lineupModalSide !== "undefined" ? lineupModalSide : "away";
           const list = side === "away" ? S.pitchersAway : S.pitchersHome;
-          if (list.find(function(x){ return x.name === p.name; })) {
+          if (
+            list.find(function (x) {
+              return x.name === p.name;
+            })
+          ) {
             toast(p.name + " already in pitcher list");
             return;
           }
-          const isDefault = list.length === 1 &&
+          const isDefault =
+            list.length === 1 &&
             (!list[0].name || /^Pitcher/.test(list[0].name)) &&
             list[0].pitches === 0;
-          const entry = { name:p.name, num:p.num||"", hand:p.throw||"R", pitches:0, strikes:0, k:0, bb:0, swings:0, looks:0, hits:0, outs:0, r:0, er:0 };
-          if (isDefault) { list[0] = entry; }
-          else { list.push(entry); }
+          const entry = {
+            name: p.name,
+            num: p.num || "",
+            hand: p.throw || "R",
+            pitches: 0,
+            strikes: 0,
+            k: 0,
+            bb: 0,
+            swings: 0,
+            looks: 0,
+            hits: 0,
+            outs: 0,
+            r: 0,
+            er: 0,
+          };
+          if (isDefault) {
+            list[0] = entry;
+          } else {
+            list.push(entry);
+          }
           renderLineupModal();
           toast(p.name + " added to pitchers");
         }
@@ -25200,7 +25558,7 @@
           // and the drop handler calling lmDropPlayerIntoSlot with "opp::id"
           // Override: if playerId starts with "opp::", use opponent player
           var _orig = lmDropPlayerIntoSlot;
-          lmDropPlayerIntoSlot = function(playerId, slotIdx) {
+          lmDropPlayerIntoSlot = function (playerId, slotIdx) {
             if (typeof playerId === "string" && playerId.startsWith("opp::")) {
               if (window._oppDragPlayer) {
                 lmDropOppPlayerIntoSlot(window._oppDragPlayer, slotIdx);
@@ -25211,7 +25569,7 @@
             _orig(playerId, slotIdx);
           };
           var _origPitch = lmDropPitcherFromRoster;
-          lmDropPitcherFromRoster = function(playerId) {
+          lmDropPitcherFromRoster = function (playerId) {
             if (typeof playerId === "string" && playerId.startsWith("opp::")) {
               if (window._oppDragPlayer) {
                 lmDropOppPitcherFromRoster(window._oppDragPlayer, null);
@@ -25589,7 +25947,11 @@
                       return page.getTextContent().then(function (tc) {
                         // Return raw items with position data
                         return tc.items.map(function (it) {
-                          return { str: it.str, x: it.transform[4], y: it.transform[5] };
+                          return {
+                            str: it.str,
+                            x: it.transform[4],
+                            y: it.transform[5],
+                          };
                         });
                       });
                     });
@@ -25599,7 +25961,9 @@
               .then(function (pageItems) {
                 // Flatten all items from all pages
                 var allItems = [];
-                pageItems.forEach(function (items) { allItems = allItems.concat(items); });
+                pageItems.forEach(function (items) {
+                  allItems = allItems.concat(items);
+                });
                 resolve(_parsePDFRosterItems(allItems));
               })
               .catch(function (err) {
@@ -25611,12 +25975,14 @@
 
         function _parsePDFRosterItems(items) {
           // ── Regexes ─────────────────────────────────────────────────────────
-          var POS  = /^(C|1B|2B|3B|SS|OF|LF|CF|RF|INF|DH|RHP|LHP|P|UTL|1B\/OF|INF\/OF|C\/RHP|C\/2B|SS\/2B|3B\/RHP|UTL\/RHP)$/i;
-          var HT   = /^\d[-']\d+["']?$/;
-          var WT   = /^\d{2,3}$/;
-          var BT   = /^[RLSBrlsb]\/[RLrl]$/;
+          var POS =
+            /^(C|1B|2B|3B|SS|OF|LF|CF|RF|INF|DH|RHP|LHP|P|UTL|1B\/OF|INF\/OF|C\/RHP|C\/2B|SS\/2B|3B\/RHP|UTL\/RHP)$/i;
+          var HT = /^\d[-']\d+["']?$/;
+          var WT = /^\d{2,3}$/;
+          var BT = /^[RLSBrlsb]\/[RLrl]$/;
           var JNUM = /^\d{1,2}$/;
-          var YEAR_TOKEN = /^(Fr\.|So\.|Jr\.|Sr\.|Gr\.|FY|FR|SO|JR|SR|GR|R-Fr\.|R-Jr\.|R-Sr\.|Fy\.|Fy|1st|2nd|3rd|4th|5th|Freshman|Sophomore|Junior|Senior|Graduate|Yr\.|Year)$/i;
+          var YEAR_TOKEN =
+            /^(Fr\.|So\.|Jr\.|Sr\.|Gr\.|FY|FR|SO|JR|SR|GR|R-Fr\.|R-Jr\.|R-Sr\.|Fy\.|Fy|1st|2nd|3rd|4th|5th|Freshman|Sophomore|Junior|Senior|Graduate|Yr\.|Year)$/i;
 
           // ── 1. Group raw items into Y-rows (3pt tolerance) ───────────────────
           var ROW_TOLERANCE = 3;
@@ -25624,31 +25990,53 @@
           items.forEach(function (item) {
             if (!item.str.trim()) return;
             var y = Math.round(item.y);
-            var row = rows.find(function (r) { return Math.abs(r.y - y) <= ROW_TOLERANCE; });
-            if (!row) { row = { y: y, cells: [] }; rows.push(row); }
+            var row = rows.find(function (r) {
+              return Math.abs(r.y - y) <= ROW_TOLERANCE;
+            });
+            if (!row) {
+              row = { y: y, cells: [] };
+              rows.push(row);
+            }
             row.cells.push({ str: item.str.trim(), x: item.x });
           });
-          rows.sort(function (a, b) { return b.y - a.y; }); // top-to-bottom
+          rows.sort(function (a, b) {
+            return b.y - a.y;
+          }); // top-to-bottom
 
           // ── 2. Detect column header row ──────────────────────────────────────
           var colX = { num: -1, name: -1, pos: -1, ht: -1, wt: -1, bt: -1 };
           var headerRowIdx = -1;
           for (var ri = 0; ri < Math.min(rows.length, 15); ri++) {
             var row = rows[ri];
-            var strs = row.cells.map(function (c) { return c.str.toLowerCase(); });
-            var hasNum  = strs.some(function (s) { return s === "no." || s === "#" || s === "no" || s === "jersey"; });
-            var hasName = strs.some(function (s) { return s === "name" || s === "player"; });
-            var hasPos  = strs.some(function (s) { return s === "pos" || s === "position"; });
+            var strs = row.cells.map(function (c) {
+              return c.str.toLowerCase();
+            });
+            var hasNum = strs.some(function (s) {
+              return s === "no." || s === "#" || s === "no" || s === "jersey";
+            });
+            var hasName = strs.some(function (s) {
+              return s === "name" || s === "player";
+            });
+            var hasPos = strs.some(function (s) {
+              return s === "pos" || s === "position";
+            });
             if ((hasNum || hasName) && hasPos) {
               headerRowIdx = ri;
               row.cells.forEach(function (c) {
                 var sl = c.str.toLowerCase();
-                if (sl === "no." || sl === "#" || sl === "no" || sl === "jersey") colX.num  = c.x;
-                if (sl === "name" || sl === "player")   colX.name = c.x;
-                if (sl === "pos"  || sl === "position") colX.pos  = c.x;
-                if (sl === "ht"   || sl === "height")   colX.ht   = c.x;
-                if (sl === "wt"   || sl === "weight")   colX.wt   = c.x;
-                if (sl === "b/t"  || sl === "b-t" || sl === "bat/thr") colX.bt = c.x;
+                if (
+                  sl === "no." ||
+                  sl === "#" ||
+                  sl === "no" ||
+                  sl === "jersey"
+                )
+                  colX.num = c.x;
+                if (sl === "name" || sl === "player") colX.name = c.x;
+                if (sl === "pos" || sl === "position") colX.pos = c.x;
+                if (sl === "ht" || sl === "height") colX.ht = c.x;
+                if (sl === "wt" || sl === "weight") colX.wt = c.x;
+                if (sl === "b/t" || sl === "b-t" || sl === "bat/thr")
+                  colX.bt = c.x;
               });
               break;
             }
@@ -25661,79 +26049,144 @@
           // how many times the single-column width fits across the page.
           var COL_SNAP = 30;
           var pageWidth = 0;
-          items.forEach(function (it) { if (it.x > pageWidth) pageWidth = it.x; });
+          items.forEach(function (it) {
+            if (it.x > pageWidth) pageWidth = it.x;
+          });
           // Estimate single-column width: from left edge to the rightmost anchor + some padding
           var singleColWidth = 0;
-          if (colX.bt >= 0)  singleColWidth = Math.max(singleColWidth, colX.bt  + 60);
-          if (colX.wt >= 0)  singleColWidth = Math.max(singleColWidth, colX.wt  + 60);
-          if (colX.ht >= 0)  singleColWidth = Math.max(singleColWidth, colX.ht  + 60);
-          if (colX.pos >= 0) singleColWidth = Math.max(singleColWidth, colX.pos + 60);
+          if (colX.bt >= 0)
+            singleColWidth = Math.max(singleColWidth, colX.bt + 60);
+          if (colX.wt >= 0)
+            singleColWidth = Math.max(singleColWidth, colX.wt + 60);
+          if (colX.ht >= 0)
+            singleColWidth = Math.max(singleColWidth, colX.ht + 60);
+          if (colX.pos >= 0)
+            singleColWidth = Math.max(singleColWidth, colX.pos + 60);
           // Number of repeated column sets on the page
-          var numCols = (singleColWidth > 0 && pageWidth > singleColWidth * 1.5)
-            ? Math.round(pageWidth / singleColWidth)
-            : 1;
+          var numCols =
+            singleColWidth > 0 && pageWidth > singleColWidth * 1.5
+              ? Math.round(pageWidth / singleColWidth)
+              : 1;
 
           // ── 4. Helper: parse a single set of cells as one player ─────────────
           function extractPlayer(cells) {
-            var num = "", name = "", pos = "", ht = "", wt = "", bt = "";
+            var num = "",
+              name = "",
+              pos = "",
+              ht = "",
+              wt = "",
+              bt = "";
             if (colX.num >= 0) {
               // Tightly-anchored columns checked first; name is the catch-all between
               // the name anchor and the pos anchor.
               cells.forEach(function (c) {
-                if (colX.num >= 0 && Math.abs(c.x - colX.num) < COL_SNAP) { if (!num) num = c.str; return; }
-                if (colX.bt  >= 0 && Math.abs(c.x - colX.bt)  < COL_SNAP) { if (!bt)  bt  = c.str; return; }
-                if (colX.ht  >= 0 && Math.abs(c.x - colX.ht)  < COL_SNAP) { if (!ht)  ht  = c.str; return; }
-                if (colX.wt  >= 0 && Math.abs(c.x - colX.wt)  < COL_SNAP) { if (!wt)  wt  = c.str; return; }
-                if (colX.pos >= 0 && Math.abs(c.x - colX.pos) < COL_SNAP) { if (!pos) pos = c.str; return; }
+                if (colX.num >= 0 && Math.abs(c.x - colX.num) < COL_SNAP) {
+                  if (!num) num = c.str;
+                  return;
+                }
+                if (colX.bt >= 0 && Math.abs(c.x - colX.bt) < COL_SNAP) {
+                  if (!bt) bt = c.str;
+                  return;
+                }
+                if (colX.ht >= 0 && Math.abs(c.x - colX.ht) < COL_SNAP) {
+                  if (!ht) ht = c.str;
+                  return;
+                }
+                if (colX.wt >= 0 && Math.abs(c.x - colX.wt) < COL_SNAP) {
+                  if (!wt) wt = c.str;
+                  return;
+                }
+                if (colX.pos >= 0 && Math.abs(c.x - colX.pos) < COL_SNAP) {
+                  if (!pos) pos = c.str;
+                  return;
+                }
                 // Name: from name anchor up to (but not including) pos anchor
                 var nameEnd = colX.pos >= 0 ? colX.pos - COL_SNAP : Infinity;
-                if (colX.name >= 0 && c.x >= colX.name - COL_SNAP && c.x < nameEnd) {
-                  name = (name ? name + " " : "") + c.str; return;
+                if (
+                  colX.name >= 0 &&
+                  c.x >= colX.name - COL_SNAP &&
+                  c.x < nameEnd
+                ) {
+                  name = (name ? name + " " : "") + c.str;
+                  return;
                 }
               });
             } else {
               // No header — sequential token parse
               var tokens = [];
-              cells.forEach(function (c) { tokens = tokens.concat(c.str.split(/\s+/)); });
-              tokens = tokens.filter(function (t) { return t.trim(); });
+              cells.forEach(function (c) {
+                tokens = tokens.concat(c.str.split(/\s+/));
+              });
+              tokens = tokens.filter(function (t) {
+                return t.trim();
+              });
               var ti = 0;
               if (!JNUM.test(tokens[0])) return null;
               num = tokens[ti++];
               var nameParts = [];
               while (ti < tokens.length) {
                 var t = tokens[ti];
-                if (YEAR_TOKEN.test(t) || POS.test(t) || HT.test(t) || BT.test(t) || JNUM.test(t)) break;
+                if (
+                  YEAR_TOKEN.test(t) ||
+                  POS.test(t) ||
+                  HT.test(t) ||
+                  BT.test(t) ||
+                  JNUM.test(t)
+                )
+                  break;
                 if (/^[A-Za-z]/.test(t)) nameParts.push(t);
                 else break;
                 ti++;
               }
               name = nameParts.join(" ");
               if (ti < tokens.length && YEAR_TOKEN.test(tokens[ti])) ti++;
-              if (ti < tokens.length && POS.test(tokens[ti])) pos = tokens[ti++];
-              if (ti < tokens.length && HT.test(tokens[ti]))  ht  = tokens[ti++];
-              if (ti < tokens.length && WT.test(tokens[ti]))  wt  = tokens[ti++];
-              if (ti < tokens.length && BT.test(tokens[ti]))  bt  = tokens[ti++];
+              if (ti < tokens.length && POS.test(tokens[ti]))
+                pos = tokens[ti++];
+              if (ti < tokens.length && HT.test(tokens[ti])) ht = tokens[ti++];
+              if (ti < tokens.length && WT.test(tokens[ti])) wt = tokens[ti++];
+              if (ti < tokens.length && BT.test(tokens[ti])) bt = tokens[ti++];
             }
 
             // Clean up
-            num  = num.replace(/[^\d]/g, "").trim();
+            num = num.replace(/[^\d]/g, "").trim();
             name = name.replace(/,$/, "").trim();
-            name = name.split(/\s+/).filter(function (w) {
-              return !YEAR_TOKEN.test(w) && !POS.test(w) && !HT.test(w) && !JNUM.test(w);
-            }).join(" ").trim();
+            name = name
+              .split(/\s+/)
+              .filter(function (w) {
+                return (
+                  !YEAR_TOKEN.test(w) &&
+                  !POS.test(w) &&
+                  !HT.test(w) &&
+                  !JNUM.test(w)
+                );
+              })
+              .join(" ")
+              .trim();
             pos = pos.toUpperCase().trim();
-            bt  = bt.toUpperCase().trim();
+            bt = bt.toUpperCase().trim();
 
             if (!JNUM.test(num) || !name || name.length < 2) return null;
             if (pos && !POS.test(pos)) pos = "";
             if (YEAR_TOKEN.test(name) || POS.test(name)) return null;
 
-            var bat = "R", thr = "R";
+            var bat = "R",
+              thr = "R";
             if (bt) {
               var bm = bt.match(/^([RLSB])\/([RL])$/i);
-              if (bm) { bat = bm[1].toUpperCase(); thr = bm[2].toUpperCase(); }
+              if (bm) {
+                bat = bm[1].toUpperCase();
+                thr = bm[2].toUpperCase();
+              }
             }
-            return { name: name, num: num, pos: pos || "OF", bat: bat, throw: thr, ht: ht, wt: wt };
+            return {
+              name: name,
+              num: num,
+              pos: pos || "OF",
+              bat: bat,
+              throw: thr,
+              ht: ht,
+              wt: wt,
+            };
           }
 
           // ── 5. Parse each row, splitting into sub-columns when needed ────────
@@ -25742,16 +26195,24 @@
 
           for (var ri = dataStart; ri < rows.length; ri++) {
             var row = rows[ri];
-            var cells = row.cells.slice().sort(function (a, b) { return a.x - b.x; });
+            var cells = row.cells.slice().sort(function (a, b) {
+              return a.x - b.x;
+            });
 
             if (numCols > 1 && colX.num >= 0 && singleColWidth > 0) {
               // Multi-column grid: split cells into per-column buckets by X offset
               var buckets = [];
               for (var ci = 0; ci < numCols; ci++) buckets.push([]);
               cells.forEach(function (c) {
-                var colIdx = Math.min(Math.floor(c.x / singleColWidth), numCols - 1);
+                var colIdx = Math.min(
+                  Math.floor(c.x / singleColWidth),
+                  numCols - 1
+                );
                 // Normalize x to the first column's coordinate space
-                buckets[colIdx].push({ str: c.str, x: c.x - colIdx * singleColWidth });
+                buckets[colIdx].push({
+                  str: c.str,
+                  x: c.x - colIdx * singleColWidth,
+                });
               });
               buckets.forEach(function (bucket) {
                 if (!bucket.length) return;
