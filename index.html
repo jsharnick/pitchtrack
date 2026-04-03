@@ -6484,6 +6484,23 @@
             style="display: flex; gap: 6px; align-items: center; flex-shrink: 0"
           >
             <button
+              onclick="downloadRosterTemplate()"
+              title="Download a blank XLSX template to fill in and import"
+              style="
+                padding: 6px 12px;
+                background: var(--surface2);
+                border: 1px solid var(--border2);
+                border-radius: 6px;
+                font-family: 'Barlow Condensed', sans-serif;
+                font-weight: 700;
+                font-size: 12px;
+                color: var(--text2);
+                cursor: pointer;
+              "
+            >
+              ⬇ Template
+            </button>
+            <button
               onclick="document.getElementById('myteam-import-input').click()"
               style="
                 padding: 6px 12px;
@@ -6610,6 +6627,23 @@
               onmouseout="this.style.borderColor='var(--border2)';this.style.color='var(--text2)'"
             >
               Select
+            </button>
+            <button
+              onclick="downloadRosterTemplate()"
+              title="Download a blank XLSX template to fill in and import"
+              style="
+                padding: 6px 12px;
+                background: var(--surface2);
+                border: 1px solid var(--border2);
+                border-radius: 6px;
+                font-family: 'Barlow Condensed', sans-serif;
+                font-weight: 700;
+                font-size: 12px;
+                color: var(--text2);
+                cursor: pointer;
+              "
+            >
+              ⬇ Template
             </button>
             <button
               onclick="oppLoadNew()"
@@ -6752,6 +6786,23 @@
                 "
               >
                 + Add Player
+              </button>
+              <button
+                onclick="downloadRosterTemplate()"
+                title="Download a blank XLSX template to fill in and import"
+                style="
+                  padding: 6px 12px;
+                  background: var(--surface2);
+                  border: 1px solid var(--border2);
+                  border-radius: 6px;
+                  font-family: 'Barlow Condensed', sans-serif;
+                  font-weight: 700;
+                  font-size: 12px;
+                  color: var(--text2);
+                  cursor: pointer;
+                "
+              >
+                ⬇ Template
               </button>
               <button
                 onclick="document.getElementById('opp-detail-import-input').click()"
@@ -27167,7 +27218,7 @@
 
           const mapCol = (header) => {
             const raw = String(header || "").trim();
-            if (raw === "#") return "num"; // "#" strips to "" after norm — check raw first
+            if (/^#/.test(raw)) return "num"; // "#", "# ★", "#  (required)", etc.
             const k = norm(raw);
             if (!k) return null;
             for (const rule of FIELD_RULES) {
@@ -27653,6 +27704,217 @@
           }
 
           return players;
+        }
+
+        // ── ROSTER TEMPLATE DOWNLOAD ───────────────────────────────────────
+        function downloadRosterTemplate() {
+          function _doDownload() {
+            const XLSX = window.XLSX;
+            if (!XLSX) {
+              alert("Spreadsheet library not loaded yet — please try again in a moment.");
+              return;
+            }
+
+            // ── Shared style helpers ──────────────────────────────────────────
+            // Dark navy header (matches PitchTrack nav bar)
+            const headerFill  = { fgColor: { rgb: "111827" } };
+            const accentFill  = { fgColor: { rgb: "CC1A1A" } };   // PT red
+            const guideFill   = { fgColor: { rgb: "1E2A3A" } };   // dark blue-grey for guide panel
+            const altRowFill  = { fgColor: { rgb: "F7F8FA" } };   // light stripe
+            const sampleFill  = { fgColor: { rgb: "FFF8F0" } };   // warm tint for sample row
+            const guideCellFill = { fgColor: { rgb: "F0F4FA" } }; // guide value cells
+
+            const boldWhite   = { bold: true, color: { rgb: "FFFFFF" }, name: "Calibri", sz: 11 };
+            const boldRed     = { bold: true, color: { rgb: "FF4444" }, name: "Calibri", sz: 10 };
+            const boldDark    = { bold: true, color: { rgb: "111827" }, name: "Calibri", sz: 11 };
+            const italicGrey  = { italic: true, color: { rgb: "888888" }, name: "Calibri", sz: 10 };
+            const normalDark  = { color: { rgb: "111827" }, name: "Calibri", sz: 11 };
+            const guideTitle  = { bold: true, color: { rgb: "FFFFFF" }, name: "Calibri", sz: 11 };
+            const guideKey    = { bold: true, color: { rgb: "CC1A1A" }, name: "Calibri", sz: 10 };
+            const guideVal    = { color: { rgb: "333333" }, name: "Calibri", sz: 10 };
+            const guideNote   = { italic: true, color: { rgb: "666666" }, name: "Calibri", sz: 9 };
+            const centerAlign = { horizontal: "center", vertical: "center" };
+            const leftAlign   = { horizontal: "left",   vertical: "center" };
+
+            const cell = (v, font, fill, alignment, numFmt) => ({
+              v, t: typeof v === "number" ? "n" : "s",
+              s: {
+                font:      font      || normalDark,
+                fill:      fill      ? { patternType: "solid", ...fill } : { patternType: "none" },
+                alignment: alignment || leftAlign,
+                border: {
+                  bottom: { style: "thin", color: { rgb: "DDDDDD" } },
+                  right:  { style: "thin", color: { rgb: "DDDDDD" } },
+                },
+                ...(numFmt ? { numFmt } : {}),
+              },
+            });
+
+            const hcell = (v) => ({                          // header cell
+              v, t: "s",
+              s: {
+                font:      boldWhite,
+                fill:      { patternType: "solid", ...headerFill },
+                alignment: centerAlign,
+                border: {
+                  bottom: { style: "medium", color: { rgb: "CC1A1A" } },
+                  right:  { style: "thin",   color: { rgb: "334455" } },
+                },
+              },
+            });
+
+            const gcell = (v, font, fill) => ({              // guide panel cell
+              v, t: "s",
+              s: {
+                font:      font || guideVal,
+                fill:      fill ? { patternType: "solid", ...fill } : { patternType: "solid", ...guideCellFill },
+                alignment: leftAlign,
+                border: {
+                  bottom: { style: "thin", color: { rgb: "CCCCCC" } },
+                  right:  { style: "thin", color: { rgb: "CCCCCC" } },
+                  left:   { style: "thin", color: { rgb: "CCCCCC" } },
+                },
+              },
+            });
+
+            // ── Sheet data ────────────────────────────────────────────────────
+            // Columns: A=# B=Name C=Pos D=Bat E=Throw F=Ht G=Wt  [H=spacer]  I=guide-label J=guide-value
+            //
+            // Row 1  — main headers + guide panel header
+            // Row 2  — sample (italic/tinted)
+            // Rows 3+ — blank data rows (20)
+            // Guide rows run alongside rows 1–15 in cols I/J
+
+            const GUIDE = [
+              // [label, value]
+              ["PITCHTRACK ROSTER IMPORT GUIDE", ""],
+              ["", ""],
+              ["REQUIRED COLUMNS", ""],
+              ["#  (Jersey Number)", "Digits only — e.g.  5,  12,  99"],
+              ["Name", "Full name — First Last"],
+              ["Pos  (Position)", "C · 1B · 2B · 3B · SS · INF · OF · LF · CF · RF · DH · RHP · LHP · P · UTL"],
+              ["Bat  (Batting Hand)", "R  =  Right      L  =  Left      S  =  Switch"],
+              ["Throw  (Throwing Hand)", "R  =  Right      L  =  Left"],
+              ["", ""],
+              ["OPTIONAL COLUMNS", ""],
+              ["Ht  (Height)", "Format:  6-1   or   6'1\""],
+              ["Wt  (Weight)", "Pounds — e.g.  185"],
+              ["", ""],
+              ["TIPS", ""],
+              ["Column order", "Any order is fine — the importer reads headers"],
+              ["Extra columns", "Extra columns (stats, class year, etc.) are ignored"],
+              ["Sample row", "Row 2 is an example — overwrite or delete it"],
+              ["B/T shorthand", "You may use a single  B/T  column (e.g.  R/R)"],
+            ];
+
+            const aoa = [];
+
+            // Row 1 — headers
+            // IMPORTANT: column A header must start with "#" so the importer's
+            // mapCol() can identify it. The ★ markers on other columns are fine
+            // because norm() strips non-ascii chars leaving the keyword intact.
+            aoa.push([
+              hcell("#"),
+              hcell("Name ★"),
+              hcell("Pos ★"),
+              hcell("Bat ★"),
+              hcell("Throw ★"),
+              hcell("Ht"),
+              hcell("Wt"),
+              cell("  ★ = required", { italic: true, color: { rgb: "CC1A1A" }, name: "Calibri", sz: 9 }, null, leftAlign),
+              gcell("  ★ = REQUIRED FIELD — must be filled in for every player", guideTitle, guideFill),
+              gcell("", guideTitle, guideFill),
+            ]);
+
+            // Row 2 — sample row
+            const sFont = { italic: true, color: { rgb: "999999" }, name: "Calibri", sz: 10 };
+            aoa.push([
+              cell("12",         sFont, { fgColor: { rgb: "FFF8F0" } }, centerAlign),
+              cell("John Smith", sFont, { fgColor: { rgb: "FFF8F0" } }),
+              cell("OF",         sFont, { fgColor: { rgb: "FFF8F0" } }, centerAlign),
+              cell("R",          sFont, { fgColor: { rgb: "FFF8F0" } }, centerAlign),
+              cell("R",          sFont, { fgColor: { rgb: "FFF8F0" } }, centerAlign),
+              cell("6-1",        sFont, { fgColor: { rgb: "FFF8F0" } }, centerAlign),
+              cell("185",        sFont, { fgColor: { rgb: "FFF8F0" } }, centerAlign),
+              cell("← sample row — overwrite or delete", { italic: true, color: { rgb: "AAAAAA" }, name: "Calibri", sz: 9 }, null, leftAlign),
+              gcell(GUIDE[0][0], { bold: true, color: { rgb: "FFFFFF" }, name: "Calibri", sz: 12 }, guideFill),
+              gcell("", null, guideFill),
+            ]);
+
+            // Rows 3–22 — 20 blank data rows, alternating stripe
+            for (let i = 0; i < 20; i++) {
+              const stripe = i % 2 === 1 ? { fgColor: { rgb: "F7F8FA" } } : null;
+              const guideIdx = i + 1; // GUIDE rows 1..20
+              const [gl, gv] = guideIdx < GUIDE.length ? GUIDE[guideIdx] : ["", ""];
+
+              // Style guide label cells
+              let glFont = guideVal;
+              let glFill = guideCellFill;
+              if (gl === "REQUIRED COLUMNS" || gl === "OPTIONAL COLUMNS" || gl === "TIPS") {
+                glFont = { bold: true, color: { rgb: "FFFFFF" }, name: "Calibri", sz: 10 };
+                glFill = accentFill;
+              } else if (gl === "") {
+                glFill = { fgColor: { rgb: "E8ECF2" } };
+              }
+
+              aoa.push([
+                cell("", normalDark, stripe, centerAlign),
+                cell("", normalDark, stripe),
+                cell("", normalDark, stripe, centerAlign),
+                cell("", normalDark, stripe, centerAlign),
+                cell("", normalDark, stripe, centerAlign),
+                cell("", normalDark, stripe, centerAlign),
+                cell("", normalDark, stripe, centerAlign),
+                cell("", normalDark, null),  // H spacer
+                gcell(gl, glFont, glFill),
+                gcell(gv, guideVal, guideCellFill),
+              ]);
+            }
+
+            // ── Build worksheet from aoa ───────────────────────────────────
+            const ws = XLSX.utils.aoa_to_sheet(aoa);
+
+            // ── Column widths ──────────────────────────────────────────────
+            ws["!cols"] = [
+              { wch: 10 },  // A  #
+              { wch: 24 },  // B  Name
+              { wch: 8  },  // C  Pos
+              { wch: 7  },  // D  Bat
+              { wch: 8  },  // E  Throw
+              { wch: 8  },  // F  Ht
+              { wch: 7  },  // G  Wt
+              { wch: 26 },  // H  sample-row note / spacer
+              { wch: 24 },  // I  Guide label
+              { wch: 60 },  // J  Guide value
+            ];
+
+            // ── Row heights ────────────────────────────────────────────────
+            ws["!rows"] = [{ hpt: 20 }]; // header row slightly taller
+
+            // ── Freeze top row ─────────────────────────────────────────────
+            ws["!freeze"] = { xSplit: 0, ySplit: 1, topLeftCell: "A2" };
+
+            // ── Merge guide header across I1:J1 and I2:J2 ─────────────────
+            ws["!merges"] = [
+              { s: { r: 0, c: 8 }, e: { r: 0, c: 9 } },   // I1:J1 — "★ = REQUIRED..."
+              { s: { r: 1, c: 8 }, e: { r: 1, c: 9 } },   // I2:J2 — "PITCHTRACK ROSTER IMPORT GUIDE"
+            ];
+
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, "PitchTrack Roster");
+
+            // Write with cellStyles enabled
+            XLSX.writeFile(wb, "PitchTrack_Roster_Template.xlsx", { cellStyles: true });
+          }
+
+          if (window.XLSX) {
+            _doDownload();
+          } else {
+            const check = setInterval(function () {
+              if (window.XLSX) { clearInterval(check); _doDownload(); }
+            }, 200);
+            setTimeout(function () { clearInterval(check); }, 10000);
+          }
         }
 
         // Load SheetJS + PDF.js dynamically
