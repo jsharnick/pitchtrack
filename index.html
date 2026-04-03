@@ -6587,6 +6587,26 @@
               0 teams
             </div>
             <button
+              id="opp-select-toggle-btn"
+              onclick="oppToggleSelectMode()"
+              style="
+                padding: 6px 12px;
+                background: none;
+                border: 1px solid var(--border2);
+                border-radius: 6px;
+                font-family: 'Barlow Condensed', sans-serif;
+                font-weight: 700;
+                font-size: 12px;
+                color: var(--text2);
+                cursor: pointer;
+                transition: all .13s;
+              "
+              onmouseover="this.style.borderColor='var(--accent)';this.style.color='var(--accent)'"
+              onmouseout="this.style.borderColor='var(--border2)';this.style.color='var(--text2)'"
+            >
+              Select
+            </button>
+            <button
               onclick="oppLoadNew()"
               style="
                 padding: 6px 14px;
@@ -6603,6 +6623,64 @@
               + Load New Opponent
             </button>
           </div>
+
+          <!-- Bulk-select action bar — shown when ≥1 tile is checked -->
+          <div
+            id="opp-bulk-bar"
+            style="
+              display: none;
+              align-items: center;
+              gap: 10px;
+              padding: 8px 16px;
+              background: var(--surface2);
+              border-bottom: 1px solid var(--border);
+              flex-shrink: 0;
+            "
+          >
+            <span
+              id="opp-bulk-label"
+              style="
+                font-family: 'Barlow Condensed', sans-serif;
+                font-weight: 700;
+                font-size: 13px;
+                color: var(--text2);
+                flex: 1;
+              "
+            >0 selected</span>
+            <button
+              onclick="oppSelectAll()"
+              style="
+                padding: 5px 12px;
+                background: none;
+                border: 1px solid var(--border2);
+                border-radius: 6px;
+                font-family: 'Barlow Condensed', sans-serif;
+                font-weight: 700;
+                font-size: 12px;
+                color: var(--text2);
+                cursor: pointer;
+              "
+            >
+              Select All
+            </button>
+            <button
+              onclick="oppDeleteSelected()"
+              style="
+                padding: 5px 14px;
+                background: #cc1a1a;
+                border: none;
+                border-radius: 6px;
+                font-family: 'Barlow Condensed', sans-serif;
+                font-weight: 700;
+                font-size: 12px;
+                color: #fff;
+                cursor: pointer;
+              "
+            >
+              🗑 Delete Selected
+            </button>
+          </div>
+
           <div
             id="opponents-list"
             style="flex: 1; overflow-y: auto; padding: 20px"
@@ -24639,6 +24717,8 @@
         let _oppEditingId = null;
         let _oppEditingPid = null;
         let _oppOpenId = null; // which opponent is open in detail view
+        let _oppSelectMode = false; // bulk-select mode active?
+        let _oppSelected = new Set(); // IDs checked in select mode
 
         // ── Persistence ──────────────────────────────────────────────────────
         async function oppLoad() {
@@ -24723,6 +24803,9 @@
         function oppOpenDetail(id) {
           const opp = _opponents.find((o) => o.id === id);
           if (!opp) return;
+          // Exit select mode when drilling into a team
+          _oppSelectMode = false;
+          _oppSelected.clear();
           _oppOpenId = id;
           document.getElementById("opp-list-view").style.display = "none";
           const detail = document.getElementById("opp-detail");
@@ -24762,6 +24845,20 @@
           if (sub)
             sub.textContent =
               n === 0 ? "No opponents yet" : n + " team" + (n !== 1 ? "s" : "");
+
+          // Sync the Select button label
+          const selBtn = document.getElementById("opp-select-toggle-btn");
+          if (selBtn) selBtn.textContent = _oppSelectMode ? "Done" : "Select";
+
+          // Show/hide the bulk-delete bar
+          const bar = document.getElementById("opp-bulk-bar");
+          if (bar) {
+            const count = _oppSelected.size;
+            bar.style.display = (_oppSelectMode && count > 0) ? "flex" : "none";
+            const barLabel = document.getElementById("opp-bulk-label");
+            if (barLabel) barLabel.textContent = count + " selected";
+          }
+
           if (!n) {
             list.innerHTML = `<div style="text-align:center;padding:64px 20px;color:var(--text3)">
               <div style="font-size:40px;margin-bottom:12px">🎯</div>
@@ -24771,19 +24868,60 @@
             return;
           }
           list.innerHTML = `<div class="opp-tiles-grid">${_opponents
-            .map(
-              (opp) => `
-            <div class="opp-tile" onclick="oppOpenDetail('${opp.id}')">
-              <div style="font-family:'Share Tech Mono',monospace;font-size:9px;letter-spacing:2px;color:var(--text3);text-transform:uppercase;margin-bottom:2px">Opponent</div>
-              <div class="opp-tile-name">${escHtml(opp.name)}</div>
-              <div class="opp-tile-meta">${opp.roster.length} player${
-                opp.roster.length !== 1 ? "s" : ""
-              }</div>
-              <div class="opp-tile-arrow">›</div>
-            </div>`
-            )
+            .map((opp) => {
+              const checked = _oppSelected.has(opp.id);
+              const checkStyle = _oppSelectMode
+                ? `position:absolute;top:10px;left:10px;width:18px;height:18px;border-radius:50%;border:2px solid ${checked ? "var(--accent)" : "var(--border2)"};background:${checked ? "var(--accent)" : "var(--surface)"};display:flex;align-items:center;justify-content:center;transition:all .12s;flex-shrink:0;`
+                : "display:none;";
+              const checkMark = checked ? `<span style="color:#fff;font-size:10px;line-height:1;margin-top:1px">✓</span>` : "";
+              const tileClick = _oppSelectMode
+                ? `oppToggleSelect('${opp.id}')`
+                : `oppOpenDetail('${opp.id}')`;
+              const tileDim = _oppSelectMode && !checked ? "opacity:0.55;" : "";
+              return `
+              <div class="opp-tile" onclick="${tileClick}" style="${tileDim}position:relative;">
+                <div style="${checkStyle}">${checkMark}</div>
+                <div style="font-family:'Share Tech Mono',monospace;font-size:9px;letter-spacing:2px;color:var(--text3);text-transform:uppercase;margin-bottom:2px">Opponent</div>
+                <div class="opp-tile-name">${escHtml(opp.name)}</div>
+                <div class="opp-tile-meta">${opp.roster.length} player${opp.roster.length !== 1 ? "s" : ""}</div>
+                ${_oppSelectMode ? "" : `<div class="opp-tile-arrow">›</div>`}
+              </div>`;
+            })
             .join("")}
           </div>`;
+        }
+
+        // ── Bulk select helpers ───────────────────────────────────────────────
+        function oppToggleSelectMode() {
+          _oppSelectMode = !_oppSelectMode;
+          if (!_oppSelectMode) _oppSelected.clear();
+          oppRenderAll();
+        }
+
+        function oppToggleSelect(id) {
+          if (_oppSelected.has(id)) _oppSelected.delete(id);
+          else _oppSelected.add(id);
+          oppRenderAll();
+        }
+
+        function oppSelectAll() {
+          _opponents.forEach((o) => _oppSelected.add(o.id));
+          oppRenderAll();
+        }
+
+        async function oppDeleteSelected() {
+          const ids = [..._oppSelected];
+          if (!ids.length) return;
+          const n = ids.length;
+          if (!confirm(`Remove ${n} opponent${n !== 1 ? "s" : ""}? This cannot be undone.`)) return;
+          for (const id of ids) {
+            _opponents = _opponents.filter((o) => o.id !== id);
+            try { await window.storage.delete("pitchtrack_opp_" + id, true); } catch(e) {}
+          }
+          await oppSaveIndex();
+          _oppSelected.clear();
+          _oppSelectMode = false;
+          oppRenderAll();
         }
 
         function _oppRenderRoster(opp, container) {
