@@ -12772,10 +12772,23 @@
             "pitch-clock-modal",
             "runner-action-modal",
             "dp-modal",
-            "baserun-modal",
           ].forEach((id) => {
             const el = document.getElementById(id);
             if (el) el.style.display = "none";
+          });
+          // baserun-modal uses classList.add("active") — must close the same way
+          const baserunEl = document.getElementById("baserun-modal");
+          if (baserunEl) {
+            baserunEl.classList.remove("active");
+            baserunEl.style.display = ""; // clear any inline override
+          }
+          // Restore base onclick handlers in case they were overridden by showForceOutQuestion
+          ["1st", "2nd", "3rd"].forEach((b) => {
+            const bEl = document.getElementById("modal-" + b);
+            if (bEl) {
+              bEl.classList.remove("runner-here");
+              bEl.onclick = () => quickRunnerDest(b);
+            }
           });
 
           // Clear any pending state
@@ -12786,6 +12799,7 @@
           S.currentQueueIdx = 0;
           sprayCallback = null;
           sprayEntry = null;
+          dpCallback = null;
 
           // Re-render everything
           resetPitchControls(false); // clear outcome/type selection, keep zone dots from restored pitchLog
@@ -15298,17 +15312,34 @@
             commitBatterOut(outcome, "GO", entry, pitchType, velocity, px, py);
           });
 
-          // Option 2+: A runner is out (FC / force out) — batter reaches 1st
+          // Option 2+: A runner is out first (FC / force out / traditional DP) — batter may or may not reach
+          const selectRunnerRetired = (base) => {
+            // Restore base onclick handlers before proceeding
+            ["1st", "2nd", "3rd"].forEach((b) => {
+              const bEl = qs("modal-" + b);
+              if (bEl) {
+                bEl.classList.remove("runner-here");
+                bEl.onclick = () => quickRunnerDest(b);
+              }
+            });
+            qs("baserun-modal").classList.remove("active");
+            commitFieldersChoice(base, entry, pitchType, velocity, px, py);
+          };
+
           runners.forEach((base) => {
             const forceLabels = {
-              "1st": "Runner on 1st retired — Fielder's Choice (FC)",
-              "2nd": "Runner on 2nd retired — Force Out / FC",
-              "3rd": "Runner on 3rd retired — Force Out / FC",
+              "1st": "Runner on 1st retired first — FC or DP",
+              "2nd": "Runner on 2nd retired first — Force Out / FC or DP",
+              "3rd": "Runner on 3rd retired first — Force Out / FC or DP",
             };
-            addBtn(`🟤 ${forceLabels[base]}`, () => {
-              qs("baserun-modal").classList.remove("active");
-              commitFieldersChoice(base, entry, pitchType, velocity, px, py);
-            });
+            addBtn(`🟤 ${forceLabels[base]}`, () => selectRunnerRetired(base));
+
+            // Also make the base on the diamond directly clickable
+            const baseEl = qs("modal-" + base);
+            if (baseEl) {
+              baseEl.classList.add("runner-here");
+              baseEl.onclick = () => selectRunnerRetired(base);
+            }
           });
 
           qs("baserun-modal").classList.add("active");
@@ -15332,38 +15363,142 @@
           }
           // Remove the retired runner
           S.bases[retiredBase] = false;
-          // Batter reaches 1st (force — batter always goes to 1st on a FC groundball)
-          // If 1st is occupied by a runner who wasn't retired, they may have advanced
-          // We'll handle that via the runner advance modal afterward
+          // Batter reaches 1st tentatively — may be undone if this is a traditional DP
           const had1st = S.bases["1st"];
-          S.bases["1st"] = true; // batter reaches
+          S.bases["1st"] = true;
 
-          // FC: charges an AB, no hit
+          // FC: charges an AB, no hit (label may be updated to GDP if traditional DP confirmed)
           recordAtBatResult("O", "FC");
 
-          toast(
-            `Fielder\'s Choice — ${batter} reaches 1st, runner on ${retiredBase} out`
-          );
+          // Ask whether batter was ALSO retired (traditional double play: runner out first, then batter)
+          checkForTraditionalDP(retiredBase, batter, entry, pitchType, velocity, px, py, had1st);
+        }
+
+        // After a fielder's choice, ask if the batter was also thrown out at 1st (traditional DP order)
+        function checkForTraditionalDP(retiredBase, batter, entry, pitchType, velocity, px, py, had1st) {
+          const retiredAt =
+            retiredBase === "1st" ? "2nd" : retiredBase === "2nd" ? "3rd" : "home";
+
+          const finishFC = (afterCb) => {
+            toast(`Fielder's Choice — ${batter} reaches 1st, runner on ${retiredBase} out`);
+            logEvent(
+              "🟤",
+              "Fielder's Choice",
+              `${batter} reaches 1st · runner retired at ${retiredAt} · ${S.outs} out`
+            );
+            updatePlayBlurb(
+              "groundout",
+              pitchType,
+              velocity,
+              zoneLabel(px, py),
+              entry.spray || null,
+              0,
+              S.bases,
+              { balls: S.balls, strikes: S.strikes }
+            );
+            afterCb();
+          };
+
+          if (S.outs >= 3) {
+            finishFC(handleThreeOuts);
+            return;
+          }
+
+          const fcContinue = () => {
+            const anyRunners = ["2nd", "3rd"].some((b) => S.bases[b]) || had1st;
+            if (anyRunners) {
+              showRunnerAdvanceOnOut("groundout", () => {
+                if (S.outs >= 3) { handleThreeOuts(); return; }
+                nextBatter();
+              });
+            } else {
+              nextBatter();
+            }
+          };
+
+          // "No DP" button calls dpCallback — wire it to the FC continuation
+          dpCallback = () => finishFC(fcContinue);
+
+          // Populate dp-modal to ask about traditional DP
+          const dpLabels = {
+            "1st": "4-6-3 / 6-4-3 DP",
+            "2nd": "5-4-3 / 4-5-3 DP",
+            "3rd": "2-3 / 5-4 DP",
+          };
+          qs("dp-sub").textContent =
+            `Runner on ${retiredBase} retired at ${retiredAt}. Was the batter also thrown out at 1st? (Traditional DP)`;
+
+          ["1st", "2nd", "3rd"].forEach((b) => {
+            const el = qs(`dp-base-${b}`);
+            if (el) {
+              el.style.background = S.bases[b] ? "var(--accent)" : "transparent";
+              el.style.borderColor = S.bases[b] ? "var(--accent)" : "var(--border2)";
+              el.style.boxShadow = S.bases[b] ? "0 0 8px rgba(204,26,26,.4)" : "none";
+            }
+          });
+
+          const btns = qs("dp-runner-btns");
+          btns.innerHTML = "";
+          const btn = document.createElement("button");
+          btn.style.cssText =
+            "display:flex;align-items:center;justify-content:space-between;padding:10px 14px;background:#f4f5f7;border:1.5px solid var(--border2);border-radius:8px;cursor:pointer;transition:all .14s;font-family:'Barlow Condensed',sans-serif;width:100%";
+          btn.innerHTML = `
+            <div>
+              <div style="font-weight:700;font-size:16px;color:var(--text)">Batter also retired at 1st</div>
+              <div style="font-size:10px;color:var(--text3);margin-top:1px">${dpLabels[retiredBase]}</div>
+            </div>
+            <div style="font-family:'Share Tech Mono',monospace;font-size:11px;color:var(--red);font-weight:700">2 OUTS</div>
+          `;
+          btn.onmouseenter = () => {
+            btn.style.borderColor = "var(--red)";
+            btn.style.background = "rgba(204,26,26,.06)";
+          };
+          btn.onmouseleave = () => {
+            btn.style.borderColor = "var(--border2)";
+            btn.style.background = "#f4f5f7";
+          };
+          btn.onclick = () =>
+            executeTraditionalDP(retiredBase, batter, entry, pitchType, velocity, px, py, had1st);
+          btns.appendChild(btn);
+
+          qs("dp-type-label").style.display = "none";
+          qs("dp-modal").style.display = "flex";
+        }
+
+        function executeTraditionalDP(retiredBase, batter, entry, pitchType, velocity, px, py, had1st) {
+          qs("dp-modal").style.display = "none";
+
+          // Batter didn't reach — restore 1st to its state before the FC
+          S.bases["1st"] = had1st;
+
+          // Second out: batter retired at 1st
+          S.outs++;
+          {
+            const _cp = activePitcher();
+            if (_cp) _cp.outs = (_cp.outs || 0) + 1;
+          }
+
+          // Update at-bat result label from FC to GDP (Grounded Into Double Play)
+          const batterKey = currentBatterKey();
+          const results = S.lineupResults[batterKey];
+          if (results && results.length > 0) {
+            results[results.length - 1].label = "GDP";
+          }
+
+          const retiredAt =
+            retiredBase === "1st" ? "2nd" : retiredBase === "2nd" ? "3rd" : "home";
+
+          toast(`Double Play! — Runner on ${retiredBase} retired at ${retiredAt}, batter out at 1st · ${S.outs} outs`);
           logEvent(
-            "🟤",
-            "Fielder's Choice",
-            `${batter} reaches 1st · runner retired at ${
-              retiredBase === "1st"
-                ? "2nd"
-                : retiredBase === "2nd"
-                ? "3rd"
-                : "home"
-            } · ${S.outs} out`
+            "⚡",
+            "Double Play",
+            `${batter} — GDP; runner retired at ${retiredAt} · batter out at 1st · ${S.outs} out${S.outs > 1 ? "s" : ""}`
           );
-          updatePlayBlurb(
-            "groundout",
-            pitchType,
-            velocity,
-            zoneLabel(px, py),
-            entry.spray || null,
-            0,
-            S.bases,
-            { balls: S.balls, strikes: S.strikes }
+
+          const blurbB = (s) => `<span class="blurb-batter">${s}</span>`;
+          const blurbOut = (s) => `<span class="blurb-out">${s}</span>`;
+          setPlayBlurb(
+            `${blurbB(batter)} ${blurbOut("grounded into a double play")}. Runner on ${retiredBase} retired at ${retiredAt}; batter also thrown out at 1st. ${S.outs} outs.`
           );
 
           if (S.outs >= 3) {
@@ -15371,18 +15506,11 @@
             return;
           }
 
-          // Ask about remaining runners — they may have been forced to advance or stayed
-          const runnersStillOn = ["1st", "2nd", "3rd"].filter(
-            (b) => S.bases[b] && b !== "1st"
-          ); // exclude batter who just arrived
-          // Actually include all bases since we need to know what each runner did
-          const anyRunners = ["2nd", "3rd"].some((b) => S.bases[b]) || had1st;
+          // Show runner advance for any runners still on base (not the batter, not the retired runner)
+          const anyRunners = ["1st", "2nd", "3rd"].some((b) => S.bases[b]);
           if (anyRunners) {
             showRunnerAdvanceOnOut("groundout", () => {
-              if (S.outs >= 3) {
-                handleThreeOuts();
-                return;
-              }
+              if (S.outs >= 3) { handleThreeOuts(); return; }
               nextBatter();
             });
           } else {
