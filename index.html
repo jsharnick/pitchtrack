@@ -8970,6 +8970,15 @@
             <div class="ram-label">Picked Off</div>
             <div class="ram-sub">Runner out, not attempting steal</div>
           </button>
+          <button
+            class="ram-btn"
+            data-outcome="pickoff-attempt"
+            onclick="executeRunnerAction('pickoff-attempt')"
+            style="border-color: var(--text3); color: var(--text3)"
+          >
+            <div class="ram-label">Pickoff Attempt</div>
+            <div class="ram-sub">Throw to base — runner safe</div>
+          </button>
         </div>
         <!-- Remove runner option -->
         <div style="display: flex; gap: 8px">
@@ -12262,6 +12271,8 @@
             r: 0,
             hbp: 0,
             bf: 0,
+            poAtt: 0,
+            poOuts: 0,
             active: true,
           });
           qs("new-p-name").value = "";
@@ -13406,6 +13417,8 @@
 
           // Pitcher career stats — scan pitch logs across all games
           let pitcherCareer = null;
+          let careerPoAtt = 0,
+            careerPoOuts = 0;
           try {
             const pGames = _liveGames.filter(
               (g) => g.awayTeam === pitchingTeam || g.homeTeam === pitchingTeam
@@ -13413,6 +13426,16 @@
             const allPPs = pGames.flatMap((g) =>
               (g.pitchLog || []).filter((e) => e.pitcher === pitcher?.name)
             );
+            // Aggregate pickoff data from pitcher objects across all games
+            pGames.forEach((g) => {
+              const pitchers =
+                g.awayTeam === pitchingTeam ? g.awayPitchers : g.homePitchers;
+              const p = (pitchers || []).find((x) => x.name === pitcher?.name);
+              if (p) {
+                careerPoAtt += p.poAtt || 0;
+                careerPoOuts += p.poOuts || 0;
+              }
+            });
             if (allPPs.length) {
               const totP = allPPs.length;
               const totStr = allPPs.filter((e) => _isStrike(e.outcome)).length;
@@ -13869,6 +13892,17 @@
             "</div>" +
             '<div style="font-size:8px;color:var(--text3);font-family:Barlow,sans-serif;margin-bottom:5px;letter-spacing:1px;text-transform:uppercase">Pitch Mix</div>' +
             pitchPie +
+            sec("Pickoff Tendency") +
+            '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:3px;margin-bottom:6px">' +
+            statBox(pitcher?.poAtt || 0, "This Game") +
+            statBox(careerPoAtt, "Career Att") +
+            statBox(
+              careerPoAtt > 0
+                ? Math.round((careerPoOuts / careerPoAtt) * 100) + "%"
+                : "—",
+              "Out%"
+            ) +
+            "</div>" +
             sec(
               "Batter · #" +
                 (batter?.num || "?") +
@@ -14144,6 +14178,11 @@
                 const bs = getBatterStats(poKey);
                 bs.po = (bs.po || 0) + 1;
               }
+              const poPitcher = activePitcher();
+              if (poPitcher) {
+                poPitcher.poAtt = (poPitcher.poAtt || 0) + 1;
+                poPitcher.poOuts = (poPitcher.poOuts || 0) + 1;
+              }
               S.bases[base] = false;
               clearRunner(base);
               S.outs++;
@@ -14156,6 +14195,20 @@
               if (S.outs >= 3) handleThreeOuts();
               break;
             }
+            case "pickoff-attempt": {
+              const paPitcher = activePitcher();
+              if (paPitcher) {
+                paPitcher.poAtt = (paPitcher.poAtt || 0) + 1;
+              }
+              const paRunner = S.runnerNames[base] || "runner";
+              toast(`Pickoff attempt at ${base} — ${paRunner} safe`);
+              logEvent(
+                "↩️",
+                "Pickoff Attempt",
+                `Throw to ${base} — ${paRunner} safe`
+              );
+              break;
+            }
             case "remove": {
               S.bases[base] = false;
               toast(`Runner removed from ${base}`);
@@ -14164,6 +14217,7 @@
           }
 
           updateScoreBug();
+          renderLiveScoutingTab();
         }
 
         // ===================== GAME LOG =====================
@@ -21385,6 +21439,7 @@
       <div class="tab active" onclick="pitcherTab('zone')">🎯 Pitch Zone</div>
       <div class="tab" onclick="pitcherTab('mix')">📊 Pitch Mix</div>
       <div class="tab" onclick="pitcherTab('gamelog')">📋 Game Log</div>
+      <div class="tab" onclick="pitcherTab('scouting')">Scouting Report</div>
     </div>
 
     <div id="ptab-p-zone">
@@ -21419,6 +21474,17 @@
       <div class="section-title" style="margin-bottom:10px">Game Log</div>
       ${buildPitcherGameLog(teamName, pitcherName, games)}
     </div>
+
+    <div id="ptab-p-scouting" style="display:none">
+      <div style="display:flex;gap:8px;margin-bottom:14px" class="scout-print-hide">
+        <button onclick="printPlayerScoutReport('${escAttr(
+          teamName
+        )}','${escAttr(
+              pitcherName
+            )}','pitcher')" style="padding:7px 18px;background:var(--accent);border:none;border-radius:7px;color:#fff;font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:14px;letter-spacing:1px;cursor:pointer;display:flex;align-items:center;gap:7px">🖨 Print Report</button>
+      </div>
+      ${buildPitcherScoutingReport(teamName, pitcherName, games)}
+    </div>
   </div>${_pitcherSidebar}</div>`;
           } catch (e) {
             console.error("renderPitcher crashed:", e);
@@ -21431,10 +21497,10 @@
         function pitcherTab(tab) {
           _lastPitcherTab = tab;
           document.querySelectorAll("#pitcher-tab-row .tab").forEach((t, i) => {
-            const tabs = ["zone", "mix", "gamelog"];
+            const tabs = ["zone", "mix", "gamelog", "scouting"];
             t.classList.toggle("active", tabs[i] === tab);
           });
-          ["zone", "mix", "gamelog"].forEach((t) => {
+          ["zone", "mix", "gamelog", "scouting"].forEach((t) => {
             const el = document.getElementById("ptab-p-" + t);
             if (el) el.style.display = t === tab ? "block" : "none";
           });
@@ -23577,6 +23643,8 @@
             r: 0,
             hbp: 0,
             bf: 0,
+            poAtt: 0,
+            poOuts: 0,
           };
           sortedGames.forEach((g) => {
             const pitchers =
@@ -23596,6 +23664,8 @@
             career.r += p.r || 0;
             career.hbp += p.hbp || 0;
             career.bf += p.bf || 0;
+            career.poAtt += p.poAtt || 0;
+            career.poOuts += p.poOuts || 0;
           });
 
           const total = allPitches.length || 1;
@@ -24082,6 +24152,14 @@
           ["Avg MPH", avgVel],
           ["Max MPH", maxVel],
           ["K/BB", kbb],
+          ["PO Att", career.poAtt],
+          ["PO Outs", career.poOuts],
+          [
+            "PO Out%",
+            career.poAtt > 0
+              ? Math.round((career.poOuts / career.poAtt) * 100) + "%"
+              : "—",
+          ],
         ]
           .map(
             ([l, v]) =>
