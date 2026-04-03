@@ -13596,22 +13596,51 @@
                     100
                 )
               : 0;
+          const oo11Pitches = pitcherPitches.filter(
+            (e) =>
+              (e.balls === 1 &&
+                e.strikes === 2 &&
+                ["strike-swinging", "strike-looking", "foul"].includes(
+                  e.outcome
+                )) ||
+              (e.balls === 2 && e.strikes === 1 && e.outcome === "ball")
+          );
+          const oo11Pct =
+            oo11Pitches.length > 0
+              ? Math.round(
+                  (oo11Pitches.filter((e) =>
+                    ["strike-swinging", "strike-looking", "foul"].includes(
+                      e.outcome
+                    )
+                  ).length /
+                    oo11Pitches.length) *
+                    100
+                )
+              : 0;
 
           // Pitch type pie
           const typeColors = {
-            FB: "#2878d4",
-            CT: "#1a5acc",
-            SI: "#4a9ec8",
+            "4SFB": "#2878d4",
+            "2SFB": "#5baef5",
+            FB: "#1a5acc",
+            CUT: "#4a9ec8",
+            CT: "#4a9ec8",
+            SNK: "#0e3d8a",
+            SI: "#0e3d8a",
+            CRV: "#d42828",
             CB: "#d42828",
+            SLD: "#e05c10",
             SL: "#e05c10",
-            SP: "#6a0a5a",
+            SLV: "#b03090",
+            SPL: "#9b5de5",
+            SP: "#9b5de5",
             CH: "#28a83a",
             KN: "#8a8a00",
+            UNKN: "#8a909e",
           };
           const ptMap = {};
           pitcherPitches.forEach((e) => {
-            const t = e.pitchType || "—";
-            if (t === "—") return;
+            const t = e.pitchType && e.pitchType !== "—" ? e.pitchType : "UNKN";
             ptMap[t] = (ptMap[t] || 0) + 1;
           });
           const ptSorted = Object.entries(ptMap).sort((a, b) => b[1] - a[1]);
@@ -13970,9 +13999,10 @@
               pWhPct >= 28 ? "var(--green)" : ""
             ) +
             "</div>" +
-            '<div style="display:grid;grid-template-columns:1fr 1fr;gap:3px;margin-bottom:6px">' +
+            '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:3px;margin-bottom:6px">' +
             statBox(pAvgVel, "Avg MPH", "var(--blue)") +
             statBox(pMaxVel, "Max MPH") +
+            statBox(oo11Pct + "%", "1-1 Conv") +
             "</div>" +
             '<div style="font-size:8px;color:var(--text3);font-family:Barlow,sans-serif;margin-bottom:5px;letter-spacing:1px;text-transform:uppercase">Pitch Mix</div>' +
             pitchPie +
@@ -18052,14 +18082,23 @@
           if (!types.length) return "";
 
           const typeColors = {
-            FB: "#2878d4",
-            CT: "#0a3a6a",
-            SI: "#4a9ec8",
+            "4SFB": "#2878d4",
+            "2SFB": "#5baef5",
+            FB: "#1a5acc",
+            CUT: "#4a9ec8",
+            CT: "#4a9ec8",
+            SNK: "#0e3d8a",
+            SI: "#0e3d8a",
+            CRV: "#d42828",
             CB: "#d42828",
+            SLD: "#e05c10",
             SL: "#e05c10",
-            SP: "#6a0a5a",
+            SLV: "#b03090",
+            SPL: "#9b5de5",
+            SP: "#9b5de5",
             CH: "#28a83a",
             KN: "#8a8a00",
+            UNKN: "#8a909e",
           };
           const counts = {};
           types.forEach((t) => {
@@ -18390,14 +18429,23 @@
         // ===== OUTCOME BREAKDOWN RENDERER (called on pitch type filter change) =====
         function renderOutcomeBreakdown(containerId, pitches) {
           const typeColors = {
-            FB: "#2878d4",
-            CT: "#0a3a6a",
-            SI: "#4a9ec8",
+            "4SFB": "#2878d4",
+            "2SFB": "#5baef5",
+            FB: "#1a5acc",
+            CUT: "#4a9ec8",
+            CT: "#4a9ec8",
+            SNK: "#0e3d8a",
+            SI: "#0e3d8a",
+            CRV: "#d42828",
             CB: "#d42828",
+            SLD: "#e05c10",
             SL: "#e05c10",
-            SP: "#6a0a5a",
+            SLV: "#b03090",
+            SPL: "#9b5de5",
+            SP: "#9b5de5",
             CH: "#28a83a",
             KN: "#8a8a00",
+            UNKN: "#8a909e",
           };
           const outLabels = {
             ball: "Ball",
@@ -18483,19 +18531,28 @@
 
           // Rebuild pitch mix (type) pie from filtered pitches
           const typeColors2 = {
-            FB: "#2878d4",
-            CT: "#0a3a6a",
-            SI: "#4a9ec8",
+            "4SFB": "#2878d4",
+            "2SFB": "#5baef5",
+            FB: "#1a5acc",
+            CUT: "#4a9ec8",
+            CT: "#4a9ec8",
+            SNK: "#0e3d8a",
+            SI: "#0e3d8a",
+            CRV: "#d42828",
             CB: "#d42828",
+            SLD: "#e05c10",
             SL: "#e05c10",
-            SP: "#6a0a5a",
+            SLV: "#b03090",
+            SPL: "#9b5de5",
+            SP: "#9b5de5",
             CH: "#28a83a",
             KN: "#8a8a00",
+            UNKN: "#8a909e",
           };
           const typeCount = {};
           pitches.forEach((p) => {
-            if (p.pitchType && p.pitchType !== "—")
-              typeCount[p.pitchType] = (typeCount[p.pitchType] || 0) + 1;
+            const t = p.pitchType && p.pitchType !== "—" ? p.pitchType : "UNKN";
+            typeCount[t] = (typeCount[t] || 0) + 1;
           });
           const typeSlices2 = Object.entries(typeCount)
             .filter(([, n]) => n > 0)
@@ -18727,19 +18784,27 @@
         function buildPitchTypeDetail(pitches) {
           // For each pitch type: count, avg/max/min velo, outcomes, BA against
           const typeColors = {
-            FB: "#5baef5",
-            CT: "#5baef5",
-            SI: "#5baef5",
-            CB: "#f57a7a",
-            SL: "#f57a7a",
-            SP: "#f57a7a",
-            CH: "#6ae87a",
-            KN: "#6ae87a",
+            "4SFB": "#2878d4",
+            "2SFB": "#5baef5",
+            FB: "#1a5acc",
+            CUT: "#4a9ec8",
+            CT: "#4a9ec8",
+            SNK: "#0e3d8a",
+            SI: "#0e3d8a",
+            CRV: "#d42828",
+            CB: "#d42828",
+            SLD: "#e05c10",
+            SL: "#e05c10",
+            SLV: "#b03090",
+            SPL: "#9b5de5",
+            SP: "#9b5de5",
+            CH: "#28a83a",
+            KN: "#8a8a00",
+            UNKN: "#8a909e",
           };
           const byType = {};
           pitches.forEach((p) => {
-            const t = p.pitchType || "—";
-            if (t === "—") return;
+            const t = p.pitchType && p.pitchType !== "—" ? p.pitchType : "UNKN";
             if (!byType[t])
               byType[t] = {
                 count: 0,
@@ -18866,22 +18931,33 @@
         function buildZoneTendenciesFiltered(pitches, containerId) {
           const pitchTypes = [
             ...new Set(
-              pitches.map((p) => p.pitchType).filter((t) => t && t !== "—")
+              pitches.map((p) =>
+                p.pitchType && p.pitchType !== "—" ? p.pitchType : "UNKN"
+              )
             ),
           ].sort(
             (a, b) =>
-              pitches.filter((p) => p.pitchType === b).length -
-              pitches.filter((p) => p.pitchType === a).length
+              pitches.filter((p) => (p.pitchType || "UNKN") === b).length -
+              pitches.filter((p) => (p.pitchType || "UNKN") === a).length
           );
           const typeColors2 = {
-            FB: "#2878d4",
-            CT: "#0a3a6a",
-            SI: "#4a9ec8",
+            "4SFB": "#2878d4",
+            "2SFB": "#5baef5",
+            FB: "#1a5acc",
+            CUT: "#4a9ec8",
+            CT: "#4a9ec8",
+            SNK: "#0e3d8a",
+            SI: "#0e3d8a",
+            CRV: "#d42828",
             CB: "#d42828",
+            SLD: "#e05c10",
             SL: "#e05c10",
-            SP: "#6a0a5a",
+            SLV: "#b03090",
+            SPL: "#9b5de5",
+            SP: "#9b5de5",
             CH: "#28a83a",
             KN: "#8a8a00",
+            UNKN: "#8a909e",
           };
           const pitchesJson = JSON.stringify(
             pitches.map((p) => ({
@@ -18982,22 +19058,33 @@
         function buildHotColdZoneFiltered(pitches, perspective, containerId) {
           const pitchTypes = [
             ...new Set(
-              pitches.map((p) => p.pitchType).filter((t) => t && t !== "—")
+              pitches.map((p) =>
+                p.pitchType && p.pitchType !== "—" ? p.pitchType : "UNKN"
+              )
             ),
           ].sort(
             (a, b) =>
-              pitches.filter((p) => p.pitchType === b).length -
-              pitches.filter((p) => p.pitchType === a).length
+              pitches.filter((p) => (p.pitchType || "UNKN") === b).length -
+              pitches.filter((p) => (p.pitchType || "UNKN") === a).length
           );
           const typeColors2 = {
-            FB: "#2878d4",
-            CT: "#0a3a6a",
-            SI: "#4a9ec8",
+            "4SFB": "#2878d4",
+            "2SFB": "#5baef5",
+            FB: "#1a5acc",
+            CUT: "#4a9ec8",
+            CT: "#4a9ec8",
+            SNK: "#0e3d8a",
+            SI: "#0e3d8a",
+            CRV: "#d42828",
             CB: "#d42828",
+            SLD: "#e05c10",
             SL: "#e05c10",
-            SP: "#6a0a5a",
+            SLV: "#b03090",
+            SPL: "#9b5de5",
+            SP: "#9b5de5",
             CH: "#28a83a",
             KN: "#8a8a00",
+            UNKN: "#8a909e",
           };
           const pitchesJson = JSON.stringify(
             pitches.map((p) => ({
@@ -19308,26 +19395,26 @@
           if (!pitches.length)
             return '<div class="empty-state">No pitch data</div>';
 
-          // Pitch type counts
-          const typeMap = {
-            FB: 0,
-            CB: 0,
-            SL: 0,
-            CH: 0,
-            CT: 0,
-            SP: 0,
-            SI: 0,
-            KN: 0,
-          };
+          // Pitch type counts — dynamic so all types (including UNKN) are captured
+          const typeMap = {};
           const typeColors = {
-            FB: "#2878d4",
-            CT: "#0a3a6a",
-            SI: "#4a9ec8",
+            "4SFB": "#2878d4",
+            "2SFB": "#5baef5",
+            FB: "#1a5acc",
+            CUT: "#4a9ec8",
+            CT: "#4a9ec8",
+            SNK: "#0e3d8a",
+            SI: "#0e3d8a",
+            CRV: "#d42828",
             CB: "#d42828",
+            SLD: "#e05c10",
             SL: "#e05c10",
-            SP: "#6a0a5a",
+            SLV: "#b03090",
+            SPL: "#9b5de5",
+            SP: "#9b5de5",
             CH: "#28a83a",
             KN: "#8a8a00",
+            UNKN: "#8a909e",
           };
           const outcomeMap = {
             ball: 0,
@@ -19341,8 +19428,8 @@
           };
 
           pitches.forEach((p) => {
-            const t = p.pitchType;
-            if (t && typeMap[t] !== undefined) typeMap[t]++;
+            const t = p.pitchType && p.pitchType !== "—" ? p.pitchType : "UNKN";
+            typeMap[t] = (typeMap[t] || 0) + 1;
             const o = p.outcome;
             if (o === "ball") outcomeMap.ball++;
             else if (o === "strike-swinging") outcomeMap["strike-swinging"]++;
@@ -19479,22 +19566,33 @@
 
           const pitchTypes = [
             ...new Set(
-              pitches.map((p) => p.pitchType).filter((t) => t && t !== "—")
+              pitches.map((p) =>
+                p.pitchType && p.pitchType !== "—" ? p.pitchType : "UNKN"
+              )
             ),
           ].sort(
             (a, b) =>
-              pitches.filter((p) => p.pitchType === b).length -
-              pitches.filter((p) => p.pitchType === a).length
+              pitches.filter((p) => (p.pitchType || "UNKN") === b).length -
+              pitches.filter((p) => (p.pitchType || "UNKN") === a).length
           );
           const typeColors2 = {
-            FB: "#2878d4",
-            CT: "#0a3a6a",
-            SI: "#4a9ec8",
+            "4SFB": "#2878d4",
+            "2SFB": "#5baef5",
+            FB: "#1a5acc",
+            CUT: "#4a9ec8",
+            CT: "#4a9ec8",
+            SNK: "#0e3d8a",
+            SI: "#0e3d8a",
+            CRV: "#d42828",
             CB: "#d42828",
+            SLD: "#e05c10",
             SL: "#e05c10",
-            SP: "#6a0a5a",
+            SLV: "#b03090",
+            SPL: "#9b5de5",
+            SP: "#9b5de5",
             CH: "#28a83a",
             KN: "#8a8a00",
+            UNKN: "#8a909e",
           };
           const bdId = "bd-" + Math.random().toString(36).slice(2, 8);
           const pitchesJson = JSON.stringify(
@@ -20458,13 +20556,13 @@
 
     <!-- Analysis Tabs -->
     <div class="tab-row" id="player-tab-row">
-      <div class="tab active" onclick="playerTab('spray')">🏟️ Spray Chart</div>
-      <div class="tab" onclick="playerTab('zone')">🎯 Pitch Zone</div>
-      <div class="tab" onclick="playerTab('breakdown')"> Pitch Breakdown</div>
+      <div class="tab active" onclick="playerTab('spray')">Spray Chart</div>
+      <div class="tab" onclick="playerTab('zone')">Pitch Zone</div>
+      <div class="tab" onclick="playerTab('breakdown')">Pitch Breakdown</div>
       <div class="tab" onclick="playerTab('splits')">Splits</div>
       <div class="tab" onclick="playerTab('baserunning')">Baserunning</div>
       <div class="tab" onclick="playerTab('scouting')">Scouting Report</div>
-      <div class="tab" onclick="playerTab('gamelog')"> Game Log</div>
+      <div class="tab" onclick="playerTab('gamelog')">Game Log</div>
     </div>
 
     <div id="ptab-splits" style="display:none">
@@ -20744,19 +20842,27 @@
 
           // Per pitch-type strike%
           const typeColors = {
-            FB: "#2878d4",
-            CT: "#0a3a6a",
-            SI: "#4a9ec8",
+            "4SFB": "#2878d4",
+            "2SFB": "#5baef5",
+            FB: "#1a5acc",
+            CUT: "#4a9ec8",
+            CT: "#4a9ec8",
+            SNK: "#0e3d8a",
+            SI: "#0e3d8a",
+            CRV: "#d42828",
             CB: "#d42828",
+            SLD: "#e05c10",
             SL: "#e05c10",
-            SP: "#6a0a5a",
+            SLV: "#b03090",
+            SPL: "#9b5de5",
+            SP: "#9b5de5",
             CH: "#28a83a",
             KN: "#8a8a00",
+            UNKN: "#8a909e",
           };
           const byType = {};
           pitches.forEach((p) => {
-            const t = p.pitchType;
-            if (!t || t === "—") return;
+            const t = p.pitchType && p.pitchType !== "—" ? p.pitchType : "UNKN";
             if (!byType[t]) byType[t] = { total: 0, strikes: 0 };
             byType[t].total++;
             if (_isStrike(p.outcome)) byType[t].strikes++;
@@ -21544,9 +21650,10 @@
     </div>
 
     <div class="tab-row" id="pitcher-tab-row">
-      <div class="tab active" onclick="pitcherTab('zone')">🎯 Pitch Zone</div>
-      <div class="tab" onclick="pitcherTab('mix')">📊 Pitch Mix</div>
-      <div class="tab" onclick="pitcherTab('gamelog')">📋 Game Log</div>
+      <div class="tab active" onclick="pitcherTab('zone')">Pitch Zone</div>
+      <div class="tab" onclick="pitcherTab('mix')">Pitch Mix</div>
+      <div class="tab" onclick="pitcherTab('splits')">Splits</div>
+      <div class="tab" onclick="pitcherTab('gamelog')">Game Log</div>
       <div class="tab" onclick="pitcherTab('scouting')">Scouting Report</div>
     </div>
 
@@ -21578,6 +21685,10 @@
       ${buildPitchMixTab(allPitches)}
     </div>
 
+    <div id="ptab-p-splits" style="display:none">
+      ${buildPitcherSplitsTab(teamName, pitcherName, games, allPitches)}
+    </div>
+
     <div id="ptab-p-gamelog" style="display:none">
       <div class="section-title" style="margin-bottom:10px">Game Log</div>
       ${buildPitcherGameLog(teamName, pitcherName, games)}
@@ -21605,15 +21716,302 @@
         function pitcherTab(tab) {
           _lastPitcherTab = tab;
           document.querySelectorAll("#pitcher-tab-row .tab").forEach((t, i) => {
-            const tabs = ["zone", "mix", "gamelog", "scouting"];
+            const tabs = ["zone", "mix", "splits", "gamelog", "scouting"];
             t.classList.toggle("active", tabs[i] === tab);
           });
-          ["zone", "mix", "gamelog", "scouting"].forEach((t) => {
+          ["zone", "mix", "splits", "gamelog", "scouting"].forEach((t) => {
             const el = document.getElementById("ptab-p-" + t);
             if (el) el.style.display = t === tab ? "block" : "none";
           });
           if (tab === "zone")
             setTimeout(() => selectAllPitchTypes("pitcher-zone-wrap"), 0);
+        }
+
+        function buildPitcherSplitsTab(
+          teamName,
+          pitcherName,
+          games,
+          allPitches
+        ) {
+          if (!allPitches.length)
+            return '<div class="empty-state">No pitch data logged yet.</div>';
+
+          // Attach game context (home/away, gameId) to each pitch
+          const pitches = [];
+          games.forEach((g) => {
+            const isHome = g.homeTeam === teamName;
+            (g.pitchLog || []).forEach((p) => {
+              if (p.pitcher === pitcherName && p.pitcherTeam === teamName)
+                pitches.push({
+                  ...p,
+                  _isHome: isHome,
+                  _gameId: g.id,
+                  _gameDate: g.date,
+                });
+            });
+          });
+          if (!pitches.length)
+            return '<div class="empty-state">No pitch data logged yet.</div>';
+
+          const swingOutcomes = [
+            "strike-swinging",
+            "foul",
+            "single",
+            "double",
+            "triple",
+            "homerun",
+            "groundout",
+            "flyout",
+            "lineout",
+            "sacfly",
+            "sacbunt",
+            "error",
+          ];
+
+          function _pRow(label, subset) {
+            if (!subset.length)
+              return `<tr><td style="font-weight:500;color:var(--text2)">${label}</td><td colspan="6" style="color:var(--text3)">—</td></tr>`;
+            const n = subset.length;
+            const strikes = subset.filter((p) => _isStrike(p.outcome)).length;
+            const inZone = subset.filter(
+              (p) =>
+                p.pitchX != null &&
+                p.pitchX >= 31 &&
+                p.pitchX <= 69 &&
+                p.pitchY != null &&
+                p.pitchY >= 30.9 &&
+                p.pitchY <= 69.1
+            ).length;
+            const swings = subset.filter((p) =>
+              swingOutcomes.includes(p.outcome)
+            ).length;
+            const whiffs = subset.filter(
+              (p) => p.outcome === "strike-swinging"
+            ).length;
+            const fps = subset.filter((p) => _isFirstPitch(p));
+            const fpStr = fps.filter((p) => _isStrike(p.outcome)).length;
+            const sp = Math.round((strikes / n) * 100);
+            const zp = Math.round((inZone / n) * 100);
+            const swp = Math.round((swings / n) * 100);
+            const whp = swings > 0 ? Math.round((whiffs / swings) * 100) : 0;
+            const fpsp =
+              fps.length > 0 ? Math.round((fpStr / fps.length) * 100) : null;
+            const spColor =
+              sp >= 65
+                ? "color:var(--green);font-weight:800"
+                : sp < 52
+                ? "color:var(--red);font-weight:800"
+                : "";
+            return `<tr>
+              <td style="font-weight:500;color:var(--text2)">${label}</td>
+              <td>${n}</td>
+              <td style="${spColor}">${sp}%</td>
+              <td>${zp}%</td>
+              <td>${swp}%</td>
+              <td>${whp}%</td>
+              <td style="color:var(--text3)">${
+                fpsp !== null ? fpsp + "%" : "—"
+              }</td>
+            </tr>`;
+          }
+
+          function _pTable(rows, title) {
+            return `<div style="margin-bottom:28px">
+              <div style="font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:9px;letter-spacing:3px;text-transform:uppercase;color:var(--text3);margin-bottom:8px">${title}</div>
+              <div style="overflow-x:auto">
+              <table class="data-table" style="min-width:500px">
+                <thead><tr>
+                  <th style="text-align:left;min-width:160px">Split</th>
+                  <th>P</th><th>Str%</th><th>Zone%</th><th>Swing%</th><th>Whiff%</th><th>FPS%</th>
+                </tr></thead>
+                <tbody>${rows.join("")}</tbody>
+              </table></div>
+            </div>`;
+          }
+
+          // Home / Away
+          const homeAwayRows = [
+            _pRow(
+              "Home",
+              pitches.filter((p) => p._isHome)
+            ),
+            _pRow(
+              "Away",
+              pitches.filter((p) => !p._isHome)
+            ),
+          ];
+
+          // Runners on base
+          const runnersRows = [
+            _pRow(
+              "Bases Empty",
+              pitches.filter(
+                (p) =>
+                  p.runnersOn &&
+                  !p.runnersOn["1st"] &&
+                  !p.runnersOn["2nd"] &&
+                  !p.runnersOn["3rd"]
+              )
+            ),
+            _pRow(
+              "Runners On",
+              pitches.filter(
+                (p) =>
+                  p.runnersOn &&
+                  (p.runnersOn["1st"] ||
+                    p.runnersOn["2nd"] ||
+                    p.runnersOn["3rd"])
+              )
+            ),
+            _pRow(
+              "RISP",
+              pitches.filter(
+                (p) => p.runnersOn && (p.runnersOn["2nd"] || p.runnersOn["3rd"])
+              )
+            ),
+            _pRow(
+              "Bases Loaded",
+              pitches.filter(
+                (p) =>
+                  p.runnersOn &&
+                  p.runnersOn["1st"] &&
+                  p.runnersOn["2nd"] &&
+                  p.runnersOn["3rd"]
+              )
+            ),
+          ];
+
+          // Outs in inning
+          const outsRows = [
+            _pRow(
+              "0 Outs",
+              pitches.filter((p) => p.outs === 0)
+            ),
+            _pRow(
+              "1 Out",
+              pitches.filter((p) => p.outs === 1)
+            ),
+            _pRow(
+              "2 Outs",
+              pitches.filter((p) => p.outs === 2)
+            ),
+          ];
+
+          // Count splits
+          const countRows = [
+            _pRow(
+              "0-0 (First Pitch)",
+              pitches.filter((p) => _isFirstPitch(p))
+            ),
+            _pRow(
+              "1-1 Count",
+              pitches.filter(
+                (p) =>
+                  (p.balls === 1 &&
+                    p.strikes === 2 &&
+                    ["strike-swinging", "strike-looking", "foul"].includes(
+                      p.outcome
+                    )) ||
+                  (p.balls === 2 && p.strikes === 1 && p.outcome === "ball")
+              )
+            ),
+            _pRow(
+              "Ahead (0-1, 0-2)",
+              pitches.filter((p) => p.strikes > p.balls)
+            ),
+            _pRow(
+              "Behind (1-0+)",
+              pitches.filter((p) => p.balls > p.strikes)
+            ),
+            _pRow(
+              "2-Strike",
+              pitches.filter((p) => p.strikes === 2)
+            ),
+            _pRow(
+              "Full Count (3-2)",
+              pitches.filter((p) => p.balls === 3 && p.strikes === 2)
+            ),
+          ];
+
+          // By inning
+          const innings = [
+            ...new Set(pitches.map((p) => p.inning).filter((x) => x != null)),
+          ].sort((a, b) => a - b);
+          const inningRows = innings.map((i) =>
+            _pRow(
+              `Inning ${i}`,
+              pitches.filter((p) => p.inning === i)
+            )
+          );
+
+          // Recent games
+          const sortedGames = games
+            .filter((g) => pitches.some((p) => p._gameId === g.id))
+            .sort((a, b) => (a.date || "").localeCompare(b.date || ""));
+          const recentIds5 = sortedGames.slice(-5).map((g) => g.id);
+          const recentIds10 = sortedGames.slice(-10).map((g) => g.id);
+          const recentRows = [
+            _pRow(
+              "Last 5 Games",
+              pitches.filter((p) => recentIds5.includes(p._gameId))
+            ),
+            _pRow(
+              "Last 10 Games",
+              pitches.filter((p) => recentIds10.includes(p._gameId))
+            ),
+          ];
+
+          // By month
+          const byMonth = {};
+          pitches.forEach((p) => {
+            if (!p._gameDate) return;
+            const m = p._gameDate.slice(0, 7);
+            if (!byMonth[m]) byMonth[m] = [];
+            byMonth[m].push(p);
+          });
+          const monthKeys = Object.keys(byMonth).sort();
+          const monthRows =
+            monthKeys.length > 1
+              ? monthKeys.map((m) => {
+                  const d = new Date(m + "-02");
+                  const lbl = d.toLocaleString("default", {
+                    month: "long",
+                    year: "numeric",
+                  });
+                  return _pRow(lbl, byMonth[m]);
+                })
+              : [];
+
+          // By pitch type
+          const typeSet = [
+            ...new Set(
+              pitches.map((p) =>
+                p.pitchType && p.pitchType !== "—" ? p.pitchType : "UNKN"
+              )
+            ),
+          ].sort();
+          const typeRows = typeSet.map((t) =>
+            _pRow(
+              t,
+              pitches.filter(
+                (p) =>
+                  (p.pitchType && p.pitchType !== "—"
+                    ? p.pitchType
+                    : "UNKN") === t
+              )
+            )
+          );
+
+          return `<div style="padding:4px 0">
+            ${_pTable(homeAwayRows, "Home / Away")}
+            ${_pTable(runnersRows, "Runners on Base")}
+            ${_pTable(outsRows, "Outs in Inning")}
+            ${_pTable(countRows, "Count Splits")}
+            ${innings.length ? _pTable(inningRows, "By Inning") : ""}
+            ${_pTable(recentRows, "Recent Performance")}
+            ${monthRows.length ? _pTable(monthRows, "By Month") : ""}
+            ${typeRows.length ? _pTable(typeRows, "By Pitch Type") : ""}
+          </div>`;
         }
 
         function buildPitchMixTab(allPitches) {
@@ -23145,8 +23543,7 @@
           // Pitch type faced
           const ptMap = {};
           allPitches.forEach((p) => {
-            const t = p.pitchType || "—";
-            if (t === "—") return;
+            const t = p.pitchType && p.pitchType !== "—" ? p.pitchType : "UNKN";
             if (!ptMap[t])
               ptMap[t] = {
                 total: 0,
@@ -23184,14 +23581,23 @@
               ptMap[t].k++;
           });
           const typeColors = {
-            FB: "#2878d4",
-            CT: "#0a3a6a",
-            SI: "#4a9ec8",
+            "4SFB": "#2878d4",
+            "2SFB": "#5baef5",
+            FB: "#1a5acc",
+            CUT: "#4a9ec8",
+            CT: "#4a9ec8",
+            SNK: "#0e3d8a",
+            SI: "#0e3d8a",
+            CRV: "#d42828",
             CB: "#d42828",
+            SLD: "#e05c10",
             SL: "#e05c10",
-            SP: "#6a0a5a",
+            SLV: "#b03090",
+            SPL: "#9b5de5",
+            SP: "#9b5de5",
             CH: "#28a83a",
             KN: "#8a8a00",
+            UNKN: "#8a909e",
           };
           const ptRows = Object.entries(ptMap)
             .sort((a, b) => b[1].total - a[1].total)
@@ -23789,6 +24195,27 @@
                     100
                 )
               : 0;
+          const oo11 = allPitches.filter(
+            (p) =>
+              (p.balls === 1 &&
+                p.strikes === 2 &&
+                ["strike-swinging", "strike-looking", "foul"].includes(
+                  p.outcome
+                )) ||
+              (p.balls === 2 && p.strikes === 1 && p.outcome === "ball")
+          );
+          const oo11Pct =
+            oo11.length > 0
+              ? Math.round(
+                  (oo11.filter((p) =>
+                    ["strike-swinging", "strike-looking", "foul"].includes(
+                      p.outcome
+                    )
+                  ).length /
+                    oo11.length) *
+                    100
+                )
+              : 0;
           const swings = allPitches.filter((p) =>
             [
               "strike-swinging",
@@ -23833,21 +24260,29 @@
               ? "∞"
               : "—";
           const typeColors = {
-            FB: "#2878d4",
-            CT: "#0a3a6a",
-            SI: "#4a9ec8",
+            "4SFB": "#2878d4",
+            "2SFB": "#5baef5",
+            FB: "#1a5acc",
+            CUT: "#4a9ec8",
+            CT: "#4a9ec8",
+            SNK: "#0e3d8a",
+            SI: "#0e3d8a",
+            CRV: "#d42828",
             CB: "#d42828",
+            SLD: "#e05c10",
             SL: "#e05c10",
-            SP: "#6a0a5a",
+            SLV: "#b03090",
+            SPL: "#9b5de5",
+            SP: "#9b5de5",
             CH: "#28a83a",
             KN: "#8a8a00",
+            UNKN: "#8a909e",
           };
 
           // Pitch arsenal per type
           const byType = {};
           allPitches.forEach((p) => {
-            const t = p.pitchType || "—";
-            if (t === "—") return;
+            const t = p.pitchType && p.pitchType !== "—" ? p.pitchType : "UNKN";
             if (!byType[t])
               byType[t] = {
                 total: 0,
@@ -24108,6 +24543,16 @@
           // Count discipline rows
           const countSit = [
             { lbl: "0-0 (FPS)", fn: (p) => p.balls === 0 && p.strikes === 0 },
+            {
+              lbl: "1-1 Count",
+              fn: (p) =>
+                (p.balls === 1 &&
+                  p.strikes === 2 &&
+                  ["strike-swinging", "strike-looking", "foul"].includes(
+                    p.outcome
+                  )) ||
+                (p.balls === 2 && p.strikes === 1 && p.outcome === "ball"),
+            },
             { lbl: "Ahead (0-1,0-2)", fn: (p) => p.strikes > p.balls },
             { lbl: "Behind (1-0+)", fn: (p) => p.balls > p.strikes },
             { lbl: "2-Strike", fn: (p) => p.strikes === 2 },
@@ -24251,6 +24696,7 @@
           ["H Allow", career.hits],
           ["Strike%", sp + "%"],
           ["FPS%", fpsPct + "%"],
+          ["1-1 Conv%", oo11Pct + "%"],
           ["Swing%", swPct + "%"],
           ["Zone%", zonePct + "%"],
           [
