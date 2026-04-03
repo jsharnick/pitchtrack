@@ -13596,6 +13596,27 @@
                     100
                 )
               : 0;
+          const oo11Pitches = pitcherPitches.filter(
+            (e) =>
+              (e.balls === 1 &&
+                e.strikes === 2 &&
+                ["strike-swinging", "strike-looking", "foul"].includes(
+                  e.outcome
+                )) ||
+              (e.balls === 2 && e.strikes === 1 && e.outcome === "ball")
+          );
+          const oo11Pct =
+            oo11Pitches.length > 0
+              ? Math.round(
+                  (oo11Pitches.filter((e) =>
+                    ["strike-swinging", "strike-looking", "foul"].includes(
+                      e.outcome
+                    )
+                  ).length /
+                    oo11Pitches.length) *
+                    100
+                )
+              : 0;
 
           // Pitch type pie
           const typeColors = {
@@ -13970,9 +13991,10 @@
               pWhPct >= 28 ? "var(--green)" : ""
             ) +
             "</div>" +
-            '<div style="display:grid;grid-template-columns:1fr 1fr;gap:3px;margin-bottom:6px">' +
+            '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:3px;margin-bottom:6px">' +
             statBox(pAvgVel, "Avg MPH", "var(--blue)") +
             statBox(pMaxVel, "Max MPH") +
+            statBox(oo11Pct + "%", "1-1 Conv") +
             "</div>" +
             '<div style="font-size:8px;color:var(--text3);font-family:Barlow,sans-serif;margin-bottom:5px;letter-spacing:1px;text-transform:uppercase">Pitch Mix</div>' +
             pitchPie +
@@ -23789,6 +23811,27 @@
                     100
                 )
               : 0;
+          const oo11 = allPitches.filter(
+            (p) =>
+              (p.balls === 1 &&
+                p.strikes === 2 &&
+                ["strike-swinging", "strike-looking", "foul"].includes(
+                  p.outcome
+                )) ||
+              (p.balls === 2 && p.strikes === 1 && p.outcome === "ball")
+          );
+          const oo11Pct =
+            oo11.length > 0
+              ? Math.round(
+                  (oo11.filter((p) =>
+                    ["strike-swinging", "strike-looking", "foul"].includes(
+                      p.outcome
+                    )
+                  ).length /
+                    oo11.length) *
+                    100
+                )
+              : 0;
           const swings = allPitches.filter((p) =>
             [
               "strike-swinging",
@@ -24108,6 +24151,16 @@
           // Count discipline rows
           const countSit = [
             { lbl: "0-0 (FPS)", fn: (p) => p.balls === 0 && p.strikes === 0 },
+            {
+              lbl: "1-1 Count",
+              fn: (p) =>
+                (p.balls === 1 &&
+                  p.strikes === 2 &&
+                  ["strike-swinging", "strike-looking", "foul"].includes(
+                    p.outcome
+                  )) ||
+                (p.balls === 2 && p.strikes === 1 && p.outcome === "ball"),
+            },
             { lbl: "Ahead (0-1,0-2)", fn: (p) => p.strikes > p.balls },
             { lbl: "Behind (1-0+)", fn: (p) => p.balls > p.strikes },
             { lbl: "2-Strike", fn: (p) => p.strikes === 2 },
@@ -24251,6 +24304,7 @@
           ["H Allow", career.hits],
           ["Strike%", sp + "%"],
           ["FPS%", fpsPct + "%"],
+          ["1-1 Conv%", oo11Pct + "%"],
           ["Swing%", swPct + "%"],
           ["Zone%", zonePct + "%"],
           [
