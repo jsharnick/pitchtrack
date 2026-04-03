@@ -5384,6 +5384,7 @@
                       />
                     </div>
                     <div
+                      id="pitch-type-grid"
                       style="
                         flex: 1;
                         display: grid;
@@ -5391,62 +5392,7 @@
                         gap: 4px;
                       "
                     >
-                      <button
-                        class="pitch-type-btn"
-                        data-type="FB"
-                        onclick="selectPitchType('FB')"
-                      >
-                        FB
-                      </button>
-                      <button
-                        class="pitch-type-btn"
-                        data-type="CB"
-                        onclick="selectPitchType('CB')"
-                      >
-                        CB
-                      </button>
-                      <button
-                        class="pitch-type-btn"
-                        data-type="SL"
-                        onclick="selectPitchType('SL')"
-                      >
-                        SL
-                      </button>
-                      <button
-                        class="pitch-type-btn"
-                        data-type="CH"
-                        onclick="selectPitchType('CH')"
-                      >
-                        CH
-                      </button>
-                      <button
-                        class="pitch-type-btn"
-                        data-type="CT"
-                        onclick="selectPitchType('CT')"
-                      >
-                        CT
-                      </button>
-                      <button
-                        class="pitch-type-btn"
-                        data-type="SP"
-                        onclick="selectPitchType('SP')"
-                      >
-                        SP
-                      </button>
-                      <button
-                        class="pitch-type-btn"
-                        data-type="SI"
-                        onclick="selectPitchType('SI')"
-                      >
-                        SI
-                      </button>
-                      <button
-                        class="pitch-type-btn"
-                        data-type="KN"
-                        onclick="selectPitchType('KN')"
-                      >
-                        KN
-                      </button>
+                      <!-- populated by renderPitchTypeGrid() on load and pitcher change -->
                     </div>
                   </div>
                 </div>
@@ -6889,6 +6835,7 @@
             >
             <select
               id="opp-mtp-pos"
+              onchange="_syncPitchSection('opp-mtp-pitch-section', this.value)"
               style="
                 width: 100%;
                 padding: 7px 10px;
@@ -7041,6 +6988,8 @@
             margin-top: 16px;
           "
         >
+          <!-- Pitch repertoire editor — shown only for pitcher positions -->
+          <div id="opp-mtp-pitch-section" style="display: none"></div>
           <button
             onclick="document.getElementById('opp-player-modal').style.display='none'"
             style="
@@ -7743,6 +7692,7 @@
             >
             <select
               id="mtp-pos"
+              onchange="_syncPitchSection('mtp-pitch-section', this.value)"
               style="
                 width: 100%;
                 padding: 7px 10px;
@@ -7887,6 +7837,8 @@
             />
           </div>
         </div>
+        <!-- Pitch repertoire editor — shown only for pitcher positions -->
+        <div id="mtp-pitch-section" style="display: none"></div>
         <div
           style="
             display: flex;
@@ -10044,6 +9996,13 @@
           document.getElementById("sn-resume-btn").style.display =
             name === "tracker" ? "inline-flex" : "none";
           currentPanel = name;
+          if (name === "tracker") {
+            // Re-render pitch grid for current active pitcher (or default if none)
+            try {
+              const ap = activePitcher();
+              renderPitchTypeGrid(_resolveActivePitcherTypes(ap));
+            } catch (e) {}
+          }
           if (name === "hub") {
             try {
               hubRefreshAll();
@@ -10535,12 +10494,255 @@
           }
           checkCommitReady();
         }
+        // ── Pitch type catalog ──────────────────────────────────────────────────
+        const ALL_PITCH_TYPES = [
+          { key: "FB", label: "FB", name: "4-Seam Fastball" },
+          { key: "2FB", label: "2FB", name: "2-Seam Fastball" },
+          { key: "SI", label: "SI", name: "Sinker" },
+          { key: "CT", label: "CT", name: "Cutter" },
+          { key: "CB", label: "CB", name: "Curveball" },
+          { key: "SL", label: "SL", name: "Slider" },
+          { key: "SW", label: "SW", name: "Sweeper" },
+          { key: "SV", label: "SV", name: "Slurve" },
+          { key: "CH", label: "CH", name: "Changeup" },
+          { key: "SP", label: "SP", name: "Splitter" },
+          { key: "VC", label: "VC", name: "Vulcan Change" },
+          { key: "KN", label: "KN", name: "Knuckleball" },
+          { key: "SC", label: "SC", name: "Screwball" },
+        ];
+        // Keys used for keyboard shortcuts 1-8 (updated whenever grid renders)
+        let _currentPitchKeys = [
+          "FB",
+          "CB",
+          "SL",
+          "CH",
+          "CT",
+          "SP",
+          "SI",
+          "KN",
+        ];
+
+        // Render the dynamic pitch type button grid based on a pitcher's repertoire.
+        // pitchTypes: array of {key, label} — empty/null = full default 8-button grid.
+        function renderPitchTypeGrid(pitchTypes) {
+          const container = document.getElementById("pitch-type-grid");
+          if (!container) return;
+
+          const DEFAULT_EIGHT = [
+            { key: "FB", label: "FB" },
+            { key: "CB", label: "CB" },
+            { key: "SL", label: "SL" },
+            { key: "CH", label: "CH" },
+            { key: "CT", label: "CT" },
+            { key: "SP", label: "SP" },
+            { key: "SI", label: "SI" },
+            { key: "KN", label: "KN" },
+          ];
+          const types =
+            pitchTypes && pitchTypes.length ? pitchTypes : DEFAULT_EIGHT;
+          const n = types.length;
+
+          const btnHTML = (t) =>
+            `<button class="pitch-type-btn" data-type="${t.key}" onclick="selectPitchType('${t.key}')">${t.label}</button>`;
+
+          if (n <= 3) {
+            // Single row
+            container.style.cssText =
+              "flex:1;display:grid;grid-template-columns:repeat(" +
+              n +
+              ",1fr);gap:4px";
+            container.innerHTML = types.map(btnHTML).join("");
+          } else if (n % 2 === 0) {
+            // Even: n/2 columns × 2 rows
+            const cols = n / 2;
+            container.style.cssText =
+              "flex:1;display:grid;grid-template-columns:repeat(" +
+              cols +
+              ",1fr);gap:4px";
+            container.innerHTML = types.map(btnHTML).join("");
+          } else {
+            // Odd ≥ 5: first (n-1) in a left grid, last button spans full height on right
+            const main = types.slice(0, n - 1);
+            const last = types[n - 1];
+            const leftCols = (n - 1) / 2;
+            container.style.cssText =
+              "flex:1;display:flex;gap:4px;align-items:stretch";
+            container.innerHTML =
+              `<div style="flex:${leftCols};display:grid;grid-template-columns:repeat(${leftCols},1fr);gap:4px">` +
+              main.map(btnHTML).join("") +
+              `</div>` +
+              `<button class="pitch-type-btn" data-type="${last.key}" onclick="selectPitchType('${last.key}')" style="flex:1;writing-mode:horizontal-tb">${last.label}</button>`;
+          }
+
+          // Restore selected state
+          if (S.selectedPitchType) {
+            const btn = container.querySelector(
+              `.pitch-type-btn[data-type="${S.selectedPitchType}"]`
+            );
+            if (btn) btn.classList.add("selected");
+          }
+          // Update keyboard shortcut keys
+          _currentPitchKeys = types.map((t) => t.key);
+        }
+
         function selectPitchType(t) {
           S.selectedPitchType = t;
           qsa(".pitch-type-btn").forEach((b) => b.classList.remove("selected"));
-          document
-            .querySelector(`.pitch-type-btn[data-type="${t}"]`)
-            .classList.add("selected");
+          const btn = document.querySelector(
+            `.pitch-type-btn[data-type="${t}"]`
+          );
+          if (btn) btn.classList.add("selected");
+        }
+
+        // ── Per-pitcher pitch type editor ────────────────────────────────────────
+        let _editingPitchTypes = []; // [] = use full default grid
+
+        function _isPitcherPos(pos) {
+          return /RHP|LHP|^P$|\/P$|P\//i.test(pos || "");
+        }
+
+        // Show or hide pitch section when position dropdown changes
+        function _syncPitchSection(sectionId, pos) {
+          const el = document.getElementById(sectionId);
+          if (!el) return;
+          if (_isPitcherPos(pos)) {
+            el.style.display = "";
+            _refreshPitchEditor(sectionId);
+          } else {
+            el.style.display = "none";
+          }
+        }
+
+        // Open pitch editor for a given modal section with existing pitchTypes
+        function _renderPitchTypeEditor(sectionId, pitchTypes) {
+          _editingPitchTypes =
+            pitchTypes && pitchTypes.length
+              ? pitchTypes.map((t) => ({ key: t.key, label: t.label || t.key }))
+              : [];
+          _refreshPitchEditor(sectionId);
+        }
+
+        function _refreshPitchEditor(sectionId) {
+          const container = document.getElementById(sectionId);
+          if (!container) return;
+          const sel = new Set(_editingPitchTypes.map((t) => t.key));
+
+          const chipStyle = (on) =>
+            `display:inline-flex;align-items:center;gap:5px;padding:5px 10px;border:1.5px solid ${
+              on ? "var(--accent)" : "var(--border2)"
+            };border-radius:20px;cursor:pointer;background:${
+              on ? "rgba(204,26,26,.08)" : "var(--surface3)"
+            };font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:13px;color:${
+              on ? "var(--accent)" : "var(--text2)"
+            };user-select:none;margin:3px`;
+
+          let chips = ALL_PITCH_TYPES.map((pt) => {
+            const on = sel.has(pt.key);
+            return `<span style="${chipStyle(
+              on
+            )}" onclick="_togglePitch('${sectionId}','${pt.key}')">
+              ${pt.key} <span style="font-weight:400;font-size:10px;color:${
+              on ? "var(--accent)" : "var(--text3)"
+            }">${pt.name}</span>
+            </span>`;
+          }).join("");
+
+          let labels = "";
+          if (_editingPitchTypes.length) {
+            labels =
+              `<div style="margin-top:10px">
+              <div style="font-size:10px;color:var(--text3);font-family:'Barlow',sans-serif;text-transform:uppercase;letter-spacing:1px;margin-bottom:6px">Button Labels — edit to customize display</div>
+              <div style="display:flex;flex-wrap:wrap;gap:6px">` +
+              _editingPitchTypes
+                .map(
+                  (pt, i) =>
+                    `<div style="display:flex;align-items:center;gap:4px;padding:4px 8px;background:var(--surface3);border:1px solid var(--border2);border-radius:6px">
+                  <span style="font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:12px;color:var(--text3)">${pt.key}</span>
+                  <span style="color:var(--text3);font-size:11px">→</span>
+                  <input value="${pt.label}" onchange="_updatePitchLabel(${i},this.value)" onclick="event.stopPropagation()" style="width:42px;padding:2px 4px;border:1px solid var(--border2);border-radius:4px;font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;text-align:center;background:white">
+                </div>`
+                )
+                .join("") +
+              `</div></div>`;
+          }
+
+          container.innerHTML = `
+            <div style="margin-top:14px;padding-top:14px;border-top:1px solid var(--border)">
+              <div style="display:flex;align-items:baseline;justify-content:space-between;margin-bottom:8px">
+                <div>
+                  <div style="font-size:10px;color:var(--text3);font-family:'Barlow',sans-serif;text-transform:uppercase;letter-spacing:1px;font-weight:600">Pitch Repertoire</div>
+                  <div style="font-size:11px;color:var(--text3);margin-top:2px">Select which pitches show in the tracker. Leave all unchecked to show the full default grid.</div>
+                </div>
+                <button onclick="_resetPitchTypes('${sectionId}')" style="background:none;border:none;color:var(--text3);font-size:11px;cursor:pointer;text-decoration:underline;white-space:nowrap;margin-left:10px">Reset</button>
+              </div>
+              <div style="line-height:1">${chips}</div>
+              ${labels}
+            </div>`;
+        }
+
+        function _togglePitch(sectionId, key) {
+          const idx = _editingPitchTypes.findIndex((t) => t.key === key);
+          if (idx >= 0) {
+            _editingPitchTypes.splice(idx, 1);
+          } else {
+            const def = ALL_PITCH_TYPES.find((t) => t.key === key);
+            _editingPitchTypes.push({ key, label: def ? def.key : key });
+          }
+          _refreshPitchEditor(sectionId);
+        }
+
+        function _updatePitchLabel(idx, val) {
+          if (_editingPitchTypes[idx])
+            _editingPitchTypes[idx].label =
+              val.trim() || _editingPitchTypes[idx].key;
+        }
+
+        function _resetPitchTypes(sectionId) {
+          _editingPitchTypes = [];
+          _refreshPitchEditor(sectionId);
+        }
+
+        // Resolve pitchTypes for a game pitcher: use in-game value if set,
+        // otherwise fall back to the matching roster player's pitchTypes.
+        function _resolveActivePitcherTypes(gamePitcher) {
+          if (!gamePitcher) return [];
+          if (gamePitcher.pitchTypes && gamePitcher.pitchTypes.length)
+            return gamePitcher.pitchTypes;
+          // Fall back: look in both rosters for a name+num match
+          const allRosters = [
+            ...(myTeamRoster || []),
+            ...(_opponents || []).flatMap((o) => o.roster || []),
+          ];
+          const match = allRosters.find(
+            (p) =>
+              p.name === gamePitcher.name &&
+              (!gamePitcher.num || p.num === gamePitcher.num)
+          );
+          return match && match.pitchTypes ? match.pitchTypes : [];
+        }
+
+        // After saving a roster player, push their pitchTypes to any matching
+        // in-game pitcher and re-render the grid if they're currently active.
+        function _syncRosterPitchTypesToGame(rosterPlayer) {
+          const newTypes = rosterPlayer.pitchTypes || [];
+          let found = false;
+          [S.pitchersAway, S.pitchersHome].forEach(function (list) {
+            (list || []).forEach(function (gp) {
+              if (
+                gp.name === rosterPlayer.name &&
+                (!rosterPlayer.num || gp.num === rosterPlayer.num)
+              ) {
+                gp.pitchTypes = newTypes;
+                found = true;
+              }
+            });
+          });
+          // Re-render grid immediately if we updated anyone — activePitcher() may
+          // be the "last in list" fallback even without gp.active === true
+          if (found) {
+            renderPitchTypeGrid(_resolveActivePitcherTypes(activePitcher()));
+            S.selectedPitchType = null;
+          }
         }
         function checkCommitReady() {
           qs("commit-pitch").disabled = !(
@@ -11874,6 +12076,7 @@
                 name: p.name,
                 num: p.num || "",
                 hand: p.throw || "R",
+                pitchTypes: p.pitchTypes || [],
                 pitches: 0,
                 strikes: 0,
                 k: 0,
@@ -11894,6 +12097,8 @@
               }
               renderPitcherList();
               updateScoreBug();
+              renderPitchTypeGrid(entry.pitchTypes);
+              S.selectedPitchType = null;
               logEvent(
                 "🔄",
                 "Pitching Change",
@@ -11987,10 +12192,11 @@
               activePitcherList().forEach(function (x) {
                 x.active = false;
               });
-              activePitcherList().push({
+              var entry = {
                 name: p.name,
                 num: p.num || "",
                 hand: p.throw || "R",
+                pitchTypes: p.pitchTypes || [],
                 pitches: 0,
                 strikes: 0,
                 k: 0,
@@ -12003,9 +12209,12 @@
                 hbp: 0,
                 bf: 0,
                 active: true,
-              });
+              };
+              activePitcherList().push(entry);
               renderPitcherList();
               updateScoreBug();
+              renderPitchTypeGrid(entry.pitchTypes);
+              S.selectedPitchType = null;
               toast(p.name + " now pitching");
             });
             list.appendChild(card);
@@ -12041,6 +12250,7 @@
             name,
             num,
             hand,
+            pitchTypes: [],
             pitches: 0,
             strikes: 0,
             k: 0,
@@ -12059,6 +12269,8 @@
           qs("add-pitcher-form").classList.remove("open");
           renderPitcherList();
           updateScoreBug();
+          renderPitchTypeGrid([]);
+          S.selectedPitchType = null;
           toast(`Pitching: #${num} ${name}`);
         }
         function removePitcher(e, i) {
@@ -12084,6 +12296,9 @@
             `Pitching Change`,
             `#${p.num || "?"} ${p.name} now pitching`
           );
+          // Update pitch type grid for this pitcher's repertoire
+          renderPitchTypeGrid(p.pitchTypes || []);
+          S.selectedPitchType = null;
         }
         let editingPitcher = null; // index into activePitcherList()
 
@@ -12171,6 +12386,11 @@
             }
             el.appendChild(div);
           });
+          // Always sync pitch grid to active pitcher — most reliable hook since
+          // renderPitcherList() is called after every pitch, undo, resume, and change.
+          try {
+            renderPitchTypeGrid(_resolveActivePitcherTypes(activePitcher()));
+          } catch (e) {}
         }
         function startPitcherEdit(e, i) {
           e.stopPropagation();
@@ -12802,6 +13022,9 @@
           dpCallback = null;
 
           // Re-render everything
+          try {
+            renderPitchTypeGrid(_resolveActivePitcherTypes(activePitcher()));
+          } catch (e) {}
           resetPitchControls(false); // clear outcome/type selection, keep zone dots from restored pitchLog
           renderPitchZoneFromLog(); // redraw dots from restored pitchLog
           renderPitchLog();
@@ -14129,7 +14352,8 @@
             case "7":
             case "8": {
               const idx = parseInt(e.key) - 1;
-              if (idx < PITCH_TYPES.length) selectPitchType(PITCH_TYPES[idx]);
+              if (idx < _currentPitchKeys.length)
+                selectPitchType(_currentPitchKeys[idx]);
               break;
             }
           }
@@ -15973,6 +16197,10 @@
             renderPitchMix();
             renderGameLog();
             clearAtBat();
+            // Restore pitch grid for the active pitcher
+            try {
+              renderPitchTypeGrid(_resolveActivePitcherTypes(activePitcher()));
+            } catch (e) {}
 
             // Restore AB strip chips for current AB
             qsa("#ab-strip .ab-pitch-chip").forEach((c) => c.remove());
@@ -24579,6 +24807,10 @@
           document.getElementById("opp-mtp-pos").value = "C";
           document.getElementById("opp-mtp-bat").value = "R";
           document.getElementById("opp-mtp-throw").value = "R";
+          // Hide pitch section (default pos = C)
+          document.getElementById("opp-mtp-pitch-section").style.display =
+            "none";
+          _editingPitchTypes = [];
           document.getElementById("opp-player-modal").style.display = "flex";
           document.getElementById("opp-mtp-name").focus();
         }
@@ -24601,6 +24833,15 @@
           document.getElementById("opp-mtp-throw").value = p.throw || "R";
           document.getElementById("opp-mtp-ht").value = p.ht || "";
           document.getElementById("opp-mtp-wt").value = p.wt || "";
+          // Show pitch repertoire editor for pitchers
+          const pitchSec = document.getElementById("opp-mtp-pitch-section");
+          if (_isPitcherPos(p.pos)) {
+            pitchSec.style.display = "";
+            _renderPitchTypeEditor("opp-mtp-pitch-section", p.pitchTypes || []);
+          } else {
+            pitchSec.style.display = "none";
+            _editingPitchTypes = [];
+          }
           document.getElementById("opp-player-modal").style.display = "flex";
         }
 
@@ -24612,17 +24853,26 @@
           }
           const opp = _opponents.find((o) => o.id === _oppEditingId);
           if (!opp) return;
+          const pos = document.getElementById("opp-mtp-pos").value;
+          const existingPlayer = opp.roster.find(
+            (x) => x.id === _oppEditingPid
+          );
           const player = {
             id:
               _oppEditingPid ||
               "p_" + Date.now() + "_" + Math.random().toString(36).slice(2, 6),
             name,
             num: document.getElementById("opp-mtp-num").value.trim(),
-            pos: document.getElementById("opp-mtp-pos").value,
+            pos,
             bat: document.getElementById("opp-mtp-bat").value,
             throw: document.getElementById("opp-mtp-throw").value,
             ht: document.getElementById("opp-mtp-ht").value.trim(),
             wt: document.getElementById("opp-mtp-wt").value.trim(),
+            pitchTypes: _isPitcherPos(pos)
+              ? [..._editingPitchTypes]
+              : existingPlayer
+              ? existingPlayer.pitchTypes || []
+              : [],
           };
           if (_oppEditingPid) {
             const idx = opp.roster.findIndex((x) => x.id === _oppEditingPid);
@@ -24633,6 +24883,8 @@
           document.getElementById("opp-player-modal").style.display = "none";
           oppSaveOne(opp);
           oppRefreshDetail();
+          // Sync pitchTypes to the in-game pitcher if this player is currently pitching
+          _syncRosterPitchTypesToGame(player);
         }
 
         function oppDeletePlayer() {
@@ -24809,6 +25061,9 @@
           document.getElementById("mtp-pos").value = "C";
           document.getElementById("mtp-bat").value = "R";
           document.getElementById("mtp-throw").value = "R";
+          // Hide pitch section (default pos = C, not a pitcher)
+          document.getElementById("mtp-pitch-section").style.display = "none";
+          _editingPitchTypes = [];
           document.getElementById("myteam-modal").style.display = "flex";
           document.getElementById("mtp-name").focus();
         }
@@ -24828,6 +25083,15 @@
           document.getElementById("mtp-throw").value = p.throw || "R";
           document.getElementById("mtp-ht").value = p.ht || "";
           document.getElementById("mtp-wt").value = p.wt || "";
+          // Show pitch repertoire editor for pitchers
+          const pitchSec = document.getElementById("mtp-pitch-section");
+          if (_isPitcherPos(p.pos)) {
+            pitchSec.style.display = "";
+            _renderPitchTypeEditor("mtp-pitch-section", p.pitchTypes || []);
+          } else {
+            pitchSec.style.display = "none";
+            _editingPitchTypes = [];
+          }
           document.getElementById("myteam-modal").style.display = "flex";
         }
 
@@ -24837,17 +25101,27 @@
             document.getElementById("mtp-name").focus();
             return;
           }
+          const pos = document.getElementById("mtp-pos").value;
+          // Preserve existing pitchTypes if not editing a pitcher (editor wasn't shown)
+          const existingPlayer = myTeamRoster.find(
+            (x) => x.id === myTeamEditingId
+          );
           const player = {
             id:
               myTeamEditingId ||
               "p_" + Date.now() + "_" + Math.random().toString(36).slice(2, 6),
             name,
             num: document.getElementById("mtp-num").value.trim(),
-            pos: document.getElementById("mtp-pos").value,
+            pos,
             bat: document.getElementById("mtp-bat").value,
             throw: document.getElementById("mtp-throw").value,
             ht: document.getElementById("mtp-ht").value.trim(),
             wt: document.getElementById("mtp-wt").value.trim(),
+            pitchTypes: _isPitcherPos(pos)
+              ? [..._editingPitchTypes]
+              : existingPlayer
+              ? existingPlayer.pitchTypes || []
+              : [],
           };
           if (myTeamEditingId) {
             const idx = myTeamRoster.findIndex((x) => x.id === myTeamEditingId);
@@ -24858,6 +25132,8 @@
           document.getElementById("myteam-modal").style.display = "none";
           myTeamSave();
           myTeamRender();
+          // Sync pitchTypes to the in-game pitcher if this player is currently pitching
+          _syncRosterPitchTypesToGame(player);
         }
 
         function myTeamDeletePlayer() {
