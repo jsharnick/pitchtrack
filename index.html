@@ -10766,82 +10766,255 @@
           max-width: 96vw;
           max-height: 88vh;
           overflow-y: auto;
-          box-shadow: 0 24px 72px rgba(0,0,0,.55);
+          box-shadow: 0 24px 72px rgba(0, 0, 0, 0.55);
           display: flex;
           flex-direction: column;
           gap: 14px;
         "
       >
         <!-- Header -->
-        <div style="display:flex;align-items:center;justify-content:space-between">
+        <div
+          style="
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+          "
+        >
           <div>
-            <div style="font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:20px;color:var(--text);letter-spacing:.5px">✉ Send via Email</div>
-            <div id="send-modal-subtitle" style="font-size:11px;color:var(--text3);margin-top:2px"></div>
+            <div
+              style="
+                font-family: 'Barlow Condensed', sans-serif;
+                font-weight: 900;
+                font-size: 20px;
+                color: var(--text);
+                letter-spacing: 0.5px;
+              "
+            >
+              ✉ Send via Email
+            </div>
+            <div
+              id="send-modal-subtitle"
+              style="font-size: 11px; color: var(--text3); margin-top: 2px"
+            ></div>
           </div>
-          <button onclick="closeSendModal()" style="background:none;border:none;color:var(--text3);font-size:20px;cursor:pointer;padding:2px 6px;border-radius:6px;line-height:1" title="Close">✕</button>
+          <button
+            onclick="closeSendModal()"
+            style="
+              background: none;
+              border: none;
+              color: var(--text3);
+              font-size: 20px;
+              cursor: pointer;
+              padding: 2px 6px;
+              border-radius: 6px;
+              line-height: 1;
+            "
+            title="Close"
+          >
+            ✕
+          </button>
         </div>
 
         <!-- Recipient -->
         <div>
-          <label style="font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:11px;color:var(--text3);letter-spacing:1px;text-transform:uppercase;display:block;margin-bottom:5px">To</label>
+          <label
+            style="
+              font-family: 'Barlow Condensed', sans-serif;
+              font-weight: 700;
+              font-size: 11px;
+              color: var(--text3);
+              letter-spacing: 1px;
+              text-transform: uppercase;
+              display: block;
+              margin-bottom: 5px;
+            "
+            >To</label
+          >
           <input
             id="send-email-to"
             type="email"
             placeholder="recipient@example.com"
             style="
-              width:100%;padding:9px 12px;
-              background:var(--surface3);border:1px solid var(--border2);
-              border-radius:8px;color:var(--text);
-              font-family:'Barlow',sans-serif;font-size:13px;outline:none;
+              width: 100%;
+              padding: 9px 12px;
+              background: var(--surface3);
+              border: 1px solid var(--border2);
+              border-radius: 8px;
+              color: var(--text);
+              font-family: 'Barlow', sans-serif;
+              font-size: 13px;
+              outline: none;
             "
           />
         </div>
 
         <!-- Subject -->
         <div>
-          <label style="font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:11px;color:var(--text3);letter-spacing:1px;text-transform:uppercase;display:block;margin-bottom:5px">Subject</label>
+          <label
+            style="
+              font-family: 'Barlow Condensed', sans-serif;
+              font-weight: 700;
+              font-size: 11px;
+              color: var(--text3);
+              letter-spacing: 1px;
+              text-transform: uppercase;
+              display: block;
+              margin-bottom: 5px;
+            "
+            >Subject</label
+          >
           <input
             id="send-email-subject"
             type="text"
             style="
-              width:100%;padding:9px 12px;
-              background:var(--surface3);border:1px solid var(--border2);
-              border-radius:8px;color:var(--text);
-              font-family:'Barlow',sans-serif;font-size:13px;outline:none;
+              width: 100%;
+              padding: 9px 12px;
+              background: var(--surface3);
+              border: 1px solid var(--border2);
+              border-radius: 8px;
+              color: var(--text);
+              font-family: 'Barlow', sans-serif;
+              font-size: 13px;
+              outline: none;
             "
           />
         </div>
 
         <!-- Summary preview -->
         <div>
-          <label style="font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:11px;color:var(--text3);letter-spacing:1px;text-transform:uppercase;display:block;margin-bottom:5px">Game Summary (included in email body)</label>
+          <label
+            style="
+              font-family: 'Barlow Condensed', sans-serif;
+              font-weight: 700;
+              font-size: 11px;
+              color: var(--text3);
+              letter-spacing: 1px;
+              text-transform: uppercase;
+              display: block;
+              margin-bottom: 5px;
+            "
+            >Game Summary (included in email body)</label
+          >
           <textarea
             id="send-email-body"
             rows="10"
             style="
-              width:100%;padding:10px 12px;
-              background:var(--surface3);border:1px solid var(--border2);
-              border-radius:8px;color:var(--text);
-              font-family:'Share Tech Mono',monospace;font-size:11px;
-              line-height:1.55;outline:none;resize:vertical;
+              width: 100%;
+              padding: 10px 12px;
+              background: var(--surface3);
+              border: 1px solid var(--border2);
+              border-radius: 8px;
+              color: var(--text);
+              font-family: 'Share Tech Mono', monospace;
+              font-size: 11px;
+              line-height: 1.55;
+              outline: none;
+              resize: vertical;
             "
           ></textarea>
         </div>
 
         <!-- Attachment note -->
-        <div style="background:rgba(26,90,204,.1);border:1px solid rgba(26,90,204,.25);border-radius:8px;padding:10px 12px;display:flex;gap:10px;align-items:flex-start">
-          <span style="font-size:16px;flex-shrink:0;margin-top:1px">📎</span>
+        <div
+          style="
+            background: rgba(26, 90, 204, 0.1);
+            border: 1px solid rgba(26, 90, 204, 0.25);
+            border-radius: 8px;
+            padding: 10px 12px;
+            display: flex;
+            gap: 10px;
+            align-items: flex-start;
+          "
+        >
+          <span style="font-size: 16px; flex-shrink: 0; margin-top: 1px"
+            >📎</span
+          >
           <div>
-            <div style="font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:12px;color:var(--text2);margin-bottom:2px">Attach the data file</div>
-            <div style="font-size:11px;color:var(--text3);line-height:1.5">Click <strong style="color:var(--text2)">Download JSON</strong> to save the data file, then attach it manually in your email client after clicking <strong style="color:var(--text2)">Open Mail</strong>.</div>
+            <div
+              style="
+                font-family: 'Barlow Condensed', sans-serif;
+                font-weight: 700;
+                font-size: 12px;
+                color: var(--text2);
+                margin-bottom: 2px;
+              "
+            >
+              Attach the data file
+            </div>
+            <div style="font-size: 11px; color: var(--text3); line-height: 1.5">
+              Click
+              <strong style="color: var(--text2)">Download JSON</strong> to save
+              the data file, then attach it manually in your email client after
+              clicking <strong style="color: var(--text2)">Open Mail</strong>.
+            </div>
           </div>
         </div>
 
         <!-- Actions -->
-        <div style="display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap;margin-top:2px">
-          <button onclick="closeSendModal()" style="padding:8px 18px;background:none;border:1.5px solid var(--border2);border-radius:8px;color:var(--text3);font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:13px;cursor:pointer">Cancel</button>
-          <button id="send-download-btn" onclick="sendModalDownload()" style="padding:8px 18px;background:var(--surface3);border:1.5px solid var(--border2);border-radius:8px;color:var(--text2);font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:13px;cursor:pointer;transition:all .13s" onmouseover="this.style.borderColor='var(--accent)';this.style.color='var(--accent)'" onmouseout="this.style.borderColor='var(--border2)';this.style.color='var(--text2)'">⬇ Download JSON</button>
-          <button onclick="sendModalOpenMail()" style="padding:8px 22px;background:var(--accent);border:none;border-radius:8px;color:#fff;font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:13px;cursor:pointer;transition:background .13s" onmouseover="this.style.background='#e02020'" onmouseout="this.style.background='var(--accent)'">✉ Open Mail</button>
+        <div
+          style="
+            display: flex;
+            gap: 8px;
+            justify-content: flex-end;
+            flex-wrap: wrap;
+            margin-top: 2px;
+          "
+        >
+          <button
+            onclick="closeSendModal()"
+            style="
+              padding: 8px 18px;
+              background: none;
+              border: 1.5px solid var(--border2);
+              border-radius: 8px;
+              color: var(--text3);
+              font-family: 'Barlow Condensed', sans-serif;
+              font-weight: 700;
+              font-size: 13px;
+              cursor: pointer;
+            "
+          >
+            Cancel
+          </button>
+          <button
+            id="send-download-btn"
+            onclick="sendModalDownload()"
+            style="
+              padding: 8px 18px;
+              background: var(--surface3);
+              border: 1.5px solid var(--border2);
+              border-radius: 8px;
+              color: var(--text2);
+              font-family: 'Barlow Condensed', sans-serif;
+              font-weight: 700;
+              font-size: 13px;
+              cursor: pointer;
+              transition: all 0.13s;
+            "
+            onmouseover="this.style.borderColor='var(--accent)';this.style.color='var(--accent)'"
+            onmouseout="this.style.borderColor='var(--border2)';this.style.color='var(--text2)'"
+          >
+            ⬇ Download JSON
+          </button>
+          <button
+            onclick="sendModalOpenMail()"
+            style="
+              padding: 8px 22px;
+              background: var(--accent);
+              border: none;
+              border-radius: 8px;
+              color: #fff;
+              font-family: 'Barlow Condensed', sans-serif;
+              font-weight: 800;
+              font-size: 13px;
+              cursor: pointer;
+              transition: background 0.13s;
+            "
+            onmouseover="this.style.background='#e02020'"
+            onmouseout="this.style.background='var(--accent)'"
+          >
+            ✉ Open Mail
+          </button>
         </div>
       </div>
     </div>
@@ -17821,7 +17994,11 @@
               window._ghSelectMode = false;
             } else if (gameId === "__teams__") {
               // Remove selected teams from the pitchtrack_teams index only — games are kept
-              const toRemove = Array.from(_tsSelected);
+              // My Team is never removed (it lives in the roster, not the teams index)
+              const myTN = window._myTeamNameCache || "";
+              const toRemove = Array.from(_tsSelected).filter(
+                (t) => t !== myTN
+              );
               let teamsRaw;
               try {
                 teamsRaw = await window.storage.get("pitchtrack_teams", true);
@@ -17917,8 +18094,10 @@
         }
 
         function tsSelectAll() {
-          // Select all non-My-Team teams
+          // Select all teams including My Team (if it exists)
           const myTN = window._myTeamNameCache || "";
+          if (myTN && myTeamRoster && myTeamRoster.length > 0)
+            _tsSelected.add(myTN);
           allTeams.filter((t) => t !== myTN).forEach((t) => _tsSelected.add(t));
           renderSidebar();
           _tsUpdateBar();
@@ -17931,7 +18110,12 @@
         }
 
         function _tsUpdateBar() {
+          const myTN = window._myTeamNameCache || "";
           const n = _tsSelected.size;
+          // My Team can be sent but not deleted — count deletable separately
+          const nDeletable = Array.from(_tsSelected).filter(
+            (t) => t !== myTN
+          ).length;
           const countEl = document.getElementById("ts-sel-count");
           const delBtn = document.getElementById("ts-del-btn");
           const sendBtn = document.getElementById("ts-send-btn");
@@ -17940,18 +18124,32 @@
               n === 0
                 ? "0 selected"
                 : `${n} team${n !== 1 ? "s" : ""} selected`;
-          [delBtn, sendBtn].forEach((btn) => {
-            if (!btn) return;
-            btn.disabled = n === 0;
-            btn.style.opacity = n === 0 ? ".45" : "1";
-            btn.style.cursor = n === 0 ? "not-allowed" : "pointer";
-            btn.style.borderColor = n === 0 ? "var(--border2)" : "var(--accent)";
-            btn.style.color = n === 0 ? "var(--text3)" : "var(--accent)";
-          });
+          // Send button — enabled whenever anything is selected
+          if (sendBtn) {
+            sendBtn.disabled = n === 0;
+            sendBtn.style.opacity = n === 0 ? ".45" : "1";
+            sendBtn.style.cursor = n === 0 ? "not-allowed" : "pointer";
+            sendBtn.style.borderColor =
+              n === 0 ? "var(--border2)" : "var(--accent)";
+            sendBtn.style.color = n === 0 ? "var(--text3)" : "var(--accent)";
+          }
+          // Delete button — only enabled when deletable (non-My-Team) teams are selected
+          if (delBtn) {
+            delBtn.disabled = nDeletable === 0;
+            delBtn.style.opacity = nDeletable === 0 ? ".45" : "1";
+            delBtn.style.cursor = nDeletable === 0 ? "not-allowed" : "pointer";
+            delBtn.style.borderColor =
+              nDeletable === 0 ? "var(--border2)" : "var(--accent)";
+            delBtn.style.color =
+              nDeletable === 0 ? "var(--text3)" : "var(--accent)";
+          }
         }
 
         function tsPromptDeleteSelected() {
-          const n = _tsSelected.size;
+          const myTN = window._myTeamNameCache || "";
+          // Only delete non-My-Team selections
+          const toDelete = Array.from(_tsSelected).filter((t) => t !== myTN);
+          const n = toDelete.length;
           if (!n) return;
           const titleEl = document.querySelector(
             "#delete-confirm-modal [style*='font-size: 21px']"
@@ -18059,14 +18257,39 @@
           const myTeamIsActive =
             currentView?.type === "team" && currentView?.data === myTeamName;
 
-          // My Team pinned entry — never selectable for deletion
+          // My Team pinned entry — selectable for Send but never for deletion
+          const myTeamIsSel = _tsSelected.has(myTeamName);
+          const myTeamChkHTML = _tsSelectMode
+            ? `<div class="gh-checkbox${
+                myTeamIsSel ? " checked" : ""
+              }" style="margin-left:10px;flex-shrink:0">${
+                myTeamIsSel ? "✓" : ""
+              }</div>`
+            : "";
           const myTeamEntry = hasMyTeam
-            ? `<div style="display:flex;align-items:center;border-left:3px solid var(--accent);margin-bottom:4px;background:rgba(204,26,26,.04);border-radius:0 6px 6px 0">
-      <button class="team-btn${
-        myTeamIsActive ? " active" : ""
-      }" data-team="${escAttr(
+            ? `<div class="ts-team-row${
+                myTeamIsSel ? " ts-selected-row" : ""
+              }" data-team="${escAttr(
                 myTeamName
-              )}" onclick="showView('team',this.getAttribute('data-team'))" style="flex:1;border-left:none">
+              )}" style="display:flex;align-items:center;border-left:3px solid ${
+                myTeamIsSel ? "var(--accent)" : "var(--accent)"
+              };margin-bottom:4px;background:rgba(204,26,26,.04);border-radius:0 6px 6px 0;cursor:${
+                _tsSelectMode ? "pointer" : "default"
+              }" ${
+                _tsSelectMode
+                  ? `onclick="tsToggleTeam('${escAttr(myTeamName)}')"`
+                  : ""
+              }>
+      ${myTeamChkHTML}
+      <button class="team-btn${
+        myTeamIsActive && !_tsSelectMode ? " active" : ""
+      }" data-team="${escAttr(myTeamName)}" ${
+                _tsSelectMode
+                  ? ""
+                  : `onclick="showView('team',this.getAttribute('data-team'))"`
+              } style="flex:1;border-left:none;pointer-events:${
+                _tsSelectMode ? "none" : "auto"
+              }">
         <div class="team-icon" style="font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:9px;letter-spacing:0.5px;color:var(--accent);border-color:rgba(204,26,26,.3)">MY</div>
         <div>
           <div class="team-name" style="color:var(--accent)">${escHtml(
@@ -18347,7 +18570,8 @@
             btn.disabled = n === 0;
             btn.style.opacity = n === 0 ? ".45" : "1";
             btn.style.cursor = n === 0 ? "not-allowed" : "pointer";
-            btn.style.borderColor = n === 0 ? "var(--border2)" : "var(--accent)";
+            btn.style.borderColor =
+              n === 0 ? "var(--border2)" : "var(--accent)";
             btn.style.color = n === 0 ? "var(--text3)" : "var(--accent)";
           });
         }
@@ -18371,19 +18595,19 @@
         }
 
         // ===== SEND VIA EMAIL =====
-        let _sendModalGames = [];   // games collected for the current open modal
-        let _sendModalMode  = '';   // 'games' | 'teams'
+        let _sendModalGames = []; // games collected for the current open modal
+        let _sendModalMode = ""; // 'games' | 'teams'
 
         function openSendModal(mode) {
-          _sendModalMode  = mode;
+          _sendModalMode = mode;
           _sendModalGames = [];
 
-          const myTN = window._myTeamNameCache || '';
+          const myTN = window._myTeamNameCache || "";
 
-          if (mode === 'games') {
+          if (mode === "games") {
             // --- collect selected games from game-history view ---
             _sendModalGames = allGames.filter((g) => _ghSelected.has(g.id));
-          } else if (mode === 'teams') {
+          } else if (mode === "teams") {
             // --- collect every game that involves any selected team ---
             _sendModalGames = allGames.filter(
               (g) => _tsSelected.has(g.awayTeam) || _tsSelected.has(g.homeTeam)
@@ -18391,142 +18615,182 @@
           }
 
           if (!_sendModalGames.length) {
-            toast('No games to send.');
+            toast("No games to send.");
             return;
           }
 
           // ── build plain-text summary ──────────────────────────────────────
           const lines = [];
-          const today = new Date().toLocaleDateString('en-US', {
-            year: 'numeric', month: 'long', day: 'numeric'
+          const today = new Date().toLocaleDateString("en-US", {
+            year: "numeric",
+            month: "long",
+            day: "numeric",
           });
 
-          if (mode === 'games') {
-            lines.push('PITCHTRACK PRO — GAME SUMMARY');
+          if (mode === "games") {
+            lines.push("PITCHTRACK PRO — GAME SUMMARY");
             lines.push(`Generated: ${today}`);
-            lines.push('═'.repeat(48));
+            lines.push("═".repeat(48));
             _sendModalGames.forEach((g, i) => {
-              lines.push('');
+              lines.push("");
               lines.push(`Game ${i + 1} of ${_sendModalGames.length}`);
-              lines.push(`Date:     ${g.date || '—'}`);
+              lines.push(`Date:     ${g.date || "—"}`);
               lines.push(`Matchup:  ${g.awayTeam} @ ${g.homeTeam}`);
-              lines.push(`Score:    ${g.awayTeam} ${g.awayScore}–${g.homeScore} ${g.homeTeam}`);
-              lines.push(`Innings:  ${g.innings || '—'}`);
+              lines.push(
+                `Score:    ${g.awayTeam} ${g.awayScore}–${g.homeScore} ${g.homeTeam}`
+              );
+              lines.push(`Innings:  ${g.innings || "—"}`);
               lines.push(`Pitches:  ${g.totalPitches || 0}`);
-              if (i < _sendModalGames.length - 1)
-                lines.push('─'.repeat(48));
+              if (i < _sendModalGames.length - 1) lines.push("─".repeat(48));
             });
           } else {
             // teams mode — one block per selected team
             const teams = Array.from(_tsSelected);
-            lines.push('PITCHTRACK PRO — TEAM SUMMARY');
+            lines.push("PITCHTRACK PRO — TEAM SUMMARY");
             lines.push(`Generated: ${today}`);
-            lines.push('═'.repeat(48));
+            lines.push("═".repeat(48));
             teams.forEach((teamName, ti) => {
               const tGames = _sendModalGames.filter(
                 (g) => g.awayTeam === teamName || g.homeTeam === teamName
               );
               // compute record
-              let w = 0, l = 0, t = 0, runs = 0, ra = 0, pitches = 0;
+              let w = 0,
+                l = 0,
+                t = 0,
+                runs = 0,
+                ra = 0,
+                pitches = 0;
               tGames.forEach((g) => {
                 const isHome = g.homeTeam === teamName;
                 const tf = isHome ? g.homeScore : g.awayScore;
                 const ta = isHome ? g.awayScore : g.homeScore;
-                if (tf > ta) w++; else if (tf < ta) l++; else t++;
-                runs += tf; ra += ta;
+                if (tf > ta) w++;
+                else if (tf < ta) l++;
+                else t++;
+                runs += tf;
+                ra += ta;
                 pitches += g.totalPitches || 0;
               });
               const rd = runs - ra;
 
-              lines.push('');
+              lines.push("");
               lines.push(`TEAM: ${teamName}`);
-              lines.push(`Record:   ${w}–${l}${t ? '–' + t : ''}`);
-              lines.push(`Runs:     ${runs} scored, ${ra} allowed (${rd >= 0 ? '+' : ''}${rd})`);
-              lines.push(`Pitches:  ${pitches} total across ${tGames.length} game${tGames.length !== 1 ? 's' : ''}`);
-              lines.push('');
-              lines.push('  GAME LOG');
-              lines.push('  ' + '─'.repeat(44));
+              lines.push(`Record:   ${w}–${l}${t ? "–" + t : ""}`);
+              lines.push(
+                `Runs:     ${runs} scored, ${ra} allowed (${
+                  rd >= 0 ? "+" : ""
+                }${rd})`
+              );
+              lines.push(
+                `Pitches:  ${pitches} total across ${tGames.length} game${
+                  tGames.length !== 1 ? "s" : ""
+                }`
+              );
+              lines.push("");
+              lines.push("  GAME LOG");
+              lines.push("  " + "─".repeat(44));
               tGames
                 .slice()
-                .sort((a, b) => (b.date || '').localeCompare(a.date || ''))
+                .sort((a, b) => (b.date || "").localeCompare(a.date || ""))
                 .forEach((g) => {
                   const isHome = g.homeTeam === teamName;
                   const opp = isHome ? g.awayTeam : g.homeTeam;
-                  const tf  = isHome ? g.homeScore : g.awayScore;
-                  const ta  = isHome ? g.awayScore : g.homeScore;
-                  const res = tf > ta ? 'W' : tf < ta ? 'L' : 'T';
+                  const tf = isHome ? g.homeScore : g.awayScore;
+                  const ta = isHome ? g.awayScore : g.homeScore;
+                  const res = tf > ta ? "W" : tf < ta ? "L" : "T";
                   lines.push(
-                    `  ${g.date || '??/??'}  ${res}  ${tf}–${ta}  vs ${opp}  (${g.totalPitches || 0}P)`
+                    `  ${g.date || "??/??"}  ${res}  ${tf}–${ta}  vs ${opp}  (${
+                      g.totalPitches || 0
+                    }P)`
                   );
                 });
-              if (ti < teams.length - 1) lines.push('\n' + '═'.repeat(48));
+              if (ti < teams.length - 1) lines.push("\n" + "═".repeat(48));
             });
           }
 
-          const bodyText = lines.join('\n');
+          const bodyText = lines.join("\n");
 
           // ── subject line ─────────────────────────────────────────────────
-          let subject = '';
-          if (mode === 'games') {
+          let subject = "";
+          if (mode === "games") {
             const n = _sendModalGames.length;
-            subject = n === 1
-              ? `PitchTrack: ${_sendModalGames[0].awayTeam} @ ${_sendModalGames[0].homeTeam} — ${_sendModalGames[0].date || ''}`
-              : `PitchTrack: ${n} Game Summary`;
+            subject =
+              n === 1
+                ? `PitchTrack: ${_sendModalGames[0].awayTeam} @ ${
+                    _sendModalGames[0].homeTeam
+                  } — ${_sendModalGames[0].date || ""}`
+                : `PitchTrack: ${n} Game Summary`;
           } else {
             const teams = Array.from(_tsSelected);
-            subject = teams.length === 1
-              ? `PitchTrack: ${teams[0]} Team Summary`
-              : `PitchTrack: Team Summary — ${teams.slice(0,2).join(', ')}${teams.length > 2 ? ' +' + (teams.length - 2) + ' more' : ''}`;
+            subject =
+              teams.length === 1
+                ? `PitchTrack: ${teams[0]} Team Summary`
+                : `PitchTrack: Team Summary — ${teams.slice(0, 2).join(", ")}${
+                    teams.length > 2 ? " +" + (teams.length - 2) + " more" : ""
+                  }`;
           }
 
           // ── subtitle ─────────────────────────────────────────────────────
-          let subtitle = '';
-          if (mode === 'games') {
-            subtitle = `${_sendModalGames.length} game${_sendModalGames.length !== 1 ? 's' : ''} selected`;
+          let subtitle = "";
+          if (mode === "games") {
+            subtitle = `${_sendModalGames.length} game${
+              _sendModalGames.length !== 1 ? "s" : ""
+            } selected`;
           } else {
             const tc = Array.from(_tsSelected).length;
-            subtitle = `${tc} team${tc !== 1 ? 's' : ''} · ${_sendModalGames.length} game${_sendModalGames.length !== 1 ? 's' : ''}`;
+            subtitle = `${tc} team${tc !== 1 ? "s" : ""} · ${
+              _sendModalGames.length
+            } game${_sendModalGames.length !== 1 ? "s" : ""}`;
           }
 
           // ── populate modal fields ─────────────────────────────────────────
-          const subEl  = document.getElementById('send-modal-subtitle');
-          const subjectEl = document.getElementById('send-email-subject');
-          const bodyEl = document.getElementById('send-email-body');
-          if (subEl)     subEl.textContent   = subtitle;
-          if (subjectEl) subjectEl.value     = subject;
-          if (bodyEl)    bodyEl.value        = bodyText;
+          const subEl = document.getElementById("send-modal-subtitle");
+          const subjectEl = document.getElementById("send-email-subject");
+          const bodyEl = document.getElementById("send-email-body");
+          if (subEl) subEl.textContent = subtitle;
+          if (subjectEl) subjectEl.value = subject;
+          if (bodyEl) bodyEl.value = bodyText;
 
           // clear To field each time
-          const toEl = document.getElementById('send-email-to');
-          if (toEl) toEl.value = '';
+          const toEl = document.getElementById("send-email-to");
+          if (toEl) toEl.value = "";
 
           // reset Download button label
-          const dlBtn = document.getElementById('send-download-btn');
-          if (dlBtn) dlBtn.textContent = '⬇ Download JSON';
+          const dlBtn = document.getElementById("send-download-btn");
+          if (dlBtn) dlBtn.textContent = "⬇ Download JSON";
 
-          document.getElementById('send-email-modal').style.display = 'flex';
+          document.getElementById("send-email-modal").style.display = "flex";
         }
 
         function closeSendModal() {
-          const modal = document.getElementById('send-email-modal');
-          if (modal) modal.style.display = 'none';
+          const modal = document.getElementById("send-email-modal");
+          if (modal) modal.style.display = "none";
           _sendModalGames = [];
-          _sendModalMode  = '';
+          _sendModalMode = "";
         }
 
         function sendModalDownload() {
-          if (!_sendModalGames.length) { toast('Nothing to download.'); return; }
-          const date = new Date().toISOString().split('T')[0];
-          let filename = '';
-          if (_sendModalMode === 'games') {
-            filename = _sendModalGames.length === 1
-              ? `pitchtrack_${_sanitizeFilename(_sendModalGames[0].awayTeam)}_vs_${_sanitizeFilename(_sendModalGames[0].homeTeam)}_${_sendModalGames[0].date || date}.json`
-              : `pitchtrack_${_sendModalGames.length}games_${date}.json`;
+          if (!_sendModalGames.length) {
+            toast("Nothing to download.");
+            return;
+          }
+          const date = new Date().toISOString().split("T")[0];
+          let filename = "";
+          if (_sendModalMode === "games") {
+            filename =
+              _sendModalGames.length === 1
+                ? `pitchtrack_${_sanitizeFilename(
+                    _sendModalGames[0].awayTeam
+                  )}_vs_${_sanitizeFilename(_sendModalGames[0].homeTeam)}_${
+                    _sendModalGames[0].date || date
+                  }.json`
+                : `pitchtrack_${_sendModalGames.length}games_${date}.json`;
           } else {
             const teams = Array.from(_tsSelected);
-            filename = teams.length === 1
-              ? `pitchtrack_${_sanitizeFilename(teams[0])}_${date}.json`
-              : `pitchtrack_${teams.length}teams_${date}.json`;
+            filename =
+              teams.length === 1
+                ? `pitchtrack_${_sanitizeFilename(teams[0])}_${date}.json`
+                : `pitchtrack_${teams.length}teams_${date}.json`;
           }
           _downloadJSON(
             {
@@ -18537,38 +18801,48 @@
             filename
           );
           // visual feedback on button
-          const dlBtn = document.getElementById('send-download-btn');
+          const dlBtn = document.getElementById("send-download-btn");
           if (dlBtn) {
-            dlBtn.textContent = '✓ Downloaded';
-            dlBtn.style.borderColor = 'var(--accent)';
-            dlBtn.style.color       = 'var(--accent)';
+            dlBtn.textContent = "✓ Downloaded";
+            dlBtn.style.borderColor = "var(--accent)";
+            dlBtn.style.color = "var(--accent)";
             setTimeout(() => {
-              dlBtn.textContent = '⬇ Download JSON';
-              dlBtn.style.borderColor = 'var(--border2)';
-              dlBtn.style.color       = 'var(--text2)';
+              dlBtn.textContent = "⬇ Download JSON";
+              dlBtn.style.borderColor = "var(--border2)";
+              dlBtn.style.color = "var(--text2)";
             }, 2500);
           }
           toast(`⬇ Saved ${filename}`);
         }
 
         function sendModalOpenMail() {
-          const to      = (document.getElementById('send-email-to')?.value      || '').trim();
-          const subject = (document.getElementById('send-email-subject')?.value || '').trim();
-          const body    = (document.getElementById('send-email-body')?.value    || '').trim();
+          const to = (
+            document.getElementById("send-email-to")?.value || ""
+          ).trim();
+          const subject = (
+            document.getElementById("send-email-subject")?.value || ""
+          ).trim();
+          const body = (
+            document.getElementById("send-email-body")?.value || ""
+          ).trim();
 
           // mailto: URIs have a ~2 000-character practical limit in most clients.
           // We truncate the body gracefully if needed.
           const MAX_BODY = 1800;
           let safeBody = body;
           if (safeBody.length > MAX_BODY) {
-            safeBody = safeBody.slice(0, MAX_BODY) + '\n\n[…body truncated — see attached JSON for full data]';
+            safeBody =
+              safeBody.slice(0, MAX_BODY) +
+              "\n\n[…body truncated — see attached JSON for full data]";
           }
 
           const parts = [];
-          if (subject) parts.push('subject=' + encodeURIComponent(subject));
-          if (safeBody) parts.push('body='    + encodeURIComponent(safeBody));
+          if (subject) parts.push("subject=" + encodeURIComponent(subject));
+          if (safeBody) parts.push("body=" + encodeURIComponent(safeBody));
 
-          const mailto = `mailto:${encodeURIComponent(to)}${parts.length ? '?' + parts.join('&') : ''}`;
+          const mailto = `mailto:${encodeURIComponent(to)}${
+            parts.length ? "?" + parts.join("&") : ""
+          }`;
           window.location.href = mailto;
         }
 
