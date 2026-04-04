@@ -609,6 +609,19 @@
         display: none !important;
       }
 
+      /* Mobile context strip */
+      body.emu-on #mob-context-strip {
+        display: flex !important;
+        align-items: center;
+        background: #1a1d26;
+        border-bottom: 1px solid rgba(255,255,255,0.07);
+        padding: 5px 12px;
+        gap: 0;
+        flex-shrink: 0;
+        height: 34px;
+        overflow: hidden;
+      }
+
       /* #main: flex column */
       body.emu-on #main {
         display: flex !important;
@@ -637,47 +650,99 @@
         overflow: hidden !important;
       }
 
-      /* zone-container: scrollable column */
+      /* Zone sub-tab bar */
+      body.emu-on #mob-zone-subtabs {
+        display: flex !important;
+        flex-shrink: 0;
+        background: #1a1d26;
+        border-bottom: 1px solid rgba(255,255,255,0.07);
+        height: 36px;
+      }
+      body.emu-on .mob-zone-stab {
+        flex: 1;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-family: "Barlow Condensed", sans-serif;
+        font-weight: 700;
+        font-size: 11px;
+        letter-spacing: 1px;
+        text-transform: uppercase;
+        color: rgba(255,255,255,0.4);
+        cursor: pointer;
+        border-bottom: 2.5px solid transparent;
+        transition: all 0.15s;
+        gap: 5px;
+      }
+      body.emu-on .mob-zone-stab.on {
+        color: #fff;
+        border-bottom-color: #cc1a1a;
+      }
+
+      /* zone-container: no scroll, shows one sub-section at a time */
       body.emu-on #zone-container {
         display: flex !important;
         flex-direction: column !important;
         flex-wrap: nowrap !important;
-        align-items: center !important;
+        align-items: stretch !important;
         flex: 1 !important;
         min-height: 0 !important;
-        height: 0 !important;
-        overflow-y: scroll !important;
-        overflow-x: hidden !important;
-        -webkit-overflow-scrolling: touch;
-        padding: 10px 10px 80px;
-        gap: 10px;
+        overflow: hidden !important;
+      }
+
+      /* zone-wrap: fills container, centered, no overflow */
+      body.emu-on .zone-wrap {
+        display: flex !important;
+        flex-direction: column !important;
+        align-items: center !important;
+        justify-content: center !important;
+        flex: 1 !important;
+        min-height: 0 !important;
+        overflow: hidden !important;
+        padding: 8px 0;
+        width: 100%;
       }
 
       body.emu-on #play-blurb-wrap {
-        display: none;
+        display: none !important;
       }
       body.emu-on #ab-strip {
-        display: none;
+        display: none !important;
       }
       body.emu-on #zone-batter-svg {
         display: none !important;
       }
-
-      /* Strike zone: scale to fill width */
-      body.emu-on .zone-wrap {
-        width: 100%;
-        align-items: center;
+      body.emu-on #zone-hint {
+        display: none !important;
       }
+      body.emu-on .zone-title {
+        display: none !important;
+      }
+      /* Hide pitch color legend in zone-wrap */
+      body.emu-on #zone-container > .zone-wrap > div:last-child {
+        display: none !important;
+      }
+
+      /* Strike zone: scale to fill available width */
       body.emu-on #strike-zone {
-        width: min(300px, calc(100% - 20px)) !important;
-        height: min(480px, calc((100% - 20px) * 1.6)) !important;
+        width: min(260px, calc(100% - 20px)) !important;
+        height: min(416px, calc((100% - 20px) * 1.6)) !important;
       }
 
-      /* Zone controls: full width */
+      /* Zone controls: fills container, scrollable */
       body.emu-on .zone-controls {
+        display: flex !important;
+        flex-direction: column !important;
+        flex: 1 !important;
+        min-height: 0 !important;
+        overflow-y: auto !important;
+        overflow-x: hidden !important;
+        -webkit-overflow-scrolling: touch;
+        padding: 10px 12px 20px;
         width: 100%;
-        min-width: unset;
-        max-width: min(480px, 100%);
+      }
+      body.emu-on .mob-zone-hidden {
+        display: none !important;
       }
       body.emu-on .outcome-grid {
         grid-template-columns: 1fr 1fr;
@@ -688,14 +753,23 @@
         font-size: 15px;
       }
       body.emu-on .velocity-row {
-        flex-wrap: wrap;
+        flex-wrap: nowrap;
+        gap: 6px;
       }
       body.emu-on .vel-wrap {
         flex-shrink: 0;
       }
+      body.emu-on .vel-input {
+        font-size: 20px;
+        width: 46px;
+      }
+      body.emu-on #pitch-type-grid {
+        grid-template-columns: repeat(4, 1fr) !important;
+        gap: 3px !important;
+      }
       body.emu-on .pitch-type-btn {
-        padding: 9px 4px;
-        font-size: 15px;
+        padding: 8px 2px !important;
+        font-size: 13px !important;
       }
       body.emu-on #commit-pitch {
         padding: 14px;
@@ -749,9 +823,6 @@
       }
 
       /* Mobile overlay panels */
-      body.emu-on #panel-tracker {
-        position: relative;
-      }
       body.emu-on .mob-panel {
         display: none !important;
         position: absolute;
@@ -833,6 +904,66 @@
         font-family: "Share Tech Mono", monospace;
         font-size: 10px;
         color: var(--text2);
+      }
+
+      /* Context strip sub-elements */
+      body.emu-on .mob-ctx-block {
+        display: flex;
+        align-items: center;
+        gap: 5px;
+        flex: 1;
+        min-width: 0;
+      }
+      body.emu-on .mob-ctx-block.mob-ctx-count {
+        justify-content: center;
+        flex: 0 0 auto;
+        gap: 6px;
+      }
+      body.emu-on .mob-ctx-sep {
+        width: 1px;
+        height: 16px;
+        background: rgba(255,255,255,0.12);
+        margin: 0 10px;
+        flex-shrink: 0;
+      }
+      body.emu-on .mob-ctx-label {
+        font-family: "Share Tech Mono", monospace;
+        font-size: 8px;
+        letter-spacing: 1.5px;
+        color: rgba(255,255,255,0.35);
+        text-transform: uppercase;
+        flex-shrink: 0;
+      }
+      body.emu-on .mob-ctx-val {
+        font-family: "Barlow Condensed", sans-serif;
+        font-weight: 700;
+        font-size: 13px;
+        color: rgba(255,255,255,0.85);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+      body.emu-on .mob-ctx-dots {
+        font-family: "Share Tech Mono", monospace;
+        font-size: 11px;
+        color: rgba(255,255,255,0.7);
+        letter-spacing: 1px;
+      }
+      body.emu-on .mob-ctx-x {
+        color: rgba(255,255,255,0.2);
+        font-size: 11px;
+      }
+      body.emu-on .mob-ctx-outs-wrap {
+        display: flex;
+        align-items: baseline;
+        gap: 2px;
+        font-family: "Barlow Condensed", sans-serif;
+        font-weight: 700;
+        font-size: 13px;
+        color: rgba(255,255,255,0.7);
+        margin-left: 6px;
+        padding-left: 6px;
+        border-left: 1px solid rgba(255,255,255,0.12);
       }
 
       /* Hub panel */
@@ -4429,19 +4560,73 @@
           overflow: hidden !important;
         }
 
-        /* ── zone-container: single scrollable region ── */
+        /* ── Zone sub-tab bar (Zone / Controls) ── */
+        #mob-zone-subtabs {
+          display: flex !important;
+          flex-shrink: 0;
+          background: #1a1d26;
+          border-bottom: 1px solid rgba(255,255,255,0.07);
+          height: 36px;
+        }
+        .mob-zone-stab {
+          flex: 1;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          font-family: "Barlow Condensed", sans-serif;
+          font-weight: 700;
+          font-size: 11px;
+          letter-spacing: 1px;
+          text-transform: uppercase;
+          color: rgba(255,255,255,0.4);
+          cursor: pointer;
+          border-bottom: 2.5px solid transparent;
+          transition: all 0.15s;
+          -webkit-tap-highlight-color: transparent;
+          gap: 5px;
+        }
+        .mob-zone-stab.on {
+          color: #fff;
+          border-bottom-color: #cc1a1a;
+        }
+
+        /* ── zone-container: NO scroll — shows only the active sub-section ── */
         #zone-container {
           display: flex !important;
           flex-direction: column !important;
           flex-wrap: nowrap !important;
-          align-items: center !important;
+          align-items: stretch !important;
           flex: 1 !important;
           min-height: 0 !important;
-          overflow-y: scroll !important;
+          overflow: hidden !important;
+        }
+
+        /* zone-wrap: fills container, centered, no overflow */
+        .zone-wrap {
+          display: flex !important;
+          flex-direction: column !important;
+          align-items: center !important;
+          justify-content: center !important;
+          flex: 1 !important;
+          min-height: 0 !important;
+          overflow: hidden !important;
+          padding: 8px 0;
+        }
+        /* zone-controls: fills container, scrollable if needed */
+        .zone-controls {
+          display: flex !important;
+          flex-direction: column !important;
+          flex: 1 !important;
+          min-height: 0 !important;
+          overflow-y: auto !important;
           overflow-x: hidden !important;
           -webkit-overflow-scrolling: touch;
-          padding: 8px 10px 20px;
-          gap: 8px;
+          padding: 10px 12px 20px;
+        }
+
+        /* Hidden sub-tab sections */
+        .mob-zone-hidden {
+          display: none !important;
         }
 
         /* Hide play blurb, AB strip, batter silhouette, legend on mobile */
@@ -4562,24 +4747,12 @@
         }
 
         /* ── Strike zone: compact, no batter ── */
-        .zone-wrap {
-          width: 100%;
-          align-items: center;
-        }
         .zone-title {
           display: none;
         }
         #strike-zone {
           width: min(200px, calc(100vw - 32px)) !important;
           height: min(320px, calc((100vw - 32px) * 1.6)) !important;
-        }
-
-        /* ── Zone controls: full width, stacked ── */
-        .zone-controls {
-          width: 100%;
-          min-width: unset;
-          max-width: 100%;
-          padding: 0;
         }
 
         /* Velocity + pitch type row: side by side */
@@ -5076,6 +5249,10 @@
         #mob-context-strip {
           display: none !important;
         }
+        /* Hide mobile zone sub-tabs */
+        #mob-zone-subtabs {
+          display: none !important;
+        }
         /* Hub mobile bar — hidden on desktop */
         #hub-mobile-bar {
           display: none !important;
@@ -5103,6 +5280,9 @@
 
         /* ── Emulator overrides: restore mobile UI at desktop viewport ── */
         body.emu-on #mob-tabs {
+          display: flex !important;
+        }
+        body.emu-on #mob-zone-subtabs {
           display: flex !important;
         }
         body.emu-on .mob-panel {
@@ -6157,6 +6337,11 @@
             </div>
             <!-- CENTER PANEL -->
             <div id="panel-center">
+              <!-- MOBILE ZONE SUB-TABS (Zone / Controls) — hidden on desktop -->
+              <div id="mob-zone-subtabs">
+                <div class="mob-zone-stab on" id="mob-ztab-zone" onclick="mobZoneSubTab('zone')">⬛ Zone</div>
+                <div class="mob-zone-stab" id="mob-ztab-controls" onclick="mobZoneSubTab('controls')">🎛 Controls</div>
+              </div>
               <div id="zone-container">
                 <div class="zone-wrap">
                   <div class="zone-title">Strike Zone</div>
@@ -13559,6 +13744,8 @@
               }
             });
           }
+          // On mobile: flip to zone view after reset so dots are visible
+          if (isMobile()) { try { mobZoneSubTab("zone"); } catch(e) {} }
         }
         // After committing a pitch mid-AB: keep zone dots, just clear outcome/type selection
         function resetAfterPitch() {
@@ -13593,6 +13780,8 @@
               }
             });
           }
+          // On mobile: after committing, flip back to zone view so user sees the dot
+          if (isMobile()) { try { mobZoneSubTab("zone"); } catch(e) {} }
         }
         function clearAtBat() {
           S.balls = 0;
@@ -18628,22 +18817,22 @@
           const pitchersP = document.getElementById("mob-pitchers-panel");
           const logP = document.getElementById("mob-log-panel");
           if (panelCenter)
-            panelCenter.style.display = tab === "zone" ? "flex" : "none";
+            panelCenter.style.display = tab === "zone" ? "" : "none";
           if (scoreP) scoreP.classList.toggle("on", tab === "score");
           if (lineupP) lineupP.classList.toggle("on", tab === "lineup");
           if (pitchersP) pitchersP.classList.toggle("on", tab === "pitchers");
           if (logP) logP.classList.toggle("on", tab === "log");
           // Show context strip only on zone tab
           const ctx = document.getElementById("mob-context-strip");
-          if (ctx) ctx.style.display = tab === "zone" ? "flex" : "none";
+          if (ctx) ctx.style.display = tab === "zone" ? "" : "none";
           if (tab === "lineup") renderMobLineup();
           if (tab === "pitchers") renderMobPitchers();
           if (tab === "log") renderMobLog(_mobLogTab);
           if (tab === "score") updateMobScore();
           if (tab === "zone") {
-            try {
-              updateMobContextStrip();
-            } catch (e) {}
+            // Restore zone sub-tab state (default to 'zone' sub-tab)
+            mobZoneSubTab(_currentZoneSubTab || "zone");
+            try { updateMobContextStrip(); } catch (e) {}
           }
         }
 
@@ -18654,6 +18843,24 @@
             if (el) el.classList.toggle("active", id === t);
           });
           renderMobLog(t);
+        }
+
+        // ── ZONE SUB-TABS (Zone / Controls) ─────────────────────────────
+        let _currentZoneSubTab = "zone";
+
+        function mobZoneSubTab(sub) {
+          if (!isMobile()) return;
+          _currentZoneSubTab = sub;
+          // Update sub-tab button states
+          ["zone", "controls"].forEach((s) => {
+            const btn = document.getElementById("mob-ztab-" + s);
+            if (btn) btn.classList.toggle("on", s === sub);
+          });
+          // Show/hide zone-wrap and zone-controls
+          const zoneWrap = document.querySelector(".zone-wrap");
+          const zoneCtrl = document.querySelector(".zone-controls");
+          if (zoneWrap) zoneWrap.classList.toggle("mob-zone-hidden", sub !== "zone");
+          if (zoneCtrl) zoneCtrl.classList.toggle("mob-zone-hidden", sub !== "controls");
         }
 
         function renderMobLog(t) {
@@ -18953,6 +19160,8 @@
             el.style.borderColor = occ ? "#cc1a1a" : "#bfc4cf";
             el.style.boxShadow = occ ? "0 0 10px rgba(204,26,26,.4)" : "none";
           });
+          const maw = document.getElementById("mob-away-name-input"),
+            aw = document.getElementById("away-name-input");
           const mhw = document.getElementById("mob-home-name-input"),
             hw = document.getElementById("home-name-input");
           if (maw && aw && maw !== document.activeElement) maw.value = aw.value;
@@ -19012,6 +19221,10 @@
           // Load My Team roster and opponents so Use buttons appear immediately
           myTeamLoad();
           oppLoad();
+          // Mobile: initialize zone sub-tab
+          if (isMobile()) {
+            try { mobZoneSubTab("zone"); } catch(e) {}
+          }
         }
         /* HUB */
         // ===== STATE =====
@@ -25485,6 +25698,11 @@
           _emuActive = false;
           document.body.classList.remove("emu-on");
           document.getElementById("emu-desktop-bar").classList.remove("on");
+          // Clean up mobile-only classes that would break desktop layout
+          const zoneWrap = document.querySelector(".zone-wrap");
+          const zoneCtrl = document.querySelector(".zone-controls");
+          if (zoneWrap) zoneWrap.classList.remove("mob-zone-hidden");
+          if (zoneCtrl) zoneCtrl.classList.remove("mob-zone-hidden");
           // Restore app-root to full size
           var root = document.getElementById("app-root");
           if (root) {
