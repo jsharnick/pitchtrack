@@ -18710,11 +18710,13 @@
         // ===== PLAYER VIEW =====
         // ===== PLAYER PITCH DATA HELPERS =====
         function getPlayerPitches(teamName, playerName, games) {
-          // Collect all pitch log entries where this player was the batter
+          // Collect all pitch log entries where this player was the batter.
+          // Use the alias set so records stored under an older name variant are found.
+          const names = _nameAliases[playerName] || new Set([playerName]);
           const pitches = [];
           games.forEach((g) => {
             (g.pitchLog || []).forEach((p) => {
-              if (p.batter === playerName)
+              if (names.has(p.batter))
                 pitches.push({ ...p, gameDate: g.date, gameId: g.id });
             });
           });
@@ -18722,11 +18724,13 @@
         }
 
         function getPitcherPitches(teamName, pitcherName, games) {
-          // Collect all pitch log entries thrown by this pitcher
+          // Collect all pitch log entries thrown by this pitcher.
+          // Use the alias set so records stored under an older name variant are found.
+          const names = _nameAliases[pitcherName] || new Set([pitcherName]);
           const pitches = [];
           games.forEach((g) => {
             (g.pitchLog || []).forEach((p) => {
-              if (p.pitcher === pitcherName && p.pitcherTeam === teamName)
+              if (names.has(p.pitcher) && p.pitcherTeam === teamName)
                 pitches.push({ ...p, gameDate: g.date, gameId: g.id });
             });
           });
@@ -21973,6 +21977,75 @@
           return { w, l, t, runs, ra, rd: runs - ra, h, hr };
         }
 
+        // ── Player identity helpers ───────────────────────────────────────────
+        // Maps canonical display name → Set of all raw names that merged into it.
+        // Populated as a side effect of _mergeStatMapByPlayer so that pitch/career
+        // lookups can find records stored under any historical name variant.
+        let _nameAliases = {}; // { "Jack Kane": Set(["Kane", "Jack Kane"]), ... }
+
+        // Extract the last word (surname) from a name string, lowercased.
+        function _lastName(name) {
+          if (!name) return "";
+          return name.trim().split(/\s+/).pop().toLowerCase();
+        }
+
+        // Look up the canonical full name from loaded rosters (myTeam + opponents)
+        // by matching jersey number + last name. Returns null if not found.
+        function _canonicalName(name, num) {
+          if (!num) return null;
+          const last = _lastName(name);
+          const numStr = String(num);
+          const checkRoster = (roster) =>
+            (roster || []).find(
+              (r) => String(r.num) === numStr && _lastName(r.name) === last
+            );
+          const myMatch = checkRoster(myTeamRoster);
+          if (myMatch) return myMatch.name;
+          for (const opp of _opponents || []) {
+            const oppMatch = checkRoster(opp.roster);
+            if (oppMatch) return oppMatch.name;
+          }
+          return null;
+        }
+
+        // After building a raw stat map, merge entries that share last name + jersey #.
+        // Resolves the canonical full name from loaded rosters when available.
+        function _mergeStatMapByPlayer(rawMap) {
+          const groups = {};
+          Object.values(rawMap).forEach((p) => {
+            const groupKey = p.num
+              ? _lastName(p.name) + "|" + p.num
+              : "name|" + p.name; // no number → don't cross-merge
+            if (!groups[groupKey]) groups[groupKey] = [];
+            groups[groupKey].push(p);
+          });
+
+          const result = {};
+          Object.entries(groups).forEach(([groupKey, entries]) => {
+            const base = { ...entries[0] };
+            for (let i = 1; i < entries.length; i++) {
+              const e = entries[i];
+              Object.keys(base).forEach((k) => {
+                if (typeof base[k] === "number") base[k] += e[k] || 0;
+              });
+            }
+            // Prefer roster-sourced canonical name, then longest name among merged entries
+            const canonical = _canonicalName(base.name, base.num);
+            base.name =
+              canonical ||
+              entries.reduce((a, b) => (a.name.length >= b.name.length ? a : b))
+                .name;
+            // Register all raw names under this canonical name so pitch/career
+            // lookups can still find records stored under any historical variant.
+            const aliasSet = new Set(entries.map((e) => e.name));
+            aliasSet.add(base.name);
+            _nameAliases[base.name] = aliasSet;
+            result[groupKey] = base;
+          });
+          return result;
+        }
+        // ─────────────────────────────────────────────────────────────────────
+
         function getTeamRoster(teamName, games) {
           const playerMap = {};
           games.forEach((g) => {
@@ -22019,7 +22092,8 @@
               m.pitchesSeen += p.pitchesSeen || 0;
             });
           });
-          return Object.values(playerMap).filter((p) => p.pa > 0);
+          const merged = _mergeStatMapByPlayer(playerMap);
+          return Object.values(merged).filter((p) => p.pa > 0);
         }
 
         function getTeamPitchers(teamName, games) {
@@ -22063,7 +22137,8 @@
               m.bf += p.bf || 0;
             });
           });
-          return Object.values(pitcherMap).filter((p) => p.pitches > 0);
+          const merged = _mergeStatMapByPlayer(pitcherMap);
+          return Object.values(merged).filter((p) => p.pitches > 0);
         }
 
         // ── Roster sidebar — shown on player and pitcher detail pages ──────────
@@ -22152,10 +22227,11 @@
             r: 0,
             rbi: 0,
           };
+          const names = _nameAliases[playerName] || new Set([playerName]);
           games.forEach((g) => {
             const isHome = g.homeTeam === teamName;
             const batters = isHome ? g.homeBatters : g.awayBatters;
-            const p = batters?.find((b) => b.name === playerName);
+            const p = batters?.find((b) => names.has(b.name));
             if (!p) return;
             base.num = p.num || base.num;
             base.pos = p.pos || base.pos;
