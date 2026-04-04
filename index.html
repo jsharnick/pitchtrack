@@ -2893,6 +2893,13 @@
         color: var(--text3);
         font-weight: 400;
       }
+      .ram-btn.ram-btn-neutral {
+        border-color: rgba(138, 144, 158, 0.35);
+      }
+      .ram-btn.ram-btn-neutral:hover {
+        background: rgba(138, 144, 158, 0.07);
+        border-color: var(--text3);
+      }
 
       /* KEYBOARD SHORTCUTS PANEL */
       #kbd-panel {
@@ -4386,7 +4393,7 @@
         <div class="hs-cards">
           <div class="hs-card red" onclick="openPanel('tracker')">
             <div class="hs-card-icon"></div>
-            <div style="text-align:center;width:100%">
+            <div style="text-align: center; width: 100%">
               <div class="hs-card-title">Game Tracker</div>
               <div class="hs-card-desc">Track every pitch in real time.</div>
             </div>
@@ -4404,7 +4411,7 @@
           </div>
           <div class="hs-card" onclick="openPanel('hub')">
             <div class="hs-card-icon"></div>
-            <div style="text-align:center;width:100%">
+            <div style="text-align: center; width: 100%">
               <div class="hs-card-title">Stats Hub</div>
               <div class="hs-card-desc">
                 Deep player &amp; team analysis across all saved games. Career
@@ -4425,7 +4432,7 @@
           </div>
           <div class="hs-card" onclick="openPanel('myteam')">
             <div class="hs-card-icon"></div>
-            <div style="text-align:center;width:100%">
+            <div style="text-align: center; width: 100%">
               <div class="hs-card-title">My Team</div>
               <div class="hs-card-desc">
                 Build and manage your roster. Import from PDF, XLSX, CSV, or
@@ -4437,7 +4444,7 @@
           </div>
           <div class="hs-card" onclick="openPanel('opponents')">
             <div class="hs-card-icon"></div>
-            <div style="text-align:center;width:100%">
+            <div style="text-align: center; width: 100%">
               <div class="hs-card-title">Opponents</div>
               <div class="hs-card-desc">
                 Build a scouting library of opponent rosters. Load a new
@@ -5321,43 +5328,101 @@
                     <div class="outcome-label" style="margin-bottom: 0">
                       Velocity &amp; Pitch Type
                     </div>
-                    <button
-                      onclick="openPitchClockModal()"
-                      onmouseout="this.style.borderColor='var(--border2)';this.style.color='var(--text3)'"
-                      onmouseover="this.style.borderColor='var(--accent)';this.style.color='var(--accent)'"
-                      style="
-                        display: flex;
-                        align-items: center;
-                        gap: 5px;
-                        padding: 3px 8px 3px 6px;
-                        background: var(--surface2);
-                        border: 1px solid var(--border2);
-                        border-radius: 5px;
-                        cursor: pointer;
-                        transition: all 0.14s;
-                        color: var(--text3);
-                      "
-                      title="Pitch Clock Violation"
-                    >
-                      <img
-                        src="data:image/png;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/4gHYSUNDX1BST0ZJTEUAAQEAAAHIAAAAAAQwAABtbnRyUkdCIFhZWiAH4AABAAEAAAAAAABhY3NwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAQAA9tYAAQAAAADTLQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAlkZXNjAAAA8AAAACRyWFlaAAABFAAAABRnWFlaAAABKAAAABRiWFlaAAABPAAAABR3dHB0AAABUAAAABRyVFJDAAABZAAAAChnVFJDAAABZAAAAChiVFJDAAABZAAAAChjcHJ0AAABjAAAADxtbHVjAAAAAAAAAAEAAAAMZW5VUwAAAAgAAAAcAHMAUgBHAEJYWVogAAAAAAAAb6IAADj1AAADkFhZWiAAAAAAAABimQAAt4UAABjaWFlaIAAAAAAAACSgAAAPhAAAts9YWVogAAAAAAAA9tYAAQAAAADTLXBhcmEAAAAAAAQAAAACZmYAAPKnAAANWQAAE9AAAApbAAAAAAAAAABtbHVjAAAAAAAAAAEAAAAMZW5VUwAAACAAAAAcAEcAbwBvAGcAbABlACAASQBuAGMALgAgADIAMAAxADb/2wBDAAUDBAQEAwUEBAQFBQUGBwwIBwcHBw8LCwkMEQ8SEhEPERETFhwXExQaFRERGCEYGh0dHx8fExciJCIeJBweHx7/2wBDAQUFBQcGBw4ICA4eFBEUHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh7/wAARCAAmADADASIAAhEBAxEB/8QAGgAAAgMBAQAAAAAAAAAAAAAAAAUDBAYCB//EAC8QAAICAgECAwUIAwAAAAAAAAECAwQFEQAGITFBURI2dIGxBxMkMjdxg5Gys8H/xAAVAQEBAAAAAAAAAAAAAAAAAAAAAf/EABcRAQEBAQAAAAAAAAAAAAAAAAARIQH/2gAMAwEAAhEDEQA/APUKteCpViq1YIoK8KCOKKNAqIoGgqgdgABoAc0OH6WyuVpC5WEKxMSFLvonXY+Xrxfgo0mzdCKVA8b2Y1ZT4EFhsca9VT2sV1NkK+PuWasDSI4ihkKKpMa70F157Pf19NAXkQlyNOehdlp2VCyxHTAHY9fpwx1Oe/dip1lDSynSgnQ9fpx/kKsQ+z6hdcfeW5rkhkncD2220nYnz8FHy8z34Y+rEfs+v3UH3duG5GY50A9tdNH2B8vFh8/I9+MpsVcx0tlcVSNyyIWiUgMUfZG+w8vXmetV4LdWWraginrzIY5YpEDI6kaKsD2IIOiDzTdKz2sr1Nj6+RuWbUCyO5ilkLqxEba2G356Pb09Ngqs7GkObvxRIEjSzIqqB2ADHQ47B3077wY74uL/ADHL3X/vdd/j/wBa8VYuwtTJ1bTqWWGZJCB4kBgf+c01nB5HqnIW81TetFVmkCwiUkN7KqqknW/MH0/bzKK5yf6Y4r4tvrLwxn6Y5X4tfrFypmrb1enIemrSfjKdp2d0/IVJYrrv46cf15eAMLba105N01VT8ZctIyO/5AoKlt9/HSH+/PwKbEqPoD3upfyf625R6i94Mj8XL/meP62DyPS2QqZq49aWrDIVmERJb2WVl2N68yPX9vMZrKWFt5O1aRSqzTPIAfEAsT/3iKUYDJwZrA4/M1UlSvfqx2YlkADhZFDAMASN6PfRPGle3arqVgszRKTshJCoJ+XDhyCJ2Z2LMxZidkk7JPBGZGDKxVgdgg6IPDhwJbFu1YULPZmlUHYDyFgD8+K8/k4MLgchmbSSvXoVZLMqxgFysaliFBIG9Dtsjhw4H//Z"
+                    <div style="display: flex; gap: 6px; align-items: center">
+                      <button
+                        onclick="openPickoffModal()"
+                        onmouseout="this.style.borderColor='var(--border2)';this.style.color='var(--text3)'"
+                        onmouseover="this.style.borderColor='var(--accent)';this.style.color='var(--accent)'"
                         style="
-                          width: 16px;
-                          height: 16px;
-                          display: block;
-                          opacity: 0.7;
+                          display: flex;
+                          align-items: center;
+                          gap: 5px;
+                          padding: 3px 8px 3px 6px;
+                          background: var(--surface2);
+                          border: 1px solid var(--border2);
+                          border-radius: 5px;
+                          cursor: pointer;
+                          transition: all 0.14s;
+                          color: var(--text3);
                         "
-                      />
-                      <span
-                        style="
-                          font-family: 'Barlow Condensed', sans-serif;
-                          font-weight: 700;
-                          font-size: 10px;
-                          letter-spacing: 1px;
-                        "
-                        >CLOCK</span
+                        title="Pickoff Actions"
                       >
-                    </button>
+                        <span
+                          style="
+                            font-family: 'Barlow Condensed', sans-serif;
+                            font-weight: 700;
+                            font-size: 10px;
+                            letter-spacing: 1px;
+                          "
+                          >PICKOFF</span
+                        >
+                      </button>
+                      <button
+                        onclick="openRunnersModal()"
+                        onmouseout="this.style.borderColor='var(--border2)';this.style.color='var(--text3)'"
+                        onmouseover="this.style.borderColor='var(--accent)';this.style.color='var(--accent)'"
+                        style="
+                          display: flex;
+                          align-items: center;
+                          gap: 5px;
+                          padding: 3px 8px 3px 6px;
+                          background: var(--surface2);
+                          border: 1px solid var(--border2);
+                          border-radius: 5px;
+                          cursor: pointer;
+                          transition: all 0.14s;
+                          color: var(--text3);
+                        "
+                        title="Baserunner Events"
+                      >
+                        <span
+                          style="
+                            font-family: 'Barlow Condensed', sans-serif;
+                            font-weight: 700;
+                            font-size: 10px;
+                            letter-spacing: 1px;
+                          "
+                          >RUNNERS</span
+                        >
+                      </button>
+                      <button
+                        onclick="openPitchClockModal()"
+                        onmouseout="this.style.borderColor='var(--border2)';this.style.color='var(--text3)'"
+                        onmouseover="this.style.borderColor='var(--accent)';this.style.color='var(--accent)'"
+                        style="
+                          display: flex;
+                          align-items: center;
+                          gap: 5px;
+                          padding: 3px 8px 3px 6px;
+                          background: var(--surface2);
+                          border: 1px solid var(--border2);
+                          border-radius: 5px;
+                          cursor: pointer;
+                          transition: all 0.14s;
+                          color: var(--text3);
+                        "
+                        title="Pitch Clock Violation"
+                      >
+                        <img
+                          src="data:image/png;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/4gHYSUNDX1BST0ZJTEUAAQEAAAHIAAAAAAQwAABtbnRyUkdCIFhZWiAH4AABAAEAAAAAAABhY3NwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAQAA9tYAAQAAAADTLQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAlkZXNjAAAA8AAAACRyWFlaAAABFAAAABRnWFlaAAABKAAAABRiWFlaAAABPAAAABR3dHB0AAABUAAAABRyVFJDAAABZAAAAChnVFJDAAABZAAAAChiVFJDAAABZAAAAChjcHJ0AAABjAAAADxtbHVjAAAAAAAAAAEAAAAMZW5VUwAAAAgAAAAcAHMAUgBHAEJYWVogAAAAAAAAb6IAADj1AAADkFhZWiAAAAAAAABimQAAt4UAABjaWFlaIAAAAAAAACSgAAAPhAAAts9YWVogAAAAAAAA9tYAAQAAAADTLXBhcmEAAAAAAAQAAAACZmYAAPKnAAANWQAAE9AAAApbAAAAAAAAAABtbHVjAAAAAAAAAAEAAAAMZW5VUwAAACAAAAAcAEcAbwBvAGcAbABlACAASQBuAGMALgAgADIAMAAxADb/2wBDAAUDBAQEAwUEBAQFBQUGBwwIBwcHBw8LCwkMEQ8SEhEPERETFhwXExQaFRERGCEYGh0dHx8fExciJCIeJBweHx7/2wBDAQUFBQcGBw4ICA4eFBEUHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh7/wAARCAAmADADASIAAhEBAxEB/8QAGgAAAgMBAQAAAAAAAAAAAAAAAAUDBAYCB//EAC8QAAICAgECAwUIAwAAAAAAAAECAwQFEQAGITFBURI2dIGxBxMkMjdxg5Gys8H/xAAVAQEBAAAAAAAAAAAAAAAAAAAAAf/EABcRAQEBAQAAAAAAAAAAAAAAAAARIQH/2gAMAwEAAhEDEQA/APUKteCpViq1YIoK8KCOKKNAqIoGgqgdgABoAc0OH6WyuVpC5WEKxMSFLvonXY+Xrxfgo0mzdCKVA8b2Y1ZT4EFhsca9VT2sV1NkK+PuWasDSI4ihkKKpMa70F157Pf19NAXkQlyNOehdlp2VCyxHTAHY9fpwx1Oe/dip1lDSynSgnQ9fpx/kKsQ+z6hdcfeW5rkhkncD2220nYnz8FHy8z34Y+rEfs+v3UH3duG5GY50A9tdNH2B8vFh8/I9+MpsVcx0tlcVSNyyIWiUgMUfZG+w8vXmetV4LdWWraginrzIY5YpEDI6kaKsD2IIOiDzTdKz2sr1Nj6+RuWbUCyO5ilkLqxEba2G356Pb09Ngqs7GkObvxRIEjSzIqqB2ADHQ47B3077wY74uL/ADHL3X/vdd/j/wBa8VYuwtTJ1bTqWWGZJCB4kBgf+c01nB5HqnIW81TetFVmkCwiUkN7KqqknW/MH0/bzKK5yf6Y4r4tvrLwxn6Y5X4tfrFypmrb1enIemrSfjKdp2d0/IVJYrrv46cf15eAMLba105N01VT8ZctIyO/5AoKlt9/HSH+/PwKbEqPoD3upfyf625R6i94Mj8XL/meP62DyPS2QqZq49aWrDIVmERJb2WVl2N68yPX9vMZrKWFt5O1aRSqzTPIAfEAsT/3iKUYDJwZrA4/M1UlSvfqx2YlkADhZFDAMASN6PfRPGle3arqVgszRKTshJCoJ+XDhyCJ2Z2LMxZidkk7JPBGZGDKxVgdgg6IPDhwJbFu1YULPZmlUHYDyFgD8+K8/k4MLgchmbSSvXoVZLMqxgFysaliFBIG9Dtsjhw4H//Z"
+                          style="
+                            width: 16px;
+                            height: 16px;
+                            display: block;
+                            opacity: 0.7;
+                          "
+                        />
+                        <span
+                          style="
+                            font-family: 'Barlow Condensed', sans-serif;
+                            font-weight: 700;
+                            font-size: 10px;
+                            letter-spacing: 1px;
+                          "
+                          >CLOCK</span
+                        >
+                      </button>
+                    </div>
                   </div>
                   <div style="display: flex; gap: 8px; align-items: stretch">
                     <div
@@ -9159,6 +9224,693 @@
         </div>
       </div>
     </div>
+
+    <!-- ==================== PICKOFF MODAL ==================== -->
+    <div
+      id="pickoff-modal"
+      style="
+        display: none;
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.75);
+        z-index: 1350;
+        align-items: center;
+        justify-content: center;
+        backdrop-filter: blur(5px);
+      "
+    >
+      <div
+        style="
+          background: var(--surface2);
+          border: 1px solid var(--border2);
+          border-radius: 16px;
+          padding: 24px;
+          width: 480px;
+          max-width: 95vw;
+          box-shadow: 0 24px 70px rgba(0, 0, 0, 0.7);
+          animation: modalPop 0.22s cubic-bezier(0.34, 1.56, 0.64, 1);
+        "
+      >
+        <div
+          style="
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 18px;
+          "
+        >
+          <div>
+            <div
+              style="
+                font-family: 'Barlow Condensed', sans-serif;
+                font-weight: 900;
+                font-size: 22px;
+                color: var(--text);
+              "
+            >
+              Pickoff
+            </div>
+            <div style="font-size: 11px; color: var(--text3); margin-top: 2px">
+              Select the pickoff outcome
+            </div>
+          </div>
+          <button
+            onclick="closePickoffModal()"
+            onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--text3)'"
+            onmouseover="this.style.borderColor='var(--red)';this.style.color='var(--red)'"
+            style="
+              background: none;
+              border: 1px solid var(--border);
+              border-radius: 6px;
+              color: var(--text3);
+              padding: 6px 8px;
+              cursor: pointer;
+              transition: all 0.14s;
+              display: flex;
+              align-items: center;
+              justify-content: center;
+            "
+          >
+            <svg
+              fill="none"
+              height="12"
+              stroke="currentColor"
+              stroke-linecap="round"
+              stroke-width="2"
+              viewbox="0 0 12 12"
+              width="12"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <line x1="1" x2="11" y1="1" y2="11"></line>
+              <line x1="11" x2="1" y1="1" y2="11"></line>
+            </svg>
+          </button>
+        </div>
+        <div
+          style="
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+            margin-bottom: 16px;
+          "
+        >
+          <button
+            class="ram-btn ram-btn-neutral"
+            onclick="handlePickoffAction('pickoff-attempt')"
+          >
+            <div class="ram-label">Pickoff Attempt</div>
+            <div class="ram-sub">Throw to base — runner safe</div>
+          </button>
+          <button
+            class="ram-btn ram-btn-out"
+            onclick="handlePickoffAction('picked-off')"
+          >
+            <div class="ram-label">Picked Off</div>
+            <div class="ram-sub">Runner out at base</div>
+          </button>
+          <button class="ram-btn" onclick="handlePickoffAction('balk')">
+            <div class="ram-label">Balk</div>
+            <div class="ram-sub">All runners advance one</div>
+          </button>
+          <button
+            class="ram-btn"
+            onclick="handlePickoffAction('advance-error')"
+          >
+            <div class="ram-label">Error</div>
+            <div class="ram-sub">Runner advances on pickoff error</div>
+          </button>
+        </div>
+        <button
+          onclick="closePickoffModal()"
+          onmouseout="this.style.background='var(--surface3)'"
+          onmouseover="this.style.background='var(--surface4, var(--border))'"
+          style="
+            width: 100%;
+            padding: 9px;
+            background: var(--surface3);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            color: var(--text2);
+            font-family: 'Barlow Condensed', sans-serif;
+            font-weight: 700;
+            font-size: 13px;
+            cursor: pointer;
+            transition: all 0.14s;
+          "
+        >
+          Cancel
+        </button>
+      </div>
+    </div>
+
+    <!-- ==================== RUNNERS MODAL ==================== -->
+    <div
+      id="runners-modal"
+      style="
+        display: none;
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.75);
+        z-index: 1350;
+        align-items: center;
+        justify-content: center;
+        backdrop-filter: blur(5px);
+      "
+    >
+      <div
+        style="
+          background: var(--surface2);
+          border: 1px solid var(--border2);
+          border-radius: 16px;
+          padding: 24px;
+          width: 480px;
+          max-width: 95vw;
+          box-shadow: 0 24px 70px rgba(0, 0, 0, 0.7);
+          animation: modalPop 0.22s cubic-bezier(0.34, 1.56, 0.64, 1);
+        "
+      >
+        <div
+          style="
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 18px;
+          "
+        >
+          <div>
+            <div
+              style="
+                font-family: 'Barlow Condensed', sans-serif;
+                font-weight: 900;
+                font-size: 22px;
+                color: var(--text);
+              "
+            >
+              Runners
+            </div>
+            <div style="font-size: 11px; color: var(--text3); margin-top: 2px">
+              Select a baserunner event
+            </div>
+          </div>
+          <button
+            onclick="closeRunnersModal()"
+            onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--text3)'"
+            onmouseover="this.style.borderColor='var(--red)';this.style.color='var(--red)'"
+            style="
+              background: none;
+              border: 1px solid var(--border);
+              border-radius: 6px;
+              color: var(--text3);
+              padding: 6px 8px;
+              cursor: pointer;
+              transition: all 0.14s;
+              display: flex;
+              align-items: center;
+              justify-content: center;
+            "
+          >
+            <svg
+              fill="none"
+              height="12"
+              stroke="currentColor"
+              stroke-linecap="round"
+              stroke-width="2"
+              viewbox="0 0 12 12"
+              width="12"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <line x1="1" x2="11" y1="1" y2="11"></line>
+              <line x1="11" x2="1" y1="1" y2="11"></line>
+            </svg>
+          </button>
+        </div>
+        <div
+          style="
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+            margin-bottom: 16px;
+          "
+        >
+          <button class="ram-btn" onclick="handleRunnersAction('stolen-base')">
+            <div class="ram-label">Stolen Base</div>
+            <div class="ram-sub">Runner advances, no out</div>
+          </button>
+          <button
+            class="ram-btn ram-btn-out"
+            onclick="handleRunnersAction('caught-stealing')"
+          >
+            <div class="ram-label">Caught Stealing</div>
+            <div class="ram-sub">Out on attempted steal</div>
+          </button>
+          <button class="ram-btn" onclick="handleRunnersAction('wild-pitch')">
+            <div class="ram-label">Wild Pitch</div>
+            <div class="ram-sub">Pitcher error, runner advances</div>
+          </button>
+          <button class="ram-btn" onclick="handleRunnersAction('passed-ball')">
+            <div class="ram-label">Passed Ball</div>
+            <div class="ram-sub">Catcher error, runner advances</div>
+          </button>
+          <button class="ram-btn" onclick="handleRunnersAction('balk')">
+            <div class="ram-label">Balk</div>
+            <div class="ram-sub">All runners advance one</div>
+          </button>
+          <button
+            class="ram-btn"
+            onclick="handleRunnersAction('advance-error')"
+          >
+            <div class="ram-label">Error</div>
+            <div class="ram-sub">Advances on fielding error</div>
+          </button>
+          <button
+            class="ram-btn ram-btn-score"
+            onclick="handleRunnersAction('advances')"
+            style="grid-column: 1 / -1"
+          >
+            <div class="ram-label">Advances</div>
+            <div class="ram-sub">Runner moves to a chosen base</div>
+          </button>
+        </div>
+        <button
+          onclick="closeRunnersModal()"
+          onmouseout="this.style.background='var(--surface3)'"
+          onmouseover="this.style.background='var(--surface4, var(--border))'"
+          style="
+            width: 100%;
+            padding: 9px;
+            background: var(--surface3);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            color: var(--text2);
+            font-family: 'Barlow Condensed', sans-serif;
+            font-weight: 700;
+            font-size: 13px;
+            cursor: pointer;
+            transition: all 0.14s;
+          "
+        >
+          Cancel
+        </button>
+      </div>
+    </div>
+
+    <!-- ==================== RUNNER PICKER MODAL ==================== -->
+    <div
+      id="runner-picker-modal"
+      style="
+        display: none;
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.75);
+        z-index: 1350;
+        align-items: center;
+        justify-content: center;
+        backdrop-filter: blur(5px);
+      "
+    >
+      <div
+        style="
+          background: var(--surface2);
+          border: 1px solid var(--border2);
+          border-radius: 16px;
+          padding: 24px;
+          width: 360px;
+          max-width: 95vw;
+          box-shadow: 0 24px 70px rgba(0, 0, 0, 0.7);
+          animation: modalPop 0.22s cubic-bezier(0.34, 1.56, 0.64, 1);
+        "
+      >
+        <div
+          style="
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 18px;
+          "
+        >
+          <div>
+            <div
+              id="rpm-title"
+              style="
+                font-family: 'Barlow Condensed', sans-serif;
+                font-weight: 900;
+                font-size: 22px;
+                color: var(--text);
+              "
+            >
+              Select Runner
+            </div>
+            <div style="font-size: 11px; color: var(--text3); margin-top: 2px">
+              Choose which runner this applies to
+            </div>
+          </div>
+          <button
+            onclick="closeRunnerPickerModal()"
+            onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--text3)'"
+            onmouseover="this.style.borderColor='var(--red)';this.style.color='var(--red)'"
+            style="
+              background: none;
+              border: 1px solid var(--border);
+              border-radius: 6px;
+              color: var(--text3);
+              padding: 6px 8px;
+              cursor: pointer;
+              transition: all 0.14s;
+              display: flex;
+              align-items: center;
+              justify-content: center;
+            "
+          >
+            <svg
+              fill="none"
+              height="12"
+              stroke="currentColor"
+              stroke-linecap="round"
+              stroke-width="2"
+              viewbox="0 0 12 12"
+              width="12"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <line x1="1" x2="11" y1="1" y2="11"></line>
+              <line x1="11" x2="1" y1="1" y2="11"></line>
+            </svg>
+          </button>
+        </div>
+        <!-- Diamond runner selector -->
+        <div
+          style="
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-bottom: 20px;
+          "
+        >
+          <div style="position: relative; width: 160px; height: 160px">
+            <svg
+              height="160"
+              style="position: absolute; top: 0; left: 0; pointer-events: none"
+              width="160"
+            >
+              <line
+                stroke="rgba(255,255,255,.15)"
+                stroke-width="1.5"
+                x1="80"
+                x2="16"
+                y1="16"
+                y2="80"
+              ></line>
+              <line
+                stroke="rgba(255,255,255,.15)"
+                stroke-width="1.5"
+                x1="16"
+                x2="80"
+                y1="80"
+                y2="144"
+              ></line>
+              <line
+                stroke="rgba(255,255,255,.15)"
+                stroke-width="1.5"
+                x1="80"
+                x2="144"
+                y1="144"
+                y2="80"
+              ></line>
+              <line
+                stroke="rgba(255,255,255,.15)"
+                stroke-width="1.5"
+                x1="144"
+                x2="80"
+                y1="80"
+                y2="16"
+              ></line>
+            </svg>
+            <!-- 2nd base -->
+            <div
+              id="rpm-base-2nd"
+              style="
+                position: absolute;
+                top: 3px;
+                left: 67px;
+                width: 26px;
+                height: 26px;
+                border: 2px solid var(--text3);
+                background: transparent;
+                transform: rotate(45deg);
+                border-radius: 3px;
+                transition: all 0.18s;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+              "
+            >
+              <span
+                style="
+                  transform: rotate(-45deg);
+                  font-family: 'Barlow Condensed', sans-serif;
+                  font-weight: 700;
+                  font-size: 9px;
+                  color: var(--text3);
+                  pointer-events: none;
+                "
+                >2B</span
+              >
+            </div>
+            <!-- 3rd base -->
+            <div
+              id="rpm-base-3rd"
+              style="
+                position: absolute;
+                top: 67px;
+                left: 3px;
+                width: 26px;
+                height: 26px;
+                border: 2px solid var(--text3);
+                background: transparent;
+                transform: rotate(45deg);
+                border-radius: 3px;
+                transition: all 0.18s;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+              "
+            >
+              <span
+                style="
+                  transform: rotate(-45deg);
+                  font-family: 'Barlow Condensed', sans-serif;
+                  font-weight: 700;
+                  font-size: 9px;
+                  color: var(--text3);
+                  pointer-events: none;
+                "
+                >3B</span
+              >
+            </div>
+            <!-- 1st base -->
+            <div
+              id="rpm-base-1st"
+              style="
+                position: absolute;
+                top: 67px;
+                left: 131px;
+                width: 26px;
+                height: 26px;
+                border: 2px solid var(--text3);
+                background: transparent;
+                transform: rotate(45deg);
+                border-radius: 3px;
+                transition: all 0.18s;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+              "
+            >
+              <span
+                style="
+                  transform: rotate(-45deg);
+                  font-family: 'Barlow Condensed', sans-serif;
+                  font-weight: 700;
+                  font-size: 9px;
+                  color: var(--text3);
+                  pointer-events: none;
+                "
+                >1B</span
+              >
+            </div>
+            <!-- Home plate (non-clickable) -->
+            <div
+              style="
+                position: absolute;
+                top: 131px;
+                left: 67px;
+                width: 26px;
+                height: 26px;
+                border: 2px solid rgba(255, 255, 255, 0.2);
+                background: rgba(255, 255, 255, 0.05);
+                transform: rotate(45deg);
+                border-radius: 3px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+              "
+            >
+              <span
+                style="
+                  transform: rotate(-45deg);
+                  font-family: 'Barlow Condensed', sans-serif;
+                  font-weight: 700;
+                  font-size: 9px;
+                  color: rgba(255, 255, 255, 0.3);
+                  pointer-events: none;
+                "
+                >H</span
+              >
+            </div>
+          </div>
+          <div style="font-size: 10px; color: var(--text3); margin-top: 8px">
+            Tap an occupied base
+          </div>
+        </div>
+        <button
+          onclick="closeRunnerPickerModal()"
+          onmouseout="this.style.background='var(--surface3)'"
+          onmouseover="this.style.background='var(--surface4, var(--border))'"
+          style="
+            width: 100%;
+            padding: 9px;
+            background: var(--surface3);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            color: var(--text2);
+            font-family: 'Barlow Condensed', sans-serif;
+            font-weight: 700;
+            font-size: 13px;
+            cursor: pointer;
+            transition: all 0.14s;
+          "
+        >
+          Cancel
+        </button>
+      </div>
+    </div>
+
+    <!-- ==================== ADVANCE TO MODAL ==================== -->
+    <div
+      id="advance-to-modal"
+      style="
+        display: none;
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.75);
+        z-index: 1400;
+        align-items: center;
+        justify-content: center;
+        backdrop-filter: blur(5px);
+      "
+    >
+      <div
+        style="
+          background: var(--surface2);
+          border: 1px solid var(--border2);
+          border-radius: 16px;
+          padding: 24px;
+          width: 360px;
+          max-width: 95vw;
+          box-shadow: 0 24px 70px rgba(0, 0, 0, 0.7);
+          animation: modalPop 0.22s cubic-bezier(0.34, 1.56, 0.64, 1);
+        "
+      >
+        <div
+          style="
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 18px;
+          "
+        >
+          <div>
+            <div
+              id="atm-title"
+              style="
+                font-family: 'Barlow Condensed', sans-serif;
+                font-weight: 900;
+                font-size: 22px;
+                color: var(--text);
+              "
+            >
+              Advance To
+            </div>
+            <div
+              id="atm-sub"
+              style="font-size: 11px; color: var(--text3); margin-top: 2px"
+            >
+              Select destination base
+            </div>
+          </div>
+          <button
+            onclick="closeAdvanceToModal()"
+            onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--text3)'"
+            onmouseover="this.style.borderColor='var(--red)';this.style.color='var(--red)'"
+            style="
+              background: none;
+              border: 1px solid var(--border);
+              border-radius: 6px;
+              color: var(--text3);
+              padding: 6px 8px;
+              cursor: pointer;
+              transition: all 0.14s;
+              display: flex;
+              align-items: center;
+              justify-content: center;
+            "
+          >
+            <svg
+              fill="none"
+              height="12"
+              stroke="currentColor"
+              stroke-linecap="round"
+              stroke-width="2"
+              viewbox="0 0 12 12"
+              width="12"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <line x1="1" x2="11" y1="1" y2="11"></line>
+              <line x1="11" x2="1" y1="1" y2="11"></line>
+            </svg>
+          </button>
+        </div>
+        <div
+          id="atm-buttons"
+          style="
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            margin-bottom: 16px;
+          "
+        ></div>
+        <button
+          onclick="closeAdvanceToModal()"
+          onmouseout="this.style.background='var(--surface3)'"
+          onmouseover="this.style.background='var(--surface4, var(--border))'"
+          style="
+            width: 100%;
+            padding: 9px;
+            background: var(--surface3);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            color: var(--text2);
+            font-family: 'Barlow Condensed', sans-serif;
+            font-weight: 700;
+            font-size: 13px;
+            cursor: pointer;
+            transition: all 0.14s;
+          "
+        >
+          Cancel
+        </button>
+      </div>
+    </div>
+
     <div
       id="resume-modal"
       style="
@@ -22451,6 +23203,189 @@
           }
         }
 
+        // ===================== PICKOFF & RUNNERS MODALS =====================
+        let _activePickoffOrRunnersAction = null;
+
+        function openPickoffModal() {
+          const anyRunner = ["1st", "2nd", "3rd"].some((b) => S.bases[b]);
+          if (!anyRunner) {
+            toast("No runners on base");
+            return;
+          }
+          qs("pickoff-modal").style.display = "flex";
+        }
+        function closePickoffModal() {
+          qs("pickoff-modal").style.display = "none";
+        }
+
+        function openRunnersModal() {
+          const anyRunner = ["1st", "2nd", "3rd"].some((b) => S.bases[b]);
+          if (!anyRunner) {
+            toast("No runners on base");
+            return;
+          }
+          qs("runners-modal").style.display = "flex";
+        }
+        function closeRunnersModal() {
+          qs("runners-modal").style.display = "none";
+        }
+
+        function handlePickoffAction(action) {
+          closePickoffModal();
+          if (action === "balk") {
+            activeRunnerBase =
+              ["1st", "2nd", "3rd"].find((b) => S.bases[b]) || "1st";
+            executeRunnerAction("balk");
+            return;
+          }
+          _dispatchWithRunnerSelection(action);
+        }
+
+        function handleRunnersAction(action) {
+          closeRunnersModal();
+          if (action === "balk") {
+            activeRunnerBase =
+              ["1st", "2nd", "3rd"].find((b) => S.bases[b]) || "1st";
+            executeRunnerAction("balk");
+            return;
+          }
+          _dispatchWithRunnerSelection(action);
+        }
+
+        function _dispatchWithRunnerSelection(action) {
+          const occupied = ["1st", "2nd", "3rd"].filter((b) => S.bases[b]);
+          if (occupied.length === 0) {
+            toast("No runners on base");
+            return;
+          }
+          if (occupied.length === 1) {
+            activeRunnerBase = occupied[0];
+            if (action === "advances") {
+              _openAdvancesDestinationPicker(occupied[0]);
+            } else {
+              executeRunnerAction(action);
+            }
+            return;
+          }
+          _activePickoffOrRunnersAction = action;
+          _openRunnerPickerModal(action, occupied);
+        }
+
+        function _openRunnerPickerModal(action, occupied) {
+          const titles = {
+            "stolen-base": "Stolen Base",
+            "caught-stealing": "Caught Stealing",
+            "wild-pitch": "Wild Pitch",
+            "passed-ball": "Passed Ball",
+            "advance-error": "Error",
+            scores: "Scores",
+            "picked-off": "Picked Off",
+            "pickoff-attempt": "Pickoff Attempt",
+            advances: "Advances",
+          };
+          qs("rpm-title").textContent = titles[action] || "Select Runner";
+
+          // Update each base square: highlight occupied, dim unoccupied
+          ["1st", "2nd", "3rd"].forEach((base) => {
+            const el = qs(`rpm-base-${base}`);
+            if (!el) return;
+            const span = el.querySelector("span");
+            if (S.bases[base]) {
+              el.style.borderColor = "var(--accent)";
+              el.style.background = "var(--accent)";
+              el.style.boxShadow = "0 0 10px rgba(232,200,74,0.6)";
+              el.style.cursor = "pointer";
+              if (span) span.style.color = "#1a1a1a";
+              el.onclick = () => {
+                closeRunnerPickerModal();
+                activeRunnerBase = base;
+                _activePickoffOrRunnersAction = null;
+                if (action === "advances") {
+                  _openAdvancesDestinationPicker(base);
+                } else {
+                  executeRunnerAction(action);
+                }
+              };
+            } else {
+              el.style.borderColor = "var(--text3)";
+              el.style.background = "transparent";
+              el.style.boxShadow = "none";
+              el.style.cursor = "default";
+              if (span) span.style.color = "var(--text3)";
+              el.onclick = null;
+            }
+          });
+
+          qs("runner-picker-modal").style.display = "flex";
+        }
+
+        function closeRunnerPickerModal() {
+          qs("runner-picker-modal").style.display = "none";
+          _activePickoffOrRunnersAction = null;
+        }
+
+        function _openAdvancesDestinationPicker(fromBase) {
+          const destinations = {
+            "1st": ["2nd", "3rd", "home"],
+            "2nd": ["3rd", "home"],
+            "3rd": ["home"],
+          };
+          const dests = destinations[fromBase] || [];
+          const runnerName = S.runnerNames[fromBase] || fromBase + " base";
+          qs("atm-title").textContent = "Advance To";
+          qs(
+            "atm-sub"
+          ).textContent = `Moving runner from ${fromBase} (${runnerName})`;
+          const container = qs("atm-buttons");
+          container.innerHTML = "";
+          dests.forEach((dest) => {
+            const btn = document.createElement("button");
+            btn.className =
+              "ram-btn" + (dest === "home" ? " ram-btn-score" : "");
+            btn.innerHTML = `<div class="ram-label">${
+              dest === "home" ? "Home (Scores)" : dest
+            }</div><div class="ram-sub">${fromBase} → ${dest}</div>`;
+            btn.onclick = () => {
+              closeAdvanceToModal();
+              _executeAdvances(fromBase, dest);
+            };
+            container.appendChild(btn);
+          });
+          qs("advance-to-modal").style.display = "flex";
+        }
+
+        function closeAdvanceToModal() {
+          qs("advance-to-modal").style.display = "none";
+        }
+
+        function _executeAdvances(fromBase, toBase) {
+          const runnerName =
+            S.runnerNames[fromBase] || currentBatter()?.name || "Runner";
+          if (toBase === "home") {
+            S.bases[fromBase] = false;
+            addRun(fromBase);
+            clearRunner(fromBase);
+            toast(`🏃 Advances — ${runnerName} scores from ${fromBase}!`);
+            logEvent(
+              "🏠",
+              "Advances (Scores)",
+              `${runnerName}: ${fromBase} → home`
+            );
+          } else {
+            S.bases[fromBase] = false;
+            S.bases[toBase] = true;
+            moveRunner(fromBase, toBase);
+            toast(`🏃 Advances — ${runnerName}: ${fromBase} → ${toBase}`);
+            logEvent(
+              "🏃",
+              "Advances",
+              `${runnerName}: ${fromBase} → ${toBase}`
+            );
+          }
+          updateScoreBug();
+          renderLiveScoutingTab();
+        }
+
         // ===================== EXPORT / IMPORT =====================
         function _downloadJSON(payload, filename) {
           const a = document.createElement("a");
@@ -27712,68 +28647,122 @@
           function _doDownload() {
             const XLSX = window.XLSX;
             if (!XLSX) {
-              alert("Spreadsheet library not loaded yet — please try again in a moment.");
+              alert(
+                "Spreadsheet library not loaded yet — please try again in a moment."
+              );
               return;
             }
 
             // ── Shared style helpers ──────────────────────────────────────────
             // Dark navy header (matches PitchTrack nav bar)
-            const headerFill  = { fgColor: { rgb: "111827" } };
-            const accentFill  = { fgColor: { rgb: "CC1A1A" } };   // PT red
-            const guideFill   = { fgColor: { rgb: "1E2A3A" } };   // dark blue-grey for guide panel
-            const altRowFill  = { fgColor: { rgb: "F7F8FA" } };   // light stripe
-            const sampleFill  = { fgColor: { rgb: "FFF8F0" } };   // warm tint for sample row
+            const headerFill = { fgColor: { rgb: "111827" } };
+            const accentFill = { fgColor: { rgb: "CC1A1A" } }; // PT red
+            const guideFill = { fgColor: { rgb: "1E2A3A" } }; // dark blue-grey for guide panel
+            const altRowFill = { fgColor: { rgb: "F7F8FA" } }; // light stripe
+            const sampleFill = { fgColor: { rgb: "FFF8F0" } }; // warm tint for sample row
             const guideCellFill = { fgColor: { rgb: "F0F4FA" } }; // guide value cells
 
-            const boldWhite   = { bold: true, color: { rgb: "FFFFFF" }, name: "Calibri", sz: 11 };
-            const boldRed     = { bold: true, color: { rgb: "FF4444" }, name: "Calibri", sz: 10 };
-            const boldDark    = { bold: true, color: { rgb: "111827" }, name: "Calibri", sz: 11 };
-            const italicGrey  = { italic: true, color: { rgb: "888888" }, name: "Calibri", sz: 10 };
-            const normalDark  = { color: { rgb: "111827" }, name: "Calibri", sz: 11 };
-            const guideTitle  = { bold: true, color: { rgb: "FFFFFF" }, name: "Calibri", sz: 11 };
-            const guideKey    = { bold: true, color: { rgb: "CC1A1A" }, name: "Calibri", sz: 10 };
-            const guideVal    = { color: { rgb: "333333" }, name: "Calibri", sz: 10 };
-            const guideNote   = { italic: true, color: { rgb: "666666" }, name: "Calibri", sz: 9 };
+            const boldWhite = {
+              bold: true,
+              color: { rgb: "FFFFFF" },
+              name: "Calibri",
+              sz: 11,
+            };
+            const boldRed = {
+              bold: true,
+              color: { rgb: "FF4444" },
+              name: "Calibri",
+              sz: 10,
+            };
+            const boldDark = {
+              bold: true,
+              color: { rgb: "111827" },
+              name: "Calibri",
+              sz: 11,
+            };
+            const italicGrey = {
+              italic: true,
+              color: { rgb: "888888" },
+              name: "Calibri",
+              sz: 10,
+            };
+            const normalDark = {
+              color: { rgb: "111827" },
+              name: "Calibri",
+              sz: 11,
+            };
+            const guideTitle = {
+              bold: true,
+              color: { rgb: "FFFFFF" },
+              name: "Calibri",
+              sz: 11,
+            };
+            const guideKey = {
+              bold: true,
+              color: { rgb: "CC1A1A" },
+              name: "Calibri",
+              sz: 10,
+            };
+            const guideVal = {
+              color: { rgb: "333333" },
+              name: "Calibri",
+              sz: 10,
+            };
+            const guideNote = {
+              italic: true,
+              color: { rgb: "666666" },
+              name: "Calibri",
+              sz: 9,
+            };
             const centerAlign = { horizontal: "center", vertical: "center" };
-            const leftAlign   = { horizontal: "left",   vertical: "center" };
+            const leftAlign = { horizontal: "left", vertical: "center" };
 
             const cell = (v, font, fill, alignment, numFmt) => ({
-              v, t: typeof v === "number" ? "n" : "s",
+              v,
+              t: typeof v === "number" ? "n" : "s",
               s: {
-                font:      font      || normalDark,
-                fill:      fill      ? { patternType: "solid", ...fill } : { patternType: "none" },
+                font: font || normalDark,
+                fill: fill
+                  ? { patternType: "solid", ...fill }
+                  : { patternType: "none" },
                 alignment: alignment || leftAlign,
                 border: {
                   bottom: { style: "thin", color: { rgb: "DDDDDD" } },
-                  right:  { style: "thin", color: { rgb: "DDDDDD" } },
+                  right: { style: "thin", color: { rgb: "DDDDDD" } },
                 },
                 ...(numFmt ? { numFmt } : {}),
               },
             });
 
-            const hcell = (v) => ({                          // header cell
-              v, t: "s",
+            const hcell = (v) => ({
+              // header cell
+              v,
+              t: "s",
               s: {
-                font:      boldWhite,
-                fill:      { patternType: "solid", ...headerFill },
+                font: boldWhite,
+                fill: { patternType: "solid", ...headerFill },
                 alignment: centerAlign,
                 border: {
                   bottom: { style: "medium", color: { rgb: "CC1A1A" } },
-                  right:  { style: "thin",   color: { rgb: "334455" } },
+                  right: { style: "thin", color: { rgb: "334455" } },
                 },
               },
             });
 
-            const gcell = (v, font, fill) => ({              // guide panel cell
-              v, t: "s",
+            const gcell = (v, font, fill) => ({
+              // guide panel cell
+              v,
+              t: "s",
               s: {
-                font:      font || guideVal,
-                fill:      fill ? { patternType: "solid", ...fill } : { patternType: "solid", ...guideCellFill },
+                font: font || guideVal,
+                fill: fill
+                  ? { patternType: "solid", ...fill }
+                  : { patternType: "solid", ...guideCellFill },
                 alignment: leftAlign,
                 border: {
                   bottom: { style: "thin", color: { rgb: "CCCCCC" } },
-                  right:  { style: "thin", color: { rgb: "CCCCCC" } },
-                  left:   { style: "thin", color: { rgb: "CCCCCC" } },
+                  right: { style: "thin", color: { rgb: "CCCCCC" } },
+                  left: { style: "thin", color: { rgb: "CCCCCC" } },
                 },
               },
             });
@@ -27793,8 +28782,14 @@
               ["REQUIRED COLUMNS", ""],
               ["#  (Jersey Number)", "Digits only — e.g.  5,  12,  99"],
               ["Name", "Full name — First Last"],
-              ["Pos  (Position)", "C · 1B · 2B · 3B · SS · INF · OF · LF · CF · RF · DH · RHP · LHP · P · UTL"],
-              ["Bat  (Batting Hand)", "R  =  Right      L  =  Left      S  =  Switch"],
+              [
+                "Pos  (Position)",
+                "C · 1B · 2B · 3B · SS · INF · OF · LF · CF · RF · DH · RHP · LHP · P · UTL",
+              ],
+              [
+                "Bat  (Batting Hand)",
+                "R  =  Right      L  =  Left      S  =  Switch",
+              ],
               ["Throw  (Throwing Hand)", "R  =  Right      L  =  Left"],
               ["", ""],
               ["OPTIONAL COLUMNS", ""],
@@ -27802,10 +28797,19 @@
               ["Wt  (Weight)", "Pounds — e.g.  185"],
               ["", ""],
               ["TIPS", ""],
-              ["Column order", "Any order is fine — the importer reads headers"],
-              ["Extra columns", "Extra columns (stats, class year, etc.) are ignored"],
+              [
+                "Column order",
+                "Any order is fine — the importer reads headers",
+              ],
+              [
+                "Extra columns",
+                "Extra columns (stats, class year, etc.) are ignored",
+              ],
               ["Sample row", "Row 2 is an example — overwrite or delete it"],
-              ["B/T shorthand", "You may use a single  B/T  column (e.g.  R/R)"],
+              [
+                "B/T shorthand",
+                "You may use a single  B/T  column (e.g.  R/R)",
+              ],
             ];
 
             const aoa = [];
@@ -27822,37 +28826,86 @@
               hcell("Throw ★"),
               hcell("Ht"),
               hcell("Wt"),
-              cell("  ★ = required", { italic: true, color: { rgb: "CC1A1A" }, name: "Calibri", sz: 9 }, null, leftAlign),
-              gcell("  ★ = REQUIRED FIELD — must be filled in for every player", guideTitle, guideFill),
+              cell(
+                "  ★ = required",
+                {
+                  italic: true,
+                  color: { rgb: "CC1A1A" },
+                  name: "Calibri",
+                  sz: 9,
+                },
+                null,
+                leftAlign
+              ),
+              gcell(
+                "  ★ = REQUIRED FIELD — must be filled in for every player",
+                guideTitle,
+                guideFill
+              ),
               gcell("", guideTitle, guideFill),
             ]);
 
             // Row 2 — sample row
-            const sFont = { italic: true, color: { rgb: "999999" }, name: "Calibri", sz: 10 };
+            const sFont = {
+              italic: true,
+              color: { rgb: "999999" },
+              name: "Calibri",
+              sz: 10,
+            };
             aoa.push([
-              cell("12",         sFont, { fgColor: { rgb: "FFF8F0" } }, centerAlign),
+              cell("12", sFont, { fgColor: { rgb: "FFF8F0" } }, centerAlign),
               cell("John Smith", sFont, { fgColor: { rgb: "FFF8F0" } }),
-              cell("OF",         sFont, { fgColor: { rgb: "FFF8F0" } }, centerAlign),
-              cell("R",          sFont, { fgColor: { rgb: "FFF8F0" } }, centerAlign),
-              cell("R",          sFont, { fgColor: { rgb: "FFF8F0" } }, centerAlign),
-              cell("6-1",        sFont, { fgColor: { rgb: "FFF8F0" } }, centerAlign),
-              cell("185",        sFont, { fgColor: { rgb: "FFF8F0" } }, centerAlign),
-              cell("← sample row — overwrite or delete", { italic: true, color: { rgb: "AAAAAA" }, name: "Calibri", sz: 9 }, null, leftAlign),
-              gcell(GUIDE[0][0], { bold: true, color: { rgb: "FFFFFF" }, name: "Calibri", sz: 12 }, guideFill),
+              cell("OF", sFont, { fgColor: { rgb: "FFF8F0" } }, centerAlign),
+              cell("R", sFont, { fgColor: { rgb: "FFF8F0" } }, centerAlign),
+              cell("R", sFont, { fgColor: { rgb: "FFF8F0" } }, centerAlign),
+              cell("6-1", sFont, { fgColor: { rgb: "FFF8F0" } }, centerAlign),
+              cell("185", sFont, { fgColor: { rgb: "FFF8F0" } }, centerAlign),
+              cell(
+                "← sample row — overwrite or delete",
+                {
+                  italic: true,
+                  color: { rgb: "AAAAAA" },
+                  name: "Calibri",
+                  sz: 9,
+                },
+                null,
+                leftAlign
+              ),
+              gcell(
+                GUIDE[0][0],
+                {
+                  bold: true,
+                  color: { rgb: "FFFFFF" },
+                  name: "Calibri",
+                  sz: 12,
+                },
+                guideFill
+              ),
               gcell("", null, guideFill),
             ]);
 
             // Rows 3–22 — 20 blank data rows, alternating stripe
             for (let i = 0; i < 20; i++) {
-              const stripe = i % 2 === 1 ? { fgColor: { rgb: "F7F8FA" } } : null;
+              const stripe =
+                i % 2 === 1 ? { fgColor: { rgb: "F7F8FA" } } : null;
               const guideIdx = i + 1; // GUIDE rows 1..20
-              const [gl, gv] = guideIdx < GUIDE.length ? GUIDE[guideIdx] : ["", ""];
+              const [gl, gv] =
+                guideIdx < GUIDE.length ? GUIDE[guideIdx] : ["", ""];
 
               // Style guide label cells
               let glFont = guideVal;
               let glFill = guideCellFill;
-              if (gl === "REQUIRED COLUMNS" || gl === "OPTIONAL COLUMNS" || gl === "TIPS") {
-                glFont = { bold: true, color: { rgb: "FFFFFF" }, name: "Calibri", sz: 10 };
+              if (
+                gl === "REQUIRED COLUMNS" ||
+                gl === "OPTIONAL COLUMNS" ||
+                gl === "TIPS"
+              ) {
+                glFont = {
+                  bold: true,
+                  color: { rgb: "FFFFFF" },
+                  name: "Calibri",
+                  sz: 10,
+                };
                 glFill = accentFill;
               } else if (gl === "") {
                 glFill = { fgColor: { rgb: "E8ECF2" } };
@@ -27866,7 +28919,7 @@
                 cell("", normalDark, stripe, centerAlign),
                 cell("", normalDark, stripe, centerAlign),
                 cell("", normalDark, stripe, centerAlign),
-                cell("", normalDark, null),  // H spacer
+                cell("", normalDark, null), // H spacer
                 gcell(gl, glFont, glFill),
                 gcell(gv, guideVal, guideCellFill),
               ]);
@@ -27877,16 +28930,16 @@
 
             // ── Column widths ──────────────────────────────────────────────
             ws["!cols"] = [
-              { wch: 10 },  // A  #
-              { wch: 24 },  // B  Name
-              { wch: 8  },  // C  Pos
-              { wch: 7  },  // D  Bat
-              { wch: 8  },  // E  Throw
-              { wch: 8  },  // F  Ht
-              { wch: 7  },  // G  Wt
-              { wch: 26 },  // H  sample-row note / spacer
-              { wch: 24 },  // I  Guide label
-              { wch: 60 },  // J  Guide value
+              { wch: 10 }, // A  #
+              { wch: 24 }, // B  Name
+              { wch: 8 }, // C  Pos
+              { wch: 7 }, // D  Bat
+              { wch: 8 }, // E  Throw
+              { wch: 8 }, // F  Ht
+              { wch: 7 }, // G  Wt
+              { wch: 26 }, // H  sample-row note / spacer
+              { wch: 24 }, // I  Guide label
+              { wch: 60 }, // J  Guide value
             ];
 
             // ── Row heights ────────────────────────────────────────────────
@@ -27897,24 +28950,31 @@
 
             // ── Merge guide header across I1:J1 and I2:J2 ─────────────────
             ws["!merges"] = [
-              { s: { r: 0, c: 8 }, e: { r: 0, c: 9 } },   // I1:J1 — "★ = REQUIRED..."
-              { s: { r: 1, c: 8 }, e: { r: 1, c: 9 } },   // I2:J2 — "PITCHTRACK ROSTER IMPORT GUIDE"
+              { s: { r: 0, c: 8 }, e: { r: 0, c: 9 } }, // I1:J1 — "★ = REQUIRED..."
+              { s: { r: 1, c: 8 }, e: { r: 1, c: 9 } }, // I2:J2 — "PITCHTRACK ROSTER IMPORT GUIDE"
             ];
 
             const wb = XLSX.utils.book_new();
             XLSX.utils.book_append_sheet(wb, ws, "PitchTrack Roster");
 
             // Write with cellStyles enabled
-            XLSX.writeFile(wb, "PitchTrack_Roster_Template.xlsx", { cellStyles: true });
+            XLSX.writeFile(wb, "PitchTrack_Roster_Template.xlsx", {
+              cellStyles: true,
+            });
           }
 
           if (window.XLSX) {
             _doDownload();
           } else {
             const check = setInterval(function () {
-              if (window.XLSX) { clearInterval(check); _doDownload(); }
+              if (window.XLSX) {
+                clearInterval(check);
+                _doDownload();
+              }
             }, 200);
-            setTimeout(function () { clearInterval(check); }, 10000);
+            setTimeout(function () {
+              clearInterval(check);
+            }, 10000);
           }
         }
 
