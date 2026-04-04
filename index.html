@@ -453,6 +453,422 @@
         display: none !important;
       }
 
+      /* ═══ EMULATOR — TRACKER PANEL ═══ */
+      /* Shell nav compact */
+      body.emu-on #shell-nav {
+        padding: 0 10px;
+        gap: 0;
+        height: 44px;
+      }
+      body.emu-on .sn-logo {
+        font-size: 14px;
+        padding-right: 10px;
+        margin-right: 0;
+      }
+      body.emu-on .sn-tab {
+        padding: 0 10px;
+        font-size: 10px;
+        letter-spacing: 1px;
+      }
+      body.emu-on .sn-save,
+      body.emu-on #sn-resume-btn {
+        font-size: 11px;
+        padding: 4px 9px;
+      }
+
+      /* panel-wrap: fill space between nav and bottom */
+      body.emu-on #panel-wrap {
+        top: 44px !important;
+        bottom: 0 !important;
+        overflow: hidden !important;
+      }
+
+      /* panel-tracker: fill panel-wrap, leave room for tab bar */
+      body.emu-on #panel-tracker {
+        position: absolute !important;
+        top: 0 !important;
+        left: 0 !important;
+        right: 0 !important;
+        bottom: 56px !important;
+        overflow: hidden !important;
+        display: flex !important;
+        flex-direction: column !important;
+      }
+
+      /* Scorebug: never shrinks */
+      body.emu-on #scorebug {
+        flex-shrink: 0 !important;
+        padding: 6px 10px;
+        gap: 0;
+        overflow: hidden;
+        justify-content: space-between;
+        align-items: center;
+      }
+      body.emu-on .bug-logo {
+        font-size: 13px;
+        padding-right: 8px;
+        margin-right: 0;
+        border-right: none;
+      }
+      body.emu-on .bug-inning {
+        padding: 0 6px;
+        margin-right: 0;
+        border-right: none;
+        flex-shrink: 0;
+      }
+      body.emu-on .inning-num {
+        font-size: 16px;
+      }
+      body.emu-on .bug-teams {
+        gap: 6px;
+        flex: 1;
+        justify-content: center;
+      }
+      body.emu-on .bug-team-name {
+        font-size: 13px;
+        min-width: 40px;
+      }
+      body.emu-on .bug-score {
+        font-size: 24px;
+        min-width: 18px;
+      }
+      body.emu-on .bug-sep {
+        font-size: 18px;
+      }
+      body.emu-on .bug-count {
+        gap: 8px;
+        padding: 0 8px;
+        border-left: none;
+        border-right: none;
+        flex-shrink: 0;
+      }
+      body.emu-on .count-dot {
+        width: 10px;
+        height: 10px;
+      }
+      body.emu-on .bug-outs {
+        padding: 0 8px;
+        border-right: none;
+        flex-shrink: 0;
+      }
+      body.emu-on .out-dot {
+        width: 9px;
+        height: 9px;
+      }
+      body.emu-on .bug-bases {
+        padding: 0 6px;
+        border-right: none;
+        flex-shrink: 0;
+      }
+      body.emu-on .bases-diamond {
+        width: 40px;
+        height: 40px;
+      }
+      body.emu-on .base-sq {
+        width: 11px;
+        height: 11px;
+      }
+      body.emu-on .base-second {
+        top: 1px;
+        left: 14px;
+      }
+      body.emu-on .base-third {
+        top: 14px;
+        left: 1px;
+      }
+      body.emu-on .base-first {
+        top: 14px;
+        left: 27px;
+      }
+      body.emu-on .base-home {
+        top: 27px;
+        left: 14px;
+      }
+      body.emu-on .bug-pitcher,
+      body.emu-on .bug-batter {
+        display: none;
+      }
+      body.emu-on #save-game-btn {
+        display: none !important;
+      }
+      body.emu-on #fullscreen-btn {
+        display: none !important;
+      }
+      body.emu-on #kbd-toggle {
+        display: none !important;
+      }
+      body.emu-on #kbd-panel {
+        display: none !important;
+      }
+
+      /* Context strip */
+      body.emu-on #mob-context-strip {
+        display: flex !important;
+      }
+
+      /* #main: flex column */
+      body.emu-on #main {
+        display: flex !important;
+        grid-template-columns: unset !important;
+        flex-direction: column !important;
+        flex: 1 !important;
+        min-height: 0 !important;
+        height: 0 !important;
+        overflow: hidden !important;
+        position: relative;
+      }
+      body.emu-on #panel-left {
+        display: none !important;
+      }
+      body.emu-on #panel-right {
+        display: none !important;
+      }
+
+      /* panel-center fills #main */
+      body.emu-on #panel-center {
+        display: flex !important;
+        flex-direction: column !important;
+        flex: 1 !important;
+        min-height: 0 !important;
+        height: 0 !important;
+        overflow: hidden !important;
+      }
+
+      /* zone-container scrollable */
+      body.emu-on #zone-container {
+        display: flex !important;
+        flex-direction: column !important;
+        flex-wrap: nowrap !important;
+        align-items: center !important;
+        flex: 1 !important;
+        min-height: 0 !important;
+        overflow-y: scroll !important;
+        overflow-x: hidden !important;
+        padding: 8px 10px 20px;
+        gap: 8px;
+      }
+
+      /* Hide desktop-only zone elements */
+      body.emu-on #play-blurb-wrap {
+        display: none !important;
+      }
+      body.emu-on #ab-strip {
+        display: none !important;
+      }
+      body.emu-on #zone-batter-svg {
+        display: none !important;
+      }
+      body.emu-on #zone-hint {
+        display: none !important;
+      }
+      body.emu-on #zone-container > .zone-wrap > div:last-child {
+        display: none !important;
+      }
+
+      /* Strike zone compact */
+      body.emu-on .zone-wrap {
+        width: 100%;
+        align-items: center;
+      }
+      body.emu-on .zone-title {
+        display: none;
+      }
+      body.emu-on #strike-zone {
+        width: min(200px, calc(100% - 32px)) !important;
+        height: min(320px, calc((100% - 32px) * 1.6)) !important;
+      }
+
+      /* Zone controls: full width */
+      body.emu-on .zone-controls {
+        width: 100%;
+        min-width: unset;
+        max-width: 100%;
+        padding: 0;
+      }
+      body.emu-on .velocity-row {
+        flex-wrap: nowrap;
+        gap: 6px;
+      }
+      body.emu-on .vel-wrap {
+        flex-shrink: 0;
+      }
+      body.emu-on .vel-input {
+        font-size: 20px;
+        width: 46px;
+      }
+
+      /* Pitch type grid: 4 per row */
+      body.emu-on #pitch-type-grid {
+        grid-template-columns: repeat(4, 1fr) !important;
+        gap: 3px !important;
+      }
+      body.emu-on .pitch-type-btn {
+        padding: 8px 2px !important;
+        font-size: 13px !important;
+      }
+
+      /* Outcome grid */
+      body.emu-on .outcome-label {
+        font-size: 8px;
+        letter-spacing: 2px;
+        margin-bottom: 4px;
+      }
+      body.emu-on .outcome-grid {
+        grid-template-columns: 1fr 1fr;
+        gap: 4px;
+      }
+      body.emu-on .outcome-btn {
+        padding: 9px 4px;
+        font-size: 14px;
+        letter-spacing: 0;
+      }
+      body.emu-on .outcome-sub {
+        font-size: 8px;
+      }
+      body.emu-on .outcome-hotkey {
+        display: none;
+      }
+
+      /* Commit button */
+      body.emu-on #commit-pitch {
+        padding: 15px;
+        font-size: 17px;
+        letter-spacing: 2px;
+      }
+      body.emu-on .clear-btn {
+        font-size: 11px;
+        padding: 8px 6px;
+      }
+
+      /* Bottom tab bar */
+      body.emu-on #mob-tabs {
+        display: flex !important;
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        z-index: 500;
+        background: #111318;
+        border-top: 1px solid rgba(255, 255, 255, 0.1);
+        height: 56px;
+      }
+      body.emu-on .mob-tab {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 2px;
+        cursor: pointer;
+        font-family: "Barlow Condensed", sans-serif;
+        font-weight: 700;
+        font-size: 9px;
+        letter-spacing: 0.5px;
+        text-transform: uppercase;
+        color: rgba(255, 255, 255, 0.35);
+        transition: all 0.15s;
+        border-top: 2.5px solid transparent;
+        padding-top: 2px;
+      }
+      body.emu-on .mob-tab.on {
+        color: #fff;
+        border-top-color: #cc1a1a;
+      }
+      body.emu-on .mob-tab-icon {
+        font-size: 18px;
+        line-height: 1;
+      }
+
+      /* Mobile overlay panels */
+      body.emu-on #panel-tracker {
+        position: relative;
+      }
+      body.emu-on .mob-panel {
+        display: none !important;
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: var(--bg);
+        overflow-y: auto;
+        z-index: 50;
+      }
+      body.emu-on .mob-panel.on {
+        display: block !important;
+      }
+      body.emu-on #mob-log-panel.on {
+        display: flex !important;
+        flex-direction: column;
+      }
+      body.emu-on #mob-log-panel .right-tabs {
+        flex-shrink: 0;
+        background: #fff;
+        border-bottom: 1px solid var(--border);
+        position: sticky;
+        top: 0;
+        z-index: 10;
+      }
+      body.emu-on #mob-log-panel .right-tab {
+        font-size: 11px;
+        padding: 0 12px;
+        height: 40px;
+      }
+      body.emu-on #mob-log-content {
+        flex: 1;
+        overflow-y: auto;
+        padding: 0 0 80px;
+      }
+
+      /* Hub panel */
+      body.emu-on #panel-hub {
+        position: absolute !important;
+        top: 0 !important;
+        left: 0 !important;
+        right: 0 !important;
+        bottom: 56px !important;
+        display: flex !important;
+        flex-direction: column !important;
+        overflow: hidden !important;
+      }
+      body.emu-on #hub-app {
+        display: flex !important;
+        flex-direction: column !important;
+        flex: 1 !important;
+        min-height: 0 !important;
+        height: 0 !important;
+        overflow: hidden !important;
+      }
+      body.emu-on #hub-sidebar {
+        display: none !important;
+      }
+      body.emu-on #hub-main {
+        flex: 1 !important;
+        min-height: 0 !important;
+        height: 0 !important;
+        overflow-y: scroll !important;
+        padding: 12px;
+      }
+      body.emu-on #hub-mobile-bar {
+        display: flex !important;
+        flex-shrink: 0 !important;
+        align-items: center;
+        gap: 8px;
+        padding: 8px 12px;
+        background: #fff;
+        border-bottom: 1px solid var(--border);
+        overflow-x: auto;
+      }
+
+      /* Desktop-only overrides hidden in emulator */
+      body.emu-on #panel-tracker,
+      body.emu-on #panel-hub {
+        overflow-x: hidden;
+      }
+      body.emu-on .app-panel {
+        overflow-x: hidden;
+      }
+
       /* ═══ TOP NAV ═══ */
       #shell-nav {
         position: fixed;
@@ -3900,6 +4316,76 @@
           flex-shrink: 0 !important;
         }
 
+        /* ── Mobile context strip: pitcher · count · batter ── */
+        #mob-context-strip {
+          display: flex !important;
+          align-items: center;
+          background: #1a1d26;
+          border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+          padding: 5px 12px;
+          gap: 0;
+          flex-shrink: 0;
+          height: 34px;
+        }
+        .mob-ctx-block {
+          display: flex;
+          align-items: center;
+          gap: 5px;
+          flex: 1;
+          min-width: 0;
+        }
+        .mob-ctx-block.mob-ctx-count {
+          justify-content: center;
+          flex: 0 0 auto;
+          gap: 6px;
+        }
+        .mob-ctx-sep {
+          width: 1px;
+          height: 16px;
+          background: rgba(255, 255, 255, 0.12);
+          margin: 0 10px;
+          flex-shrink: 0;
+        }
+        .mob-ctx-label {
+          font-family: "Share Tech Mono", monospace;
+          font-size: 8px;
+          letter-spacing: 1.5px;
+          color: rgba(255, 255, 255, 0.35);
+          text-transform: uppercase;
+          flex-shrink: 0;
+        }
+        .mob-ctx-val {
+          font-family: "Barlow Condensed", sans-serif;
+          font-weight: 700;
+          font-size: 13px;
+          color: rgba(255, 255, 255, 0.85);
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+        }
+        .mob-ctx-dots {
+          font-family: "Share Tech Mono", monospace;
+          font-size: 11px;
+          color: rgba(255, 255, 255, 0.7);
+          letter-spacing: 1px;
+        }
+        .mob-ctx-x {
+          color: rgba(255, 255, 255, 0.2);
+          font-size: 11px;
+        }
+        .mob-ctx-outs-wrap {
+          display: flex;
+          align-items: baseline;
+          gap: 2px;
+          font-family: "Barlow Condensed", sans-serif;
+          font-weight: 700;
+          font-size: 13px;
+          color: rgba(255, 255, 255, 0.7);
+          margin-left: 6px;
+          padding-left: 6px;
+          border-left: 1px solid rgba(255, 255, 255, 0.12);
+        }
+
         /* ── #main: flex column filling space after scorebug ── */
         #main {
           display: flex !important;
@@ -3928,7 +4414,7 @@
           overflow: hidden !important;
         }
 
-        /* ── zone-container: the ONE scrollable region ── */
+        /* ── zone-container: single scrollable region ── */
         #zone-container {
           display: flex !important;
           flex-direction: column !important;
@@ -3936,32 +4422,38 @@
           align-items: center !important;
           flex: 1 !important;
           min-height: 0 !important;
-          height: 0 !important;
           overflow-y: scroll !important;
           overflow-x: hidden !important;
           -webkit-overflow-scrolling: touch;
-          padding: 10px 10px 80px;
-          gap: 10px;
+          padding: 8px 10px 20px;
+          gap: 8px;
         }
 
-        /* Hide play blurb and AB strip on mobile — space is too tight */
+        /* Hide play blurb, AB strip, batter silhouette, legend on mobile */
         #play-blurb-wrap {
-          display: none;
+          display: none !important;
         }
         #ab-strip {
-          display: none;
+          display: none !important;
+        }
+        #zone-batter-svg {
+          display: none !important;
+        }
+        #zone-hint {
+          display: none !important;
+        }
+        /* Hide the pitch color legend */
+        #zone-container > .zone-wrap > div:last-child {
+          display: none !important;
         }
 
-        /* ── Scorebug compact — NO horizontal scroll ── */
+        /* ── Scorebug compact ── */
         #scorebug {
           padding: 6px 10px;
           gap: 0;
-          flex-wrap: wrap;
-          overflow-x: hidden;
-          overflow-y: hidden;
+          overflow: hidden;
           justify-content: space-between;
           align-items: center;
-          row-gap: 6px;
         }
         .bug-logo {
           font-size: 13px;
@@ -3982,7 +4474,6 @@
           gap: 6px;
           flex: 1;
           justify-content: center;
-          margin: 0;
         }
         .bug-team-name {
           font-size: 13px;
@@ -3995,10 +4486,9 @@
         .bug-sep {
           font-size: 18px;
         }
-        /* Count, outs, bases: second row, full width */
         .bug-count {
           gap: 8px;
-          padding: 4px 8px;
+          padding: 0 8px;
           border-left: none;
           border-right: none;
           flex-shrink: 0;
@@ -4008,7 +4498,7 @@
           height: 10px;
         }
         .bug-outs {
-          padding: 4px 8px;
+          padding: 0 8px;
           border-right: none;
           flex-shrink: 0;
         }
@@ -4017,33 +4507,33 @@
           height: 9px;
         }
         .bug-bases {
-          padding: 4px 8px;
+          padding: 0 6px;
           border-right: none;
           flex-shrink: 0;
         }
         .bases-diamond {
-          width: 44px;
-          height: 44px;
+          width: 40px;
+          height: 40px;
         }
         .base-sq {
-          width: 12px;
-          height: 12px;
+          width: 11px;
+          height: 11px;
         }
         .base-second {
-          top: 2px;
-          left: 15px;
+          top: 1px;
+          left: 14px;
         }
         .base-third {
-          top: 15px;
+          top: 14px;
           left: 1px;
         }
         .base-first {
-          top: 15px;
-          left: 29px;
+          top: 14px;
+          left: 27px;
         }
         .base-home {
-          top: 29px;
-          left: 15px;
+          top: 27px;
+          left: 14px;
         }
         .bug-pitcher,
         .bug-batter {
@@ -4056,73 +4546,97 @@
           display: none !important;
         }
 
-        /* ── Strike zone: scale to fill width ── */
+        /* ── Strike zone: compact, no batter ── */
         .zone-wrap {
           width: 100%;
           align-items: center;
         }
-        #strike-zone {
-          width: min(300px, calc(100vw - 20px)) !important;
-          height: min(480px, calc((100vw - 20px) * 1.6)) !important;
+        .zone-title {
+          display: none;
         }
-        #zone-batter-svg img {
-          height: min(380px, calc((100vw - 20px) * 1.27)) !important;
-          width: auto !important;
+        #strike-zone {
+          width: min(200px, calc(100vw - 32px)) !important;
+          height: min(320px, calc((100vw - 32px) * 1.6)) !important;
         }
 
-        /* ── Zone controls: full width ── */
+        /* ── Zone controls: full width, stacked ── */
         .zone-controls {
           width: 100%;
           min-width: unset;
-          max-width: min(480px, 100%);
-        }
-        .outcome-grid {
-          grid-template-columns: 1fr 1fr;
-          gap: 5px;
-        }
-        .outcome-btn {
-          padding: 10px 6px;
-          font-size: 15px;
+          max-width: 100%;
+          padding: 0;
         }
 
-        /* ── Velocity / pitch type row ── */
+        /* Velocity + pitch type row: side by side */
         .velocity-row {
-          flex-wrap: wrap;
+          flex-wrap: nowrap;
+          gap: 6px;
         }
         .vel-wrap {
           flex-shrink: 0;
         }
-
-        /* ── Pitch type buttons ── */
-        .pitch-type-btn {
-          padding: 9px 4px;
-          font-size: 15px;
+        .vel-input {
+          font-size: 20px;
+          width: 46px;
         }
 
-        /* ── Commit + action buttons ── */
+        /* Pitch type grid: 4 per row, 2 rows */
+        #pitch-type-grid {
+          grid-template-columns: repeat(4, 1fr) !important;
+          gap: 3px !important;
+        }
+        .pitch-type-btn {
+          padding: 8px 2px !important;
+          font-size: 13px !important;
+        }
+
+        /* Outcome grid: 2-col */
+        .outcome-label {
+          font-size: 8px;
+          letter-spacing: 2px;
+          margin-bottom: 4px;
+        }
+        .outcome-grid {
+          grid-template-columns: 1fr 1fr;
+          gap: 4px;
+        }
+        .outcome-btn {
+          padding: 9px 4px;
+          font-size: 14px;
+          letter-spacing: 0;
+        }
+        .outcome-sub {
+          font-size: 8px;
+        }
+        .outcome-hotkey {
+          display: none;
+        }
+
+        /* Pickoff/Runners/Clock buttons: smaller */
+        .zone-controls
+          > div:first-child
+          > div:first-child
+          > div:last-child
+          button {
+          padding: 3px 7px !important;
+        }
+        .zone-controls
+          > div:first-child
+          > div:first-child
+          > div:last-child
+          span {
+          font-size: 9px !important;
+        }
+
+        /* ── COMMIT button: prominent ── */
         #commit-pitch {
-          padding: 14px;
-          font-size: 16px;
+          padding: 15px;
+          font-size: 17px;
+          letter-spacing: 2px;
         }
         .clear-btn {
           font-size: 11px;
-          padding: 7px 8px;
-        }
-
-        /* ── Play blurb ── */
-        #play-blurb-wrap {
-          padding: 6px 12px;
-          min-height: 28px;
-        }
-        #play-blurb-inner {
-          font-size: 13px;
-        }
-
-        /* ── AB strip ── */
-        #ab-strip {
-          min-height: 44px;
-          max-height: 44px;
-          padding: 4px 10px;
+          padding: 8px 6px;
         }
 
         /* ── Mobile bottom tab bar ── */
@@ -4144,34 +4658,35 @@
           flex-direction: column;
           align-items: center;
           justify-content: center;
-          gap: 3px;
+          gap: 2px;
           cursor: pointer;
           font-family: "Barlow Condensed", sans-serif;
           font-weight: 700;
-          font-size: 8px;
+          font-size: 9px;
           letter-spacing: 0.5px;
           text-transform: uppercase;
-          color: rgba(255, 255, 255, 0.4);
+          color: rgba(255, 255, 255, 0.35);
           transition: all 0.15s;
           border-top: 2.5px solid transparent;
           padding-top: 2px;
+          -webkit-tap-highlight-color: transparent;
         }
         .mob-tab.on {
           color: #fff;
           border-top-color: #cc1a1a;
         }
         .mob-tab-icon {
-          font-size: 20px;
+          font-size: 18px;
           line-height: 1;
         }
 
-        /* ── panel-wrap: full height between nav and tab bar ── */
+        /* ── panel-wrap bottom = 0 (mob-tabs is inside panel-tracker) ── */
         #panel-wrap {
           bottom: 0;
           overflow: hidden;
         }
 
-        /* ── Re-show mobile-only elements (overrides desktop hide) ── */
+        /* ── Re-show mobile-only elements ── */
         #mob-tabs {
           display: flex !important;
         }
@@ -4180,11 +4695,9 @@
         }
 
         /* ── Mobile overlay panels ── */
-        /* panel-tracker needs relative positioning for mob panels to overlay correctly */
         #panel-tracker {
           position: relative;
         }
-
         .mob-panel {
           display: none !important;
           position: absolute;
@@ -4200,9 +4713,33 @@
           display: block !important;
         }
 
+        /* ── Stats (log) panel ── */
+        #mob-log-panel.on {
+          display: flex !important;
+          flex-direction: column;
+        }
+        #mob-log-panel .right-tabs {
+          flex-shrink: 0;
+          background: #fff;
+          border-bottom: 1px solid var(--border);
+          position: sticky;
+          top: 0;
+          z-index: 10;
+        }
+        #mob-log-panel .right-tab {
+          font-size: 11px;
+          padding: 0 12px;
+          height: 40px;
+        }
+        #mob-log-content {
+          flex: 1;
+          overflow-y: auto;
+          padding: 0 0 80px;
+        }
+
         /* ── Score panel ── */
         #mob-score-panel {
-          padding: 14px;
+          padding: 0;
         }
         .mob-section-title {
           font-family: "Barlow Condensed", sans-serif;
@@ -4211,13 +4748,16 @@
           letter-spacing: 3px;
           text-transform: uppercase;
           color: var(--text3);
-          margin-bottom: 10px;
+          margin-bottom: 8px;
+          margin-top: 14px;
+          padding: 0 14px;
         }
         .mob-score-grid {
           display: grid;
           grid-template-columns: 1fr 1fr;
           gap: 10px;
-          margin-bottom: 14px;
+          margin-bottom: 0;
+          padding: 0 14px;
         }
         .mob-score-card {
           background: #fff;
@@ -4245,8 +4785,6 @@
           justify-content: center;
           margin-top: 6px;
         }
-
-        /* pitcher/batter info row */
         .mob-pb-row {
           background: #fff;
           border: 1px solid var(--border);
@@ -4255,7 +4793,7 @@
           display: flex;
           justify-content: space-between;
           align-items: center;
-          margin-bottom: 10px;
+          margin: 0 14px 10px;
         }
         .mob-pb-label {
           font-size: 8px;
@@ -4273,12 +4811,6 @@
           font-family: "Share Tech Mono", monospace;
           font-size: 10px;
           color: var(--text2);
-        }
-
-        /* ── Log panel ── */
-        #mob-log-panel.on {
-          display: flex !important;
-          flex-direction: column;
         }
 
         /* ── Lineup panel ── */
@@ -4525,6 +5057,10 @@
 
       /* ── Desktop-only rules (769px and up) ── */
       @media (min-width: 769px) {
+        /* Hide mobile-only context strip */
+        #mob-context-strip {
+          display: none !important;
+        }
         /* Hub mobile bar — hidden on desktop */
         #hub-mobile-bar {
           display: none !important;
@@ -4548,6 +5084,38 @@
         }
         .mob-panel {
           display: none !important;
+        }
+
+        /* ── Emulator overrides: restore mobile UI at desktop viewport ── */
+        body.emu-on #mob-tabs {
+          display: flex !important;
+        }
+        body.emu-on .mob-panel {
+          display: none !important;
+        }
+        body.emu-on .mob-panel.on {
+          display: block !important;
+        }
+        body.emu-on #mob-log-panel.on {
+          display: flex !important;
+        }
+        body.emu-on #mob-context-strip {
+          display: flex !important;
+        }
+        body.emu-on #hub-mobile-bar {
+          display: flex !important;
+        }
+        body.emu-on #hub-app {
+          display: flex !important;
+          grid-template-columns: unset !important;
+          min-height: unset !important;
+        }
+        body.emu-on #hub-sidebar {
+          display: none !important;
+        }
+        body.emu-on #hub-main {
+          overflow-y: auto;
+          padding: 12px;
         }
       }
 
@@ -4877,22 +5445,24 @@
         <!-- MOBILE BOTTOM TABS — inside panel-wrap so they're in the fixed layer -->
         <div id="mob-tabs">
           <div class="mob-tab on" id="mobtab-zone" onclick="mobTab('zone')">
-            Zone
+            <span class="mob-tab-icon">🎯</span>Zone
           </div>
           <div class="mob-tab" id="mobtab-score" onclick="mobTab('score')">
-            Score
+            <span class="mob-tab-icon">🏟</span>Score
           </div>
           <div class="mob-tab" id="mobtab-lineup" onclick="mobTab('lineup')">
-            Lineup
+            <span class="mob-tab-icon">📋</span>Lineup
           </div>
           <div
             class="mob-tab"
             id="mobtab-pitchers"
             onclick="mobTab('pitchers')"
           >
-            Pitchers
+            <span class="mob-tab-icon">⚾</span>Pitchers
           </div>
-          <div class="mob-tab" id="mobtab-log" onclick="mobTab('log')">Log</div>
+          <div class="mob-tab" id="mobtab-log" onclick="mobTab('log')">
+            <span class="mob-tab-icon">📊</span>Stats
+          </div>
         </div>
         <div class="app-panel" id="panel-tracker">
           <!-- SCOREBUG -->
@@ -5132,6 +5702,28 @@
             >
               Save Game
             </button>
+          </div>
+          <!-- MOBILE CONTEXT STRIP: pitcher · batter · count (zone tab only) -->
+          <div id="mob-context-strip">
+            <div class="mob-ctx-block">
+              <span class="mob-ctx-label">P</span>
+              <span class="mob-ctx-val" id="mob-ctx-pitcher">—</span>
+            </div>
+            <div class="mob-ctx-sep"></div>
+            <div class="mob-ctx-block mob-ctx-count">
+              <span class="mob-ctx-dots" id="mob-ctx-balls"></span>
+              <span class="mob-ctx-x">–</span>
+              <span class="mob-ctx-dots" id="mob-ctx-strikes"></span>
+              <span class="mob-ctx-outs-wrap"
+                ><span id="mob-ctx-outs">0</span
+                ><span class="mob-ctx-label"> out</span></span
+              >
+            </div>
+            <div class="mob-ctx-sep"></div>
+            <div class="mob-ctx-block">
+              <span class="mob-ctx-label">AB</span>
+              <span class="mob-ctx-val" id="mob-ctx-batter">—</span>
+            </div>
           </div>
           <!-- MAIN -->
           <div id="main">
@@ -6657,21 +7249,21 @@
                   id="mob-tab-boxscore"
                   onclick="mobLogTab('boxscore')"
                 >
-                  Box
+                  Box Score
                 </div>
                 <div
                   class="right-tab"
                   id="mob-tab-pitchmix"
                   onclick="mobLogTab('pitchmix')"
                 >
-                  Mix
+                  Pitch Mix
                 </div>
                 <div
                   class="right-tab"
                   id="mob-tab-gamelog"
                   onclick="mobLogTab('gamelog')"
                 >
-                  Log
+                  Game Log
                 </div>
               </div>
               <div
@@ -12031,6 +12623,10 @@
           // Sync mobile score panel
           try {
             updateMobScore();
+          } catch (e) {}
+          // Sync mobile context strip
+          try {
+            updateMobContextStrip();
           } catch (e) {}
         }
 
@@ -17999,7 +18595,10 @@
         let _mobLogTab = "pitchlog";
 
         function isMobile() {
-          return window.innerWidth <= 768;
+          return (
+            window.innerWidth <= 768 ||
+            (typeof _emuActive !== "undefined" && _emuActive)
+          );
         }
 
         function mobTab(tab) {
@@ -18019,10 +18618,18 @@
           if (lineupP) lineupP.classList.toggle("on", tab === "lineup");
           if (pitchersP) pitchersP.classList.toggle("on", tab === "pitchers");
           if (logP) logP.classList.toggle("on", tab === "log");
+          // Show context strip only on zone tab
+          const ctx = document.getElementById("mob-context-strip");
+          if (ctx) ctx.style.display = tab === "zone" ? "flex" : "none";
           if (tab === "lineup") renderMobLineup();
           if (tab === "pitchers") renderMobPitchers();
           if (tab === "log") renderMobLog(_mobLogTab);
           if (tab === "score") updateMobScore();
+          if (tab === "zone") {
+            try {
+              updateMobContextStrip();
+            } catch (e) {}
+          }
         }
 
         function mobLogTab(t) {
@@ -18341,6 +18948,25 @@
         window.addEventListener("pitchtrack:render", () => {
           if (_currentMobTab === "log") renderMobLog(_mobLogTab);
         });
+
+        function updateMobContextStrip() {
+          const setEl = (id, v) => {
+            const e = document.getElementById(id);
+            if (e) e.textContent = v;
+          };
+          const p = activePitcher();
+          setEl("mob-ctx-pitcher", p ? `#${p.num} ${p.name}` : "—");
+          const b = currentBatter();
+          setEl("mob-ctx-batter", b ? `#${b.num || ""} ${b.name}` : "—");
+          // Balls: filled dots
+          const ballDots =
+            "●".repeat(S.balls) + "○".repeat(Math.max(0, 4 - S.balls));
+          const strikeDots =
+            "●".repeat(S.strikes) + "○".repeat(Math.max(0, 3 - S.strikes));
+          setEl("mob-ctx-balls", ballDots);
+          setEl("mob-ctx-strikes", strikeDots);
+          setEl("mob-ctx-outs", S.outs);
+        }
 
         function toast(msg) {
           const el = qs("toast");
@@ -24825,6 +25451,18 @@
           var navLabel = document.getElementById("sn-emulator-label");
           if (navBtn) navBtn.classList.add("active");
           if (navLabel) navLabel.textContent = "Desktop";
+          // Refresh mobile UI state
+          try {
+            if (typeof mobTab === "function")
+              mobTab(
+                typeof _currentMobTab !== "undefined" && _currentMobTab
+                  ? _currentMobTab
+                  : "zone"
+              );
+          } catch (e) {}
+          try {
+            if (typeof updateMobScore === "function") updateMobScore();
+          } catch (e) {}
         }
 
         function closeMobileEmulator() {
