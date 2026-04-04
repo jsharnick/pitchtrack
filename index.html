@@ -14308,17 +14308,32 @@
           let careerPoAtt = 0,
             careerPoOuts = 0;
           try {
+            // Match pitcher by exact name OR last name + jersey number so records
+            // stored under an older name variant (e.g. "Slack" vs "Tyler Slack") are found.
+            const pName = pitcher?.name;
+            const pLast = _lastName(pName || "");
+            const pNum = pitcher?.num;
+            const _pitcherMatch = (name, num) =>
+              name === pName ||
+              (pLast &&
+                _lastName(name) === pLast &&
+                (!pNum || !num || String(pNum) === String(num)));
+
             const pGames = _liveGames.filter(
               (g) => g.awayTeam === pitchingTeam || g.homeTeam === pitchingTeam
             );
             const allPPs = pGames.flatMap((g) =>
-              (g.pitchLog || []).filter((e) => e.pitcher === pitcher?.name)
+              (g.pitchLog || []).filter((e) =>
+                _pitcherMatch(e.pitcher, e.pitcherNum)
+              )
             );
             // Aggregate pickoff data from pitcher objects across all games
             pGames.forEach((g) => {
               const pitchers =
                 g.awayTeam === pitchingTeam ? g.awayPitchers : g.homePitchers;
-              const p = (pitchers || []).find((x) => x.name === pitcher?.name);
+              const p = (pitchers || []).find((x) =>
+                _pitcherMatch(x.name, x.num)
+              );
               if (p) {
                 careerPoAtt += p.poAtt || 0;
                 careerPoOuts += p.poOuts || 0;
@@ -25223,10 +25238,12 @@
             poAtt: 0,
             poOuts: 0,
           };
+          const pitcherNames =
+            _nameAliases[pitcherName] || new Set([pitcherName]);
           sortedGames.forEach((g) => {
             const pitchers =
               g.awayTeam === teamName ? g.awayPitchers : g.homePitchers;
-            const p = (pitchers || []).find((x) => x.name === pitcherName);
+            const p = (pitchers || []).find((x) => pitcherNames.has(x.name));
             if (!p || !p.pitches) return;
             career.num = p.num || career.num;
             career.hand = p.hand || career.hand;
