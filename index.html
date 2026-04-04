@@ -32,6 +32,8 @@
         flex-direction: column;
         align-items: center;
         justify-content: center;
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
         background: linear-gradient(
           150deg,
           #0a0d12 0%,
@@ -91,6 +93,7 @@
         flex-direction: column;
         align-items: center;
         gap: 0;
+        margin: auto;
       }
 
       .hs-logo {
@@ -233,22 +236,20 @@
         background: linear-gradient(135deg, #d42020, #f03030);
       }
       .hs-footer {
-        position: fixed;
-        bottom: 15px;
+        position: relative;
+        margin-top: 28px;
         font-family: "Share Tech Mono", monospace;
         font-size: 9px;
         color: rgba(255, 255, 255, 0.15);
         letter-spacing: 2px;
         text-align: center;
-        left: 50%;
-        transform: translateX(-50%);
         white-space: nowrap;
         display: flex;
         flex-direction: column;
         align-items: center;
         gap: 6px;
-        z-index: 10;
         pointer-events: none;
+        padding-bottom: 20px;
       }
 
       /* ═══ TOP NAV ═══ */
@@ -1594,6 +1595,7 @@
         border-radius: 6px;
         overflow: hidden;
         box-shadow: inset 0 1px 4px rgba(0, 0, 0, 0.06);
+        touch-action: none;  /* prevent scroll hijack on mobile — tap registers cleanly */
       }
 
       /* Strike box: center ~38% of canvas */
@@ -3573,40 +3575,70 @@
         }
 
         /* ── Home screen ── */
+        #home-screen {
+          justify-content: flex-start; /* top-aligned so cards scroll naturally */
+          overflow-y: auto;
+          -webkit-overflow-scrolling: touch;
+        }
+        .hs-content {
+          padding: 28px 16px 40px;
+          margin: 0;
+          width: 100%;
+          max-width: 100%;
+          gap: 0;
+        }
         .hs-logo {
-          font-size: clamp(32px, 9vw, 52px);
+          font-size: clamp(30px, 8vw, 46px);
           gap: 10px;
         }
         .hs-tagline {
           font-size: 11px;
           letter-spacing: 3px;
-          margin-bottom: 32px;
+          margin-bottom: 20px;
         }
+        /* Cards: single column, horizontal layout */
         .hs-cards {
           grid-template-columns: 1fr;
-          gap: 14px;
+          gap: 10px;
+          width: 100%;
         }
         .hs-card {
-          padding: 24px 20px;
+          flex-direction: row;
+          align-items: center;
+          padding: 16px 18px;
+          gap: 14px;
+        }
+        .hs-card-icon {
+          display: none; /* empty — save space */
+        }
+        .hs-card > div[style] {
+          text-align: left !important;
+          flex: 1;
+          min-width: 0;
         }
         .hs-card-title {
-          font-size: 22px;
+          font-size: 20px;
+          text-align: left;
         }
         .hs-card-desc {
-          font-size: 12px;
+          font-size: 11px;
+          text-align: left;
         }
         .hs-tags {
-          gap: 4px;
-        }
-        .hs-tag {
-          font-size: 7.5px;
+          display: none; /* too cramped on mobile */
         }
         .hs-cta {
-          font-size: 13px;
-          padding: 9px 0;
+          flex-shrink: 0;
+          width: auto;
+          padding: 10px 16px;
+          font-size: 12px;
+          letter-spacing: 1px;
+          margin-top: 0;
         }
-
-        /* ── panel-wrap: fixed box between nav (44px) and tab bar (56px) ── */
+        /* Hide Yak Factory logo on mobile */
+        .hs-footer {
+          display: none !important;
+        }
         #panel-wrap {
           top: 44px !important;
           bottom: 0 !important;
@@ -3874,24 +3906,24 @@
           flex-direction: column;
           align-items: center;
           justify-content: center;
-          gap: 3px;
+          gap: 2px;
           cursor: pointer;
           font-family: "Barlow Condensed", sans-serif;
           font-weight: 700;
-          font-size: 8px;
+          font-size: 9px;
           letter-spacing: 0.5px;
           text-transform: uppercase;
-          color: rgba(255, 255, 255, 0.4);
+          color: rgba(255, 255, 255, 0.38);
           transition: all 0.15s;
           border-top: 2.5px solid transparent;
-          padding-top: 2px;
+          padding-top: 4px;
         }
         .mob-tab.on {
           color: #fff;
           border-top-color: #cc1a1a;
         }
         .mob-tab-icon {
-          font-size: 20px;
+          font-size: 18px;
           line-height: 1;
         }
 
@@ -3932,7 +3964,13 @@
 
         /* ── Score panel ── */
         #mob-score-panel {
-          padding: 14px;
+          background: var(--surface2);
+        }
+        #mob-score-panel > div {
+          padding: 12px 12px 80px;
+          display: flex;
+          flex-direction: column;
+          gap: 10px;
         }
         .mob-section-title {
           font-family: "Barlow Condensed", sans-serif;
@@ -3941,62 +3979,80 @@
           letter-spacing: 3px;
           text-transform: uppercase;
           color: var(--text3);
-          margin-bottom: 10px;
+          margin-bottom: 4px;
+          margin-top: 2px;
+        }
+        /* Unified card wrapper matching desktop .panel-section look */
+        .mob-card {
+          background: var(--surface);
+          border: 1px solid var(--border);
+          border-radius: 10px;
+          padding: 12px 14px;
         }
         .mob-score-grid {
           display: grid;
           grid-template-columns: 1fr 1fr;
-          gap: 10px;
-          margin-bottom: 14px;
+          gap: 8px;
         }
         .mob-score-card {
-          background: #fff;
+          background: var(--surface2);
           border: 1px solid var(--border);
-          border-radius: 10px;
-          padding: 12px;
+          border-radius: 8px;
+          padding: 10px 8px;
           text-align: center;
         }
         .mob-score-val {
           font-family: "Barlow Condensed", sans-serif;
           font-weight: 900;
-          font-size: 36px;
+          font-size: 32px;
           color: var(--text);
+          line-height: 1;
+          margin: 2px 0;
         }
         .mob-score-lbl {
-          font-size: 9px;
-          letter-spacing: 2px;
+          font-family: "Barlow Condensed", sans-serif;
+          font-weight: 700;
+          font-size: 10px;
+          letter-spacing: 1px;
           text-transform: uppercase;
-          color: var(--text3);
-          margin-top: 2px;
+          color: var(--text2);
         }
         .mob-score-btns {
           display: flex;
-          gap: 6px;
+          gap: 5px;
           justify-content: center;
           margin-top: 6px;
+        }
+        /* Make score +/- buttons larger on mobile */
+        .mob-score-btns .score-btn {
+          width: 32px;
+          height: 26px;
+          font-size: 16px;
+          border-radius: 6px;
         }
 
         /* pitcher/batter info row */
         .mob-pb-row {
-          background: #fff;
+          background: var(--surface);
           border: 1px solid var(--border);
-          border-radius: 10px;
-          padding: 12px 14px;
+          border-radius: 8px;
+          padding: 10px 14px;
           display: flex;
           justify-content: space-between;
           align-items: center;
-          margin-bottom: 10px;
         }
         .mob-pb-label {
-          font-size: 8px;
+          font-family: "Barlow Condensed", sans-serif;
+          font-size: 9px;
           letter-spacing: 2px;
           text-transform: uppercase;
           color: var(--text3);
+          font-weight: 700;
         }
         .mob-pb-name {
           font-family: "Barlow Condensed", sans-serif;
           font-weight: 700;
-          font-size: 16px;
+          font-size: 17px;
           color: var(--text);
         }
         .mob-pb-stats {
@@ -4047,39 +4103,46 @@
           -webkit-overflow-scrolling: touch;
           padding: 12px;
         }
-        /* Mobile hub header: team pill selector */
+        /* Mobile hub header: team grid selector */
         #hub-mobile-bar {
           display: flex !important;
           flex-shrink: 0 !important;
-          align-items: center;
-          gap: 8px;
-          padding: 8px 12px;
-          background: #fff;
+          flex-wrap: wrap;
+          gap: 6px;
+          padding: 10px 12px;
+          background: var(--surface);
           border-bottom: 1px solid var(--border);
-          overflow-x: auto;
-          -webkit-overflow-scrolling: touch;
         }
         .hub-mob-team-btn {
-          flex-shrink: 0;
-          padding: 5px 12px;
+          flex: 1 1 auto;
+          min-width: calc(50% - 6px);
+          padding: 9px 10px;
           background: var(--surface2);
-          border: 1.5px solid var(--border);
-          border-radius: 20px;
+          border: 1.5px solid var(--border2);
+          border-radius: 8px;
           font-family: "Barlow Condensed", sans-serif;
           font-weight: 700;
-          font-size: 13px;
+          font-size: 14px;
+          letter-spacing: 0.5px;
           color: var(--text2);
           cursor: pointer;
           white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          text-align: center;
           transition: all 0.14s;
         }
         .hub-mob-team-btn.active {
-          background: rgba(204, 26, 26, 0.08);
+          background: rgba(204, 26, 26, 0.09);
           border-color: var(--accent);
           color: var(--accent);
         }
+        /* "All Games" button spans full width */
         .hub-mob-team-btn.all {
+          flex: 1 1 100%;
           border-style: dashed;
+          font-size: 13px;
+          padding: 8px 10px;
         }
         .stat-cards {
           grid-template-columns: repeat(3, 1fr);
@@ -4106,14 +4169,21 @@
           font-size: 36px;
         }
         .tab-row {
-          overflow-x: auto;
-          -webkit-overflow-scrolling: touch;
-          flex-wrap: nowrap;
+          display: grid !important;
+          grid-template-columns: repeat(auto-fit, minmax(72px, 1fr));
+          gap: 0;
+          overflow-x: unset;
+          flex-wrap: unset;
+          border-bottom: 2px solid var(--border);
+          margin-bottom: 14px;
         }
         .tab {
           white-space: nowrap;
           font-size: 11px;
-          padding: 8px 12px;
+          padding: 10px 6px;
+          text-align: center;
+          border-radius: 0;
+          letter-spacing: 1px;
         }
         /* Collapse all two-column grids in player/pitcher detail to single column */
         #ptab-spray > div,
@@ -4243,6 +4313,12 @@
         .app-panel {
           overflow-x: hidden;
         }
+        /* My Team + Opponents: ensure vertical scroll works on mobile */
+        #panel-myteam,
+        #panel-opponents {
+          overflow-y: auto !important;
+          -webkit-overflow-scrolling: touch;
+        }
 
         /* Hide keyboard shortcut button on mobile */
         #kbd-toggle {
@@ -4279,6 +4355,308 @@
         .mob-panel {
           display: none !important;
         }
+      }
+
+      /* ═══ MOBILE EMULATOR ═══ */
+      /* Phone bezel — hidden by default */
+      #emu-bezel {
+        display: none;
+        position: fixed;
+        inset: 0;
+        z-index: 99997;
+        pointer-events: none;
+        align-items: center;
+        justify-content: center;
+      }
+      #emu-bezel-inner {
+        width: 414px;
+        height: 896px;
+        border: 3px solid rgba(255,255,255,0.18);
+        border-radius: 52px;
+        box-shadow:
+          0 0 0 1px rgba(0,0,0,0.7),
+          0 32px 80px rgba(0,0,0,0.7),
+          inset 0 0 0 2px rgba(0,0,0,0.8);
+        background: transparent;
+        pointer-events: none;
+        position: relative;
+      }
+      /* Notch */
+      #emu-bezel-inner::before {
+        content: "";
+        position: absolute;
+        top: 14px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 120px;
+        height: 28px;
+        background: rgba(0,0,0,0.85);
+        border-radius: 20px;
+        z-index: 2;
+      }
+      /* Home bar */
+      #emu-bezel-inner::after {
+        content: "";
+        position: absolute;
+        bottom: 12px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 120px;
+        height: 5px;
+        background: rgba(255,255,255,0.25);
+        border-radius: 4px;
+        z-index: 2;
+      }
+      /* Dim overlay outside the phone frame */
+      #emu-bezel-outer {
+        display: none;
+        position: fixed;
+        inset: 0;
+        z-index: 99996;
+        background: rgba(0,0,0,0.72);
+        pointer-events: none;
+      }
+
+      /* Emulator toggle button — visible on desktop home screen only */
+      #emu-toggle-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 7px;
+        margin-top: 22px;
+        padding: 9px 20px;
+        background: rgba(255,255,255,0.06);
+        border: 1.5px solid rgba(255,255,255,0.15);
+        border-radius: 30px;
+        font-family: "Barlow Condensed", sans-serif;
+        font-weight: 700;
+        font-size: 13px;
+        letter-spacing: 2px;
+        text-transform: uppercase;
+        color: rgba(255,255,255,0.45);
+        cursor: pointer;
+        transition: all 0.18s;
+        user-select: none;
+      }
+      #emu-toggle-btn:hover {
+        background: rgba(255,255,255,0.11);
+        border-color: rgba(255,255,255,0.3);
+        color: rgba(255,255,255,0.75);
+      }
+      #emu-toggle-btn.active {
+        background: rgba(180,20,20,0.18);
+        border-color: rgba(255,80,80,0.4);
+        color: #ff8080;
+      }
+      /* Hide the toggle button on real mobile — pointless there */
+      @media (max-width: 768px) {
+        #emu-toggle-btn { display: none !important; }
+      }
+
+      /* When emulator is ON — apply all mobile layout rules via body class */
+      body.mobile-emu #shell-nav {
+        padding: 0 10px; gap: 0; height: 44px;
+      }
+      body.mobile-emu .sn-logo {
+        font-size: 14px; padding-right: 10px; margin-right: 0;
+      }
+      body.mobile-emu .sn-tab {
+        padding: 0 10px; font-size: 10px; letter-spacing: 1px;
+      }
+      body.mobile-emu .sn-save,
+      body.mobile-emu #sn-resume-btn {
+        font-size: 11px; padding: 4px 9px;
+      }
+      body.mobile-emu #home-screen {
+        justify-content: flex-start;
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
+      }
+      body.mobile-emu .hs-content {
+        padding: 28px 16px 40px; margin: 0; width: 100%; max-width: 100%; gap: 0;
+      }
+      body.mobile-emu .hs-logo { font-size: clamp(30px,8vw,46px); gap: 10px; }
+      body.mobile-emu .hs-tagline { font-size: 11px; letter-spacing: 3px; margin-bottom: 20px; }
+      body.mobile-emu .hs-cards { grid-template-columns: 1fr; gap: 10px; width: 100%; }
+      body.mobile-emu .hs-card { flex-direction: row; align-items: center; padding: 16px 18px; gap: 14px; }
+      body.mobile-emu .hs-card-icon { display: none; }
+      body.mobile-emu .hs-card > div[style] { text-align: left !important; flex: 1; min-width: 0; }
+      body.mobile-emu .hs-card-title { font-size: 20px; text-align: left; }
+      body.mobile-emu .hs-card-desc { font-size: 11px; text-align: left; }
+      body.mobile-emu .hs-tags { display: none; }
+      body.mobile-emu .hs-cta { flex-shrink: 0; width: auto; padding: 10px 16px; font-size: 12px; letter-spacing: 1px; margin-top: 0; }
+      body.mobile-emu .hs-footer { display: none !important; }
+      body.mobile-emu #emu-toggle-btn { display: none !important; }
+      body.mobile-emu #panel-wrap { top: 44px !important; bottom: 0 !important; overflow: hidden !important; }
+      body.mobile-emu #panel-tracker {
+        position: absolute !important; top: 0 !important; left: 0 !important;
+        right: 0 !important; bottom: 56px !important;
+        overflow: hidden !important; display: flex !important; flex-direction: column !important;
+      }
+      body.mobile-emu #scorebug {
+        flex-shrink: 0 !important; padding: 6px 10px; gap: 0; flex-wrap: wrap;
+        overflow-x: hidden; overflow-y: hidden; justify-content: space-between;
+        align-items: center; row-gap: 6px;
+      }
+      body.mobile-emu #main {
+        display: flex !important; grid-template-columns: unset !important;
+        flex-direction: column !important; flex: 1 !important; min-height: 0 !important;
+        height: 0 !important; overflow: hidden !important; position: relative;
+      }
+      body.mobile-emu #panel-left { display: none !important; }
+      body.mobile-emu #panel-right { display: none !important; }
+      body.mobile-emu #panel-center {
+        display: flex !important; flex-direction: column !important; flex: 1 !important;
+        min-height: 0 !important; height: 0 !important; overflow: hidden !important;
+      }
+      body.mobile-emu #zone-container {
+        display: flex !important; flex-direction: column !important; flex-wrap: nowrap !important;
+        align-items: center !important; flex: 1 !important; min-height: 0 !important;
+        height: 0 !important; overflow-y: scroll !important; overflow-x: hidden !important;
+        -webkit-overflow-scrolling: touch; padding: 10px 10px 80px; gap: 10px;
+      }
+      body.mobile-emu #play-blurb-wrap { display: none; }
+      body.mobile-emu #ab-strip { display: none; }
+      body.mobile-emu .bug-logo { font-size: 13px; padding-right: 8px; margin-right: 0; border-right: none; }
+      body.mobile-emu .bug-inning { padding: 0 6px; margin-right: 0; border-right: none; flex-shrink: 0; }
+      body.mobile-emu .inning-num { font-size: 16px; }
+      body.mobile-emu .bug-teams { gap: 6px; flex: 1; justify-content: center; margin: 0; }
+      body.mobile-emu .bug-team-name { font-size: 13px; min-width: 40px; }
+      body.mobile-emu .bug-score { font-size: 24px; min-width: 18px; }
+      body.mobile-emu .bug-sep { font-size: 18px; }
+      body.mobile-emu .bug-count { gap: 8px; padding: 4px 8px; border-left: none; border-right: none; flex-shrink: 0; }
+      body.mobile-emu .count-dot { width: 10px; height: 10px; }
+      body.mobile-emu .bug-outs { padding: 4px 8px; border-right: none; flex-shrink: 0; }
+      body.mobile-emu .out-dot { width: 9px; height: 9px; }
+      body.mobile-emu .bug-bases { padding: 4px 8px; border-right: none; flex-shrink: 0; }
+      body.mobile-emu .bases-diamond { width: 44px; height: 44px; }
+      body.mobile-emu .base-sq { width: 12px; height: 12px; }
+      body.mobile-emu .base-second { top: 2px; left: 15px; }
+      body.mobile-emu .base-third { top: 15px; left: 1px; }
+      body.mobile-emu .base-first { top: 15px; left: 29px; }
+      body.mobile-emu .base-home { top: 29px; left: 15px; }
+      body.mobile-emu .bug-pitcher,
+      body.mobile-emu .bug-batter { display: none; }
+      body.mobile-emu #save-game-btn { display: none !important; }
+      body.mobile-emu #fullscreen-btn { display: none !important; }
+      body.mobile-emu .zone-wrap { width: 100%; align-items: center; }
+      body.mobile-emu #strike-zone {
+        width: min(300px, calc(100vw - 20px)) !important;
+        height: min(480px, calc((100vw - 20px) * 1.6)) !important;
+      }
+      body.mobile-emu #zone-batter-svg img {
+        height: min(380px, calc((100vw - 20px) * 1.27)) !important;
+        width: auto !important;
+      }
+      body.mobile-emu .zone-controls { width: 100%; min-width: unset; max-width: min(480px,100%); }
+      body.mobile-emu .outcome-grid { grid-template-columns: 1fr 1fr; gap: 5px; }
+      body.mobile-emu .outcome-btn { padding: 10px 6px; font-size: 15px; }
+      body.mobile-emu .velocity-row { flex-wrap: wrap; }
+      body.mobile-emu .vel-wrap { flex-shrink: 0; }
+      body.mobile-emu .pitch-type-btn { padding: 9px 4px; font-size: 15px; }
+      body.mobile-emu #commit-pitch { padding: 14px; font-size: 16px; }
+      body.mobile-emu .clear-btn { font-size: 11px; padding: 7px 8px; }
+      body.mobile-emu #mob-tabs {
+        display: flex !important; position: absolute; bottom: 0; left: 0; right: 0;
+        z-index: 500; background: #111318; border-top: 1px solid rgba(255,255,255,0.1);
+        height: 56px; padding-bottom: env(safe-area-inset-bottom,0px);
+      }
+      body.mobile-emu .mob-tab {
+        flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center;
+        gap: 2px; cursor: pointer; font-family: "Barlow Condensed", sans-serif; font-weight: 700;
+        font-size: 9px; letter-spacing: 0.5px; text-transform: uppercase;
+        color: rgba(255,255,255,0.38); transition: all 0.15s; border-top: 2.5px solid transparent; padding-top: 4px;
+      }
+      body.mobile-emu .mob-tab.on { color: #fff; border-top-color: #cc1a1a; }
+      body.mobile-emu .mob-tab-icon { font-size: 18px; line-height: 1; }
+      body.mobile-emu #panel-hub {
+        position: absolute !important; top: 0 !important; left: 0 !important;
+        right: 0 !important; bottom: 56px !important;
+        display: flex !important; flex-direction: column !important; overflow: hidden !important;
+      }
+      body.mobile-emu #hub-app {
+        display: flex !important; flex-direction: column !important; flex: 1 !important;
+        min-height: 0 !important; height: 0 !important; overflow: hidden !important;
+        grid-template-columns: unset !important;
+      }
+      body.mobile-emu #hub-sidebar { display: none !important; }
+      body.mobile-emu #hub-main {
+        flex: 1 !important; min-height: 0 !important; height: 0 !important;
+        overflow-y: scroll !important; -webkit-overflow-scrolling: touch; padding: 12px;
+      }
+      body.mobile-emu #hub-mobile-bar {
+        display: flex !important; flex-shrink: 0 !important; flex-wrap: wrap;
+        gap: 6px; padding: 10px 12px; background: var(--surface);
+        border-bottom: 1px solid var(--border);
+      }
+      body.mobile-emu .hub-mob-team-btn {
+        flex: 1 1 auto; min-width: calc(50% - 6px); padding: 9px 10px;
+        background: var(--surface2); border: 1.5px solid var(--border2);
+        border-radius: 8px; font-family: "Barlow Condensed",sans-serif;
+        font-weight: 700; font-size: 14px; text-align: center;
+        overflow: hidden; text-overflow: ellipsis;
+      }
+      body.mobile-emu .hub-mob-team-btn.all {
+        flex: 1 1 100%; border-style: dashed; font-size: 13px; padding: 8px 10px;
+      }
+      body.mobile-emu .mob-panel {
+        display: none !important; position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+        background: var(--bg); overflow-y: auto; z-index: 50;
+      }
+      body.mobile-emu .mob-panel.on { display: block !important; }
+      body.mobile-emu .stat-cards { grid-template-columns: repeat(3,1fr) !important; gap: 7px; }
+      body.mobile-emu .stat-card { padding: 10px 8px; }
+      body.mobile-emu .stat-card-val { font-size: 20px; }
+      body.mobile-emu .tab-row {
+        display: grid !important; grid-template-columns: repeat(auto-fit, minmax(72px, 1fr));
+        gap: 0; overflow-x: unset; flex-wrap: unset;
+        border-bottom: 2px solid var(--border); margin-bottom: 14px;
+      }
+      body.mobile-emu .tab { white-space: nowrap; font-size: 11px; padding: 10px 6px; text-align: center; letter-spacing: 1px; }
+      body.mobile-emu .modal-box {
+        min-width: unset; width: calc(100vw - 24px); max-width: unset; padding: 18px; border-radius: 12px;
+      }
+      body.mobile-emu .sm-box { width: calc(100vw - 24px); padding: 22px 18px; }
+      body.mobile-emu #save-modal { align-items: flex-end; }
+      body.mobile-emu .sm-box { border-radius: 16px 16px 0 0; }
+      body.mobile-emu #panel-myteam,
+      body.mobile-emu #panel-opponents {
+        overflow-y: auto !important; -webkit-overflow-scrolling: touch;
+      }
+      body.mobile-emu #kbd-toggle { display: none !important; }
+      body.mobile-emu #kbd-panel { display: none !important; }
+      /* Override desktop-only rules when emulator is on */
+      body.mobile-emu #hub-mobile-bar { display: flex !important; }
+
+      /* Phone frame constrain all fixed children to 414px centered column */
+      body.mobile-emu #home-screen,
+      body.mobile-emu #shell-nav,
+      body.mobile-emu #panel-wrap {
+        left: 50% !important;
+        transform: translateX(-50%) !important;
+        width: 414px !important;
+        max-width: 414px !important;
+        right: auto !important;
+      }
+      /* Strike-zone & spray use vw — remap inside emu width */
+      body.mobile-emu #strike-zone {
+        width: min(300px, calc(414px - 20px)) !important;
+        height: min(480px, calc((414px - 20px) * 1.6)) !important;
+      }
+      body.mobile-emu #zone-batter-svg img {
+        height: min(380px, calc((414px - 20px) * 1.27)) !important;
+        width: auto !important;
+      }
+      body.mobile-emu #mob-score-panel > div {
+        padding: 12px 12px 80px !important;
+        display: flex !important;
+        flex-direction: column !important;
+        gap: 10px !important;
+      }
+      body.mobile-emu .mob-card {
+        background: var(--surface) !important;
+        border: 1px solid var(--border) !important;
+        border-radius: 10px !important;
+        padding: 12px 14px !important;
       }
 
       #panel-myteam {
@@ -4469,8 +4847,14 @@
           />
           YAK FACTORY · WHERE TRADITION MEETS INNOVATION
         </div>
+        <button id="emu-toggle-btn" onclick="toggleMobileEmu()" title="Preview mobile layout">
+          📱 Mobile Preview
+        </button>
       </div>
     </div>
+    <!-- Phone bezel overlay (emulator decoration) -->
+    <div id="emu-bezel-outer"></div>
+    <div id="emu-bezel"><div id="emu-bezel-inner"></div></div>
     <div id="shell-nav">
       <div class="sn-logo" onclick="navHome()">PT</div>
       <div class="sn-tab" id="sntab-tracker" onclick="openPanel('tracker')">
@@ -4512,18 +4896,20 @@
       <!-- MOBILE BOTTOM TABS — inside panel-wrap so they're in the fixed layer -->
       <div id="mob-tabs">
         <div class="mob-tab on" id="mobtab-zone" onclick="mobTab('zone')">
-          Zone
+          <span class="mob-tab-icon">🎯</span>Zone
         </div>
         <div class="mob-tab" id="mobtab-score" onclick="mobTab('score')">
-          Score
+          <span class="mob-tab-icon">📊</span>Score
         </div>
         <div class="mob-tab" id="mobtab-lineup" onclick="mobTab('lineup')">
-          Lineup
+          <span class="mob-tab-icon">📋</span>Lineup
         </div>
         <div class="mob-tab" id="mobtab-pitchers" onclick="mobTab('pitchers')">
-          Pitchers
+          <span class="mob-tab-icon">⚾</span>Pitchers
         </div>
-        <div class="mob-tab" id="mobtab-log" onclick="mobTab('log')">Log</div>
+        <div class="mob-tab" id="mobtab-log" onclick="mobTab('log')">
+          <span class="mob-tab-icon">📜</span>Log
+        </div>
       </div>
       <div class="app-panel" id="panel-tracker">
         <!-- SCOREBUG -->
@@ -5885,211 +6271,86 @@
             </div>
           </div>
           <div class="mob-panel" id="mob-score-panel">
-            <div style="padding: 14px 14px 80px">
+            <div>
+              <!-- Teams -->
               <div class="mob-section-title">Teams</div>
-              <div
-                style="
-                  display: grid;
-                  grid-template-columns: 1fr 1fr;
-                  gap: 8px;
-                  margin-bottom: 14px;
-                "
-              >
+              <div class="mob-card" style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
                 <div class="setup-field">
-                  <label
-                    style="
-                      font-size: 8px;
-                      letter-spacing: 2px;
-                      color: var(--text3);
-                      text-transform: uppercase;
-                      font-weight: 600;
-                    "
-                    >Away Team</label
-                  >
-                  <input
-                    class="setup-input"
-                    id="mob-away-name-input"
+                  <label>Away Team</label>
+                  <input class="setup-input" id="mob-away-name-input"
                     oninput="document.getElementById('away-name-input').value=this.value;updateTeamNames()"
-                    placeholder="AWAY"
-                  />
+                    placeholder="AWAY"/>
                 </div>
                 <div class="setup-field">
-                  <label
-                    style="
-                      font-size: 8px;
-                      letter-spacing: 2px;
-                      color: var(--text3);
-                      text-transform: uppercase;
-                      font-weight: 600;
-                    "
-                    >Home Team</label
-                  >
-                  <input
-                    class="setup-input"
-                    id="mob-home-name-input"
+                  <label>Home Team</label>
+                  <input class="setup-input" id="mob-home-name-input"
                     oninput="document.getElementById('home-name-input').value=this.value;updateTeamNames()"
-                    placeholder="HOME"
-                  />
+                    placeholder="HOME"/>
                 </div>
               </div>
+              <!-- Score -->
               <div class="mob-section-title">Score</div>
               <div class="mob-score-grid">
                 <div class="mob-score-card">
                   <div class="mob-score-lbl" id="mob-away-lbl">AWAY</div>
                   <div class="mob-score-val" id="mob-away-val">0</div>
                   <div class="mob-score-btns">
-                    <button class="score-btn" onclick="changeScore('away',-1)">
-                      −
-                    </button>
-                    <button class="score-btn" onclick="changeScore('away',+1)">
-                      +
-                    </button>
+                    <button class="score-btn" onclick="changeScore('away',-1)">−</button>
+                    <button class="score-btn" onclick="changeScore('away',+1)">+</button>
                   </div>
                 </div>
                 <div class="mob-score-card">
                   <div class="mob-score-lbl" id="mob-home-lbl">HOME</div>
                   <div class="mob-score-val" id="mob-home-val">0</div>
                   <div class="mob-score-btns">
-                    <button class="score-btn" onclick="changeScore('home',-1)">
-                      −
-                    </button>
-                    <button class="score-btn" onclick="changeScore('home',+1)">
-                      +
-                    </button>
+                    <button class="score-btn" onclick="changeScore('home',-1)">−</button>
+                    <button class="score-btn" onclick="changeScore('home',+1)">+</button>
                   </div>
                 </div>
               </div>
+              <!-- Inning -->
               <div class="mob-section-title">Inning</div>
-              <div
-                style="
-                  background: #fff;
-                  border: 1px solid var(--border);
-                  border-radius: 10px;
-                  padding: 12px 14px;
-                  margin-bottom: 14px;
-                "
-              >
-                <div class="inning-ctrl" style="justify-content: space-between">
-                  <button class="inning-btn" onclick="changeInning(-1)">
-                    ◀
-                  </button>
-                  <div class="inning-display" id="mob-inning-display">
-                    1<small id="mob-inning-half">TOP</small>
-                  </div>
-                  <button class="inning-btn" onclick="changeInning(+1)">
-                    ▶
-                  </button>
+              <div class="mob-card">
+                <div class="inning-ctrl" style="justify-content:space-between">
+                  <button class="inning-btn" onclick="changeInning(-1)">◀</button>
+                  <div class="inning-display" id="mob-inning-display">1<small id="mob-inning-half">TOP</small></div>
+                  <button class="inning-btn" onclick="changeInning(+1)">▶</button>
                 </div>
-                <div class="half-toggle" style="margin-top: 10px">
-                  <div
-                    class="half-btn active"
-                    id="mob-half-top"
-                    onclick="setHalf('top')"
-                  >
-                    TOP
-                  </div>
-                  <div
-                    class="half-btn"
-                    id="mob-half-bot"
-                    onclick="setHalf('bottom')"
-                  >
-                    BOTTOM
-                  </div>
+                <div class="half-toggle" style="margin-top:10px">
+                  <div class="half-btn active" id="mob-half-top" onclick="setHalf('top')">TOP</div>
+                  <div class="half-btn" id="mob-half-bot" onclick="setHalf('bottom')">BOTTOM</div>
                 </div>
               </div>
+              <!-- Outs -->
               <div class="mob-section-title">Outs</div>
-              <div
-                style="
-                  background: #fff;
-                  border: 1px solid var(--border);
-                  border-radius: 10px;
-                  padding: 12px 14px;
-                  margin-bottom: 14px;
-                  display: flex;
-                  gap: 10px;
-                  justify-content: center;
-                "
-              >
-                <button
-                  onclick="if(S.outs>0){S.outs--;updateScoreBug()}"
-                  style="
-                    padding: 8px 16px;
-                    background: var(--surface2);
-                    border: 1px solid var(--border);
-                    border-radius: 6px;
-                    font-family: 'Barlow Condensed', sans-serif;
-                    font-weight: 700;
-                    font-size: 15px;
-                    color: var(--text);
-                    cursor: pointer;
-                  "
-                >
-                  −
-                </button>
-                <div
-                  id="mob-outs-val"
-                  style="
-                    font-family: 'Barlow Condensed', sans-serif;
-                    font-weight: 900;
-                    font-size: 28px;
-                    min-width: 40px;
-                    text-align: center;
-                  "
-                >
-                  0
-                </div>
-                <button
-                  onclick="if(S.outs<3){S.outs++;updateScoreBug()}"
-                  style="
-                    padding: 8px 16px;
-                    background: var(--surface2);
-                    border: 1px solid var(--border);
-                    border-radius: 6px;
-                    font-family: 'Barlow Condensed', sans-serif;
-                    font-weight: 700;
-                    font-size: 15px;
-                    color: var(--text);
-                    cursor: pointer;
-                  "
-                >
-                  +
-                </button>
+              <div class="mob-card" style="display:flex;gap:10px;justify-content:center;align-items:center">
+                <button class="score-btn" style="width:40px;height:34px;font-size:18px;border-radius:7px"
+                  onclick="if(S.outs>0){S.outs--;updateScoreBug()}">−</button>
+                <div id="mob-outs-val" style="font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:32px;min-width:44px;text-align:center;color:var(--text)">0</div>
+                <button class="score-btn" style="width:40px;height:34px;font-size:18px;border-radius:7px"
+                  onclick="if(S.outs<3){S.outs++;updateScoreBug()}">+</button>
               </div>
+              <!-- Pitcher & Batter -->
               <div class="mob-section-title">Pitcher &amp; Batter</div>
-              <div class="mob-pb-row">
-                <div>
-                  <div class="mob-pb-label">Pitcher</div>
-                  <div class="mob-pb-name" id="mob-pitcher-name">—</div>
-                  <div class="mob-pb-stats" id="mob-pitcher-stats">
-                    0P · 0K · 0BB
+              <div class="mob-card" style="display:flex;flex-direction:column;gap:8px">
+                <div class="mob-pb-row" style="border:none;padding:0;border-bottom:1px solid var(--border);padding-bottom:8px">
+                  <div>
+                    <div class="mob-pb-label">Pitcher</div>
+                    <div class="mob-pb-name" id="mob-pitcher-name">—</div>
+                    <div class="mob-pb-stats" id="mob-pitcher-stats">0P · 0K · 0BB</div>
+                  </div>
+                </div>
+                <div class="mob-pb-row" style="border:none;padding:0">
+                  <div>
+                    <div class="mob-pb-label">At Bat</div>
+                    <div class="mob-pb-name" id="mob-batter-name">—</div>
+                    <div class="mob-pb-stats" id="mob-batter-stats">0-0 · 0BB</div>
                   </div>
                 </div>
               </div>
-              <div class="mob-pb-row">
-                <div>
-                  <div class="mob-pb-label">At Bat</div>
-                  <div class="mob-pb-name" id="mob-batter-name">—</div>
-                  <div class="mob-pb-stats" id="mob-batter-stats">
-                    0-0 · 0BB
-                  </div>
-                </div>
-              </div>
-              <div class="mob-section-title" style="margin-top: 4px">
-                Base Runners
-              </div>
-              <div
-                style="
-                  background: #fff;
-                  border: 1px solid var(--border);
-                  border-radius: 10px;
-                  padding: 16px 14px;
-                  margin-bottom: 14px;
-                  display: flex;
-                  flex-direction: column;
-                  align-items: center;
-                  gap: 10px;
-                "
-              >
+              <!-- Base Runners -->
+              <div class="mob-section-title">Base Runners</div>
+              <div class="mob-card" style="display:flex;flex-direction:column;align-items:center;gap:10px">
                 <div
                   style="
                     position: relative;
@@ -6218,10 +6479,9 @@
                 >
                   Tap base to place / manage runner
                 </div>
-              </div>
-            </div>
-          </div>
-          <!-- MOBILE: Lineup Panel -->
+              </div><!-- /mob-card bases -->
+            </div><!-- /mob-score-panel inner -->
+          </div><!-- /mob-score-panel -->
           <div class="mob-panel" id="mob-lineup-panel">
             <div id="mob-lineup-content" style="padding: 14px 14px 80px"></div>
           </div>
@@ -8433,6 +8693,7 @@
                 border-radius: 10px;
                 display: block;
                 border: 1px solid var(--border);
+                touch-action: none;
               "
               viewbox="0 0 560 510"
             >
@@ -11226,6 +11487,36 @@
           }
         }
 
+        // ═══ MOBILE EMULATOR TOGGLE ═══
+        (function () {
+          if (localStorage.getItem("pt_mobileEmu") === "1") {
+            document.body.classList.add("mobile-emu");
+            ["emu-bezel","emu-bezel-outer"].forEach(function(id){
+              var el = document.getElementById(id);
+              if (el) el.style.display = "flex";
+            });
+          }
+        })();
+
+        function toggleMobileEmu() {
+          var on = document.body.classList.toggle("mobile-emu");
+          localStorage.setItem("pt_mobileEmu", on ? "1" : "0");
+          var bezel = document.getElementById("emu-bezel");
+          var overlay = document.getElementById("emu-bezel-outer");
+          var btn = document.getElementById("emu-toggle-btn");
+          if (bezel) bezel.style.display = on ? "flex" : "none";
+          if (overlay) overlay.style.display = on ? "flex" : "none";
+          if (btn) btn.classList.toggle("active", on);
+        }
+
+        // Sync button active state on load
+        document.addEventListener("DOMContentLoaded", function () {
+          var btn = document.getElementById("emu-toggle-btn");
+          if (btn && document.body.classList.contains("mobile-emu")) {
+            btn.classList.add("active");
+          }
+        });
+
         // Nav logo → home (with save prompt if in tracker)
         function navHome() {
           if (currentPanel === "tracker" && unsavedGame) {
@@ -11570,9 +11861,11 @@
         // ===================== ZONE =====================
         let placeholderEl = null;
         function handleZoneClick(e) {
+          // Support both mouse and touch events
+          const src = (e.touches && e.touches[0]) || (e.changedTouches && e.changedTouches[0]) || e;
           const r = qs("strike-zone").getBoundingClientRect();
-          S.pitchX = ((e.clientX - r.left) / r.width) * 100;
-          S.pitchY = ((e.clientY - r.top) / r.height) * 100;
+          S.pitchX = ((src.clientX - r.left) / r.width) * 100;
+          S.pitchY = ((src.clientY - r.top) / r.height) * 100;
           if (placeholderEl) placeholderEl.remove();
           placeholderEl = document.createElement("div");
           placeholderEl.className = "zone-placeholder";
@@ -11586,6 +11879,24 @@
           hint.className = inZone ? "in-zone" : "out-zone";
           checkCommitReady();
         }
+
+        // Wire up touchend on the strike zone for instant mobile response
+        document.addEventListener("DOMContentLoaded", function () {
+          const sz = document.getElementById("strike-zone");
+          if (sz) {
+            sz.addEventListener("touchend", function (e) {
+              e.preventDefault(); // block the ghost mouse click
+              handleZoneClick(e);
+            }, { passive: false });
+          }
+          const sf = document.getElementById("spray-field");
+          if (sf) {
+            sf.addEventListener("touchend", function (e) {
+              e.preventDefault();
+              handleSprayClick(e);
+            }, { passive: false });
+          }
+        });
         function isInZone(px, py) {
           return px >= 31 && px <= 69 && py >= 30.9 && py <= 69.1;
         }
@@ -16113,12 +16424,14 @@
         }
 
         function handleSprayClick(e) {
+          // Support both mouse and touch events
+          const src = (e.touches && e.touches[0]) || (e.changedTouches && e.changedTouches[0]) || e;
           const svg = qs("spray-field");
           const rect = svg.getBoundingClientRect();
           const scaleX = 560 / rect.width;
           const scaleY = 510 / rect.height;
-          const x = (e.clientX - rect.left) * scaleX;
-          const y = (e.clientY - rect.top) * scaleY;
+          const x = (src.clientX - rect.left) * scaleX;
+          const y = (src.clientY - rect.top) * scaleY;
 
           sprayState.fieldX = Math.round(x);
           sprayState.fieldY = Math.round(y);
