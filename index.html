@@ -11496,7 +11496,12 @@
             name === "tracker" ? "inline-flex" : "none";
           currentPanel = name;
           var mt = document.getElementById("mob-tabs");
-          if (mt) mt.style.setProperty("display", name === "tracker" ? "flex" : "none", "important");
+          if (mt)
+            mt.style.setProperty(
+              "display",
+              name === "tracker" ? "flex" : "none",
+              "important"
+            );
           if (name === "tracker") {
             // Re-render pitch grid for current active pitcher (or default if none)
             try {
@@ -18146,7 +18151,16 @@
         }
 
         function mobFillFromRoster(pid, slotIdx) {
-          const p = myTeamRoster.find((x) => x.id === pid);
+          // Determine correct roster source for the side being edited
+          const editSide = _mobEditingSlot ? _mobEditingSlot.side : null;
+          const src = editSide === "away" ? _rosterSrcAway : _rosterSrcHome;
+          const pool =
+            src === "myteam"
+              ? myTeamRoster || []
+              : src && src.roster
+              ? src.roster
+              : myTeamRoster || [];
+          const p = pool.find((x) => x.id === pid);
           if (!p) return;
           mobShowSubOptions(p, slotIdx);
         }
@@ -18302,12 +18316,27 @@
                 : "var(--text3)";
 
             if (isEditing) {
-              const rosterBatters = (myTeamRoster || []).filter(
-                (p) =>
-                  !["RHP", "LHP", "P", "UTL/RHP", "C/RHP", "3B/RHP"].includes(
-                    p.pos
-                  )
-              );
+              // Determine which roster to show based on which team was loaded for this side
+              const _rosterSrc =
+                side === "away" ? _rosterSrcAway : _rosterSrcHome;
+              const _pitcherPositions = [
+                "RHP",
+                "LHP",
+                "P",
+                "UTL/RHP",
+                "C/RHP",
+                "3B/RHP",
+              ];
+              let rosterBatters = [];
+              if (_rosterSrc === "myteam") {
+                rosterBatters = (myTeamRoster || []).filter(
+                  (p) => !_pitcherPositions.includes(p.pos)
+                );
+              } else if (_rosterSrc && _rosterSrc.roster) {
+                rosterBatters = (_rosterSrc.roster || []).filter(
+                  (p) => !_pitcherPositions.includes(p.pos)
+                );
+              }
               const rosterPickerHtml =
                 rosterBatters.length > 0
                   ? `<div style="margin-top:8px;border-top:1px solid var(--border);padding-top:8px">
@@ -28216,6 +28245,7 @@
             inp.value = name;
             updateTeamNames();
           }
+          _rosterSrcAway = "myteam";
           if (currentPanel === "myteam") openPanel("tracker");
           setTimeout(
             function () {
@@ -28237,6 +28267,7 @@
             inp.value = name;
             updateTeamNames();
           }
+          _rosterSrcHome = "myteam";
           if (currentPanel === "myteam") openPanel("tracker");
           setTimeout(
             function () {
@@ -28752,6 +28783,9 @@
         // ══════════════════════════════════════════════════════════════════════
 
         var _oppPickerSide = null; // 'away' | 'home'
+        // Tracks which roster source is loaded per side: null | 'myteam' | opp-object
+        var _rosterSrcAway = null;
+        var _rosterSrcHome = null;
 
         function oppPickerOpen(side) {
           if (!_opponents || !_opponents.length) {
@@ -28804,6 +28838,9 @@
         }
 
         function oppUseAsLineup(opp, side) {
+          // Track roster source per side for mobile lineup picker
+          if (side === "away") _rosterSrcAway = opp;
+          else _rosterSrcHome = opp;
           // Set the team name input
           const inp = document.getElementById(side + "-name-input");
           if (inp) {
