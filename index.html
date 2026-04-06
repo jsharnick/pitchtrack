@@ -3921,7 +3921,7 @@
 
         /* ── Re-show mobile-only elements (overrides desktop hide) ── */
         #mob-tabs {
-          display: flex !important;
+          display: none;
         }
         #hub-mobile-bar {
           display: flex !important;
@@ -11467,6 +11467,8 @@
             .querySelectorAll(".app-panel")
             .forEach((p) => p.classList.remove("on"));
           currentPanel = null;
+          var mt = document.getElementById("mob-tabs");
+          if (mt) mt.style.display = "none";
         }
 
         function openPanel(name, skipPrompt) {
@@ -11496,6 +11498,8 @@
           document.getElementById("sn-resume-btn").style.display =
             name === "tracker" ? "inline-flex" : "none";
           currentPanel = name;
+          var mt = document.getElementById("mob-tabs");
+          if (mt) mt.style.display = name === "tracker" ? "" : "none";
           if (name === "tracker") {
             // Re-render pitch grid for current active pitcher (or default if none)
             try {
