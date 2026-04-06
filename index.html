@@ -3795,6 +3795,28 @@
         }
         .bug-pitcher,
         .bug-batter {
+          display: flex;
+          width: 50%;
+          font-size: 9px;
+          padding: 2px 4px;
+          gap: 3px;
+          min-width: 0;
+          flex-shrink: 1;
+        }
+        .bug-pitcher .blabel,
+        .bug-batter .blabel {
+          font-size: 8px;
+          letter-spacing: 1px;
+        }
+        .bug-pitcher .bname,
+        .bug-batter .bname {
+          font-size: 9px;
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+        }
+        .bug-pitcher .bstats,
+        .bug-batter .bstats {
           display: none;
         }
         #save-game-btn {
@@ -4032,6 +4054,31 @@
         }
 
         /* ── Hub responsive ── */
+        /* ── Hub game list: hide pitch count on mobile so export buttons stay visible ── */
+        .game-meta {
+          display: none;
+        }
+        /* ── Hub select bar: wrap buttons on narrow screens ── */
+        .gh-select-bar {
+          flex-wrap: wrap;
+        }
+        /* ── Hub Export All / Import buttons: visible on mobile, hidden on desktop (sidebar has them) ── */
+        .hub-mob-action-btn {
+          display: inline-flex;
+          align-items: center;
+          padding: 6px 12px;
+          border: 1.5px solid var(--border2);
+          border-radius: 7px;
+          background: none;
+          color: var(--text2);
+          font-family: "Barlow Condensed", sans-serif;
+          font-weight: 700;
+          font-size: 12px;
+          letter-spacing: 1px;
+          cursor: pointer;
+          white-space: nowrap;
+        }
+
         /* panel-hub fills panel-wrap exactly like panel-tracker */
         #panel-hub {
           position: absolute !important;
@@ -4390,6 +4437,9 @@
           display: none !important;
         }
         .mob-panel {
+          display: none !important;
+        }
+        .hub-mob-action-btn {
           display: none !important;
         }
       }
@@ -17947,6 +17997,13 @@
               : '<div style="padding:20px;text-align:center;color:var(--text3);font-size:12px">No scouting data yet.</div>';
             return;
           }
+          // Ensure desktop renders are fresh before copying
+          try {
+            if (t === "boxscore") renderBoxScore();
+          } catch (e) {}
+          try {
+            if (t === "pitchmix") renderPitchMix();
+          } catch (e) {}
           const srcMap = {
             boxscore: "content-boxscore",
             pitchmix: "content-pitchstats",
@@ -19069,16 +19126,18 @@
       <div><div class="page-title">Game History</div><div class="page-sub">${
         allGames.length
       } game${allGames.length !== 1 ? "s" : ""} saved</div></div>
-      <div style="display:flex;gap:8px;align-items:center">
-        <button id="gh-select-btn" onclick="ghToggleSelectMode()" style="padding:6px 14px;border:1.5px solid var(--border2);border-radius:7px;background:none;color:var(--text2);font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:13px;cursor:pointer;transition:all .13s" onmouseover="this.style.borderColor='var(--accent)';this.style.color='var(--accent)'" onmouseout="if(!window._ghSelectMode){this.style.borderColor='var(--border2)';this.style.color='var(--text2)'}">Select</button>
+      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;justify-content:flex-end">
+        <button class="hub-mob-action-btn" onclick="exportAllData()" title="Export all games as JSON" style="-webkit-tap-highlight-color:transparent;touch-action:manipulation">⬇ Export All</button>
+        <button class="hub-mob-action-btn" onclick="triggerImport()" title="Import games from JSON" style="-webkit-tap-highlight-color:transparent;touch-action:manipulation">⬆ Import</button>
+        <button id="gh-select-btn" onclick="ghToggleSelectMode()" style="padding:6px 14px;border:1.5px solid var(--border2);border-radius:7px;background:none;color:var(--text2);font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:13px;cursor:pointer;transition:all .13s;-webkit-tap-highlight-color:transparent;touch-action:manipulation" onmouseover="this.style.borderColor='var(--accent)';this.style.color='var(--accent)'" onmouseout="if(!window._ghSelectMode){this.style.borderColor='var(--border2)';this.style.color='var(--text2)'}">Select</button>
       </div>
     </div>
     <div id="gh-select-bar" style="display:none" class="gh-select-bar">
       <span id="gh-sel-count" style="font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:14px;color:var(--text);flex:1">0 selected</span>
-      <button onclick="ghSelectAll()" style="padding:5px 12px;border:1.5px solid var(--border2);border-radius:6px;background:none;color:var(--text2);font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:12px;cursor:pointer">Select All</button>
-      <button onclick="ghSelectNone()" style="padding:5px 12px;border:1.5px solid var(--border2);border-radius:6px;background:none;color:var(--text2);font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:12px;cursor:pointer">Deselect All</button>
-      <button id="gh-send-sel-btn" onclick="openSendModal('games')" disabled style="padding:5px 14px;border:1.5px solid var(--border2);border-radius:6px;background:none;color:var(--text3);font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:12px;cursor:not-allowed;opacity:.45;transition:all .13s">✉ Send</button>
-      <button id="gh-del-sel-btn" onclick="ghPromptDeleteSelected()" disabled style="padding:5px 14px;border:1.5px solid var(--border2);border-radius:6px;background:none;color:var(--text3);font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:12px;cursor:not-allowed;opacity:.45;transition:all .13s">Delete Selected</button>
+      <button onclick="ghSelectAll()" style="padding:5px 12px;border:1.5px solid var(--border2);border-radius:6px;background:none;color:var(--text2);font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:12px;cursor:pointer;-webkit-tap-highlight-color:transparent;touch-action:manipulation">Select All</button>
+      <button onclick="ghSelectNone()" style="padding:5px 12px;border:1.5px solid var(--border2);border-radius:6px;background:none;color:var(--text2);font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:12px;cursor:pointer;-webkit-tap-highlight-color:transparent;touch-action:manipulation">Deselect All</button>
+      <button id="gh-send-sel-btn" onclick="openSendModal('games')" disabled style="padding:5px 14px;border:1.5px solid var(--border2);border-radius:6px;background:none;color:var(--text3);font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:12px;cursor:not-allowed;opacity:.45;transition:all .13s;-webkit-tap-highlight-color:transparent;touch-action:manipulation">✉ Send</button>
+      <button id="gh-del-sel-btn" onclick="ghPromptDeleteSelected()" disabled style="padding:5px 14px;border:1.5px solid var(--border2);border-radius:6px;background:none;color:var(--text3);font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:12px;cursor:not-allowed;opacity:.45;transition:all .13s;-webkit-tap-highlight-color:transparent;touch-action:manipulation">Delete Selected</button>
     </div>
     <div id="hub-games-list"></div>`;
 
@@ -19108,7 +19167,7 @@
       )} <span style="color:var(--text3);font-weight:400">vs</span> ${escHtml(
               g.homeTeam
             )}</div>
-      <div style="flex:1;font-size:11px;color:var(--text3)">${
+      <div class="game-meta" style="flex:1;font-size:11px;color:var(--text3)">${
         g.totalPitches || 0
       } pitches · ${g.innings} inn</div>
       <div class="game-score">${g.awayScore}–${g.homeScore}</div>
