@@ -3573,6 +3573,15 @@
         }
 
         /* ── Home screen ── */
+        #home-screen {
+          justify-content: flex-start !important;
+          overflow-y: auto !important;
+          -webkit-overflow-scrolling: touch;
+        }
+        .hs-content {
+          padding-top: 28px;
+          padding-bottom: 40px;
+        }
         .hs-logo {
           font-size: clamp(32px, 9vw, 52px);
           gap: 10px;
@@ -3604,6 +3613,15 @@
         .hs-cta {
           font-size: 13px;
           padding: 9px 0;
+        }
+
+        /* ── KEEP: hides preview button on real mobile devices ── */
+        /* Hide YakFactory branding and preview button on real mobile */
+        .hs-footer {
+          display: none !important;
+        }
+        #mob-preview-wrap {
+          display: none !important;
         }
 
         /* ── panel-wrap: fixed box between nav (44px) and tab bar (56px) ── */
@@ -3903,7 +3921,7 @@
 
         /* ── Re-show mobile-only elements (overrides desktop hide) ── */
         #mob-tabs {
-          display: flex !important;
+          display: none;
         }
         #hub-mobile-bar {
           display: flex !important;
@@ -4052,12 +4070,12 @@
           display: flex !important;
           flex-shrink: 0 !important;
           align-items: center;
-          gap: 8px;
+          flex-wrap: wrap;
+          gap: 6px;
           padding: 8px 12px;
           background: #fff;
           border-bottom: 1px solid var(--border);
-          overflow-x: auto;
-          -webkit-overflow-scrolling: touch;
+          overflow-x: visible;
         }
         .hub-mob-team-btn {
           flex-shrink: 0;
@@ -4106,14 +4124,14 @@
           font-size: 36px;
         }
         .tab-row {
-          overflow-x: auto;
-          -webkit-overflow-scrolling: touch;
-          flex-wrap: nowrap;
+          overflow-x: visible;
+          flex-wrap: wrap;
         }
         .tab {
-          white-space: nowrap;
+          white-space: normal;
           font-size: 11px;
           padding: 8px 12px;
+          flex-shrink: 1;
         }
         /* Collapse all two-column grids in player/pitcher detail to single column */
         #ptab-spray > div,
@@ -4253,6 +4271,104 @@
         }
       } /* end @media mobile */
 
+      /* ═══════════════════════════════════════════════════
+         iOS / MOBILE POLISH
+         ═══════════════════════════════════════════════════ */
+
+      /* 1. Remove tap highlight flash on all interactive elements */
+      button,
+      .mob-tab,
+      .hs-card,
+      .outcome-btn,
+      .pitch-type-btn,
+      .spray-type-btn,
+      .hub-mob-team-btn,
+      .opp-tile,
+      .sn-tab,
+      .sn-logo,
+      .score-btn,
+      .inning-btn,
+      .half-btn,
+      .tab,
+      [onclick] {
+        -webkit-tap-highlight-color: transparent;
+      }
+
+      /* 2. Snappy tap response / prevent double-tap zoom */
+      button,
+      .mob-tab,
+      .hs-card,
+      .outcome-btn,
+      .pitch-type-btn,
+      .spray-type-btn,
+      [onclick] {
+        touch-action: manipulation;
+      }
+
+      /* 3. Prevent rubber-band overscroll on fixed containers */
+      body,
+      #home-screen {
+        overscroll-behavior: none;
+      }
+
+      /* 4. No text selection on UI chrome */
+      #shell-nav,
+      #mob-tabs,
+      #scorebug,
+      .hs-card .hs-card-title,
+      .hs-card .hs-cta,
+      .mob-tab,
+      .outcome-btn,
+      .pitch-type-btn {
+        -webkit-user-select: none;
+        user-select: none;
+      }
+
+      /* 5. Prevent iOS auto-zoom on input focus (requires ≥16px) */
+      @media (max-width: 768px) {
+        input,
+        select,
+        textarea {
+          font-size: 16px !important;
+        }
+        #mob-np-num,
+        #mob-np-name {
+          font-size: 16px !important;
+        }
+      }
+
+      /* 6. Safe area top inset for notched iPhones / Dynamic Island */
+      @media (max-width: 768px) {
+        #shell-nav {
+          padding-top: env(safe-area-inset-top, 0px);
+          height: calc(44px + env(safe-area-inset-top, 0px));
+        }
+        #panel-wrap {
+          top: calc(44px + env(safe-area-inset-top, 0px)) !important;
+        }
+      }
+
+      /* 7. Contain overscroll on scrollable panels (no chaining to page) */
+      @media (max-width: 768px) {
+        #zone-container,
+        #hub-main,
+        .mob-panel {
+          overscroll-behavior: contain;
+        }
+      }
+
+      /* ── KEEP: hidden by default — JS shows it only on localhost (VS Code Live Server) ── */
+      #mob-preview-wrap {
+        display: none !important;
+      }
+
+      /* ── KEEP: hides preview button inside the preview iframe (prevents nesting) ── */
+      /* 8. Hide YakFactory branding + preview button when running in preview iframe */
+      html.mp-active .hs-footer,
+      html.mp-active #mob-preview-wrap {
+        display: none !important;
+      }
+
       /* ── Desktop-only rules (769px and up) ── */
       @media (min-width: 769px) {
         /* Hub mobile bar — hidden on desktop */
@@ -4382,6 +4498,66 @@
         border-color: var(--accent);
         color: var(--accent);
       }
+
+      /* ── Scouting report: stack all grids single-column on mobile ── */
+      @media (max-width: 768px) {
+        .scout-header {
+          flex-direction: column !important;
+          align-items: flex-start !important;
+          gap: 8px !important;
+        }
+        .scout-r1,
+        .scout-r2,
+        .scout-r3 {
+          grid-template-columns: 1fr !important;
+        }
+      }
+
+      /* ── Stats Hub: hide desktop roster sidebar, show pill nav on mobile ── */
+      .hub-mob-player-nav {
+        display: none;
+      }
+      @media (max-width: 768px) {
+        .hub-roster-sidebar {
+          display: none !important;
+        }
+        .hub-mob-player-nav {
+          display: block;
+          padding: 12px 0 16px;
+          border-top: 1px solid var(--border);
+          margin-top: 20px;
+        }
+      }
+
+      /* ── Lineup modal: split-screen on mobile ── */
+      @media (max-width: 768px) {
+        #lineup-modal {
+          align-items: flex-end !important;
+          padding: 0 !important;
+        }
+        #lineup-modal > div {
+          flex-direction: column !important;
+          width: 100% !important;
+          max-width: 100% !important;
+          max-height: 94vh !important;
+          border-radius: 20px 20px 0 0 !important;
+        }
+        /* Lineup editor: top half */
+        #lm-left-col {
+          flex: 1 !important;
+          min-height: 0 !important;
+          max-height: none !important;
+          overflow-y: auto !important;
+          border-bottom: 1px solid var(--border) !important;
+        }
+        /* Roster panel: bottom half — shown when a My Team/Opponent is loaded */
+        #lm-roster-panel {
+          width: 100% !important;
+          max-height: 46vh !important;
+          border-left: none !important;
+          border-top: none !important;
+        }
+      }
     </style>
   </head>
   <body>
@@ -4454,6 +4630,36 @@
             </div>
             <div class="hs-cta">Manage Opponents</div>
           </div>
+        </div>
+        <!-- ── KEEP: Mobile Preview button — localhost/Live Server only, hidden everywhere else via CSS+JS ── -->
+        <div id="mob-preview-wrap" style="margin-top: 24px; text-align: center">
+          <button
+            id="mob-preview-btn"
+            onclick="openMobilePreview()"
+            style="
+              background: rgba(255, 255, 255, 0.08);
+              border: 1.5px solid rgba(255, 255, 255, 0.2);
+              border-radius: 10px;
+              color: rgba(255, 255, 255, 0.65);
+              font-family: 'Barlow Condensed', sans-serif;
+              font-weight: 700;
+              font-size: 12px;
+              letter-spacing: 2px;
+              text-transform: uppercase;
+              padding: 10px 22px;
+              cursor: pointer;
+              display: inline-flex;
+              align-items: center;
+              gap: 8px;
+              transition: all 0.18s;
+              -webkit-tap-highlight-color: transparent;
+              touch-action: manipulation;
+            "
+            onmouseover="this.style.borderColor='rgba(255,255,255,0.45)';this.style.color='rgba(255,255,255,0.9)'"
+            onmouseout="this.style.borderColor='rgba(255,255,255,0.2)';this.style.color='rgba(255,255,255,0.65)'"
+          >
+            📱 Preview Mobile Layout
+          </button>
         </div>
         <div class="hs-footer">
           <img
@@ -5912,6 +6118,48 @@
                     oninput="document.getElementById('away-name-input').value=this.value;updateTeamNames()"
                     placeholder="AWAY"
                   />
+                  <button
+                    id="mob-use-myteam-away-btn"
+                    onclick="myTeamUseAsAway()"
+                    style="
+                      display: none;
+                      margin-top: 4px;
+                      width: 100%;
+                      padding: 4px 8px;
+                      background: var(--surface3);
+                      border: 1px dashed var(--border2);
+                      border-radius: 5px;
+                      font-family: 'Barlow Condensed', sans-serif;
+                      font-weight: 700;
+                      font-size: 10px;
+                      color: var(--text3);
+                      cursor: pointer;
+                      letter-spacing: 0.5px;
+                    "
+                  >
+                    USE MY TEAM ▸
+                  </button>
+                  <button
+                    id="mob-use-opp-away-btn"
+                    onclick="oppPickerOpen('away')"
+                    style="
+                      display: none;
+                      margin-top: 3px;
+                      width: 100%;
+                      padding: 4px 8px;
+                      background: var(--surface3);
+                      border: 1px dashed var(--border2);
+                      border-radius: 5px;
+                      font-family: 'Barlow Condensed', sans-serif;
+                      font-weight: 700;
+                      font-size: 10px;
+                      color: var(--text3);
+                      cursor: pointer;
+                      letter-spacing: 0.5px;
+                    "
+                  >
+                    USE OPPONENT ▸
+                  </button>
                 </div>
                 <div class="setup-field">
                   <label
@@ -5930,6 +6178,48 @@
                     oninput="document.getElementById('home-name-input').value=this.value;updateTeamNames()"
                     placeholder="HOME"
                   />
+                  <button
+                    id="mob-use-myteam-home-btn"
+                    onclick="myTeamUseAsHome()"
+                    style="
+                      display: none;
+                      margin-top: 4px;
+                      width: 100%;
+                      padding: 4px 8px;
+                      background: var(--surface3);
+                      border: 1px dashed var(--border2);
+                      border-radius: 5px;
+                      font-family: 'Barlow Condensed', sans-serif;
+                      font-weight: 700;
+                      font-size: 10px;
+                      color: var(--text3);
+                      cursor: pointer;
+                      letter-spacing: 0.5px;
+                    "
+                  >
+                    USE MY TEAM ▸
+                  </button>
+                  <button
+                    id="mob-use-opp-home-btn"
+                    onclick="oppPickerOpen('home')"
+                    style="
+                      display: none;
+                      margin-top: 3px;
+                      width: 100%;
+                      padding: 4px 8px;
+                      background: var(--surface3);
+                      border: 1px dashed var(--border2);
+                      border-radius: 5px;
+                      font-family: 'Barlow Condensed', sans-serif;
+                      font-weight: 700;
+                      font-size: 10px;
+                      color: var(--text3);
+                      cursor: pointer;
+                      letter-spacing: 0.5px;
+                    "
+                  >
+                    USE OPPONENT ▸
+                  </button>
                 </div>
               </div>
               <div class="mob-section-title">Score</div>
@@ -6237,31 +6527,31 @@
             <div class="right-tabs" style="flex-shrink: 0">
               <div
                 class="right-tab active"
-                id="mob-tab-pitchlog"
-                onclick="mobLogTab('pitchlog')"
-              >
-                Pitches
-              </div>
-              <div
-                class="right-tab"
                 id="mob-tab-boxscore"
                 onclick="mobLogTab('boxscore')"
               >
-                Box
+                Box Score
+              </div>
+              <div
+                class="right-tab"
+                id="mob-tab-scouting"
+                onclick="mobLogTab('scouting')"
+              >
+                Scouting
               </div>
               <div
                 class="right-tab"
                 id="mob-tab-pitchmix"
                 onclick="mobLogTab('pitchmix')"
               >
-                Mix
+                Pitch Mix
               </div>
               <div
                 class="right-tab"
                 id="mob-tab-gamelog"
                 onclick="mobLogTab('gamelog')"
               >
-                Log
+                Game Log
               </div>
             </div>
             <div
@@ -11108,6 +11398,21 @@
         </div>
       </div>
       <script>
+        // ── MOBILE PREVIEW: detect if running inside the preview iframe ──
+        (function () {
+          try {
+            if (new URLSearchParams(location.search).get("preview") === "1") {
+              document.documentElement.classList.add("mp-active");
+            }
+            // Show preview button only on localhost (VS Code Live Server) — hidden everywhere else
+            var h = location.hostname;
+            if (h === "localhost" || h === "127.0.0.1" || h === "") {
+              var el = document.getElementById("mob-preview-wrap");
+              if (el) el.style.setProperty("display", "block", "important");
+            }
+          } catch (e) {}
+        })();
+
         // ── Storage polyfill ──────────────────────────────────────────────────────────
         // Uses Claude's native window.storage when inside Claude.ai,
         // falls back to localStorage so the app works on any web host (GitHub Pages etc.)
@@ -11162,6 +11467,8 @@
             .querySelectorAll(".app-panel")
             .forEach((p) => p.classList.remove("on"));
           currentPanel = null;
+          var mt = document.getElementById("mob-tabs");
+          if (mt) mt.style.display = "none";
         }
 
         function openPanel(name, skipPrompt) {
@@ -11191,6 +11498,8 @@
           document.getElementById("sn-resume-btn").style.display =
             name === "tracker" ? "inline-flex" : "none";
           currentPanel = name;
+          var mt = document.getElementById("mob-tabs");
+          if (mt) mt.style.display = name === "tracker" ? "" : "none";
           if (name === "tracker") {
             // Re-render pitch grid for current active pitcher (or default if none)
             try {
@@ -17529,10 +17838,65 @@
         let toastTimer;
         // ===================== MOBILE UI =====================
         let _currentMobTab = "zone";
-        let _mobLogTab = "pitchlog";
+        let _mobLogTab = "boxscore";
 
         function isMobile() {
           return window.innerWidth <= 768;
+        }
+
+        // ════════════════════════════════════════════════════════════
+        // KEEP: Mobile Preview — opens an iPhone-frame iframe overlay
+        // so desktop users can test the mobile layout without a device.
+        // Button lives on home screen (#mob-preview-wrap), hidden on
+        // real mobile via CSS. Do NOT remove these functions.
+        // ════════════════════════════════════════════════════════════
+        function openMobilePreview() {
+          if (document.getElementById("mob-preview-overlay")) return;
+
+          var overlay = document.createElement("div");
+          overlay.id = "mob-preview-overlay";
+          overlay.style.cssText =
+            "position:fixed;inset:0;background:rgba(0,0,0,0.88);z-index:99999;" +
+            "display:flex;flex-direction:column;align-items:center;justify-content:center;" +
+            "gap:16px;backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px)";
+          overlay.addEventListener("click", function (e) {
+            if (e.target === overlay) closeMobilePreview();
+          });
+
+          var frame = document.createElement("div");
+          frame.style.cssText =
+            "position:relative;width:393px;" +
+            "height:min(852px,calc(100vh - 120px));" +
+            "background:#111;border-radius:44px;" +
+            "box-shadow:0 0 0 10px #1c1c1c,0 0 0 12px #333,0 40px 80px rgba(0,0,0,0.8);" +
+            "overflow:hidden;flex-shrink:0";
+
+          var iframe = document.createElement("iframe");
+          iframe.src = "./index.html?preview=1";
+          iframe.style.cssText =
+            "width:100%;height:100%;border:none;display:block;border-radius:44px";
+          iframe.title = "Mobile Preview";
+
+          frame.appendChild(iframe);
+
+          var closeBtn = document.createElement("button");
+          closeBtn.textContent = "\u2715  Close Preview";
+          closeBtn.style.cssText =
+            "background:rgba(255,255,255,0.1);border:1.5px solid rgba(255,255,255,0.25);" +
+            "border-radius:8px;color:rgba(255,255,255,0.8);" +
+            "font-family:'Barlow Condensed',sans-serif;font-weight:700;" +
+            "font-size:13px;letter-spacing:2px;text-transform:uppercase;" +
+            "padding:10px 24px;cursor:pointer;-webkit-tap-highlight-color:transparent";
+          closeBtn.onclick = closeMobilePreview;
+
+          overlay.appendChild(frame);
+          overlay.appendChild(closeBtn);
+          document.body.appendChild(overlay);
+        }
+
+        function closeMobilePreview() {
+          var el = document.getElementById("mob-preview-overlay");
+          if (el) el.parentNode.removeChild(el);
         }
 
         function mobTab(tab) {
@@ -17560,7 +17924,7 @@
 
         function mobLogTab(t) {
           _mobLogTab = t;
-          ["pitchlog", "boxscore", "pitchmix", "gamelog"].forEach((id) => {
+          ["boxscore", "scouting", "pitchmix", "gamelog"].forEach((id) => {
             const el = document.getElementById("mob-tab-" + id);
             if (el) el.classList.toggle("active", id === t);
           });
@@ -17570,8 +17934,18 @@
         function renderMobLog(t) {
           const wrap = document.getElementById("mob-log-content");
           if (!wrap) return;
+          if (t === "scouting") {
+            const scoutContent = document.getElementById("content-scouting");
+            if (scoutContent) scoutContent.classList.add("active");
+            renderLiveScoutingTab(true);
+            if (scoutContent) scoutContent.classList.remove("active");
+            const src = document.getElementById("live-scout-wrap");
+            wrap.innerHTML = src
+              ? src.innerHTML
+              : '<div style="padding:20px;text-align:center;color:var(--text3);font-size:12px">No scouting data yet.</div>';
+            return;
+          }
           const srcMap = {
-            pitchlog: "pitch-log",
             boxscore: "content-boxscore",
             pitchmix: "content-pitchstats",
             gamelog: "game-log-list",
@@ -17654,6 +18028,37 @@
           });
 
           // Add pitcher form
+          const rosterPitchers = (myTeamRoster || []).filter((p) =>
+            ["RHP", "LHP", "P", "UTL/RHP", "C/RHP", "3B/RHP"].includes(p.pos)
+          );
+          const pitcherRosterHtml =
+            rosterPitchers.length > 0
+              ? `<div style="margin-top:8px;border-top:1px solid var(--border);padding-top:8px">
+                <div style="font-size:8px;letter-spacing:2px;color:var(--text3);text-transform:uppercase;font-weight:600;margin-bottom:6px">Add from Roster</div>
+                <div style="max-height:180px;overflow-y:auto;display:flex;flex-direction:column;gap:3px">
+                  ${rosterPitchers
+                    .map(
+                      (p) =>
+                        `<div onclick="mobFillPitcherFromRoster('${
+                          p.id
+                        }')" style="display:flex;align-items:center;gap:8px;padding:7px 8px;background:var(--surface3);border:1px solid var(--border);border-radius:6px;cursor:pointer;-webkit-tap-highlight-color:transparent">
+                      <div style="font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:14px;color:var(--blue);width:30px;text-align:right;flex-shrink:0">#${
+                        p.num || "—"
+                      }</div>
+                      <div style="flex:1;min-width:0">
+                        <div style="font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:13px;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${
+                          p.name
+                        }</div>
+                        <div style="font-size:9px;color:var(--text3)">${
+                          p.pos || "—"
+                        } · ${p.throw || "R"}HP</div>
+                      </div>
+                    </div>`
+                    )
+                    .join("")}
+                </div>
+              </div>`
+              : "";
           html += `<div style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:10px;margin-top:4px">
     <div style="font-size:8px;letter-spacing:2px;color:var(--text3);text-transform:uppercase;font-weight:600;margin-bottom:8px">Add Pitcher</div>
     <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">
@@ -17665,6 +18070,7 @@
       </select>
       <button onclick="addMobPitcher()" style="background:var(--accent);border:none;border-radius:5px;color:#fff;font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:13px;padding:7px 12px;cursor:pointer;white-space:nowrap">+ Add</button>
     </div>
+    ${pitcherRosterHtml}
   </div>`;
 
           wrap.innerHTML = html;
@@ -17715,6 +18121,166 @@
           toast(`Pitching: #${num} ${name}`);
         }
 
+        function mobFillPitcherFromRoster(pid) {
+          const p = myTeamRoster.find((x) => x.id === pid);
+          if (!p) return;
+          activePitcherList().forEach((x) => (x.active = false));
+          activePitcherList().push({
+            name: p.name,
+            num: p.num || "0",
+            hand: p.throw || "R",
+            pitches: 0,
+            strikes: 0,
+            k: 0,
+            bb: 0,
+            swings: 0,
+            looks: 0,
+            hits: 0,
+            outs: 0,
+            r: 0,
+            hbp: 0,
+            bf: 0,
+            active: true,
+          });
+          renderMobPitchers();
+          renderPitcherList();
+          updateScoreBug();
+          toast(`Pitching: #${p.num} ${p.name}`);
+        }
+
+        function mobFillFromRoster(pid, slotIdx) {
+          const p = myTeamRoster.find((x) => x.id === pid);
+          if (!p) return;
+          mobShowSubOptions(p, slotIdx);
+        }
+
+        function mobShowSubOptions(p, slotIdx) {
+          var existing = document.getElementById("mob-sub-overlay");
+          if (existing) existing.remove();
+
+          var overlay = document.createElement("div");
+          overlay.id = "mob-sub-overlay";
+          overlay.style.cssText =
+            "position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:99998;" +
+            "display:flex;align-items:flex-end;justify-content:center";
+          overlay.addEventListener("click", function (e) {
+            if (e.target === overlay) overlay.remove();
+          });
+
+          var sheet = document.createElement("div");
+          sheet.style.cssText =
+            "background:var(--surface2);border-radius:20px 20px 0 0;width:100%;" +
+            "padding:16px 16px 40px;box-shadow:0 -8px 32px rgba(0,0,0,.3)";
+
+          sheet.innerHTML =
+            '<div style="width:40px;height:4px;background:var(--border2);border-radius:2px;margin:0 auto 14px"></div>' +
+            '<div style="font-family:Barlow Condensed,sans-serif;font-weight:900;font-size:20px;color:var(--text);margin-bottom:2px">#' +
+            (p.num || "\u2014") +
+            " " +
+            p.name +
+            "</div>" +
+            '<div style="font-size:11px;color:var(--text3);margin-bottom:14px">' +
+            (p.pos || "\u2014") +
+            " \u00b7 " +
+            (p.bat || "R") +
+            "/" +
+            (p.throw || "R") +
+            "</div>" +
+            '<div style="font-size:9px;color:var(--text3);font-family:Barlow,sans-serif;font-weight:600;' +
+            'letter-spacing:1.5px;text-transform:uppercase;margin-bottom:10px">Substitute as:</div>';
+
+          var opts = [
+            {
+              label: "\uD83D\uDD04 Pinch Hitter",
+              sub: "PH",
+              desc: "Place in slot " + (slotIdx + 1) + " as PH",
+            },
+            {
+              label: "\uD83C\uDFC3 Pinch Runner",
+              sub: "PR",
+              desc: "Replace a baserunner",
+            },
+            {
+              label: "\uD83D\uDEE1 Defensive Sub",
+              sub: "DEF",
+              desc: "Place in slot " + (slotIdx + 1) + " as DEF",
+            },
+            {
+              label: "\uD83D\uDCCB Set in lineup",
+              sub: "SLOT",
+              desc: "Place in slot " + (slotIdx + 1),
+            },
+          ];
+
+          opts.forEach(function (opt) {
+            var btn = document.createElement("button");
+            btn.style.cssText =
+              "display:flex;flex-direction:column;width:100%;text-align:left;" +
+              "background:var(--surface3);border:1px solid var(--border);border-radius:10px;" +
+              "padding:12px 14px;cursor:pointer;margin-bottom:8px;" +
+              "-webkit-tap-highlight-color:transparent;touch-action:manipulation";
+            btn.innerHTML =
+              '<span style="font-family:Barlow Condensed,sans-serif;font-weight:700;font-size:15px;color:var(--text)">' +
+              opt.label +
+              "</span>" +
+              '<span style="font-size:11px;color:var(--text3);margin-top:2px">' +
+              opt.desc +
+              "</span>";
+            btn.addEventListener("click", function () {
+              overlay.remove();
+              var side = S.isTop ? "away" : "home";
+              var lineup = side === "away" ? S.lineupAway : S.lineupHome;
+
+              if (opt.sub === "PR") {
+                // Base selector uses lmApplySub which needs lineupModalSide
+                lineupModalSide = side;
+                lmShowBaseSelector(p);
+                _mobEditingSlot = null;
+                renderMobLineup();
+              } else {
+                // All other subs go directly into the edited slot
+                lineup[slotIdx] = {
+                  name: p.name,
+                  num: p.num || String(slotIdx + 1),
+                  pos: p.pos || "OF",
+                  hand: p.bat || "R",
+                  isPH: opt.sub === "PH",
+                  isPR: false,
+                  isDEF: opt.sub === "DEF",
+                };
+                _mobEditingSlot = null;
+                renderMobLineup();
+                renderLineup();
+                updateScoreBug();
+                var label =
+                  opt.sub === "PH"
+                    ? " as Pinch Hitter"
+                    : opt.sub === "DEF"
+                    ? " as Defensive Sub"
+                    : "";
+                toast("#" + p.num + " " + p.name + label);
+              }
+            });
+            sheet.appendChild(btn);
+          });
+
+          // Cancel button
+          var cancelBtn = document.createElement("button");
+          cancelBtn.textContent = "Cancel";
+          cancelBtn.style.cssText =
+            "width:100%;text-align:center;background:none;border:1.5px solid var(--border2);" +
+            "border-radius:10px;padding:12px;cursor:pointer;margin-top:4px;" +
+            "font-family:Barlow Condensed,sans-serif;font-weight:700;font-size:15px;" +
+            "color:var(--text3);-webkit-tap-highlight-color:transparent;touch-action:manipulation";
+          cancelBtn.addEventListener("click", function () {
+            overlay.remove();
+          });
+          sheet.appendChild(cancelBtn);
+
+          overlay.appendChild(sheet);
+          document.body.appendChild(overlay);
+        }
+
         // ── MOBILE LINEUP ─────────────────────────────────────────────────
         function renderMobLineup() {
           const wrap = document.getElementById("mob-lineup-content");
@@ -17739,6 +18305,40 @@
                 : "var(--text3)";
 
             if (isEditing) {
+              const rosterBatters = (myTeamRoster || []).filter(
+                (p) =>
+                  !["RHP", "LHP", "P", "UTL/RHP", "C/RHP", "3B/RHP"].includes(
+                    p.pos
+                  )
+              );
+              const rosterPickerHtml =
+                rosterBatters.length > 0
+                  ? `<div style="margin-top:8px;border-top:1px solid var(--border);padding-top:8px">
+                    <div style="font-size:8px;letter-spacing:2px;color:var(--text3);text-transform:uppercase;font-weight:600;margin-bottom:6px">Pick from Roster</div>
+                    <div style="max-height:200px;overflow-y:auto;display:flex;flex-direction:column;gap:3px">
+                      ${rosterBatters
+                        .map(
+                          (p) =>
+                            `<div onclick="mobFillFromRoster('${
+                              p.id
+                            }',${i})" style="display:flex;align-items:center;gap:8px;padding:7px 8px;background:var(--surface3);border:1px solid var(--border);border-radius:6px;cursor:pointer;-webkit-tap-highlight-color:transparent">
+                          <div style="font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:14px;color:var(--accent);width:30px;text-align:right;flex-shrink:0">#${
+                            p.num || "—"
+                          }</div>
+                          <div style="flex:1;min-width:0">
+                            <div style="font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:13px;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${
+                              p.name
+                            }</div>
+                            <div style="font-size:9px;color:var(--text3)">${
+                              p.pos || "—"
+                            } · ${p.bat || "R"}/${p.throw || "R"}</div>
+                          </div>
+                        </div>`
+                        )
+                        .join("")}
+                    </div>
+                  </div>`
+                  : "";
               html += `<div style="background:var(--surface2);border:1px solid var(--border2);border-radius:8px;padding:10px;margin-bottom:6px">
         <div style="font-size:8px;letter-spacing:2px;color:var(--text3);text-transform:uppercase;font-weight:600;margin-bottom:8px">${
           i + 1
@@ -17763,6 +18363,7 @@
           <button onclick="saveMobLineupSlot(${i})" style="background:var(--accent);border:none;border-radius:5px;color:#fff;font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:14px;padding:7px 12px;cursor:pointer">✓</button>
           <button onclick="_mobEditingSlot=null;renderMobLineup()" style="background:none;border:1px solid var(--border);border-radius:5px;color:var(--text3);padding:7px 10px;cursor:pointer">✕</button>
         </div>
+        ${rosterPickerHtml}
       </div>`;
             } else {
               html += `<div style="display:flex;align-items:center;gap:8px;padding:8px 10px;background:${
@@ -22064,7 +22665,7 @@
       <div class="section-title" style="margin-bottom:10px">Game Log</div>
       ${buildPlayerGameLog(teamName, playerName, games)}
     </div>
-  </div>${_rosterSidebar}</div>`;
+  ${_rosterSidebar.mobilePills}</div>${_rosterSidebar.sidebar}</div>`;
           } catch (e) {
             console.error("renderPlayer crashed:", e);
             document.getElementById("hub-content").innerHTML =
@@ -22768,6 +23369,8 @@
               ? getTeamPitchers(teamName, games)
               : getTeamRoster(teamName, games);
 
+          const viewType = type === "pitcher" ? "pitcher" : "player";
+
           const items = players
             .map((p) => {
               const isCurrent = p.name === currentName;
@@ -22778,11 +23381,9 @@
                       p.ab > 0 ? _fmtRate(p.hits / p.ab) : ".---"
                     }`;
               return `<button
-      onclick="showView('${
-        type === "pitcher" ? "pitcher" : "player"
-      }',JSON.stringify({team:'${escAttr(teamName)}',name:'${escAttr(
-                p.name
-              )}'}),true)"
+      onclick="showView('${viewType}',JSON.stringify({team:'${escAttr(
+                teamName
+              )}',name:'${escAttr(p.name)}'}),true)"
       style="width:100%;display:flex;align-items:center;gap:8px;padding:7px 10px;background:${
         isCurrent ? "rgba(204,26,26,.07)" : "transparent"
       };border:none;border-left:3px solid ${
@@ -22811,7 +23412,43 @@
             })
             .join("");
 
-          return `<div style="width:200px;flex-shrink:0;background:var(--surface);border-left:1px solid var(--border);margin:-20px -24px -20px 24px;padding-top:14px;overflow-y:auto;max-height:calc(100vh - 88px);position:sticky;top:0;align-self:flex-start">
+          const pills = players
+            .map((p) => {
+              const isCurrent = p.name === currentName;
+              return `<button
+      onclick="showView('${viewType}',JSON.stringify({team:'${escAttr(
+                teamName
+              )}',name:'${escAttr(p.name)}'}),true)"
+      style="display:inline-flex;align-items:center;gap:5px;padding:6px 10px;background:${
+        isCurrent ? "var(--accent)" : "var(--surface2)"
+      };border:1.5px solid ${
+                isCurrent ? "var(--accent)" : "var(--border)"
+              };border-radius:20px;cursor:pointer;-webkit-tap-highlight-color:transparent;touch-action:manipulation;flex-shrink:0">
+      <span style="font-family:'Share Tech Mono',monospace;font-size:9px;font-weight:700;color:${
+        isCurrent ? "#fff" : "var(--text3)"
+      }">#${escHtml(p.num || "?")}</span>
+      <span style="font-family:'Barlow Condensed',sans-serif;font-weight:${
+        isCurrent ? "800" : "600"
+      };font-size:12px;color:${
+                isCurrent ? "#fff" : "var(--text)"
+              };max-width:80px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escHtml(
+                p.name.split(" ").pop()
+              )}</span>
+    </button>`;
+            })
+            .join("");
+
+          const mobilePills = `<div class="hub-mob-player-nav">
+    <div style="font-size:8px;letter-spacing:2px;color:var(--text3);text-transform:uppercase;font-weight:700;margin-bottom:8px">${escHtml(
+      teamName
+    )} · ${type === "pitcher" ? "Pitchers" : "Batters"}</div>
+    <div style="display:flex;flex-wrap:wrap;gap:6px">${
+      pills ||
+      '<span style="font-size:12px;color:var(--text3)">No players</span>'
+    }</div>
+  </div>`;
+
+          const sidebar = `<div class="hub-roster-sidebar" style="width:200px;flex-shrink:0;background:var(--surface);border-left:1px solid var(--border);margin:-20px -24px -20px 24px;padding-top:14px;overflow-y:auto;max-height:calc(100vh - 88px);position:sticky;top:0;align-self:flex-start">
     <div style="font-size:8px;letter-spacing:2px;color:var(--text3);text-transform:uppercase;font-weight:700;padding:0 10px 8px;border-bottom:1px solid var(--border)">${escHtml(
       teamName
     )} · ${type === "pitcher" ? "Pitchers" : "Batters"}</div>
@@ -22820,6 +23457,8 @@
       '<div style="padding:12px;font-size:12px;color:var(--text3)">No players</div>'
     }
   </div>`;
+
+          return { sidebar, mobilePills };
         }
 
         function getPlayerCareerStats(teamName, playerName, games) {
@@ -23203,7 +23842,7 @@
       </div>
       ${buildPitcherScoutingReport(teamName, pitcherName, games)}
     </div>
-  </div>${_pitcherSidebar}</div>`;
+  ${_pitcherSidebar.mobilePills}</div>${_pitcherSidebar.sidebar}</div>`;
           } catch (e) {
             console.error("renderPitcher crashed:", e);
             document.getElementById("hub-content").innerHTML =
@@ -25611,7 +26250,7 @@
 
           return `<div class="scout-report-page" id="scout-hitter-report" style="padding:16px;background:#fff;font-family:'Barlow Condensed',sans-serif;overflow:hidden;max-width:100%">
   <!-- Header -->
-  <div style="display:flex;align-items:flex-start;justify-content:space-between;border-bottom:3px solid #cc1a1a;padding-bottom:6px;margin-bottom:8px">
+  <div class="scout-header" style="display:flex;align-items:flex-start;justify-content:space-between;border-bottom:3px solid #cc1a1a;padding-bottom:6px;margin-bottom:8px">
     <div>
       <div style="font-family:'Barlow',sans-serif;font-weight:700;font-size:10px;letter-spacing:1px;text-transform:uppercase;color:#cc1a1a;margin-bottom:2px">Hitter Scouting Report</div>
       <div style="font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:24px;color:#111318;line-height:1">#${
@@ -25643,7 +26282,7 @@
   </div>
 
   <!-- Row 1: Production stats + Plate Discipline bars (50/50) -->
-  <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:8px">
+  <div class="scout-r1" style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:8px">
     <div class="scout-section" style="margin-bottom:0">
       <div class="scout-section-title">Production</div>
       <div style="display:grid;grid-template-columns:repeat(6,1fr);gap:5px">
@@ -25703,7 +26342,7 @@
   </div>
 
   <!-- Row 2: Spray | Batted Ball Profile | Field Heat Map | Hot/Cold -->
-  <div style="display:grid;grid-template-columns:1.4fr 1fr 1fr 0.85fr;gap:8px;margin-bottom:8px;align-items:start">
+  <div class="scout-r2" style="display:grid;grid-template-columns:1.4fr 1fr 1fr 0.85fr;gap:8px;margin-bottom:8px;align-items:start">
 
     <!-- Spray chart -->
     <div class="scout-section" style="margin-bottom:0">
@@ -25770,7 +26409,7 @@
 
 
   <!-- Row 3: Count/Situation + vs Pitch Type (50/50) -->
-  <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:8px">
+  <div class="scout-r3" style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:8px">
     <div class="scout-section" style="margin-bottom:0">
       <div class="scout-section-title">Performance by Count / Situation</div>
       <table class="scout-table">
@@ -26348,7 +26987,7 @@
 
           return `<div class="scout-report-page" id="scout-pitcher-report">
   <!-- Header -->
-  <div style="display:flex;align-items:flex-start;justify-content:space-between;border-bottom:3px solid #1a5acc;padding-bottom:10px;margin-bottom:16px">
+  <div class="scout-header" style="display:flex;align-items:flex-start;justify-content:space-between;border-bottom:3px solid #1a5acc;padding-bottom:10px;margin-bottom:16px">
     <div>
       <div style="font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:10px;letter-spacing:3px;text-transform:uppercase;color:#1a5acc;margin-bottom:2px">Pitcher Scouting Report</div>
       <div style="font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:32px;color:#111318;line-height:1">#${
@@ -26369,7 +27008,7 @@
   </div>
 
   <!-- Row 1: Core stats | Outcome Breakdown | Pitch Mix -->
-  <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;margin-bottom:16px">
+  <div class="scout-r1" style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;margin-bottom:16px">
     <div class="scout-section" style="margin-bottom:0">
       <div class="scout-section-title">Core Stats</div>
       <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:5px">
@@ -26429,7 +27068,7 @@
       </table>
     </div>
     <!-- Visual row: Strike% bars | Hot/Cold | FB zone | CB zone | CT zone -->
-    <div style="display:grid;grid-template-columns:minmax(150px,200px) minmax(140px,180px) 1fr 1fr 1fr;gap:10px;align-items:start">
+    <div class="scout-r2" style="display:grid;grid-template-columns:minmax(150px,200px) minmax(140px,180px) 1fr 1fr 1fr;gap:10px;align-items:start">
       <!-- Strike% bars -->
       <div class="scout-section" style="margin-bottom:0">
         <div class="scout-section-title">Strike% by Pitch</div>
@@ -26456,7 +27095,7 @@
   </div>
 
   <!-- Row 3: Count performance + Last 5 -->
-  <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+  <div class="scout-r3" style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
     <div class="scout-section">
       <div class="scout-section-title">Performance by Count</div>
       <table class="scout-table">
@@ -27451,10 +28090,15 @@
             : "No players yet";
           // Show "Use My Team" buttons in the tracker whenever there are players
           ["away", "home"].forEach((side) => {
-            const btn = document.getElementById("use-myteam-" + side + "-btn");
-            if (btn) btn.style.display = total > 0 ? "block" : "none";
-            if (btn && total > 0)
-              btn.textContent = "USE " + teamName.toUpperCase() + " ▸";
+            [
+              "use-myteam-" + side + "-btn",
+              "mob-use-myteam-" + side + "-btn",
+            ].forEach(function (id) {
+              const btn = document.getElementById(id);
+              if (btn) btn.style.display = total > 0 ? "block" : "none";
+              if (btn && total > 0)
+                btn.textContent = "USE " + teamName.toUpperCase() + " ▸";
+            });
           });
           wrap.innerHTML = html;
         }
@@ -28095,10 +28739,15 @@
         function oppRefreshUseButtons() {
           const hasOpps = _opponents && _opponents.length > 0;
           const disp = hasOpps ? "block" : "none";
-          const awayBtn = document.getElementById("use-opp-away-btn");
-          const homeBtn = document.getElementById("use-opp-home-btn");
-          if (awayBtn) awayBtn.style.display = disp;
-          if (homeBtn) homeBtn.style.display = disp;
+          [
+            "use-opp-away-btn",
+            "use-opp-home-btn",
+            "mob-use-opp-away-btn",
+            "mob-use-opp-home-btn",
+          ].forEach(function (id) {
+            const btn = document.getElementById(id);
+            if (btn) btn.style.display = disp;
+          });
         }
 
         // ══════════════════════════════════════════════════════════════════════
