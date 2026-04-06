@@ -11468,7 +11468,7 @@
             .forEach((p) => p.classList.remove("on"));
           currentPanel = null;
           var mt = document.getElementById("mob-tabs");
-          if (mt) mt.style.display = "none";
+          if (mt) mt.style.setProperty("display", "none", "important");
         }
 
         function openPanel(name, skipPrompt) {
@@ -11499,7 +11499,7 @@
             name === "tracker" ? "inline-flex" : "none";
           currentPanel = name;
           var mt = document.getElementById("mob-tabs");
-          if (mt) mt.style.display = name === "tracker" ? "" : "none";
+          if (mt) mt.style.setProperty("display", name === "tracker" ? "flex" : "none", "important");
           if (name === "tracker") {
             // Re-render pitch grid for current active pitcher (or default if none)
             try {
