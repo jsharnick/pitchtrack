@@ -3873,9 +3873,9 @@
           padding: 4px 10px;
         }
 
-        /* ── Mobile bottom tab bar ── */
+        /* ── Mobile bottom tab bar — hidden by default, shown via JS only in tracker ── */
         #mob-tabs {
-          display: flex !important;
+          display: none !important;
           position: absolute;
           bottom: 0;
           left: 0;
@@ -3920,9 +3920,6 @@
         }
 
         /* ── Re-show mobile-only elements (overrides desktop hide) ── */
-        #mob-tabs {
-          display: none;
-        }
         #hub-mobile-bar {
           display: flex !important;
         }
