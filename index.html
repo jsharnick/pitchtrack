@@ -4140,6 +4140,11 @@
           border-color: var(--accent);
           color: var(--accent);
         }
+        .hub-mob-team-btn.mob-ts-selected {
+          background: var(--accent) !important;
+          color: #fff !important;
+          border-color: var(--accent) !important;
+        }
         .hub-mob-team-btn.all {
           border-style: dashed;
         }
@@ -6624,6 +6629,103 @@
               id="hub-mob-teams"
               style="display: flex; gap: 8px; flex-shrink: 0"
             ></div>
+            <button
+              id="mob-ts-select-btn"
+              class="hub-mob-team-btn"
+              onclick="mobTsToggleSelectMode()"
+              style="
+                flex-shrink: 0;
+                margin-left: 4px;
+                -webkit-tap-highlight-color: transparent;
+                touch-action: manipulation;
+              "
+            >
+              Select
+            </button>
+            <!-- Mobile team select action bar -->
+            <div
+              id="mob-ts-action-bar"
+              style="
+                display: none;
+                width: 100%;
+                align-items: center;
+                gap: 8px;
+                padding: 6px 0;
+                flex-wrap: wrap;
+                border-top: 1px solid var(--border);
+                margin-top: 4px;
+              "
+            >
+              <span
+                id="mob-ts-sel-count"
+                style="
+                  font-family: 'Barlow Condensed', sans-serif;
+                  font-weight: 700;
+                  font-size: 13px;
+                  color: var(--text);
+                  flex: 1;
+                "
+                >0 selected</span
+              >
+              <button
+                onclick="mobTsSelectAll()"
+                style="
+                  padding: 4px 10px;
+                  border: 1.5px solid var(--border2);
+                  border-radius: 6px;
+                  background: none;
+                  color: var(--text2);
+                  font-family: 'Barlow Condensed', sans-serif;
+                  font-weight: 700;
+                  font-size: 12px;
+                  cursor: pointer;
+                  -webkit-tap-highlight-color: transparent;
+                  touch-action: manipulation;
+                "
+              >
+                All
+              </button>
+              <button
+                onclick="mobTsSelectNone()"
+                style="
+                  padding: 4px 10px;
+                  border: 1.5px solid var(--border2);
+                  border-radius: 6px;
+                  background: none;
+                  color: var(--text2);
+                  font-family: 'Barlow Condensed', sans-serif;
+                  font-weight: 700;
+                  font-size: 12px;
+                  cursor: pointer;
+                  -webkit-tap-highlight-color: transparent;
+                  touch-action: manipulation;
+                "
+              >
+                None
+              </button>
+              <button
+                id="mob-ts-send-btn"
+                onclick="openSendModal('teams')"
+                disabled
+                style="
+                  padding: 4px 12px;
+                  border: 1.5px solid var(--border2);
+                  border-radius: 6px;
+                  background: none;
+                  color: var(--text3);
+                  font-family: 'Barlow Condensed', sans-serif;
+                  font-weight: 800;
+                  font-size: 12px;
+                  cursor: not-allowed;
+                  opacity: 0.45;
+                  transition: all 0.13s;
+                  -webkit-tap-highlight-color: transparent;
+                  touch-action: manipulation;
+                "
+              >
+                ✉ Send
+              </button>
+            </div>
           </div>
           <div id="hub-sidebar">
             <div
@@ -18880,33 +18982,39 @@
                 return null;
               }
             })();
+            const _mobPillOnclick = `_mobTsSelectMode ? ((_tsSelected.has(this.getAttribute('data-team')) ? _tsSelected.delete(this.getAttribute('data-team')) : _tsSelected.add(this.getAttribute('data-team'))), hubRefreshAll(), _mobTsUpdateBar()) : hubMobNav('team',this.getAttribute('data-team'))`;
             const mobMyTeamBtn =
               _mobMyTeamName && myTeamRoster && myTeamRoster.length > 0
                 ? `<button class="hub-mob-team-btn${
-                    currentView?.type === "team" &&
-                    currentView?.data === _mobMyTeamName
+                    _mobTsSelectMode && _tsSelected.has(_mobMyTeamName)
+                      ? " mob-ts-selected"
+                      : currentView?.type === "team" &&
+                        currentView?.data === _mobMyTeamName
                       ? " active"
                       : ""
                   }" data-team="${escAttr(
                     _mobMyTeamName
-                  )}" onclick="hubMobNav('team',this.getAttribute('data-team'))" style="color:var(--accent);border-color:rgba(204,26,26,.4)">${escHtml(
-                    _mobMyTeamName
-                  )}</button>`
+                  )}" onclick="${_mobPillOnclick}" style="${
+                    _mobTsSelectMode
+                      ? ""
+                      : "color:var(--accent);border-color:rgba(204,26,26,.4)"
+                  }">${escHtml(_mobMyTeamName)}</button>`
                 : "";
             mobTeams.innerHTML =
               mobMyTeamBtn +
               allTeams
                 .filter((t) => t !== _mobMyTeamName)
                 .map((t) => {
+                  const isSelected = _mobTsSelectMode && _tsSelected.has(t);
                   const isActive =
-                    currentView?.type === "team" && currentView?.data === t;
+                    !_mobTsSelectMode &&
+                    currentView?.type === "team" &&
+                    currentView?.data === t;
                   return `<button class="hub-mob-team-btn${
-                    isActive ? " active" : ""
+                    isSelected ? " mob-ts-selected" : isActive ? " active" : ""
                   }" data-team="${escAttr(
                     t
-                  )}" onclick="hubMobNav('team',this.getAttribute('data-team'))">${escHtml(
-                    t
-                  )}</button>`;
+                  )}" onclick="${_mobPillOnclick}">${escHtml(t)}</button>`;
                 })
                 .join("");
           }
@@ -19053,6 +19161,53 @@
             .join("");
 
           list.innerHTML = myTeamEntry + teamRows;
+        }
+
+        // ── Mobile team select mode ──────────────────────────────────────────
+        var _mobTsSelectMode = false;
+
+        function mobTsToggleSelectMode() {
+          _mobTsSelectMode = !_mobTsSelectMode;
+          _tsSelected.clear();
+          var btn = document.getElementById("mob-ts-select-btn");
+          var bar = document.getElementById("mob-ts-action-bar");
+          if (btn) {
+            btn.textContent = _mobTsSelectMode ? "Cancel" : "Select";
+            btn.style.color = _mobTsSelectMode ? "var(--accent)" : "";
+            btn.style.borderColor = _mobTsSelectMode ? "var(--accent)" : "";
+          }
+          if (bar) bar.style.display = _mobTsSelectMode ? "flex" : "none";
+          hubRefreshAll();
+          _mobTsUpdateBar();
+        }
+
+        function _mobTsUpdateBar() {
+          var count = _tsSelected.size;
+          var el = document.getElementById("mob-ts-sel-count");
+          var sendBtn = document.getElementById("mob-ts-send-btn");
+          if (el) el.textContent = count + " selected";
+          if (sendBtn) {
+            sendBtn.disabled = count === 0;
+            sendBtn.style.opacity = count > 0 ? "1" : ".45";
+            sendBtn.style.cursor = count > 0 ? "pointer" : "not-allowed";
+            sendBtn.style.color = count > 0 ? "var(--text)" : "var(--text3)";
+          }
+        }
+
+        function mobTsSelectAll() {
+          var myTN = window._myTeamNameCache || "";
+          if (myTN) _tsSelected.add(myTN);
+          allTeams.forEach(function (t) {
+            _tsSelected.add(t);
+          });
+          hubRefreshAll();
+          _mobTsUpdateBar();
+        }
+
+        function mobTsSelectNone() {
+          _tsSelected.clear();
+          hubRefreshAll();
+          _mobTsUpdateBar();
         }
 
         function hubMobNav(type, data) {
