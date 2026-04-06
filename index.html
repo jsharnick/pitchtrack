@@ -3921,7 +3921,7 @@
 
         /* ── Re-show mobile-only elements (overrides desktop hide) ── */
         #mob-tabs {
-          display: flex !important;
+          display: none;
         }
         #hub-mobile-bar {
           display: flex !important;
@@ -11467,6 +11467,8 @@
             .querySelectorAll(".app-panel")
             .forEach((p) => p.classList.remove("on"));
           currentPanel = null;
+          var mt = document.getElementById("mob-tabs");
+          if (mt) mt.style.display = "none";
         }
 
         function openPanel(name, skipPrompt) {
@@ -11496,6 +11498,8 @@
           document.getElementById("sn-resume-btn").style.display =
             name === "tracker" ? "inline-flex" : "none";
           currentPanel = name;
+          var mt = document.getElementById("mob-tabs");
+          if (mt) mt.style.display = name === "tracker" ? "" : "none";
           if (name === "tracker") {
             // Re-render pitch grid for current active pitcher (or default if none)
             try {
@@ -18186,10 +18190,26 @@
             'letter-spacing:1.5px;text-transform:uppercase;margin-bottom:10px">Substitute as:</div>';
 
           var opts = [
-            { label: "\uD83D\uDD04 Pinch Hitter", sub: "PH",   desc: "Place in slot " + (slotIdx + 1) + " as PH" },
-            { label: "\uD83C\uDFC3 Pinch Runner",  sub: "PR",   desc: "Replace a baserunner" },
-            { label: "\uD83D\uDEE1 Defensive Sub", sub: "DEF",  desc: "Place in slot " + (slotIdx + 1) + " as DEF" },
-            { label: "\uD83D\uDCCB Set in lineup", sub: "SLOT", desc: "Place in slot " + (slotIdx + 1) },
+            {
+              label: "\uD83D\uDD04 Pinch Hitter",
+              sub: "PH",
+              desc: "Place in slot " + (slotIdx + 1) + " as PH",
+            },
+            {
+              label: "\uD83C\uDFC3 Pinch Runner",
+              sub: "PR",
+              desc: "Replace a baserunner",
+            },
+            {
+              label: "\uD83D\uDEE1 Defensive Sub",
+              sub: "DEF",
+              desc: "Place in slot " + (slotIdx + 1) + " as DEF",
+            },
+            {
+              label: "\uD83D\uDCCB Set in lineup",
+              sub: "SLOT",
+              desc: "Place in slot " + (slotIdx + 1),
+            },
           ];
 
           opts.forEach(function (opt) {
@@ -18201,8 +18221,11 @@
               "-webkit-tap-highlight-color:transparent;touch-action:manipulation";
             btn.innerHTML =
               '<span style="font-family:Barlow Condensed,sans-serif;font-weight:700;font-size:15px;color:var(--text)">' +
-              opt.label + "</span>" +
-              '<span style="font-size:11px;color:var(--text3);margin-top:2px">' + opt.desc + "</span>";
+              opt.label +
+              "</span>" +
+              '<span style="font-size:11px;color:var(--text3);margin-top:2px">' +
+              opt.desc +
+              "</span>";
             btn.addEventListener("click", function () {
               overlay.remove();
               var side = S.isTop ? "away" : "home";
@@ -18229,8 +18252,12 @@
                 renderMobLineup();
                 renderLineup();
                 updateScoreBug();
-                var label = opt.sub === "PH" ? " as Pinch Hitter"
-                  : opt.sub === "DEF" ? " as Defensive Sub" : "";
+                var label =
+                  opt.sub === "PH"
+                    ? " as Pinch Hitter"
+                    : opt.sub === "DEF"
+                    ? " as Defensive Sub"
+                    : "";
                 toast("#" + p.num + " " + p.name + label);
               }
             });
@@ -18245,7 +18272,9 @@
             "border-radius:10px;padding:12px;cursor:pointer;margin-top:4px;" +
             "font-family:Barlow Condensed,sans-serif;font-weight:700;font-size:15px;" +
             "color:var(--text3);-webkit-tap-highlight-color:transparent;touch-action:manipulation";
-          cancelBtn.addEventListener("click", function () { overlay.remove(); });
+          cancelBtn.addEventListener("click", function () {
+            overlay.remove();
+          });
           sheet.appendChild(cancelBtn);
 
           overlay.appendChild(sheet);
@@ -23352,9 +23381,9 @@
                       p.ab > 0 ? _fmtRate(p.hits / p.ab) : ".---"
                     }`;
               return `<button
-      onclick="showView('${viewType}',JSON.stringify({team:'${escAttr(teamName)}',name:'${escAttr(
-                p.name
-              )}'}),true)"
+      onclick="showView('${viewType}',JSON.stringify({team:'${escAttr(
+                teamName
+              )}',name:'${escAttr(p.name)}'}),true)"
       style="width:100%;display:flex;align-items:center;gap:8px;padding:7px 10px;background:${
         isCurrent ? "rgba(204,26,26,.07)" : "transparent"
       };border:none;border-left:3px solid ${
@@ -23387,27 +23416,36 @@
             .map((p) => {
               const isCurrent = p.name === currentName;
               return `<button
-      onclick="showView('${viewType}',JSON.stringify({team:'${escAttr(teamName)}',name:'${escAttr(p.name)}'}),true)"
+      onclick="showView('${viewType}',JSON.stringify({team:'${escAttr(
+                teamName
+              )}',name:'${escAttr(p.name)}'}),true)"
       style="display:inline-flex;align-items:center;gap:5px;padding:6px 10px;background:${
         isCurrent ? "var(--accent)" : "var(--surface2)"
       };border:1.5px solid ${
-        isCurrent ? "var(--accent)" : "var(--border)"
-      };border-radius:20px;cursor:pointer;-webkit-tap-highlight-color:transparent;touch-action:manipulation;flex-shrink:0">
+                isCurrent ? "var(--accent)" : "var(--border)"
+              };border-radius:20px;cursor:pointer;-webkit-tap-highlight-color:transparent;touch-action:manipulation;flex-shrink:0">
       <span style="font-family:'Share Tech Mono',monospace;font-size:9px;font-weight:700;color:${
         isCurrent ? "#fff" : "var(--text3)"
       }">#${escHtml(p.num || "?")}</span>
       <span style="font-family:'Barlow Condensed',sans-serif;font-weight:${
         isCurrent ? "800" : "600"
       };font-size:12px;color:${
-        isCurrent ? "#fff" : "var(--text)"
-      };max-width:80px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escHtml(p.name.split(" ").pop())}</span>
+                isCurrent ? "#fff" : "var(--text)"
+              };max-width:80px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escHtml(
+                p.name.split(" ").pop()
+              )}</span>
     </button>`;
             })
             .join("");
 
           const mobilePills = `<div class="hub-mob-player-nav">
-    <div style="font-size:8px;letter-spacing:2px;color:var(--text3);text-transform:uppercase;font-weight:700;margin-bottom:8px">${escHtml(teamName)} · ${type === "pitcher" ? "Pitchers" : "Batters"}</div>
-    <div style="display:flex;flex-wrap:wrap;gap:6px">${pills || '<span style="font-size:12px;color:var(--text3)">No players</span>'}</div>
+    <div style="font-size:8px;letter-spacing:2px;color:var(--text3);text-transform:uppercase;font-weight:700;margin-bottom:8px">${escHtml(
+      teamName
+    )} · ${type === "pitcher" ? "Pitchers" : "Batters"}</div>
+    <div style="display:flex;flex-wrap:wrap;gap:6px">${
+      pills ||
+      '<span style="font-size:12px;color:var(--text3)">No players</span>'
+    }</div>
   </div>`;
 
           const sidebar = `<div class="hub-roster-sidebar" style="width:200px;flex-shrink:0;background:var(--surface);border-left:1px solid var(--border);margin:-20px -24px -20px 24px;padding-top:14px;overflow-y:auto;max-height:calc(100vh - 88px);position:sticky;top:0;align-self:flex-start">
