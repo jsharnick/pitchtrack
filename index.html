@@ -4243,10 +4243,11 @@
           border-radius: 12px;
         }
 
-        /* ── Spray modal: stacked column, field large at bottom ── */
+        /* ── Spray modal: field full-width at top, controls below ── */
         #spray-modal {
           padding: 0 !important;
           overflow-y: auto !important;
+          align-items: flex-start !important;
         }
         #spray-modal > div {
           width: 100% !important;
@@ -4254,31 +4255,38 @@
           min-height: 100%;
           border-radius: 0 !important;
           margin: 0 !important;
-          padding: 12px 12px 20px !important;
+          padding: 10px 10px 24px !important;
           display: flex !important;
           flex-direction: column !important;
-          gap: 10px !important;
+          gap: 8px !important;
         }
-        /* Inner two-col → single column */
-        #spray-modal > div > div[style*="display:flex"] {
+        /* Inner two-col → single column, field first */
+        #spray-two-col {
           flex-direction: column !important;
+          display: flex !important;
         }
-        /* Controls panel: fixed width → full width */
-        #spray-modal > div > div[style*="flex:0 0 180px"] {
+        /* Field wrapper: order 1 so it appears BEFORE controls */
+        #spray-modal div[style*="flex: 1"][style*="min-width"] {
+          order: 1 !important;
+          width: 100% !important;
+        }
+        /* Controls panel: order 2 so it appears AFTER field */
+        #spray-controls {
+          order: 2 !important;
           flex: none !important;
           width: 100% !important;
         }
-        /* Ball type buttons: 2×3 grid for easier tapping */
+        /* Ball type buttons: 2-col grid */
         #ball-type-grid {
           display: grid !important;
           grid-template-columns: 1fr 1fr !important;
-          gap: 7px !important;
+          gap: 6px !important;
         }
         .spray-type-btn {
-          padding: 12px 8px !important;
+          padding: 11px 8px !important;
           font-size: 14px !important;
         }
-        /* Field: full width, tall enough to tap precisely */
+        /* Field: full width */
         #spray-field {
           width: 100% !important;
           height: auto !important;
@@ -4289,6 +4297,18 @@
         }
         #spray-field-hint {
           display: none !important;
+        }
+        /* Quality + submit buttons: side by side on mobile */
+        #hard-hit-row {
+          width: 100% !important;
+        }
+        /* Log Play + Skip: row layout */
+        #spray-submit-row {
+          flex-direction: row !important;
+          margin-top: 0 !important;
+        }
+        #spray-submit-row > button {
+          flex: 1 !important;
         }
 
         .sm-box {
@@ -9010,9 +9030,13 @@
           </button>
         </div>
         <!-- Two-column layout: controls left, field right -->
-        <div style="display: flex; gap: 16px; align-items: flex-start">
+        <div
+          id="spray-two-col"
+          style="display: flex; gap: 16px; align-items: flex-start"
+        >
           <!-- Left: ball type + hard hit + submit -->
           <div
+            id="spray-controls"
             style="
               flex: 0 0 180px;
               display: flex;
@@ -9148,6 +9172,7 @@
             </div>
             <!-- Submit -->
             <div
+              id="spray-submit-row"
               style="
                 display: flex;
                 flex-direction: column;
