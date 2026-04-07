@@ -20296,6 +20296,11 @@
             const { s, isPitcher } = sd;
             const hasBat = s.ab > 0;
             const hasPit = s.pd && s.pd.pitches > 0;
+            // For pitchers, prefer pd.num (from pitcher data) over s.num (from batter data)
+            const displayNum = isPitcher
+              ? (s.pd && s.pd.num) || (s.num !== "—" ? s.num : null) || "—"
+              : s.num || "—";
+            const numColor = isPitcher ? "var(--blue)" : "var(--accent)";
             const badge = isPitcher
               ? s.pos && s.pos !== "—"
                 ? escHtml(s.pos)
@@ -20334,7 +20339,9 @@
             }
             return `<div class="cmp-slot cmp-slot-filled">
       <div class="cmp-slot-toprow">
-        <div class="cmp-slot-num">#${escHtml(s.num || "—")}</div>
+        <div class="cmp-slot-num" style="color:${numColor}">#${escHtml(
+              displayNum
+            )}</div>
         <div class="cmp-slot-badge">${badge}</div>
       </div>
       <div class="cmp-slot-name">${escHtml(s.name)}</div>
@@ -20464,7 +20471,7 @@
                   `<div class="cmp-picker-player-row" onclick="comparePick('${escAttr(
                     team
                   )}','${escAttr(p.name)}',true)">
-                <div class="cmp-picker-player-num">#${escHtml(
+                <div class="cmp-picker-player-num" style="color:var(--blue)">#${escHtml(
                   p.num || "—"
                 )}</div>
                 <div class="cmp-picker-player-info">
