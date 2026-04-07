@@ -4633,6 +4633,41 @@
         }
       }
 
+      /* ══ Recent filter button ════════════════════════════════════════ */
+      .recent-filter-btn {
+        font-family: "Barlow Condensed", sans-serif;
+        font-weight: 700;
+        font-size: 11px;
+        letter-spacing: 1.5px;
+        text-transform: uppercase;
+        padding: 5px 14px;
+        border-radius: 20px;
+        border: 1.5px solid var(--border2);
+        background: none;
+        color: var(--text3);
+        cursor: pointer;
+        white-space: nowrap;
+        transition: all 0.14s;
+        -webkit-tap-highlight-color: transparent;
+        touch-action: manipulation;
+        flex-shrink: 0;
+      }
+      .recent-filter-btn:hover {
+        color: var(--text2);
+        border-color: var(--text3);
+      }
+      .recent-filter-btn.rfb-active {
+        background: var(--accent);
+        color: #fff !important;
+        border-color: var(--accent) !important;
+      }
+      @media (max-width: 768px) {
+        .recent-filter-btn {
+          font-size: 10px;
+          padding: 4px 10px;
+        }
+      }
+
       /* ══ Player Comparison ══════════════════════════════════════════ */
       .cmp-slots {
         display: flex;
@@ -20335,6 +20370,19 @@
             : battingSection + pitchSection;
         }
 
+        function toggleRecentFilter() {
+          _recentFilter = !_recentFilter;
+          const v = currentView;
+          if (v && v.type === "pitcher") {
+            renderPitcher(v.data.team, v.data.name);
+            if (_lastPitcherTab)
+              setTimeout(() => pitcherTab(_lastPitcherTab), 0);
+          } else if (v && v.type === "player") {
+            renderPlayer(v.data.team, v.data.name);
+            if (_lastPlayerTab) setTimeout(() => playerTab(_lastPlayerTab), 0);
+          }
+        }
+
         function renderCompare() {
           const c = document.getElementById("hub-content");
           const allSlotDefs = [_cmpSlot1, _cmpSlot2, _cmpSlot3];
@@ -20586,6 +20634,7 @@
         // ===== VIEWS =====
         let _lastPlayerTab = "spray";
         let _lastPitcherTab = "zone";
+        let _recentFilter = false; // toggles last-3-games (pitcher) / last-5-games (hitter) filter
         let _cmpSlot1 = null; // {team, name, isPitcher} or null
         let _cmpSlot2 = null;
         let _cmpSlot3 = null;
@@ -20615,6 +20664,8 @@
           document.getElementById("hub-welcome").style.display = "none";
           document.getElementById("hub-content").style.display = "block";
           renderSidebar();
+          // Reset recent filter when navigating to a new player/pitcher
+          if (type === "player" || type === "pitcher") _recentFilter = false;
           if (type === "games") renderAllGames();
           else if (type === "team") renderTeam(data);
           else if (type === "player") {
@@ -24078,7 +24129,19 @@
 
         function renderPlayer(teamName, playerName) {
           try {
-            const games = getTeamGames(teamName);
+            const _allTeamGames = getTeamGames(teamName);
+            const games = _recentFilter
+              ? (() => {
+                  const names =
+                    _nameAliases[playerName] || new Set([playerName]);
+                  return [..._allTeamGames]
+                    .sort((a, b) => b.date.localeCompare(a.date))
+                    .filter((g) =>
+                      (g.pitchLog || []).some((p) => names.has(p.batter))
+                    )
+                    .slice(0, 5);
+                })()
+              : _allTeamGames;
             const stats = getPlayerCareerStats(teamName, playerName, games);
             const allPitches = getPlayerPitches(teamName, playerName, games);
 
@@ -24187,6 +24250,18 @@
     </div>
 
     <!-- Analysis Tabs -->
+    <div class="scout-print-hide" style="display:flex;justify-content:flex-end;align-items:center;gap:10px;margin-bottom:8px">
+      ${
+        _recentFilter
+          ? `<span style="font-family:'Barlow Condensed',sans-serif;font-size:11px;letter-spacing:1px;color:var(--text3);text-transform:uppercase">Showing last 5 games</span>`
+          : ""
+      }
+      <button class="recent-filter-btn${
+        _recentFilter ? " rfb-active" : ""
+      }" onclick="toggleRecentFilter()">
+        ${_recentFilter ? "⏱ Last 5 Games" : "⏱ Filter Recent"}
+      </button>
+    </div>
     <div class="tab-row" id="player-tab-row">
       <div class="tab active" onclick="playerTab('spray')">Spray Chart</div>
       <div class="tab" onclick="playerTab('zone')">Pitch Zone</div>
@@ -25214,7 +25289,22 @@
         // ===== PITCHER DETAIL VIEW =====
         function renderPitcher(teamName, pitcherName) {
           try {
-            const games = getTeamGames(teamName);
+            const _allTeamGames = getTeamGames(teamName);
+            const games = _recentFilter
+              ? (() => {
+                  const names =
+                    _nameAliases[pitcherName] || new Set([pitcherName]);
+                  return [..._allTeamGames]
+                    .sort((a, b) => b.date.localeCompare(a.date))
+                    .filter((g) =>
+                      (g.pitchLog || []).some(
+                        (p) =>
+                          p.pitcherTeam === teamName && names.has(p.pitcher)
+                      )
+                    )
+                    .slice(0, 3);
+                })()
+              : _allTeamGames;
             const allPitches = getPitcherPitches(teamName, pitcherName, games);
 
             let career = {
@@ -25391,6 +25481,18 @@
       <div class="stat-card"><div class="stat-card-val">${maxVel}</div><div class="stat-card-lbl">Max Velo</div></div>
     </div>
 
+    <div class="scout-print-hide" style="display:flex;justify-content:flex-end;align-items:center;gap:10px;margin-bottom:8px">
+      ${
+        _recentFilter
+          ? `<span style="font-family:'Barlow Condensed',sans-serif;font-size:11px;letter-spacing:1px;color:var(--text3);text-transform:uppercase">Showing last 3 appearances</span>`
+          : ""
+      }
+      <button class="recent-filter-btn${
+        _recentFilter ? " rfb-active" : ""
+      }" onclick="toggleRecentFilter()">
+        ${_recentFilter ? "⏱ Last 3 Games" : "⏱ Filter Recent"}
+      </button>
+    </div>
     <div class="tab-row" id="pitcher-tab-row">
       <div class="tab active" onclick="pitcherTab('zone')">Pitch Zone</div>
       <div class="tab" onclick="pitcherTab('mix')">Pitch Mix</div>
@@ -28597,6 +28699,34 @@
             .slice(0, 3)
             .map(([t]) => t);
           // top3Zones inlined in layout below
+
+          // Recent 50 pitches per type — only when NOT in recent-filter mode (filter already limits data)
+          const _recent50HTML = (() => {
+            if (top3Types.length === 0 || _recentFilter) return "";
+            const sorted = [...allPitches].sort((a, b) =>
+              (b.gameDate || "").localeCompare(a.gameDate || "")
+            );
+            const cols = top3Types
+              .map((t) => {
+                const r50 = sorted
+                  .filter((p) => p.pitchType === t)
+                  .slice(0, 50);
+                return `<div class="scout-section" style="margin-bottom:0">
+                <div class="scout-section-title" style="color:${
+                  typeColors[t] || "#8a909e"
+                }">${t} Last 50 · ${r50.length}P</div>
+                ${buildPitchZoneSVG(r50, 200, 185)}
+              </div>`;
+              })
+              .join("");
+            return `<div class="scout-section" style="margin:6px 0 4px;padding-top:6px;border-top:1px solid var(--border)">
+                <div class="scout-section-title" style="color:var(--text2)">Recent Pitch Locations · Last 50 Per Type</div>
+              </div>
+              <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:10px">
+                ${cols}
+              </div>`;
+          })();
+
           // Strike% by type bars
           const strBars = Object.entries(byType)
             .sort((a, b) => b[1].total - a[1].total)
@@ -28733,6 +28863,7 @@
         .join("")}
     </div>
   </div>
+  <div class="scout-print-hide">${_recent50HTML}</div>
 
   <!-- Row 3: Count performance + Last 5 -->
   <div class="scout-r3" style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
