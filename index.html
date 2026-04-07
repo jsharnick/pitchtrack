@@ -688,6 +688,8 @@
         white-space: nowrap;
         line-height: 1.2;
         box-shadow: 0 0 6px rgba(245, 200, 66, 0.5);
+        text-align: center;
+        min-width: 44px;
       }
       .fpos-btn:hover,
       .fpos-btn.selected {
@@ -9601,6 +9603,7 @@
           <!-- LF -->
           <button
             class="fpos-btn"
+            data-pos="LF"
             onclick="_fielderSelect('LF')"
             style="
               position: absolute;
@@ -9614,6 +9617,7 @@
           <!-- CF -->
           <button
             class="fpos-btn"
+            data-pos="CF"
             onclick="_fielderSelect('CF')"
             style="
               position: absolute;
@@ -9627,6 +9631,7 @@
           <!-- RF -->
           <button
             class="fpos-btn"
+            data-pos="RF"
             onclick="_fielderSelect('RF')"
             style="
               position: absolute;
@@ -9640,6 +9645,7 @@
           <!-- 3B -->
           <button
             class="fpos-btn"
+            data-pos="3B"
             onclick="_fielderSelect('3B')"
             style="
               position: absolute;
@@ -9653,6 +9659,7 @@
           <!-- SS -->
           <button
             class="fpos-btn"
+            data-pos="SS"
             onclick="_fielderSelect('SS')"
             style="
               position: absolute;
@@ -9666,6 +9673,7 @@
           <!-- 2B -->
           <button
             class="fpos-btn"
+            data-pos="2B"
             onclick="_fielderSelect('2B')"
             style="
               position: absolute;
@@ -9679,6 +9687,7 @@
           <!-- 1B -->
           <button
             class="fpos-btn"
+            data-pos="1B"
             onclick="_fielderSelect('1B')"
             style="
               position: absolute;
@@ -9692,6 +9701,7 @@
           <!-- P -->
           <button
             class="fpos-btn"
+            data-pos="P"
             onclick="_fielderSelect('P')"
             style="
               position: absolute;
@@ -9705,6 +9715,7 @@
           <!-- C -->
           <button
             class="fpos-btn"
+            data-pos="C"
             onclick="_fielderSelect('C')"
             style="
               position: absolute;
@@ -17564,7 +17575,20 @@
             S._lastFielder = fielder || null;
             S._lastScoreStr = scoreStr || null;
             // Track fielding stats: PO on the fielder who recorded the out
-            if (fielder) _trackFielding(fielder, "po");
+            // For ground outs/sac bunts the play typically ends at 1B — credit
+            // an assist to the fielder who fielded it and a PO to the 1B,
+            // unless the fielder IS the 1B (unassisted putout).
+            if (fielder) {
+              if (
+                (outcome === "groundout" || outcome === "sacbunt") &&
+                fielder !== "1B"
+              ) {
+                _trackFielding(fielder, "a"); // fielder gets the assist
+                _trackFielding("1B", "po"); // 1B gets the putout
+              } else {
+                _trackFielding(fielder, "po"); // all other outs: straight PO
+              }
+            }
             updatePlayBlurb(
               outcome,
               pitchType,
@@ -18042,6 +18066,31 @@
           {
             const _cp = activePitcher();
             if (_cp) _cp.outs = (_cp.outs || 0) + 1;
+          }
+
+          // Track fielding stats for the second out of the double play.
+          // The relay/receiving fielder at the base where the runner was retired
+          // gets the putout; the first fielder (already credited with an assist or
+          // PO on the batter out) also gets an assist on this throw.
+          // Conventional DP relay positions:
+          //   runner retired at 2nd → 2B or SS takes the throw → credit 2B/SS PO
+          //   runner retired at 3rd → 3B takes the throw → credit 3B PO
+          //   runner retired at 1st → 1B takes the throw → credit 1B PO
+          //   runner retired at home → C takes the throw → credit C PO
+          const dpRelayPos = {
+            "1st": "1B",
+            "2nd": "SS", // most common; SS covers 2B on 4-6-3 / 6-4-3 style
+            "3rd": "3B",
+            home: "C",
+          };
+          const relayPos = dpRelayPos[retiredBase];
+          if (relayPos) {
+            // The original fielder (S._lastFielder from the batter out) gets an assist
+            if (S._lastFielder && S._lastFielder !== relayPos) {
+              _trackFielding(S._lastFielder, "a");
+            }
+            // The relay man at the base gets the putout
+            _trackFielding(relayPos, "po");
           }
 
           const batter = currentBatter()?.name || "Batter";
@@ -26501,10 +26550,32 @@
         function openFielderModal(outcome, logLabel, batter, callback) {
           _fielderCallback = callback;
           _fielderContext = { outcome, logLabel, batter };
-          // Reset button states
-          document
-            .querySelectorAll(".fpos-btn")
-            .forEach((b) => b.classList.remove("selected"));
+
+          // Build a position → player name map from the current defensive lineup
+          const isHomeDefending = S.isTop;
+          const defLineup = isHomeDefending ? S.lineupHome : S.lineupAway;
+          const posToPlayer = {};
+          defLineup.forEach((p) => {
+            if (p.pos) posToPlayer[p.pos.toUpperCase()] = p.name;
+          });
+          // Pitcher comes from the active pitcher list, not the batting lineup
+          const pitcher = activePitcher();
+          if (pitcher) posToPlayer["P"] = pitcher.name;
+
+          // Annotate every position button with the player name
+          document.querySelectorAll(".fpos-btn").forEach((btn) => {
+            btn.classList.remove("selected");
+            const pos =
+              btn.getAttribute("data-pos") ||
+              btn.textContent.trim().toUpperCase();
+            const name = posToPlayer[pos];
+            if (name) {
+              btn.innerHTML = `<span style="font-size:13px;font-weight:900;letter-spacing:1px">${pos}</span><br><span style="font-size:9px;font-weight:600;letter-spacing:0;opacity:0.85;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:56px;display:block">${name}</span>`;
+            } else {
+              btn.innerHTML = `<span style="font-size:13px;font-weight:900;letter-spacing:1px">${pos}</span>`;
+            }
+          });
+
           qs("fielder-title").textContent = "Who made the play?";
           qs("fielder-sub").textContent = `${logLabel} — ${batter}`;
           qs("fielder-modal").style.display = "flex";
@@ -26586,21 +26657,35 @@
           if (!pos) return;
           // Defensive team: if top half (away bats), home team defends
           const isHomeDefending = S.isTop;
-          const lineup = isHomeDefending ? S.lineupHome : S.lineupAway;
           const teamName = isHomeDefending
             ? qs("home-name-input")?.value || "HOME"
             : qs("away-name-input")?.value || "AWAY";
-          // Find player at that position
-          const player = lineup.find(
-            (p) => (p.pos || "").toUpperCase() === (pos || "").toUpperCase()
-          );
-          if (!player) return;
-          const key = teamName + "::" + player.name;
+
+          let playerName, playerPos;
+
+          if (pos.toUpperCase() === "P") {
+            // Pitcher is tracked in pitchersHome/pitchersAway, not in the batting lineup
+            const pitcher = activePitcher();
+            if (!pitcher) return;
+            playerName = pitcher.name;
+            playerPos = "P";
+          } else {
+            // Find the player currently listed at this position in the defensive lineup
+            const lineup = isHomeDefending ? S.lineupHome : S.lineupAway;
+            const player = lineup.find(
+              (p) => (p.pos || "").toUpperCase() === pos.toUpperCase()
+            );
+            if (!player) return;
+            playerName = player.name;
+            playerPos = player.pos || pos;
+          }
+
+          const key = teamName + "::" + playerName;
           if (!S.fieldingStats[key])
             S.fieldingStats[key] = {
-              name: player.name,
+              name: playerName,
               team: teamName,
-              pos,
+              pos: playerPos,
               po: 0,
               a: 0,
               e: 0,
