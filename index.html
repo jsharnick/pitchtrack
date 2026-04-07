@@ -4610,6 +4610,308 @@
           border-top: none !important;
         }
       }
+
+      /* ══ Player Comparison ══════════════════════════════════════════ */
+      .cmp-slots {
+        display: flex;
+        gap: 10px;
+        margin-bottom: 20px;
+        align-items: stretch;
+      }
+      .cmp-slot {
+        flex: 1;
+        background: var(--surface2);
+        border-radius: 10px;
+        padding: 14px 14px 10px;
+        text-align: center;
+        border: 2px solid var(--border);
+        cursor: pointer;
+        transition: border-color 0.14s;
+        min-width: 0;
+        -webkit-tap-highlight-color: transparent;
+        touch-action: manipulation;
+        display: flex;
+        flex-direction: column;
+      }
+      .cmp-slot:hover {
+        border-color: var(--border2);
+      }
+      .cmp-slot.cmp-slot-filled {
+        cursor: default;
+      }
+      .cmp-slot.cmp-slot-filled:hover {
+        border-color: var(--border);
+      }
+      .cmp-slot-toprow {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 7px;
+      }
+      .cmp-slot-num {
+        font-family: "Barlow Condensed", sans-serif;
+        font-weight: 900;
+        font-size: 24px;
+        color: var(--accent);
+        line-height: 1;
+      }
+      .cmp-slot-badge {
+        font-family: "Barlow Condensed", sans-serif;
+        font-weight: 700;
+        font-size: 9px;
+        letter-spacing: 1.5px;
+        text-transform: uppercase;
+        color: var(--text3);
+        border: 1px solid var(--border2);
+        border-radius: 3px;
+        padding: 1px 4px;
+      }
+      .cmp-slot-name {
+        font-family: "Barlow Condensed", sans-serif;
+        font-weight: 900;
+        font-size: 15px;
+        color: var(--text);
+        margin-top: 3px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+      .cmp-slot-team {
+        font-size: 9px;
+        color: var(--text3);
+        letter-spacing: 1.5px;
+        text-transform: uppercase;
+        margin-top: 1px;
+        margin-bottom: 10px;
+      }
+      .cmp-slot-stats-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 5px 8px;
+        margin-top: auto;
+        text-align: center;
+      }
+      .cmp-mini-stat {
+        background: var(--surface);
+        border-radius: 5px;
+        padding: 5px 4px 4px;
+      }
+      .cmp-mini-val {
+        font-family: "Barlow Condensed", sans-serif;
+        font-weight: 700;
+        font-size: 17px;
+        color: var(--text);
+        line-height: 1;
+      }
+      .cmp-mini-lbl {
+        font-family: "Barlow Condensed", sans-serif;
+        font-size: 10px;
+        letter-spacing: 0.5px;
+        text-transform: uppercase;
+        color: var(--text3);
+        margin-top: 1px;
+      }
+      .cmp-slot-meta {
+        font-size: 9px;
+        color: var(--text3);
+        margin-top: 8px;
+        letter-spacing: 1px;
+        text-transform: uppercase;
+      }
+      .cmp-slot-change {
+        font-size: 10px;
+        color: var(--text3);
+        margin-top: 6px;
+        cursor: pointer;
+        text-decoration: underline;
+        -webkit-tap-highlight-color: transparent;
+        touch-action: manipulation;
+      }
+      /* Stat table */
+      .cmp-stat-section-head {
+        font-family: "Barlow Condensed", sans-serif;
+        font-weight: 700;
+        font-size: 10px;
+        letter-spacing: 2px;
+        text-transform: uppercase;
+        color: var(--text3);
+        padding: 10px 0 4px;
+        border-bottom: 1px solid var(--border);
+        margin-bottom: 0;
+      }
+      .cmp-stat-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-bottom: 8px;
+        table-layout: fixed;
+      }
+      .cmp-stat-table th {
+        font-family: "Barlow Condensed", sans-serif;
+        font-weight: 700;
+        font-size: 10px;
+        letter-spacing: 1.5px;
+        text-transform: uppercase;
+        color: var(--text3);
+        padding: 5px 6px;
+        text-align: center;
+        border-bottom: 1.5px solid var(--border);
+      }
+      .cmp-stat-table th:first-child {
+        text-align: left;
+        padding-left: 0;
+      }
+      .cmp-stat-table td {
+        font-family: "Barlow Condensed", sans-serif;
+        font-weight: 700;
+        font-size: 14px;
+        color: var(--text2);
+        text-align: center;
+        padding: 6px 6px;
+        border-bottom: 1px solid var(--border);
+        vertical-align: middle;
+      }
+      .cmp-stat-table td:first-child {
+        font-size: 10px;
+        letter-spacing: 1.2px;
+        text-transform: uppercase;
+        color: var(--text3);
+        text-align: left;
+        padding-left: 0;
+        font-weight: 600;
+        line-height: 1.3;
+      }
+      /* Win cell: red backglow */
+      td.cmp-val.win {
+        background: rgba(204, 26, 26, 0.12) !important;
+        color: var(--accent) !important;
+        font-weight: 900 !important;
+      }
+      /* Percentile badge inside cell */
+      .cmp-pctile {
+        font-family: "Barlow Condensed", sans-serif;
+        font-size: 9px;
+        font-weight: 700;
+        letter-spacing: 0.5px;
+        color: var(--text3);
+        opacity: 0.8;
+        margin-top: 1px;
+        line-height: 1;
+      }
+      td.cmp-val.win .cmp-pctile {
+        color: var(--accent);
+        opacity: 0.7;
+      }
+      /* Comparison picker sheet */
+      #cmp-picker-sheet {
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        background: var(--surface);
+        border-radius: 16px 16px 0 0;
+        max-height: 80vh;
+        overflow-y: auto;
+        padding: 16px 16px calc(16px + env(safe-area-inset-bottom, 0px));
+        z-index: 9999;
+        transform: translateY(100%);
+        transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+      }
+      #cmp-picker-sheet.open {
+        transform: translateY(0);
+      }
+      .cmp-picker-team-btn {
+        padding: 5px 13px;
+        border: 1.5px solid var(--border2);
+        border-radius: 20px;
+        background: none;
+        color: var(--text2);
+        font-family: "Barlow Condensed", sans-serif;
+        font-weight: 700;
+        font-size: 13px;
+        cursor: pointer;
+        transition: all 0.13s;
+        -webkit-tap-highlight-color: transparent;
+        touch-action: manipulation;
+        white-space: nowrap;
+      }
+      .cmp-picker-team-btn.active {
+        background: var(--accent);
+        color: #fff !important;
+        border-color: var(--accent) !important;
+      }
+      .cmp-picker-player-row {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 10px 0;
+        border-bottom: 1px solid var(--border);
+        cursor: pointer;
+        -webkit-tap-highlight-color: transparent;
+        touch-action: manipulation;
+        transition: background 0.1s;
+      }
+      .cmp-picker-player-row:active {
+        background: rgba(255, 255, 255, 0.05);
+      }
+      .cmp-picker-player-num {
+        font-family: "Barlow Condensed", sans-serif;
+        font-weight: 900;
+        font-size: 14px;
+        color: var(--accent);
+        min-width: 28px;
+        text-align: center;
+      }
+      .cmp-picker-player-info {
+        flex: 1;
+        min-width: 0;
+      }
+      .cmp-picker-player-name {
+        font-family: "Barlow Condensed", sans-serif;
+        font-weight: 700;
+        font-size: 15px;
+        color: var(--text);
+      }
+      .cmp-picker-player-meta {
+        font-size: 10px;
+        color: var(--text3);
+        letter-spacing: 1px;
+        text-transform: uppercase;
+      }
+      .cmp-picker-role-label {
+        font-family: "Barlow Condensed", sans-serif;
+        font-weight: 700;
+        font-size: 10px;
+        letter-spacing: 2px;
+        text-transform: uppercase;
+        color: var(--text3);
+        padding: 8px 0 4px;
+        border-bottom: 1px solid var(--border);
+        margin-bottom: 0;
+      }
+      @media (min-width: 769px) {
+        #cmp-picker-sheet {
+          position: fixed;
+          top: 50%;
+          left: 50%;
+          transform: translate(-50%, -55%);
+          max-height: 65vh;
+          border-radius: 12px;
+          width: 420px;
+          bottom: auto;
+          padding: 20px;
+        }
+        #cmp-picker-sheet.open {
+          transform: translate(-50%, -50%);
+        }
+      }
+      @media (max-width: 768px) {
+        .cmp-slots {
+          flex-wrap: wrap;
+        }
+        .cmp-slot {
+          min-width: calc(50% - 5px);
+        }
+      }
     </style>
   </head>
   <body>
@@ -6642,6 +6944,19 @@
             >
               Select
             </button>
+            <button
+              id="hub-mob-compare"
+              class="hub-mob-team-btn"
+              onclick="hubMobNav('compare')"
+              style="
+                flex-shrink: 0;
+                margin-left: 4px;
+                -webkit-tap-highlight-color: transparent;
+                touch-action: manipulation;
+              "
+            >
+              ⚖ Compare
+            </button>
             <!-- Mobile team select action bar -->
             <div
               id="mob-ts-action-bar"
@@ -6929,6 +7244,31 @@
                 <div>
                   <div class="team-name">Game History</div>
                   <div class="team-meta">All saved games</div>
+                </div>
+              </button>
+              <button
+                class="team-btn"
+                id="btn-compare-players"
+                onclick="showView('compare')"
+                style="
+                  -webkit-tap-highlight-color: transparent;
+                  touch-action: manipulation;
+                "
+              >
+                <div
+                  class="team-icon"
+                  style="
+                    font-size: 14px;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                  "
+                >
+                  ⚖
+                </div>
+                <div>
+                  <div class="team-name">Compare Players</div>
+                  <div class="team-meta">Side-by-side stats</div>
                 </div>
               </button>
             </div>
@@ -19024,6 +19364,12 @@
               "active",
               currentView?.type === "games" || !currentView?.type
             );
+          const cmpMobBtn = document.getElementById("hub-mob-compare");
+          if (cmpMobBtn)
+            cmpMobBtn.classList.toggle(
+              "active",
+              currentView?.type === "compare"
+            );
 
           // Desktop sidebar
           const myTeamName = (function () {
@@ -19225,9 +19571,945 @@
           }
         }
 
+        // ===== PLAYER COMPARISON =====
+
+        // ── League-wide percentile tables (built at render time) ──────────────
+        function _cmpBuildLeaguePctiles(minPA, minPitches) {
+          minPA = minPA || 5;
+          minPitches = minPitches || 10;
+          const b = {
+            avg: [],
+            obp: [],
+            slg: [],
+            ops: [],
+            kpct: [],
+            bbpct: [],
+            iso: [],
+            babip: [],
+          };
+          const p = {
+            strikePct: [],
+            kBF: [],
+            bbBF: [],
+            whiffRate: [],
+            chaseRate: [],
+          };
+
+          const myTN = (function () {
+            try {
+              const ni = document.getElementById("myteam-name-input");
+              if (ni && ni.value.trim()) return ni.value.trim();
+              return window._myTeamNameCache || null;
+            } catch (e) {
+              return null;
+            }
+          })();
+          const teams = [...(allTeams || [])];
+          if (
+            myTN &&
+            myTeamRoster &&
+            myTeamRoster.length > 0 &&
+            !teams.includes(myTN)
+          )
+            teams.push(myTN);
+
+          teams.forEach((team) => {
+            const games = getTeamGames(team);
+            // batters
+            getTeamRoster(team, games).forEach((r) => {
+              const pa =
+                r.pa != null ? r.pa : (r.ab || 0) + (r.bb || 0) + (r.hbp || 0);
+              if (pa < minPA) return;
+              const tb =
+                (r.hits || 0) -
+                (r.doubles || 0) -
+                (r.triples || 0) -
+                (r.hr || 0) +
+                (r.doubles || 0) * 2 +
+                (r.triples || 0) * 3 +
+                (r.hr || 0) * 4;
+              if (r.ab > 0) {
+                b.avg.push(r.hits / r.ab);
+                b.slg.push(tb / r.ab);
+                b.iso.push((tb - (r.hits || 0)) / r.ab);
+              }
+              if (pa > 0) {
+                b.obp.push(((r.hits || 0) + (r.bb || 0) + (r.hbp || 0)) / pa);
+                b.kpct.push((r.k || 0) / pa);
+                b.bbpct.push((r.bb || 0) / pa);
+              }
+              const obp2 =
+                  pa > 0
+                    ? ((r.hits || 0) + (r.bb || 0) + (r.hbp || 0)) / pa
+                    : null,
+                slg2 = r.ab > 0 ? tb / r.ab : null;
+              if (obp2 !== null && slg2 !== null) b.ops.push(obp2 + slg2);
+              const bd = r.ab - (r.k || 0) - (r.hr || 0);
+              if (bd > 0) b.babip.push(((r.hits || 0) - (r.hr || 0)) / bd);
+            });
+            // pitchers — aggregate pitch-log for whiff/chase
+            getTeamPitchers(team, games).forEach((pt) => {
+              if (pt.pitches < minPitches) return;
+              p.strikePct.push(pt.strikes / pt.pitches);
+              if (pt.bf > 0) {
+                p.kBF.push(pt.k / pt.bf);
+                p.bbBF.push(pt.bb / pt.bf);
+              }
+            });
+          });
+
+          const CONTACT_ALL = [
+            "single",
+            "double",
+            "triple",
+            "homerun",
+            "groundout",
+            "flyout",
+            "lineout",
+            "sacfly",
+            "sacbunt",
+            "error",
+          ];
+          const SWING_ALL = ["strike-swinging", "foul", ...CONTACT_ALL];
+          const IN_ZONE = (q) =>
+            q.pitchX != null &&
+            q.pitchX >= 31 &&
+            q.pitchX <= 69 &&
+            q.pitchY != null &&
+            q.pitchY >= 30.9 &&
+            q.pitchY <= 69.1;
+          // collect whiff/chase from pitch logs for all pitchers (heavy but done once)
+          teams.forEach((team) => {
+            const games = getTeamGames(team);
+            getTeamPitchers(team, games).forEach((pt) => {
+              if (pt.pitches < minPitches) return;
+              const pp2 = getPitcherPitches(team, pt.name, games);
+              const sw = pp2.filter((q) =>
+                SWING_ALL.includes(q.outcome)
+              ).length;
+              const wh = pp2.filter(
+                (q) => q.outcome === "strike-swinging"
+              ).length;
+              const oo = pp2.filter((q) => !IN_ZONE(q));
+              const oos = oo.filter((q) =>
+                SWING_ALL.includes(q.outcome)
+              ).length;
+              if (sw > 0) p.whiffRate.push(wh / sw);
+              if (oo.length > 0) p.chaseRate.push(oos / oo.length);
+            });
+          });
+
+          // sort ascending
+          [...Object.keys(b), ...Object.keys(p)].forEach((k) => {
+            const a = b[k] || p[k];
+            if (a) a.sort((x, y) => x - y);
+          });
+          return { b, p };
+        }
+
+        function _cmpPctile(sortedArr, val) {
+          if (
+            val === null ||
+            val === undefined ||
+            isNaN(val) ||
+            !sortedArr ||
+            sortedArr.length < 3
+          )
+            return null;
+          const below = sortedArr.filter((v) => v < val).length;
+          return Math.round((below / sortedArr.length) * 100);
+        }
+
+        function _pctileSuffix(n) {
+          if (n === null) return "";
+          if (n >= 90) return n + "th ▲";
+          if (n <= 10) return n + "th ▼";
+          return n + "th";
+        }
+
+        function _cmpBuildStats(team, name) {
+          const games = getTeamGames(team);
+          const s = getPlayerCareerStats(team, name, games);
+          const pa = s.pa != null ? s.pa : s.ab + s.bb + (s.hbp || 0);
+          const tb =
+            s.hits -
+            s.doubles -
+            s.triples -
+            s.hr +
+            s.doubles * 2 +
+            s.triples * 3 +
+            s.hr * 4;
+          const avg = s.ab > 0 ? s.hits / s.ab : null;
+          const obp =
+            pa > 0 ? (s.hits + s.bb + (s.hbp || 0) + (s.ci || 0)) / pa : null;
+          const slg = s.ab > 0 ? tb / s.ab : null;
+          const ops = obp !== null && slg !== null ? obp + slg : null;
+          const kpct = pa > 0 ? s.k / pa : null;
+          const bbpct = pa > 0 ? s.bb / pa : null;
+          const babip_den = s.ab - s.k - s.hr;
+          const babip = babip_den > 0 ? (s.hits - s.hr) / babip_den : null;
+          const iso = s.ab > 0 ? (tb - s.hits) / s.ab : null;
+
+          // Pitcher aggregate data
+          const allPitchers = getTeamPitchers(team, games);
+          const pd = allPitchers.find((p) => p.name === name) || null;
+          const pStrikePct =
+            pd && pd.pitches > 0 ? pd.strikes / pd.pitches : null;
+          const pKperBF = pd && pd.bf > 0 ? pd.k / pd.bf : null;
+          const pBBperBF = pd && pd.bf > 0 ? pd.bb / pd.bf : null;
+
+          // Pitch-level processing helpers
+          const CONTACT_OUT = [
+            "groundout",
+            "flyout",
+            "lineout",
+            "sacfly",
+            "sacbunt",
+            "error",
+          ];
+          const CONTACT_HIT = ["single", "double", "triple", "homerun"];
+          const CONTACT_ALL = [...CONTACT_HIT, ...CONTACT_OUT];
+          const SWING_ALL = ["strike-swinging", "foul", ...CONTACT_ALL];
+          const IN_ZONE = (p) =>
+            p.pitchX != null &&
+            p.pitchX >= 31 &&
+            p.pitchX <= 69 &&
+            p.pitchY != null &&
+            p.pitchY >= 30.9 &&
+            p.pitchY <= 69.1;
+          const IS_GB = (b) => b === "groundball" || b === "weakgrounder";
+
+          // ── Batter plate discipline from pitch log ──
+          const bp = getPlayerPitches(team, name, games);
+          const bSwings = bp.filter((p) =>
+            SWING_ALL.includes(p.outcome)
+          ).length;
+          const bContact = bp.filter((p) =>
+            CONTACT_ALL.includes(p.outcome)
+          ).length;
+          const bWhiffs = bp.filter(
+            (p) => p.outcome === "strike-swinging"
+          ).length;
+          const bOOZ = bp.filter((p) => !IN_ZONE(p));
+          const bIZ = bp.filter((p) => IN_ZONE(p));
+          const bChaseSwings = bOOZ.filter((p) =>
+            SWING_ALL.includes(p.outcome)
+          ).length;
+          const bZSwings = bIZ.filter((p) =>
+            SWING_ALL.includes(p.outcome)
+          ).length;
+          const bBIP = bp.filter((p) => p.spray?.btype);
+          const bGB = bBIP.filter((p) => IS_GB(p.spray.btype)).length;
+          const bLD = bBIP.filter((p) => p.spray.btype === "linedrive").length;
+          const bFB = bBIP.filter(
+            (p) => p.spray.btype === "flyball" || p.spray.btype === "popup"
+          ).length;
+          const bVels = bp
+            .map((p) => parseFloat(p.velocity))
+            .filter((v) => !isNaN(v) && v > 0);
+
+          const contactRate = bSwings > 0 ? bContact / bSwings : null;
+          const whiffRate = bSwings > 0 ? bWhiffs / bSwings : null;
+          const chaseRate = bOOZ.length > 0 ? bChaseSwings / bOOZ.length : null;
+          const zoneSwingRate = bIZ.length > 0 ? bZSwings / bIZ.length : null;
+          const swingRate = bp.length > 0 ? bSwings / bp.length : null;
+          const bGBpct = bBIP.length > 0 ? bGB / bBIP.length : null;
+          const bLDpct = bBIP.length > 0 ? bLD / bBIP.length : null;
+          const bFBpct = bBIP.length > 0 ? bFB / bBIP.length : null;
+          const avgVeloFaced =
+            bVels.length > 0
+              ? bVels.reduce((a, b) => a + b, 0) / bVels.length
+              : null;
+
+          // ── Pitcher pitch-level metrics ──
+          const pp = getPitcherPitches(team, name, games);
+          const pSwings = pp.filter((p) =>
+            SWING_ALL.includes(p.outcome)
+          ).length;
+          const pWhiffs = pp.filter(
+            (p) => p.outcome === "strike-swinging"
+          ).length;
+          const pOOZ = pp.filter((p) => !IN_ZONE(p));
+          const pIZ = pp.filter((p) => IN_ZONE(p));
+          const pChaseSwings = pOOZ.filter((p) =>
+            SWING_ALL.includes(p.outcome)
+          ).length;
+          const pBIP2 = pp.filter((p) => p.spray?.btype);
+          const pGB2 = pBIP2.filter((p) => IS_GB(p.spray.btype)).length;
+          const pLD2 = pBIP2.filter(
+            (p) => p.spray.btype === "linedrive"
+          ).length;
+          const pFB2 = pBIP2.filter(
+            (p) => p.spray.btype === "flyball" || p.spray.btype === "popup"
+          ).length;
+          const pFP = pp.filter((p) => _isFirstPitch(p));
+          const pFPS = pFP.filter((p) => _isStrike(p.outcome)).length;
+          const pVels = pp
+            .map((p) => parseFloat(p.velocity))
+            .filter((v) => !isNaN(v) && v > 0);
+
+          const pWhiffRate = pSwings > 0 ? pWhiffs / pSwings : null;
+          const pChaseRate =
+            pOOZ.length > 0 ? pChaseSwings / pOOZ.length : null;
+          const pZonePct = pp.length > 0 ? pIZ.length / pp.length : null;
+          const pGBpct = pBIP2.length > 0 ? pGB2 / pBIP2.length : null;
+          const pLDpct = pBIP2.length > 0 ? pLD2 / pBIP2.length : null;
+          const pFBpct = pBIP2.length > 0 ? pFB2 / pBIP2.length : null;
+          const pFPSpct = pFP.length > 0 ? pFPS / pFP.length : null;
+          const pAvgVelo =
+            pVels.length > 0
+              ? pVels.reduce((a, b) => a + b, 0) / pVels.length
+              : null;
+          const pMaxVelo = pVels.length > 0 ? Math.max(...pVels) : null;
+
+          return {
+            team,
+            name,
+            ...s,
+            pa,
+            tb,
+            avg,
+            obp,
+            slg,
+            ops,
+            kpct,
+            bbpct,
+            babip,
+            iso,
+            pd,
+            pStrikePct,
+            pKperBF,
+            pBBperBF,
+            contactRate,
+            whiffRate,
+            chaseRate,
+            zoneSwingRate,
+            swingRate,
+            bGBpct,
+            bLDpct,
+            bFBpct,
+            avgVeloFaced,
+            pWhiffRate,
+            pChaseRate,
+            pZonePct,
+            pGBpct,
+            pLDpct,
+            pFBpct,
+            pFPSpct,
+            pAvgVelo,
+            pMaxVelo,
+          };
+        }
+
+        function _cmpFmt(n, type) {
+          if (
+            n === null ||
+            n === undefined ||
+            (typeof n === "number" && isNaN(n))
+          )
+            return "—";
+          if (type === "rate") return _fmtRate(n);
+          if (type === "pct") return (n * 100).toFixed(1) + "%";
+          if (type === "int")
+            return isNaN(parseInt(n)) ? "—" : Math.round(n).toString();
+          return n.toString();
+        }
+
+        // _cmpRow: vals = array of formatted strings, pcts = optional array of percentile ints|null
+        function _cmpRow(label, vals, dir, pcts) {
+          const classes = vals.map(() => "cmp-val");
+          if (dir !== "none") {
+            const nums = vals.map((v) =>
+              v !== "—"
+                ? parseFloat(
+                    v.replace("%", "").replace("▲", "").replace("▼", "")
+                  )
+                : null
+            );
+            const valids = nums.filter((n) => n !== null);
+            if (valids.length >= 2) {
+              const best =
+                dir === "high" ? Math.max(...valids) : Math.min(...valids);
+              nums.forEach((n, i) => {
+                if (n === best) classes[i] += " win";
+              });
+            }
+          }
+          const tds = vals
+            .map((v, i) => {
+              const pb =
+                pcts && pcts[i] !== null && pcts[i] !== undefined
+                  ? `<div class="cmp-pctile">${_pctileSuffix(pcts[i])}</div>`
+                  : "";
+              return `<td class="${classes[i]}">${v}${pb}</td>`;
+            })
+            .join("");
+          return `<tr><td>${label}</td>${tds}</tr>`;
+        }
+
+        function _cmpStatsHTML(slots, pctiles) {
+          // slots = array of {s, isPitcher} (2 or 3 elements, s may be null)
+          const r = _cmpRow;
+          const f = _cmpFmt;
+          const NA = "—";
+          const N = slots.length;
+
+          // Column widths: label gets 40%, value cols split remaining evenly
+          const valW = Math.floor(60 / N);
+          const labelW = 100 - valW * N;
+          const thStyle = `style="width:${valW}%"`;
+          const thLabelStyle = `style="width:${labelW}%"`;
+
+          const n1 = slots[0]?.s
+            ? escHtml(slots[0].s.name.split(" ").pop())
+            : "P1";
+          const names = slots.map((sl, i) =>
+            sl?.s ? escHtml(sl.s.name.split(" ").pop()) : "P" + (i + 1)
+          );
+          const thead = `<thead><tr><th ${thLabelStyle}></th>${names
+            .map((n) => `<th ${thStyle}>${n}</th>`)
+            .join("")}</tr></thead>`;
+
+          // p() helper: get formatted value for slot i, or NA
+          const gv = (i, getter) => {
+            const sl = slots[i];
+            return sl?.s ? getter(sl.s) : NA;
+          };
+
+          // Helper: skip batting section if all slots are pitchers with no PA
+          const hasBatting = (s) => s && s.ab > 0;
+          const showBatting = slots.some((sl) => hasBatting(sl?.s));
+
+          // ── PITCHING SECTION ──────────────────────────────────────────
+          const hasPitching = slots.some(
+            (sl) => sl?.s?.pd && sl.s.pd.pitches > 0
+          );
+          let pitchSection = "";
+          if (hasPitching) {
+            const vp = (key, getter) =>
+              slots.map((sl) => (sl?.s ? getter(sl.s) : NA));
+            const rp = (label, getter, dir, pKey) =>
+              r(
+                label,
+                vp(label, getter),
+                dir,
+                pKey
+                  ? slots.map((sl) =>
+                      _cmpPctile(pctiles.p[pKey], sl?.s?.[pKey])
+                    )
+                  : null
+              );
+
+            pitchSection = `
+    <div class="cmp-stat-section-head">Pitching — Results</div>
+    <table class="cmp-stat-table">${thead}<tbody>
+      ${r(
+        "Games",
+        slots.map((sl) => (sl?.s?.pd ? f(sl.s.pd.games, "int") : NA)),
+        "high"
+      )}
+      ${r(
+        "Pitches Thrown",
+        slots.map((sl) => (sl?.s?.pd ? f(sl.s.pd.pitches, "int") : NA)),
+        "high"
+      )}
+      ${r(
+        "K",
+        slots.map((sl) => (sl?.s?.pd ? f(sl.s.pd.k, "int") : NA)),
+        "high"
+      )}
+      ${r(
+        "BB",
+        slots.map((sl) => (sl?.s?.pd ? f(sl.s.pd.bb, "int") : NA)),
+        "low"
+      )}
+      ${r(
+        "Hits Allowed",
+        slots.map((sl) => (sl?.s?.pd ? f(sl.s.pd.hits, "int") : NA)),
+        "low"
+      )}
+      ${r(
+        "K%",
+        slots.map((sl) => f(sl?.s?.pKperBF, "pct")),
+        "high",
+        slots.map((sl) => _cmpPctile(pctiles.p.kBF, sl?.s?.pKperBF))
+      )}
+      ${r(
+        "BB%",
+        slots.map((sl) => f(sl?.s?.pBBperBF, "pct")),
+        "low",
+        slots.map((sl) => _cmpPctile(pctiles.p.bbBF, sl?.s?.pBBperBF))
+      )}
+    </tbody></table>
+    <div class="cmp-stat-section-head">Pitching — Process</div>
+    <table class="cmp-stat-table">${thead}<tbody>
+      ${r(
+        "Strike%",
+        slots.map((sl) => f(sl?.s?.pStrikePct, "pct")),
+        "high",
+        slots.map((sl) => _cmpPctile(pctiles.p.strikePct, sl?.s?.pStrikePct))
+      )}
+      ${r(
+        "Zone%",
+        slots.map((sl) => f(sl?.s?.pZonePct, "pct")),
+        "high"
+      )}
+      ${r(
+        "Whiff%",
+        slots.map((sl) => f(sl?.s?.pWhiffRate, "pct")),
+        "high",
+        slots.map((sl) => _cmpPctile(pctiles.p.whiffRate, sl?.s?.pWhiffRate))
+      )}
+      ${r(
+        "Chase% (induced)",
+        slots.map((sl) => f(sl?.s?.pChaseRate, "pct")),
+        "high",
+        slots.map((sl) => _cmpPctile(pctiles.p.chaseRate, sl?.s?.pChaseRate))
+      )}
+      ${r(
+        "First Pitch Strike%",
+        slots.map((sl) => f(sl?.s?.pFPSpct, "pct")),
+        "high"
+      )}
+      ${r(
+        "GB%",
+        slots.map((sl) => f(sl?.s?.pGBpct, "pct")),
+        "high"
+      )}
+      ${r(
+        "LD%",
+        slots.map((sl) => f(sl?.s?.pLDpct, "pct")),
+        "low"
+      )}
+      ${r(
+        "Avg Velo",
+        slots.map((sl) =>
+          sl?.s?.pAvgVelo != null ? sl.s.pAvgVelo.toFixed(1) : NA
+        ),
+        "high"
+      )}
+      ${r(
+        "Max Velo",
+        slots.map((sl) =>
+          sl?.s?.pMaxVelo != null ? sl.s.pMaxVelo.toFixed(1) : NA
+        ),
+        "high"
+      )}
+    </tbody></table>`;
+          }
+
+          // ── BATTING SECTION ───────────────────────────────────────────
+          let battingSection = "";
+          if (showBatting) {
+            battingSection = `
+    <div class="cmp-stat-section-head">Batting — Results</div>
+    <table class="cmp-stat-table">${thead}<tbody>
+      ${r(
+        "Games",
+        slots.map((sl) => f(sl?.s?.games, "int")),
+        "high"
+      )}
+      ${r(
+        "PA",
+        slots.map((sl) => f(sl?.s?.pa, "int")),
+        "high"
+      )}
+      ${r(
+        "AVG",
+        slots.map((sl) => f(sl?.s?.avg, "rate")),
+        "high",
+        slots.map((sl) => _cmpPctile(pctiles.b.avg, sl?.s?.avg))
+      )}
+      ${r(
+        "OBP",
+        slots.map((sl) => f(sl?.s?.obp, "rate")),
+        "high",
+        slots.map((sl) => _cmpPctile(pctiles.b.obp, sl?.s?.obp))
+      )}
+      ${r(
+        "SLG",
+        slots.map((sl) => f(sl?.s?.slg, "rate")),
+        "high",
+        slots.map((sl) => _cmpPctile(pctiles.b.slg, sl?.s?.slg))
+      )}
+      ${r(
+        "OPS",
+        slots.map((sl) => f(sl?.s?.ops, "rate")),
+        "high",
+        slots.map((sl) => _cmpPctile(pctiles.b.ops, sl?.s?.ops))
+      )}
+      ${r(
+        "H",
+        slots.map((sl) => f(sl?.s?.hits, "int")),
+        "high"
+      )}
+      ${r(
+        "2B",
+        slots.map((sl) => f(sl?.s?.doubles, "int")),
+        "high"
+      )}
+      ${r(
+        "HR",
+        slots.map((sl) => f(sl?.s?.hr, "int")),
+        "high"
+      )}
+      ${r(
+        "BB",
+        slots.map((sl) => f(sl?.s?.bb, "int")),
+        "high"
+      )}
+      ${r(
+        "K",
+        slots.map((sl) => f(sl?.s?.k, "int")),
+        "low"
+      )}
+      ${r(
+        "RBI",
+        slots.map((sl) => f(sl?.s?.rbi, "int")),
+        "high"
+      )}
+      ${r(
+        "SB",
+        slots.map((sl) => f(sl?.s?.sb, "int")),
+        "high"
+      )}
+    </tbody></table>
+    <div class="cmp-stat-section-head">Batting — Process</div>
+    <table class="cmp-stat-table">${thead}<tbody>
+      ${r(
+        "Contact%",
+        slots.map((sl) => f(sl?.s?.contactRate, "pct")),
+        "high"
+      )}
+      ${r(
+        "Whiff%",
+        slots.map((sl) => f(sl?.s?.whiffRate, "pct")),
+        "low"
+      )}
+      ${r(
+        "Chase% (O-Swing)",
+        slots.map((sl) => f(sl?.s?.chaseRate, "pct")),
+        "low"
+      )}
+      ${r(
+        "Zone Swing%",
+        slots.map((sl) => f(sl?.s?.zoneSwingRate, "pct")),
+        "high"
+      )}
+      ${r(
+        "Overall Swing%",
+        slots.map((sl) => f(sl?.s?.swingRate, "pct")),
+        "none"
+      )}
+      ${r(
+        "K%",
+        slots.map((sl) => f(sl?.s?.kpct, "pct")),
+        "low",
+        slots.map((sl) => _cmpPctile(pctiles.b.kpct, sl?.s?.kpct))
+      )}
+      ${r(
+        "BB%",
+        slots.map((sl) => f(sl?.s?.bbpct, "pct")),
+        "high",
+        slots.map((sl) => _cmpPctile(pctiles.b.bbpct, sl?.s?.bbpct))
+      )}
+      ${r(
+        "ISO",
+        slots.map((sl) => f(sl?.s?.iso, "rate")),
+        "high",
+        slots.map((sl) => _cmpPctile(pctiles.b.iso, sl?.s?.iso))
+      )}
+      ${r(
+        "BABIP",
+        slots.map((sl) => f(sl?.s?.babip, "rate")),
+        "high",
+        slots.map((sl) => _cmpPctile(pctiles.b.babip, sl?.s?.babip))
+      )}
+      ${r(
+        "Avg Velo Faced",
+        slots.map((sl) =>
+          sl?.s?.avgVeloFaced != null ? sl.s.avgVeloFaced.toFixed(1) : NA
+        ),
+        "none"
+      )}
+    </tbody></table>
+    <div class="cmp-stat-section-head">Batted Ball Profile</div>
+    <table class="cmp-stat-table">${thead}<tbody>
+      ${r(
+        "GB%",
+        slots.map((sl) => f(sl?.s?.bGBpct, "pct")),
+        "none"
+      )}
+      ${r(
+        "LD%",
+        slots.map((sl) => f(sl?.s?.bLDpct, "pct")),
+        "high"
+      )}
+      ${r(
+        "FB%",
+        slots.map((sl) => f(sl?.s?.bFBpct, "pct")),
+        "none"
+      )}
+    </tbody></table>`;
+          }
+
+          // If pitcher comparison: pitching first, batting after (if any)
+          const isPitcherComp =
+            !showBatting || slots.every((sl) => sl?.isPitcher);
+          return isPitcherComp
+            ? pitchSection + battingSection
+            : battingSection + pitchSection;
+        }
+
+        function renderCompare() {
+          const c = document.getElementById("hub-content");
+          const allSlotDefs = [_cmpSlot1, _cmpSlot2, _cmpSlot3];
+          const slotDefs =
+            allSlotDefs.filter(Boolean).length >= 1
+              ? allSlotDefs
+              : [null, null];
+          // Build stats for filled slots
+          const slotData = slotDefs.map((sd) =>
+            sd
+              ? {
+                  s: _cmpBuildStats(sd.team, sd.name),
+                  isPitcher: sd.isPitcher || false,
+                }
+              : null
+          );
+
+          // Build league percentiles once (only when at least one slot filled)
+          const hasAny = slotData.some((sd) => sd !== null);
+          const pctiles = hasAny ? _cmpBuildLeaguePctiles() : { b: {}, p: {} };
+          const f = _cmpFmt;
+
+          function miniStat(val, lbl) {
+            return `<div class="cmp-mini-stat"><div class="cmp-mini-val">${val}</div><div class="cmp-mini-lbl">${lbl}</div></div>`;
+          }
+
+          function slotHTML(sd, slotNum) {
+            if (!sd)
+              return `<div class="cmp-slot" onclick="compareOpenPicker(${slotNum})" style="align-items:center;justify-content:center;gap:6px;min-height:120px">
+      <div style="font-size:22px;opacity:.2">👤</div>
+      <div style="font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:11px;letter-spacing:1px;text-transform:uppercase;color:var(--text3)">+ Add Player ${slotNum}</div>
+    </div>`;
+            const { s, isPitcher } = sd;
+            const hasBat = s.ab > 0;
+            const hasPit = s.pd && s.pd.pitches > 0;
+            const badge = isPitcher
+              ? s.pos && s.pos !== "—"
+                ? escHtml(s.pos)
+                : "P"
+              : s.pos && s.pos !== "—"
+              ? escHtml(s.pos)
+              : "BAT";
+            let statsGrid;
+            if (isPitcher && hasPit) {
+              statsGrid = [
+                miniStat(f(s.pStrikePct, "pct"), "Strike%"),
+                miniStat(f(s.pKperBF, "pct"), "K%"),
+                miniStat(f(s.pBBperBF, "pct"), "BB%"),
+                miniStat(f(s.pWhiffRate, "pct"), "Whiff%"),
+                miniStat(f(s.pChaseRate, "pct"), "Chase%"),
+                miniStat(f(s.pZonePct, "pct"), "Zone%"),
+                miniStat(f(s.pFPSpct, "pct"), "FPS%"),
+                miniStat(
+                  s.pAvgVelo != null ? s.pAvgVelo.toFixed(1) : "—",
+                  "Avg Velo"
+                ),
+              ].join("");
+            } else if (hasBat) {
+              statsGrid = [
+                miniStat(f(s.avg, "rate"), "AVG"),
+                miniStat(f(s.obp, "rate"), "OBP"),
+                miniStat(f(s.slg, "rate"), "SLG"),
+                miniStat(f(s.ops, "rate"), "OPS"),
+                miniStat(f(s.kpct, "pct"), "K%"),
+                miniStat(f(s.bbpct, "pct"), "BB%"),
+                miniStat(f(s.iso, "rate"), "ISO"),
+                miniStat(f(s.contactRate, "pct"), "Contact%"),
+              ].join("");
+            } else {
+              statsGrid = `<div style="grid-column:1/-1;font-size:10px;color:var(--text3);text-align:center;padding:8px 0">No data</div>`;
+            }
+            return `<div class="cmp-slot cmp-slot-filled">
+      <div class="cmp-slot-toprow">
+        <div class="cmp-slot-num">#${escHtml(s.num || "—")}</div>
+        <div class="cmp-slot-badge">${badge}</div>
+      </div>
+      <div class="cmp-slot-name">${escHtml(s.name)}</div>
+      <div class="cmp-slot-team">${escHtml(s.team)}</div>
+      <div class="cmp-slot-stats-grid">${statsGrid}</div>
+      <div class="cmp-slot-meta">${s.games}G · ${
+              isPitcher && hasPit ? s.pd.pitches + " pitches" : s.pa + " PA"
+            }</div>
+      <div class="cmp-slot-change" onclick="event.stopPropagation();compareOpenPicker(${slotNum})">change</div>
+    </div>`;
+          }
+
+          const filledSlots = slotData.filter(Boolean);
+          const statsHTML =
+            filledSlots.length >= 1
+              ? _cmpStatsHTML(
+                  slotData.map((sd, i) => (sd ? { ...sd } : null)),
+                  pctiles
+                )
+              : `<div style="text-align:center;padding:40px 20px;color:var(--text3);font-family:'Barlow Condensed',sans-serif;font-size:15px">Pick players above to compare</div>`;
+
+          const slotsHTML = slotData
+            .map((sd, i) => slotHTML(sd, i + 1))
+            .join("");
+
+          c.innerHTML = `
+    <div class="page-header"><div><div class="page-title">Compare Players</div><div class="page-sub">Up to 3 players · rate stats + percentile rankings</div></div></div>
+    <div class="cmp-slots">${slotsHTML}</div>
+    ${statsHTML}`;
+        }
+
+        function compareOpenPicker(slot) {
+          _cmpPickerSlot = slot;
+          _cmpPickerTeam = null;
+          const overlay = document.getElementById("cmp-picker-overlay");
+          const sheet = document.getElementById("cmp-picker-sheet");
+          const title = document.getElementById("cmp-picker-title");
+          if (!overlay || !sheet) return;
+          if (title) title.textContent = "Pick Player " + slot;
+          overlay.style.display = "block";
+          requestAnimationFrame(() => sheet.classList.add("open"));
+          _cmpRenderPickerTeams();
+        }
+
+        function _cmpRenderPickerTeams() {
+          const teamsEl = document.getElementById("cmp-picker-teams");
+          if (!teamsEl) return;
+          const myTN = (function () {
+            try {
+              const ni = document.getElementById("myteam-name-input");
+              if (ni && ni.value.trim()) return ni.value.trim();
+              return window._myTeamNameCache || null;
+            } catch (e) {
+              return null;
+            }
+          })();
+          const teams = [];
+          if (myTN && myTeamRoster && myTeamRoster.length > 0) teams.push(myTN);
+          allTeams.forEach((t) => {
+            if (t !== myTN) teams.push(t);
+          });
+          teamsEl.innerHTML = teams
+            .map(
+              (t) =>
+                `<button class="cmp-picker-team-btn${
+                  _cmpPickerTeam === t ? " active" : ""
+                }" onclick="comparePickerSelectTeam('${escAttr(t)}')">${escHtml(
+                  t
+                )}</button>`
+            )
+            .join("");
+          if (!_cmpPickerTeam && teams.length > 0)
+            comparePickerSelectTeam(teams[0]);
+          else if (_cmpPickerTeam) _cmpRenderPickerPlayers(_cmpPickerTeam);
+        }
+
+        function comparePickerSelectTeam(team) {
+          _cmpPickerTeam = team;
+          const teamsEl = document.getElementById("cmp-picker-teams");
+          if (teamsEl) {
+            teamsEl.querySelectorAll(".cmp-picker-team-btn").forEach((b) => {
+              b.classList.toggle("active", b.textContent === team);
+            });
+          }
+          _cmpRenderPickerPlayers(team);
+        }
+
+        function _cmpRenderPickerPlayers(team) {
+          const el = document.getElementById("cmp-picker-players");
+          if (!el) return;
+          const games = getTeamGames(team);
+          const batters = getTeamRoster(team, games).sort((a, b) =>
+            (a.name || "").localeCompare(b.name || "")
+          );
+          const pitchers = getTeamPitchers(team, games).sort((a, b) =>
+            (a.name || "").localeCompare(b.name || "")
+          );
+          let html = "";
+          if (batters.length > 0) {
+            html += `<div class="cmp-picker-role-label">Batters</div>`;
+            html += batters
+              .map(
+                (p) =>
+                  `<div class="cmp-picker-player-row" onclick="comparePick('${escAttr(
+                    team
+                  )}','${escAttr(p.name)}',false)">
+                <div class="cmp-picker-player-num">#${escHtml(
+                  p.num || "—"
+                )}</div>
+                <div class="cmp-picker-player-info">
+                  <div class="cmp-picker-player-name">${escHtml(p.name)}</div>
+                  <div class="cmp-picker-player-meta">${escHtml(
+                    p.pos || "—"
+                  )} · ${p.games} G · ${
+                    p.ab > 0 ? _fmtRate(p.hits / p.ab) : ".---"
+                  } AVG</div>
+                </div>
+              </div>`
+              )
+              .join("");
+          }
+          if (pitchers.length > 0) {
+            html += `<div class="cmp-picker-role-label">Pitchers</div>`;
+            html += pitchers
+              .map(
+                (p) =>
+                  `<div class="cmp-picker-player-row" onclick="comparePick('${escAttr(
+                    team
+                  )}','${escAttr(p.name)}',true)">
+                <div class="cmp-picker-player-num">#${escHtml(
+                  p.num || "—"
+                )}</div>
+                <div class="cmp-picker-player-info">
+                  <div class="cmp-picker-player-name">${escHtml(p.name)}</div>
+                  <div class="cmp-picker-player-meta">${escHtml(
+                    p.hand || "R"
+                  )}HP · ${p.games} G · ${p.pitches} pitches</div>
+                </div>
+              </div>`
+              )
+              .join("");
+          }
+          if (!html)
+            html = `<div style="padding:20px;text-align:center;color:var(--text3);font-family:'Barlow Condensed',sans-serif">No players found for ${escHtml(
+              team
+            )}</div>`;
+          el.innerHTML = html;
+        }
+
+        function comparePick(team, name, isPitcher) {
+          if (_cmpPickerSlot === 1) _cmpSlot1 = { team, name, isPitcher };
+          else if (_cmpPickerSlot === 2) _cmpSlot2 = { team, name, isPitcher };
+          else _cmpSlot3 = { team, name, isPitcher };
+          compareCancelPicker();
+          renderCompare();
+        }
+
+        function compareCancelPicker() {
+          const overlay = document.getElementById("cmp-picker-overlay");
+          const sheet = document.getElementById("cmp-picker-sheet");
+          if (!sheet) return;
+          sheet.classList.remove("open");
+          setTimeout(() => {
+            if (overlay) overlay.style.display = "none";
+          }, 260);
+        }
+
         // ===== VIEWS =====
         let _lastPlayerTab = "spray";
         let _lastPitcherTab = "zone";
+        let _cmpSlot1 = null; // {team, name, isPitcher} or null
+        let _cmpSlot2 = null;
+        let _cmpSlot3 = null;
+        let _cmpPickerSlot = 1;
+        let _cmpPickerTeam = null;
 
         function showView(type, data, preserveTab) {
           // data may be a JSON string (from onclick attributes) or an object
@@ -19263,6 +20545,7 @@
             if (preserveTab && _lastPitcherTab)
               setTimeout(() => pitcherTab(_lastPitcherTab), 0);
           } else if (type === "game") renderGame(data);
+          else if (type === "compare") renderCompare();
         }
 
         // ===== ALL GAMES VIEW =====
@@ -30883,6 +32166,67 @@
           });
         })();
       </script>
+    </div>
+    <!-- ── Player Comparison Picker ── -->
+    <div
+      id="cmp-picker-overlay"
+      style="
+        display: none;
+        position: fixed;
+        inset: 0;
+        z-index: 9998;
+        background: rgba(0, 0, 0, 0.7);
+        backdrop-filter: blur(3px);
+        -webkit-backdrop-filter: blur(3px);
+      "
+      onclick="if(event.target===this)compareCancelPicker()"
+    >
+      <div id="cmp-picker-sheet">
+        <div
+          style="
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 12px;
+          "
+        >
+          <div
+            id="cmp-picker-title"
+            style="
+              font-family: 'Barlow Condensed', sans-serif;
+              font-weight: 900;
+              font-size: 16px;
+              letter-spacing: 1px;
+              text-transform: uppercase;
+              color: var(--text);
+            "
+          >
+            Pick Player
+          </div>
+          <button
+            onclick="compareCancelPicker()"
+            style="
+              background: none;
+              border: none;
+              color: var(--text3);
+              font-size: 18px;
+              cursor: pointer;
+              padding: 0 4px;
+              -webkit-tap-highlight-color: transparent;
+            "
+          >
+            ✕
+          </button>
+        </div>
+        <div
+          id="cmp-picker-teams"
+          style="display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 14px"
+        ></div>
+        <div
+          id="cmp-picker-players"
+          style="max-height: 320px; overflow-y: auto"
+        ></div>
+      </div>
     </div>
   </body>
 </html>
