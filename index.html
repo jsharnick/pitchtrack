@@ -160,11 +160,6 @@
       }
       .hs-card:hover {
         transform: translateY(-5px);
-        background: rgba(255, 255, 255, 0.09);
-        border-color: rgba(255, 255, 255, 0.22);
-        box-shadow: 0 24px 64px rgba(0, 0, 0, 0.45);
-      }
-      .hs-card.red:hover {
         background: rgba(180, 20, 20, 0.22);
         border-color: rgba(255, 80, 80, 0.4);
         box-shadow: 0 24px 64px rgba(180, 20, 20, 0.4);
@@ -222,14 +217,7 @@
         transition: background 0.15s;
         width: 100%;
       }
-      .hs-card.red .hs-cta {
-        background: linear-gradient(135deg, #bb1818, #d42020);
-        border-color: transparent;
-      }
       .hs-card:hover .hs-cta {
-        background: rgba(255, 255, 255, 0.16);
-      }
-      .hs-card.red:hover .hs-cta {
         background: linear-gradient(135deg, #d42020, #f03030);
       }
       .hs-footer {
@@ -3350,6 +3338,36 @@
         margin-bottom: 12px;
         animation: fadeIn 0.15s;
       }
+      .opp-card.opp-selected {
+        border-color: var(--accent);
+        background: rgba(204, 26, 26, 0.1);
+        box-shadow: 0 0 0 2px rgba(204, 26, 26, 0.2);
+      }
+      .opp-card-check {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        width: 20px;
+        height: 20px;
+        border-radius: 50%;
+        border: 2px solid var(--border2);
+        background: var(--surface2);
+        display: none;
+        align-items: center;
+        justify-content: center;
+        font-size: 11px;
+        font-weight: 900;
+        color: #fff;
+        transition: all 0.13s;
+        pointer-events: none;
+      }
+      .opp-select-active .opp-card-check {
+        display: flex;
+      }
+      .opp-card.opp-selected .opp-card-check {
+        background: var(--accent);
+        border-color: var(--accent);
+      }
       .ts-selected-row {
         background: rgba(204, 26, 26, 0.07) !important;
         border-left-color: var(--accent) !important;
@@ -3546,6 +3564,167 @@
         font-size: 16px;
         letter-spacing: 1px;
         gap: 10px;
+      }
+
+      /* ── Hub action buttons (export / import / select) — shown on all screen sizes ── */
+      .hub-mob-action-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        padding: 6px 13px;
+        border: 1.5px solid var(--border2);
+        border-radius: 7px;
+        background: none;
+        color: var(--text2);
+        font-family: "Barlow Condensed", sans-serif;
+        font-weight: 700;
+        font-size: 12px;
+        letter-spacing: 0.8px;
+        cursor: pointer;
+        white-space: nowrap;
+        transition: color 0.13s, border-color 0.13s;
+        -webkit-tap-highlight-color: transparent;
+        touch-action: manipulation;
+      }
+      .hub-mob-action-btn:hover {
+        color: var(--accent);
+        border-color: var(--accent);
+      }
+
+      /* ── Hub top-level tab bar ── */
+      #hub-tab-bar {
+        display: flex;
+        flex-shrink: 0;
+        background: var(--surface);
+        border-bottom: 2px solid var(--border);
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: none;
+      }
+      #hub-tab-bar::-webkit-scrollbar {
+        display: none;
+      }
+      .hub-top-tab {
+        font-family: "Barlow Condensed", sans-serif;
+        font-weight: 700;
+        font-size: 13px;
+        letter-spacing: 1px;
+        text-transform: uppercase;
+        color: var(--text3);
+        padding: 12px 22px;
+        cursor: pointer;
+        border-bottom: 3px solid transparent;
+        margin-bottom: -2px;
+        white-space: nowrap;
+        transition: color 0.15s, border-color 0.15s;
+        -webkit-tap-highlight-color: transparent;
+        touch-action: manipulation;
+        user-select: none;
+      }
+      .hub-top-tab:hover {
+        color: var(--text);
+      }
+      .hub-top-tab.active {
+        color: var(--accent);
+        border-bottom-color: var(--accent);
+      }
+
+      /* ── Hub back button (opponents drill-down) ── */
+      .hub-back-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        margin: 14px 0 -4px 0;
+        padding: 5px 12px;
+        background: none;
+        border: 1.5px solid var(--border2);
+        border-radius: 6px;
+        font-family: "Barlow Condensed", sans-serif;
+        font-weight: 700;
+        font-size: 12px;
+        letter-spacing: 0.5px;
+        color: var(--text3);
+        cursor: pointer;
+        transition: color 0.14s, border-color 0.14s;
+      }
+      .hub-back-btn:hover {
+        color: var(--accent);
+        border-color: var(--accent);
+      }
+
+      /* ── Opponents welcome grid ── */
+      .opp-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+        gap: 16px;
+        padding: 20px 24px;
+      }
+      .opp-card {
+        background: var(--surface);
+        border: 1.5px solid var(--border2);
+        border-radius: 14px;
+        padding: 20px 20px 16px;
+        cursor: pointer;
+        transition: border-color 0.18s, box-shadow 0.18s, background 0.18s;
+        position: relative;
+        display: flex;
+        flex-direction: column;
+        gap: 0;
+      }
+      .opp-card:hover {
+        border-color: var(--accent);
+        background: #fff;
+        box-shadow: 0 4px 18px rgba(0, 0, 0, 0.1);
+      }
+      .opp-card-header {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        margin-bottom: 4px;
+      }
+      .opp-card-name {
+        font-family: "Barlow Condensed", sans-serif;
+        font-weight: 900;
+        font-size: 26px;
+        color: var(--text);
+        line-height: 1.05;
+        letter-spacing: -0.3px;
+      }
+      .opp-card-record {
+        font-family: "Barlow Condensed", sans-serif;
+        font-weight: 700;
+        font-size: 13px;
+        letter-spacing: 0.3px;
+        color: var(--text3);
+        margin-bottom: 14px;
+      }
+      .opp-card-stats {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 10px 6px;
+        border-top: 1.5px solid var(--border);
+        padding-top: 14px;
+      }
+      .opp-stat {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 3px;
+      }
+      .opp-stat-val {
+        font-family: "Barlow Condensed", sans-serif;
+        font-weight: 700;
+        font-size: 20px;
+        color: var(--text);
+        line-height: 1;
+      }
+      .opp-stat-lbl {
+        font-family: "Barlow Condensed", sans-serif;
+        font-weight: 700;
+        font-size: 9px;
+        letter-spacing: 1.2px;
+        text-transform: uppercase;
+        color: var(--text3);
       }
 
       /* ═══════════════════════════════════════════════════
@@ -4064,23 +4243,31 @@
         .gh-select-bar {
           flex-wrap: wrap;
         }
-        /* ── Hub Export All / Import buttons: visible on mobile, hidden on desktop (sidebar has them) ── */
-        .hub-mob-action-btn {
-          display: inline-flex;
-          align-items: center;
-          padding: 6px 12px;
-          border: 1.5px solid var(--border2);
-          border-radius: 7px;
-          background: none;
-          color: var(--text2);
-          font-family: "Barlow Condensed", sans-serif;
-          font-weight: 700;
-          font-size: 12px;
-          letter-spacing: 1px;
-          cursor: pointer;
-          white-space: nowrap;
+        /* Hub tab bar — compact on mobile */
+        .hub-top-tab {
+          padding: 10px 14px !important;
+          font-size: 11px !important;
         }
-
+        /* Opponents grid — 2 columns on mobile */
+        .opp-grid {
+          grid-template-columns: repeat(2, 1fr) !important;
+          padding: 12px !important;
+          gap: 10px !important;
+        }
+        .opp-card {
+          padding: 14px 12px 12px !important;
+          gap: 8px !important;
+        }
+        .opp-card-name {
+          font-size: 17px !important;
+        }
+        .opp-stat-val {
+          font-size: 14px !important;
+        }
+        .opp-card-stats {
+          gap: 6px 2px !important;
+          padding-top: 10px !important;
+        }
         /* panel-hub fills panel-wrap exactly like panel-tracker */
         #panel-hub {
           position: absolute !important;
@@ -4111,8 +4298,12 @@
           -webkit-overflow-scrolling: touch;
           padding: 12px;
         }
-        /* Mobile hub header: team pill selector */
+        /* Mobile team pill bar — hidden now that we use the top tab bar */
         #hub-mobile-bar {
+          display: none !important;
+        }
+        /* Keep this block to avoid breaking references but it won't show */
+        #hub-mobile-bar-UNUSED {
           display: flex !important;
           flex-shrink: 0 !important;
           align-items: center;
@@ -4446,27 +4637,32 @@
         #hub-mobile-bar {
           display: none !important;
         }
-        /* Hub layout — sidebar grid */
+        /* Hub layout — tab bar at top, content fills below, no sidebar */
+        #panel-hub {
+          display: flex;
+          flex-direction: column;
+        }
+        #hub-tab-bar {
+          flex-shrink: 0;
+        }
         #hub-app {
-          display: grid;
-          grid-template-columns: 260px 1fr;
-          min-height: calc(100vh - 44px);
+          flex: 1;
+          overflow-y: auto;
+          min-height: 0;
         }
         #hub-sidebar {
-          overflow-y: auto;
+          display: none !important;
         }
         #hub-main {
           overflow-y: auto;
           padding: 20px 24px;
+          width: 100%;
         }
         /* Hide mobile-only components */
         #mob-tabs {
           display: none !important;
         }
         .mob-panel {
-          display: none !important;
-        }
-        .hub-mob-action-btn {
           display: none !important;
         }
       }
@@ -4977,7 +5173,7 @@
         <div class="hs-logo"><span class="hs-ball">⚾</span> PitchTrack</div>
         <div class="hs-tagline">Professional Baseball Tracking Suite</div>
         <div class="hs-cards">
-          <div class="hs-card red" onclick="openPanel('tracker')">
+          <div class="hs-card" onclick="openPanel('tracker')">
             <div class="hs-card-icon"></div>
             <div style="text-align: center; width: 100%">
               <div class="hs-card-title">Game Tracker</div>
@@ -6973,7 +7169,38 @@
         <!-- #main -->
       </div>
       <div class="app-panel" id="panel-hub">
-        <div id="hub-app">
+        <!-- Top-level tab bar — outside hub-app so it spans full width above the content -->
+        <div id="hub-tab-bar">
+          <div
+            class="hub-top-tab"
+            id="htab-myteam"
+            onclick="hubSetTab('myteam')"
+          >
+            My Team
+          </div>
+          <div
+            class="hub-top-tab"
+            id="htab-history"
+            onclick="hubSetTab('history')"
+          >
+            Game History
+          </div>
+          <div
+            class="hub-top-tab"
+            id="htab-compare"
+            onclick="hubSetTab('compare')"
+          >
+            Compare Players
+          </div>
+          <div
+            class="hub-top-tab"
+            id="htab-opponents"
+            onclick="hubSetTab('opponents')"
+          >
+            Opponents
+          </div>
+        </div>
+        <div id="hub-app" data-hubtab="history">
           <!-- Mobile team nav bar (hidden on desktop via CSS) -->
           <div id="hub-mobile-bar">
             <button
@@ -12073,6 +12300,7 @@
           }
           if (name === "hub") {
             try {
+              _hubTab = null; // re-evaluate default tab on every entry
               hubRefreshAll();
             } catch (e) {}
           }
@@ -19283,6 +19511,40 @@
               _tsSelected.clear();
               _tsSelectMode = false;
               window._tsSelectMode = false;
+            } else if (gameId === "__opp_delete__") {
+              // Delete all games involving selected opponents AND remove from teams index
+              const teamsToDelete = Array.from(_hubOppSelected);
+              const gameIdsToDelete = allGames
+                .filter(
+                  (g) =>
+                    teamsToDelete.includes(g.awayTeam) ||
+                    teamsToDelete.includes(g.homeTeam)
+                )
+                .map((g) => g.id);
+              for (const id of gameIdsToDelete) {
+                await window.storage.delete(id, true);
+              }
+              // Also remove from teams index
+              let teamsRaw2;
+              try {
+                teamsRaw2 = await window.storage.get("pitchtrack_teams", true);
+              } catch (e) {}
+              const current2 = teamsRaw2 ? JSON.parse(teamsRaw2.value) : [];
+              const updated2 = current2.filter(
+                (t) =>
+                  !teamsToDelete.includes(typeof t === "string" ? t : t.name)
+              );
+              await window.storage.set(
+                "pitchtrack_teams",
+                JSON.stringify(updated2),
+                true
+              );
+              _hubOppSelected.clear();
+              _hubOppSelectMode = false;
+              window._hubOppSelectMode = false;
+              await hubRefreshAll();
+              renderOpponentsWelcome();
+              return;
             } else {
               await window.storage.delete(gameId, true);
             }
@@ -19306,18 +19568,54 @@
         async function hubRefreshAll() {
           document.getElementById("hub-team-list").innerHTML =
             '<div class="sidebar-empty">Loading...</div>';
+          // Show welcome/loading state so stale content doesn't bleed through
+          const _hc = document.getElementById("hub-content");
+          const _hw = document.getElementById("hub-welcome");
+          if (_hc) _hc.style.display = "none";
+          if (_hw) _hw.style.display = "block";
+          // Always reload myTeam so _myTeamNameCache is guaranteed current
+          try {
+            await myTeamLoad();
+          } catch (e) {}
           allGames = await loadAllGames();
           allTeams = await loadTeams();
-          console.log(
-            "[PitchTrack Hub] Loaded",
-            allGames.length,
-            "games,",
-            allTeams.length,
-            "teams"
+
+          // Capture team name NOW from freshly-loaded data — don't re-evaluate later
+          const _loadedTeamName = _getMyTeamName();
+          const _hasMyTeam = !!(
+            _loadedTeamName &&
+            myTeamRoster &&
+            myTeamRoster.length
           );
-          renderSidebar();
-          if (currentView) showView(currentView.type, currentView.data);
-          else if (allGames.length > 0) showView("games");
+
+          if (!_hubTab) {
+            _hubTab = _hasMyTeam ? "myteam" : "history";
+          }
+
+          // Set tab highlights directly (no re-evaluation of team name inside hubSetTab)
+          ["myteam", "opponents", "history", "compare"].forEach(function (t) {
+            const el = document.getElementById("htab-" + t);
+            if (el) el.classList.toggle("active", t === _hubTab);
+          });
+          const _app = document.getElementById("hub-app");
+          if (_app) _app.dataset.hubtab = _hubTab;
+
+          // Render content using the already-loaded team name
+          if (_hubTab === "myteam") {
+            if (_loadedTeamName) {
+              showView("team", _loadedTeamName);
+            } else {
+              if (_hc) _hc.style.display = "none";
+              if (_hw) _hw.style.display = "block";
+              renderSidebar();
+            }
+          } else if (_hubTab === "history") {
+            showView("games");
+          } else if (_hubTab === "opponents") {
+            renderOpponentsWelcome();
+          } else if (_hubTab === "compare") {
+            showView("compare");
+          }
         }
 
         // ===== TEAM SELECT MODE =====
@@ -19454,16 +19752,7 @@
           // Always render mobile bar regardless of team count
           const mobTeams = document.getElementById("hub-mob-teams");
           if (mobTeams) {
-            // Resolve myTeamName for mobile (same logic as desktop, runs before desktop block)
-            const _mobMyTeamName = (function () {
-              try {
-                const ni = document.getElementById("myteam-name-input");
-                if (ni && ni.value.trim()) return ni.value.trim();
-                return window._myTeamNameCache || null;
-              } catch (e) {
-                return null;
-              }
-            })();
+            const _mobMyTeamName = _getMyTeamName();
             const _mobPillOnclick = `_mobTsSelectMode ? ((_tsSelected.has(this.getAttribute('data-team')) ? _tsSelected.delete(this.getAttribute('data-team')) : _tsSelected.add(this.getAttribute('data-team'))), hubRefreshAll(), _mobTsUpdateBar()) : hubMobNav('team',this.getAttribute('data-team'))`;
             const mobMyTeamBtn =
               _mobMyTeamName && myTeamRoster && myTeamRoster.length > 0
@@ -19514,20 +19803,21 @@
             );
 
           // Desktop sidebar
-          const myTeamName = (function () {
-            try {
-              const ni = document.getElementById("myteam-name-input");
-              if (ni && ni.value.trim()) return ni.value.trim();
-              return window._myTeamNameCache || "My Team";
-            } catch (e) {
-              return "My Team";
-            }
-          })();
+          const myTeamName = _getMyTeamName() || "My Team";
           const otherTeams = allTeams.filter((t) => t !== myTeamName);
           const hasMyTeam = myTeamRoster && myTeamRoster.length > 0;
-          if (!otherTeams.length && !hasMyTeam) {
-            list.innerHTML = '<div class="sidebar-empty">No teams yet</div>';
-            return;
+          // In opponents tab only show opponent teams, not My Team
+          const showingOpponents = _hubTab === "opponents";
+          if (!otherTeams.length && (!hasMyTeam || showingOpponents)) {
+            if (showingOpponents && !otherTeams.length) {
+              list.innerHTML =
+                '<div class="sidebar-empty">No opponents yet</div>';
+              return;
+            }
+            if (!showingOpponents && !otherTeams.length && !hasMyTeam) {
+              list.innerHTML = '<div class="sidebar-empty">No teams yet</div>';
+              return;
+            }
           }
           const myTeamGames = hasMyTeam ? getTeamGames(myTeamName) : [];
           const myTeamRecord =
@@ -19648,7 +19938,7 @@
             })
             .join("");
 
-          list.innerHTML = myTeamEntry + teamRows;
+          list.innerHTML = (showingOpponents ? "" : myTeamEntry) + teamRows;
         }
 
         // ── Mobile team select mode ──────────────────────────────────────────
@@ -20787,6 +21077,7 @@
         }
 
         // ===== VIEWS =====
+        let _hubTab = null; // 'myteam' | 'opponents' | 'history' | 'compare'
         let _lastPlayerTab = "spray";
         let _lastPitcherTab = "zone";
         let _recentFilter = false; // toggles last-3-games (pitcher) / last-5-games (hitter) filter
@@ -20835,9 +21126,335 @@
           else if (type === "compare") renderCompare();
         }
 
+        // ===== HUB TAB NAVIGATION =====
+        function _getMyTeamName() {
+          try {
+            const ni = document.getElementById("myteam-name-input");
+            if (ni && ni.value.trim()) return ni.value.trim();
+            return window._myTeamNameCache || null;
+          } catch (e) {
+            return null;
+          }
+        }
+
+        function hubSetTab(tab) {
+          _hubTab = tab;
+          const app = document.getElementById("hub-app");
+          if (app) app.dataset.hubtab = tab;
+          ["myteam", "opponents", "history", "compare"].forEach(function (t) {
+            const el = document.getElementById("htab-" + t);
+            if (el) el.classList.toggle("active", t === tab);
+          });
+          if (tab === "myteam") {
+            const name = _getMyTeamName();
+            if (name) showView("team", name);
+            else {
+              currentView = null;
+              document.getElementById("hub-welcome").style.display = "block";
+              document.getElementById("hub-content").style.display = "none";
+              renderSidebar();
+            }
+          } else if (tab === "opponents") {
+            const myName = _getMyTeamName();
+            if (
+              currentView &&
+              currentView.type === "team" &&
+              currentView.data !== myName
+            ) {
+              showView("team", currentView.data);
+            } else {
+              renderOpponentsWelcome();
+            }
+          } else if (tab === "history") {
+            showView("games");
+          } else if (tab === "compare") {
+            showView("compare");
+          }
+        }
+
+        function renderOpponentsWelcome() {
+          currentView = null;
+          document.getElementById("hub-welcome").style.display = "none";
+          const c = document.getElementById("hub-content");
+          c.style.display = "block";
+          renderSidebar();
+          const myName = _getMyTeamName();
+          const opponents = allTeams.filter((t) => t !== myName);
+          if (!opponents.length) {
+            c.innerHTML = `<div class="page-header"><div><div class="page-title">Opponents</div></div></div>
+              <div class="empty-state"><div class="empty-icon"></div>No opponent data yet.<br>Games you track will appear here.</div>`;
+            return;
+          }
+          const f = (v, type) => {
+            if (v == null || isNaN(v)) return "—";
+            if (type === "rate")
+              return v >= 1
+                ? v.toFixed(3)
+                : "." + String(Math.round(v * 1000)).padStart(3, "0");
+            if (type === "era") return v.toFixed(2);
+            return String(Math.round(v));
+          };
+
+          // Compute per-team stats first so we can derive league averages for color-coding
+          const teamStats = opponents.map((t) => {
+            const games = getTeamGames(t);
+            const rec = getTeamRecord(t, games);
+            const batters = getTeamRoster(t, games);
+            const pitchers = getTeamPitchers(t, games);
+            let tAB = 0,
+              tH = 0,
+              tBB = 0,
+              tHBP = 0,
+              t2B = 0,
+              t3B = 0,
+              tHR = 0;
+            batters.forEach((b) => {
+              tAB += b.ab || 0;
+              tH += b.hits || 0;
+              tBB += b.bb || 0;
+              tHBP += b.hbp || 0;
+              t2B += b.doubles || 0;
+              t3B += b.triples || 0;
+              tHR += b.hr || 0;
+            });
+            const avg = tAB > 0 ? tH / tAB : null;
+            const obp =
+              tAB + tBB + tHBP > 0
+                ? (tH + tBB + tHBP) / (tAB + tBB + tHBP)
+                : null;
+            const slg =
+              tAB > 0
+                ? (tH - t2B - t3B - tHR + t2B * 2 + t3B * 3 + tHR * 4) / tAB
+                : null;
+            const ops = obp != null && slg != null ? obp + slg : null;
+            let pOuts = 0,
+              pR = 0,
+              pK = 0;
+            pitchers.forEach((p) => {
+              pOuts += p.outs || 0;
+              pR += p.r || 0;
+              pK += p.k || 0;
+            });
+            const era = pOuts > 0 ? (pR / (pOuts / 3)) * 9 : null;
+            return { t, games, rec, avg, obp, ops, era, tHR, pK };
+          });
+
+          // League averages (only teams with data for each stat)
+          const leagueAvg = (key) => {
+            const vals = teamStats
+              .map((s) => s[key])
+              .filter((v) => v != null && !isNaN(v));
+            return vals.length
+              ? vals.reduce((a, b) => a + b, 0) / vals.length
+              : null;
+          };
+          const lgAVG = leagueAvg("avg"),
+            lgOBP = leagueAvg("obp"),
+            lgOPS = leagueAvg("ops"),
+            lgERA = leagueAvg("era"),
+            lgHR = leagueAvg("tHR"),
+            lgK = leagueAvg("pK");
+
+          // Returns inline style string: red=good, blue=bad, relative to league avg
+          const sc = (val, lgVal, higherIsBetter) => {
+            if (val == null || lgVal == null || isNaN(val)) return "";
+            if (val > lgVal)
+              return higherIsBetter ? "color:var(--accent)" : "color:#4a9eff";
+            if (val < lgVal)
+              return higherIsBetter ? "color:#4a9eff" : "color:var(--accent)";
+            return "";
+          };
+
+          _hubOppSelectMode = false;
+          _hubOppSelected.clear();
+
+          c.innerHTML = `<div class="page-header">
+            <div><div class="page-title">Opponents</div>
+            <div class="page-sub">${opponents.length} team${
+            opponents.length !== 1 ? "s" : ""
+          }</div></div>
+            <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;justify-content:flex-end">
+              <button class="hub-mob-action-btn" onclick="exportAllData()" title="Export all games as JSON">⬇ Export All</button>
+              <button class="hub-mob-action-btn" onclick="triggerImport()" title="Import games from JSON">⬆ Import</button>
+              <button id="opp-select-btn" onclick="hubOppToggleSelectMode()" style="padding:6px 14px;border:1.5px solid var(--border2);border-radius:7px;background:none;color:var(--text2);font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:13px;cursor:pointer;transition:all .13s;-webkit-tap-highlight-color:transparent;touch-action:manipulation" onmouseover="this.style.borderColor='var(--accent)';this.style.color='var(--accent)'" onmouseout="if(!window._hubOppSelectMode){this.style.borderColor='var(--border2)';this.style.color='var(--text2)'}">Select</button>
+            </div></div>
+            <div id="opp-select-bar" style="display:none" class="gh-select-bar">
+              <span id="opp-sel-count" style="font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:14px;color:var(--text);flex:1">0 selected</span>
+              <button onclick="hubOppSelectAll()" style="padding:5px 12px;border:1.5px solid var(--border2);border-radius:6px;background:none;color:var(--text2);font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:12px;cursor:pointer;-webkit-tap-highlight-color:transparent;touch-action:manipulation">Select All</button>
+              <button onclick="hubOppSelectNone()" style="padding:5px 12px;border:1.5px solid var(--border2);border-radius:6px;background:none;color:var(--text2);font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:12px;cursor:pointer;-webkit-tap-highlight-color:transparent;touch-action:manipulation">Deselect All</button>
+              <button id="opp-del-sel-btn" onclick="hubOppPromptDeleteSelected()" disabled style="padding:5px 14px;border:1.5px solid var(--border2);border-radius:6px;background:none;color:var(--text3);font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:12px;cursor:not-allowed;opacity:.45;transition:all .13s;-webkit-tap-highlight-color:transparent;touch-action:manipulation">Delete Selected</button>
+            </div>
+            <div class="opp-grid" id="opp-cards-grid">${teamStats
+              .map(({ t, games, rec, avg, obp, ops, era, tHR, pK }) => {
+                const isSel = _hubOppSelected.has(t);
+                return `<div class="opp-card${
+                  isSel ? " opp-selected" : ""
+                }" data-team="${escAttr(
+                  t
+                )}" onclick="_hubOppSelectMode ? hubOppToggleCard('${escAttr(
+                  t
+                )}') : showView('team','${escAttr(t)}')">
+                  <div class="opp-card-check">${isSel ? "✓" : ""}</div>
+                  <div class="opp-card-name">${escHtml(t)}</div>
+                  <div class="opp-card-record">${rec.w}-${rec.l}${
+                  rec.t ? "-" + rec.t : ""
+                } &nbsp;·&nbsp; ${games.length}G</div>
+                  <div class="opp-card-stats">
+                    <div class="opp-stat"><span class="opp-stat-val" style="${sc(
+                      avg,
+                      lgAVG,
+                      true
+                    )}">${f(
+                  avg,
+                  "rate"
+                )}</span><span class="opp-stat-lbl">AVG</span></div>
+                    <div class="opp-stat"><span class="opp-stat-val" style="${sc(
+                      obp,
+                      lgOBP,
+                      true
+                    )}">${f(
+                  obp,
+                  "rate"
+                )}</span><span class="opp-stat-lbl">OBP</span></div>
+                    <div class="opp-stat"><span class="opp-stat-val" style="${sc(
+                      ops,
+                      lgOPS,
+                      true
+                    )}">${f(
+                  ops,
+                  "rate"
+                )}</span><span class="opp-stat-lbl">OPS</span></div>
+                    <div class="opp-stat"><span class="opp-stat-val" style="${sc(
+                      era,
+                      lgERA,
+                      false
+                    )}">${f(
+                  era,
+                  "era"
+                )}</span><span class="opp-stat-lbl">ERA</span></div>
+                    <div class="opp-stat"><span class="opp-stat-val" style="${sc(
+                      tHR,
+                      lgHR,
+                      true
+                    )}">${tHR}</span><span class="opp-stat-lbl">HR</span></div>
+                    <div class="opp-stat"><span class="opp-stat-val" style="${sc(
+                      pK,
+                      lgK,
+                      true
+                    )}">${pK}</span><span class="opp-stat-lbl">K</span></div>
+                  </div>
+                </div>`;
+              })
+              .join("")}</div>`;
+        }
+
         // ===== ALL GAMES VIEW =====
         let _ghSelectMode = false;
         let _ghSelected = new Set();
+
+        // ===== HUB OPPONENTS SELECT MODE =====
+        let _hubOppSelectMode = false;
+        let _hubOppSelected = new Set(); // team names
+
+        function hubOppToggleSelectMode() {
+          _hubOppSelectMode = !_hubOppSelectMode;
+          _hubOppSelected.clear();
+          window._hubOppSelectMode = _hubOppSelectMode;
+          const bar = document.getElementById("opp-select-bar");
+          const btn = document.getElementById("opp-select-btn");
+          const grid = document.getElementById("opp-cards-grid");
+          if (bar) bar.style.display = _hubOppSelectMode ? "flex" : "none";
+          if (btn) {
+            btn.textContent = _hubOppSelectMode ? "Cancel" : "Select";
+            btn.style.borderColor = _hubOppSelectMode
+              ? "var(--accent)"
+              : "var(--border2)";
+            btn.style.color = _hubOppSelectMode
+              ? "var(--accent)"
+              : "var(--text2)";
+          }
+          if (grid)
+            grid.classList.toggle("opp-select-active", _hubOppSelectMode);
+          _renderOppCards();
+          _oppUpdateSelBar();
+        }
+
+        function hubOppToggleCard(teamName) {
+          if (_hubOppSelected.has(teamName)) _hubOppSelected.delete(teamName);
+          else _hubOppSelected.add(teamName);
+          const card = document.querySelector(
+            `.opp-card[data-team="${CSS.escape(teamName)}"]`
+          );
+          if (card) {
+            const sel = _hubOppSelected.has(teamName);
+            card.classList.toggle("opp-selected", sel);
+            const chk = card.querySelector(".opp-card-check");
+            if (chk) chk.textContent = sel ? "✓" : "";
+          }
+          _oppUpdateSelBar();
+        }
+
+        function hubOppSelectAll() {
+          document.querySelectorAll(".opp-card[data-team]").forEach((c) => {
+            _hubOppSelected.add(c.dataset.team);
+          });
+          _renderOppCards();
+          _oppUpdateSelBar();
+        }
+
+        function hubOppSelectNone() {
+          _hubOppSelected.clear();
+          _renderOppCards();
+          _oppUpdateSelBar();
+        }
+
+        function _renderOppCards() {
+          document.querySelectorAll(".opp-card[data-team]").forEach((card) => {
+            const t = card.dataset.team;
+            const sel = _hubOppSelected.has(t);
+            card.classList.toggle("opp-selected", sel);
+            const chk = card.querySelector(".opp-card-check");
+            if (chk) chk.textContent = sel ? "✓" : "";
+            card.style.cursor = _hubOppSelectMode ? "pointer" : "";
+          });
+        }
+
+        function _oppUpdateSelBar() {
+          const n = _hubOppSelected.size;
+          const countEl = document.getElementById("opp-sel-count");
+          const delBtn = document.getElementById("opp-del-sel-btn");
+          if (countEl)
+            countEl.textContent =
+              n === 0
+                ? "0 selected"
+                : `${n} team${n !== 1 ? "s" : ""} selected`;
+          if (delBtn) {
+            delBtn.disabled = n === 0;
+            delBtn.style.opacity = n === 0 ? ".45" : "1";
+            delBtn.style.cursor = n === 0 ? "not-allowed" : "pointer";
+            delBtn.style.borderColor =
+              n === 0 ? "var(--border2)" : "var(--accent)";
+            delBtn.style.color = n === 0 ? "var(--text3)" : "var(--accent)";
+          }
+        }
+
+        function hubOppPromptDeleteSelected() {
+          const n = _hubOppSelected.size;
+          if (!n) return;
+          const sub = document.getElementById("delete-confirm-sub");
+          if (sub)
+            sub.textContent = `All games for ${n} opponent${
+              n !== 1 ? "s" : ""
+            } will be permanently removed. This cannot be undone.`;
+          const titleEl = document.querySelector(
+            "#delete-confirm-modal [style*='font-size: 21px']"
+          );
+          if (titleEl)
+            titleEl.textContent = `Delete ${n} opponent${n !== 1 ? "s" : ""}?`;
+          _pendingDeleteId = "__opp_delete__";
+          document.getElementById("delete-confirm-modal").style.display =
+            "flex";
+        }
 
         function renderAllGames() {
           const c = document.getElementById("hub-content");
@@ -21264,8 +21881,15 @@
           const players = getTeamRoster(teamName, games);
           const pitchers = getTeamPitchers(teamName, games);
 
+          const myName = _getMyTeamName();
+          const isOpponent = _hubTab === "opponents" && teamName !== myName;
+          const backBtn = isOpponent
+            ? `<button class="hub-back-btn" onclick="renderOpponentsWelcome()">← Opponents</button>`
+            : "";
+
           const c = document.getElementById("hub-content");
           c.innerHTML = `
+    ${backBtn}
     <div class="page-header">
       <div>
         <div class="page-title">${escHtml(teamName)}</div>
@@ -26323,15 +26947,8 @@
         async function hubBoot() {
           myTeamLoad();
           oppLoad();
-          document.getElementById("hub-content").innerHTML =
-            '<div id="hub-loading" style="display:flex;align-items:center;justify-content:center;height:200px;color:#8a909e;font-family:Barlow Condensed,sans-serif;font-size:16px;letter-spacing:1px;gap:10px">\u26be Loading saved games...</div>';
+          // hubRefreshAll handles all tab selection and content rendering
           await hubRefreshAll();
-          if (allGames.length === 0) {
-            document.getElementById("hub-welcome").style.display = "block";
-            document.getElementById("hub-content").style.display = "none";
-          } else {
-            showView("games");
-          }
         }
         // ===================== PITCH CLOCK VIOLATION =====================
         function openPitchClockModal() {
