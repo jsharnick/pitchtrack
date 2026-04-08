@@ -160,11 +160,6 @@
       }
       .hs-card:hover {
         transform: translateY(-5px);
-        background: rgba(255, 255, 255, 0.09);
-        border-color: rgba(255, 255, 255, 0.22);
-        box-shadow: 0 24px 64px rgba(0, 0, 0, 0.45);
-      }
-      .hs-card.red:hover {
         background: rgba(180, 20, 20, 0.22);
         border-color: rgba(255, 80, 80, 0.4);
         box-shadow: 0 24px 64px rgba(180, 20, 20, 0.4);
@@ -222,14 +217,7 @@
         transition: background 0.15s;
         width: 100%;
       }
-      .hs-card.red .hs-cta {
-        background: linear-gradient(135deg, #bb1818, #d42020);
-        border-color: transparent;
-      }
       .hs-card:hover .hs-cta {
-        background: rgba(255, 255, 255, 0.16);
-      }
-      .hs-card.red:hover .hs-cta {
         background: linear-gradient(135deg, #d42020, #f03030);
       }
       .hs-footer {
@@ -3637,7 +3625,7 @@
       /* ── Opponents welcome grid ── */
       .opp-grid {
         display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+        grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
         gap: 16px;
         padding: 20px 24px;
       }
@@ -3645,57 +3633,65 @@
         background: var(--surface);
         border: 1.5px solid var(--border2);
         border-radius: 14px;
-        padding: 22px 20px 18px;
+        padding: 20px 20px 16px;
         cursor: pointer;
-        transition: border-color 0.15s, box-shadow 0.15s;
+        transition: border-color 0.18s, box-shadow 0.18s, background 0.18s;
         display: flex;
         flex-direction: column;
-        gap: 10px;
+        gap: 0;
       }
       .opp-card:hover {
         border-color: var(--accent);
-        box-shadow: 0 3px 14px rgba(0, 0, 0, 0.09);
+        background: #fff;
+        box-shadow: 0 4px 18px rgba(0, 0, 0, 0.1);
+      }
+      .opp-card-header {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        margin-bottom: 4px;
       }
       .opp-card-name {
         font-family: "Barlow Condensed", sans-serif;
-        font-weight: 800;
-        font-size: 22px;
+        font-weight: 900;
+        font-size: 26px;
         color: var(--text);
-        line-height: 1.1;
+        line-height: 1.05;
+        letter-spacing: -0.3px;
       }
       .opp-card-record {
         font-family: "Barlow Condensed", sans-serif;
         font-weight: 700;
-        font-size: 12px;
-        letter-spacing: 0.5px;
+        font-size: 13px;
+        letter-spacing: 0.3px;
         color: var(--text3);
-        margin-top: -4px;
+        margin-bottom: 14px;
       }
       .opp-card-stats {
         display: grid;
         grid-template-columns: repeat(3, 1fr);
-        gap: 8px 4px;
-        border-top: 1px solid var(--border);
-        padding-top: 12px;
+        gap: 10px 6px;
+        border-top: 1.5px solid var(--border);
+        padding-top: 14px;
       }
       .opp-stat {
         display: flex;
         flex-direction: column;
         align-items: center;
-        gap: 2px;
+        gap: 3px;
       }
       .opp-stat-val {
         font-family: "Barlow Condensed", sans-serif;
         font-weight: 700;
-        font-size: 17px;
+        font-size: 20px;
         color: var(--text);
         line-height: 1;
       }
       .opp-stat-lbl {
         font-family: "Barlow Condensed", sans-serif;
-        font-weight: 600;
+        font-weight: 700;
         font-size: 9px;
-        letter-spacing: 1px;
+        letter-spacing: 1.2px;
         text-transform: uppercase;
         color: var(--text3);
       }
@@ -5146,7 +5142,7 @@
         <div class="hs-logo"><span class="hs-ball">⚾</span> PitchTrack</div>
         <div class="hs-tagline">Professional Baseball Tracking Suite</div>
         <div class="hs-cards">
-          <div class="hs-card red" onclick="openPanel('tracker')">
+          <div class="hs-card" onclick="openPanel('tracker')">
             <div class="hs-card-icon"></div>
             <div style="text-align: center; width: 100%">
               <div class="hs-card-title">Game Tracker</div>
@@ -12273,6 +12269,7 @@
           }
           if (name === "hub") {
             try {
+              _hubTab = null; // re-evaluate default tab on every entry
               hubRefreshAll();
             } catch (e) {}
           }
@@ -19506,22 +19503,54 @@
         async function hubRefreshAll() {
           document.getElementById("hub-team-list").innerHTML =
             '<div class="sidebar-empty">Loading...</div>';
+          // Show welcome/loading state so stale content doesn't bleed through
+          const _hc = document.getElementById("hub-content");
+          const _hw = document.getElementById("hub-welcome");
+          if (_hc) _hc.style.display = "none";
+          if (_hw) _hw.style.display = "block";
+          // Always reload myTeam so _myTeamNameCache is guaranteed current
+          try {
+            await myTeamLoad();
+          } catch (e) {}
           allGames = await loadAllGames();
           allTeams = await loadTeams();
-          console.log(
-            "[PitchTrack Hub] Loaded",
-            allGames.length,
-            "games,",
-            allTeams.length,
-            "teams"
+
+          // Capture team name NOW from freshly-loaded data — don't re-evaluate later
+          const _loadedTeamName = _getMyTeamName();
+          const _hasMyTeam = !!(
+            _loadedTeamName &&
+            myTeamRoster &&
+            myTeamRoster.length
           );
+
           if (!_hubTab) {
-            _hubTab =
-              _getMyTeamName() && myTeamRoster && myTeamRoster.length
-                ? "myteam"
-                : "history";
+            _hubTab = _hasMyTeam ? "myteam" : "history";
           }
-          hubSetTab(_hubTab);
+
+          // Set tab highlights directly (no re-evaluation of team name inside hubSetTab)
+          ["myteam", "opponents", "history", "compare"].forEach(function (t) {
+            const el = document.getElementById("htab-" + t);
+            if (el) el.classList.toggle("active", t === _hubTab);
+          });
+          const _app = document.getElementById("hub-app");
+          if (_app) _app.dataset.hubtab = _hubTab;
+
+          // Render content using the already-loaded team name
+          if (_hubTab === "myteam") {
+            if (_loadedTeamName) {
+              showView("team", _loadedTeamName);
+            } else {
+              if (_hc) _hc.style.display = "none";
+              if (_hw) _hw.style.display = "block";
+              renderSidebar();
+            }
+          } else if (_hubTab === "history") {
+            showView("games");
+          } else if (_hubTab === "opponents") {
+            renderOpponentsWelcome();
+          } else if (_hubTab === "compare") {
+            showView("compare");
+          }
         }
 
         // ===== TEAM SELECT MODE =====
@@ -21101,6 +21130,76 @@
             return String(Math.round(v));
           };
 
+          // Compute per-team stats first so we can derive league averages for color-coding
+          const teamStats = opponents.map((t) => {
+            const games = getTeamGames(t);
+            const rec = getTeamRecord(t, games);
+            const batters = getTeamRoster(t, games);
+            const pitchers = getTeamPitchers(t, games);
+            let tAB = 0,
+              tH = 0,
+              tBB = 0,
+              tHBP = 0,
+              t2B = 0,
+              t3B = 0,
+              tHR = 0;
+            batters.forEach((b) => {
+              tAB += b.ab || 0;
+              tH += b.hits || 0;
+              tBB += b.bb || 0;
+              tHBP += b.hbp || 0;
+              t2B += b.doubles || 0;
+              t3B += b.triples || 0;
+              tHR += b.hr || 0;
+            });
+            const avg = tAB > 0 ? tH / tAB : null;
+            const obp =
+              tAB + tBB + tHBP > 0
+                ? (tH + tBB + tHBP) / (tAB + tBB + tHBP)
+                : null;
+            const slg =
+              tAB > 0
+                ? (tH - t2B - t3B - tHR + t2B * 2 + t3B * 3 + tHR * 4) / tAB
+                : null;
+            const ops = obp != null && slg != null ? obp + slg : null;
+            let pOuts = 0,
+              pR = 0,
+              pK = 0;
+            pitchers.forEach((p) => {
+              pOuts += p.outs || 0;
+              pR += p.r || 0;
+              pK += p.k || 0;
+            });
+            const era = pOuts > 0 ? (pR / (pOuts / 3)) * 9 : null;
+            return { t, games, rec, avg, obp, ops, era, tHR, pK };
+          });
+
+          // League averages (only teams with data for each stat)
+          const leagueAvg = (key) => {
+            const vals = teamStats
+              .map((s) => s[key])
+              .filter((v) => v != null && !isNaN(v));
+            return vals.length
+              ? vals.reduce((a, b) => a + b, 0) / vals.length
+              : null;
+          };
+          const lgAVG = leagueAvg("avg"),
+            lgOBP = leagueAvg("obp"),
+            lgOPS = leagueAvg("ops"),
+            lgERA = leagueAvg("era"),
+            lgHR = leagueAvg("tHR"),
+            lgK = leagueAvg("pK");
+
+          // Returns inline style string: red=good, blue=bad, relative to league avg
+          const sc = (val, lgVal, higherIsBetter) => {
+            if (val == null || lgVal == null || isNaN(val)) return "";
+            if (val > lgVal)
+              return higherIsBetter ? "color:var(--accent)" : "color:#4a9eff";
+            if (val < lgVal)
+              return higherIsBetter ? "color:#4a9eff" : "color:var(--accent)";
+            return "";
+          };
+
           c.innerHTML = `<div class="page-header">
             <div><div class="page-title">Opponents</div>
             <div class="page-sub">${opponents.length} team${
@@ -21110,82 +21209,60 @@
               <button class="hub-mob-action-btn" onclick="exportAllData()" title="Export all games as JSON">⬇ Export All</button>
               <button class="hub-mob-action-btn" onclick="triggerImport()" title="Import games from JSON">⬆ Import</button>
             </div></div>
-            <div class="opp-grid">${opponents
-              .map((t) => {
-                const games = getTeamGames(t);
-                const rec = getTeamRecord(t, games);
-                const batters = getTeamRoster(t, games);
-                const pitchers = getTeamPitchers(t, games);
-
-                // Team batting totals
-                let tAB = 0,
-                  tH = 0,
-                  tBB = 0,
-                  tHBP = 0,
-                  t2B = 0,
-                  t3B = 0,
-                  tHR = 0;
-                batters.forEach((b) => {
-                  tAB += b.ab || 0;
-                  tH += b.hits || 0;
-                  tBB += b.bb || 0;
-                  tHBP += b.hbp || 0;
-                  t2B += b.doubles || 0;
-                  t3B += b.triples || 0;
-                  tHR += b.hr || 0;
-                });
-                const avg = tAB > 0 ? tH / tAB : null;
-                const obp =
-                  tAB + tBB + tHBP > 0
-                    ? (tH + tBB + tHBP) / (tAB + tBB + tHBP)
-                    : null;
-                const slg =
-                  tAB > 0
-                    ? (tH - t2B - t3B - tHR + t2B * 2 + t3B * 3 + tHR * 4) / tAB
-                    : null;
-                const ops = obp != null && slg != null ? obp + slg : null;
-
-                // Team pitching — ERA via outs (3 outs = 1 IP)
-                let pOuts = 0,
-                  pR = 0,
-                  pK = 0,
-                  pBB2 = 0;
-                pitchers.forEach((p) => {
-                  pOuts += p.outs || 0;
-                  pR += p.r || 0;
-                  pK += p.k || 0;
-                  pBB2 += p.bb || 0;
-                });
-                const era = pOuts > 0 ? (pR / (pOuts / 3)) * 9 : null;
-
+            <div class="opp-grid">${teamStats
+              .map(({ t, games, rec, avg, obp, ops, era, tHR, pK }) => {
                 return `<div class="opp-card" onclick="showView('team','${escAttr(
                   t
                 )}')">
-                <div class="opp-card-name">${escHtml(t)}</div>
-                <div class="opp-card-record">${rec.w}-${rec.l}${
+                  <div class="opp-card-name">${escHtml(t)}</div>
+                  <div class="opp-card-record">${rec.w}-${rec.l}${
                   rec.t ? "-" + rec.t : ""
                 } &nbsp;·&nbsp; ${games.length}G</div>
-                <div class="opp-card-stats">
-                  <div class="opp-stat"><span class="opp-stat-val">${f(
-                    avg,
-                    "rate"
-                  )}</span><span class="opp-stat-lbl">AVG</span></div>
-                  <div class="opp-stat"><span class="opp-stat-val">${f(
-                    obp,
-                    "rate"
-                  )}</span><span class="opp-stat-lbl">OBP</span></div>
-                  <div class="opp-stat"><span class="opp-stat-val">${f(
-                    ops,
-                    "rate"
-                  )}</span><span class="opp-stat-lbl">OPS</span></div>
-                  <div class="opp-stat"><span class="opp-stat-val">${f(
-                    era,
-                    "era"
-                  )}</span><span class="opp-stat-lbl">ERA</span></div>
-                  <div class="opp-stat"><span class="opp-stat-val">${tHR}</span><span class="opp-stat-lbl">HR</span></div>
-                  <div class="opp-stat"><span class="opp-stat-val">${pK}</span><span class="opp-stat-lbl">K</span></div>
-                </div>
-              </div>`;
+                  <div class="opp-card-stats">
+                    <div class="opp-stat"><span class="opp-stat-val" style="${sc(
+                      avg,
+                      lgAVG,
+                      true
+                    )}">${f(
+                  avg,
+                  "rate"
+                )}</span><span class="opp-stat-lbl">AVG</span></div>
+                    <div class="opp-stat"><span class="opp-stat-val" style="${sc(
+                      obp,
+                      lgOBP,
+                      true
+                    )}">${f(
+                  obp,
+                  "rate"
+                )}</span><span class="opp-stat-lbl">OBP</span></div>
+                    <div class="opp-stat"><span class="opp-stat-val" style="${sc(
+                      ops,
+                      lgOPS,
+                      true
+                    )}">${f(
+                  ops,
+                  "rate"
+                )}</span><span class="opp-stat-lbl">OPS</span></div>
+                    <div class="opp-stat"><span class="opp-stat-val" style="${sc(
+                      era,
+                      lgERA,
+                      false
+                    )}">${f(
+                  era,
+                  "era"
+                )}</span><span class="opp-stat-lbl">ERA</span></div>
+                    <div class="opp-stat"><span class="opp-stat-val" style="${sc(
+                      tHR,
+                      lgHR,
+                      true
+                    )}">${tHR}</span><span class="opp-stat-lbl">HR</span></div>
+                    <div class="opp-stat"><span class="opp-stat-val" style="${sc(
+                      pK,
+                      lgK,
+                      true
+                    )}">${pK}</span><span class="opp-stat-lbl">K</span></div>
+                  </div>
+                </div>`;
               })
               .join("")}</div>`;
         }
@@ -26685,15 +26762,8 @@
         async function hubBoot() {
           myTeamLoad();
           oppLoad();
-          document.getElementById("hub-content").innerHTML =
-            '<div id="hub-loading" style="display:flex;align-items:center;justify-content:center;height:200px;color:#8a909e;font-family:Barlow Condensed,sans-serif;font-size:16px;letter-spacing:1px;gap:10px">\u26be Loading saved games...</div>';
+          // hubRefreshAll handles all tab selection and content rendering
           await hubRefreshAll();
-          if (allGames.length === 0) {
-            document.getElementById("hub-welcome").style.display = "block";
-            document.getElementById("hub-content").style.display = "none";
-          } else {
-            showView("games");
-          }
         }
         // ===================== PITCH CLOCK VIOLATION =====================
         function openPitchClockModal() {
