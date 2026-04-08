@@ -14005,6 +14005,8 @@
             )
               renderMobPitchers();
           } catch (e) {}
+          // Autosave silently after every half-inning
+          saveGame(true).catch(() => {});
         }
         function recordAtBatResult(type, label, rbi) {
           const key = currentBatterKey();
@@ -18170,7 +18172,7 @@
         }
 
         // ===================== SAVE GAME =====================
-        async function saveGame() {
+        async function saveGame(silent = false) {
           const awayTeam = qs("away-name-input").value.trim() || "AWAY";
           const homeTeam = qs("home-name-input").value.trim() || "HOME";
           const date = new Date().toISOString().split("T")[0];
@@ -18276,22 +18278,24 @@
               true
             );
 
-            toast(`Game saved! ${awayTeam} vs ${homeTeam} — ${date}`);
             try {
               unsavedGame = false;
               updateDot();
             } catch (e) {}
-            try {
-              const saveBtn = document.getElementById("sn-save-btn");
-              if (saveBtn) {
-                saveBtn.textContent = "✓ Saved";
-                saveBtn.classList.add("ok");
-                setTimeout(() => {
-                  saveBtn.textContent = "Save";
-                  saveBtn.classList.remove("ok");
-                }, 3000);
-              }
-            } catch (e) {}
+            if (!silent) {
+              toast(`Game saved! ${awayTeam} vs ${homeTeam} — ${date}`);
+              try {
+                const saveBtn = document.getElementById("sn-save-btn");
+                if (saveBtn) {
+                  saveBtn.textContent = "✓ Saved";
+                  saveBtn.classList.add("ok");
+                  setTimeout(() => {
+                    saveBtn.textContent = "Save";
+                    saveBtn.classList.remove("ok");
+                  }, 3000);
+                }
+              } catch (e) {}
+            }
           } catch (err) {
             toast("Save failed — " + (err?.message || "storage unavailable"));
             console.error("saveGame error:", err);
