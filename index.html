@@ -15766,9 +15766,11 @@
               );
             })
             .join("");
-          const batterVsPitcher = S.pitchLog.filter(
-            (e) => e.batter === batter?.name && e.pitcher === pitcher?.name
-          );
+          const batterVsPitcher = S.pitchLog.filter((e) => {
+            const bNames =
+              _nameAliases[batter?.name] || new Set([batter?.name]);
+            return bNames.has(e.batter) && e.pitcher === pitcher?.name;
+          });
           const bvpTotal = batterVsPitcher.length;
           const bvpSwings = batterVsPitcher.filter((e) =>
             [
@@ -23561,9 +23563,10 @@
 
         function _extractABs(pitchLog, batterName, teamName, game) {
           // pitchLog is newest-first; reverse so we process in chronological order
+          const matchNames = _nameAliases[batterName] || new Set([batterName]);
           const pitches = [...pitchLog]
             .reverse()
-            .filter((p) => p.batter === batterName);
+            .filter((p) => matchNames.has(p.batter));
           const abs = [];
           let cur = null;
           let prevEnded = false; // did the previous pitch end an AB?
