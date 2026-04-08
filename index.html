@@ -4819,19 +4819,19 @@
       }
       .cmp-stat-table td {
         font-family: "Barlow Condensed", sans-serif;
-        font-weight: 700;
-        font-size: 14px;
-        color: var(--text2);
+        font-weight: 500;
+        font-size: 15px;
+        color: var(--text);
         text-align: center;
-        padding: 6px 6px;
+        padding: 7px 6px;
         border-bottom: 1px solid var(--border);
         vertical-align: middle;
       }
       .cmp-stat-table td:first-child {
-        font-size: 10px;
-        letter-spacing: 1.2px;
+        font-size: 12px;
+        letter-spacing: 0.6px;
         text-transform: uppercase;
-        color: var(--text3);
+        color: var(--text2);
         text-align: left;
         padding-left: 0;
         font-weight: 600;
@@ -4841,16 +4841,15 @@
       td.cmp-val.win {
         background: rgba(204, 26, 26, 0.12) !important;
         color: var(--accent) !important;
-        font-weight: 900 !important;
+        font-weight: 700 !important;
       }
       /* Percentile badge inside cell */
       .cmp-pctile {
         font-family: "Barlow Condensed", sans-serif;
-        font-size: 9px;
-        font-weight: 700;
-        letter-spacing: 0.5px;
-        color: var(--text3);
-        opacity: 0.8;
+        font-size: 10px;
+        font-weight: 500;
+        letter-spacing: 0.3px;
+        color: var(--text2);
         margin-top: 1px;
         line-height: 1;
       }
@@ -19734,7 +19733,9 @@
             getTeamRoster(team, games).forEach((r) => {
               const pa =
                 r.pa != null ? r.pa : (r.ab || 0) + (r.bb || 0) + (r.hbp || 0);
-              if (pa < minPA) return;
+              // Require at least 2 PA per team game played to be included in percentiles
+              // e.g. USJ played 8 games → player needs 16 PA; Dean played 5 → needs 10 PA
+              if (pa < games.length * 2) return;
               const tb =
                 (r.hits || 0) -
                 (r.doubles || 0) -
@@ -19977,6 +19978,40 @@
               : null;
           const pMaxVelo = pVels.length > 0 ? Math.max(...pVels) : null;
 
+          // ── Splits ──
+          const sortedGames = [...games].sort((a, b) =>
+            a.date.localeCompare(b.date)
+          );
+          const allABs = sortedGames.flatMap((g) =>
+            _extractABs(g.pitchLog || [], name, team, g)
+          );
+          const _splitSt = (filterFn) => {
+            const arr = allABs.filter(filterFn).map(_abToStats);
+            return arr.length ? _sumStats(arr) : null;
+          };
+          const splits = {
+            vsLHP: _splitSt((a) => a.pitcherHand === "L"),
+            vsRHP: _splitSt((a) => a.pitcherHand !== "L"),
+            home: _splitSt((a) => a.isHome),
+            away: _splitSt((a) => !a.isHome),
+            risp: _splitSt((a) => a.runnersOn?.["2nd"] || a.runnersOn?.["3rd"]),
+            basesEmpty: _splitSt(
+              (a) =>
+                !a.runnersOn?.["1st"] &&
+                !a.runnersOn?.["2nd"] &&
+                !a.runnersOn?.["3rd"]
+            ),
+            aheadCount: _splitSt((a) => {
+              const fp = a.pitches[0];
+              return fp && fp.balls > fp.strikes;
+            }),
+            behindCount: _splitSt((a) => {
+              const fp = a.pitches[0];
+              return fp && fp.strikes > fp.balls;
+            }),
+            twoStrike: _splitSt((a) => a.pitches.some((p) => p.strikes === 2)),
+          };
+
           return {
             team,
             name,
@@ -20013,6 +20048,7 @@
             pFPSpct,
             pAvgVelo,
             pMaxVelo,
+            splits,
           };
         }
 
@@ -20366,6 +20402,91 @@
         "none"
       )}
     </tbody></table>`;
+
+            // ── SPLITS SECTION ──
+            const hasSplitData = slots.some(
+              (sl) => sl?.s?.splits && Object.values(sl.s.splits).some(Boolean)
+            );
+            if (hasSplitData) {
+              // Helper to derive rate stats from a _sumStats object
+              const fmtSplitStat = (st, metric) => {
+                if (!st || st.pa === 0) return NA;
+                if (metric === "pa") return Math.round(st.pa).toString();
+                if (metric === "avg")
+                  return st.ab > 0 ? _fmtRate(st.h / st.ab) : NA;
+                if (metric === "obp") {
+                  const o = st.pa > 0 ? (st.h + st.bb + st.hbp) / st.pa : null;
+                  return o !== null ? _fmtRate(o) : NA;
+                }
+                if (metric === "slg")
+                  return st.ab > 0 ? _fmtRate(st.tb / st.ab) : NA;
+                if (metric === "ops") {
+                  const o = st.pa > 0 ? (st.h + st.bb + st.hbp) / st.pa : null;
+                  const sg = st.ab > 0 ? st.tb / st.ab : null;
+                  return o !== null && sg !== null ? _fmtRate(o + sg) : NA;
+                }
+                if (metric === "kpct")
+                  return st.pa > 0 ? f(st.k / st.pa, "pct") : NA;
+                if (metric === "bbpct")
+                  return st.pa > 0 ? f(st.bb / st.pa, "pct") : NA;
+                return NA;
+              };
+
+              const splitCats = [
+                { key: "vsLHP", label: "vs LHP" },
+                { key: "vsRHP", label: "vs RHP" },
+                { key: "home", label: "Home" },
+                { key: "away", label: "Away" },
+                { key: "risp", label: "RISP" },
+                { key: "basesEmpty", label: "Bases Empty" },
+                { key: "aheadCount", label: "Ahead in Count" },
+                { key: "behindCount", label: "Behind in Count" },
+                { key: "twoStrike", label: "2-Strike" },
+              ];
+
+              // Sub-header style for each split context
+              const splitSubHead = (lbl) =>
+                `<tr><td colspan="${
+                  N + 1
+                }" style="font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--text3);padding:10px 0 4px;border-bottom:none">${lbl}</td></tr>`;
+
+              const splitMetrics = [
+                { key: "pa", label: "PA", dir: "high" },
+                { key: "avg", label: "AVG", dir: "high" },
+                { key: "obp", label: "OBP", dir: "high" },
+                { key: "slg", label: "SLG", dir: "high" },
+                { key: "ops", label: "OPS", dir: "high" },
+                { key: "kpct", label: "K%", dir: "low" },
+                { key: "bbpct", label: "BB%", dir: "high" },
+              ];
+
+              const splitRows = splitCats
+                .map(({ key, label }) => {
+                  const anyHasData = slots.some(
+                    (sl) => sl?.s?.splits?.[key] != null
+                  );
+                  if (!anyHasData) return "";
+                  const metricRows = splitMetrics
+                    .map(({ key: mk, label: ml, dir }) =>
+                      r(
+                        ml,
+                        slots.map((sl) =>
+                          fmtSplitStat(sl?.s?.splits?.[key], mk)
+                        ),
+                        dir
+                      )
+                    )
+                    .join("");
+                  return splitSubHead(label) + metricRows;
+                })
+                .join("");
+
+              battingSection += `
+    <div class="cmp-stat-section-head">Splits</div>
+    <table class="cmp-stat-table">${thead}<tbody>
+      ${splitRows}
+    </tbody></table>`;
+            }
           }
 
           // If pitcher comparison: pitching first, batting after (if any)
