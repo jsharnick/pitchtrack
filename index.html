@@ -18642,8 +18642,15 @@
             }
           });
 
-          // Add pitcher form
-          const rosterPitchers = (myTeamRoster || []).filter((p) =>
+          // Add pitcher form — show roster cards only for the pitching team
+          const _pitchSrc = S.isTop ? _rosterSrcHome : _rosterSrcAway;
+          const _pitchPool =
+            _pitchSrc === "myteam"
+              ? myTeamRoster || []
+              : _pitchSrc && _pitchSrc.roster
+              ? _pitchSrc.roster
+              : [];
+          const rosterPitchers = _pitchPool.filter((p) =>
             ["RHP", "LHP", "P", "UTL/RHP", "C/RHP", "3B/RHP"].includes(p.pos)
           );
           const pitcherRosterHtml =
@@ -18737,7 +18744,14 @@
         }
 
         function mobFillPitcherFromRoster(pid) {
-          const p = myTeamRoster.find((x) => x.id === pid);
+          const _pitchSrc = S.isTop ? _rosterSrcHome : _rosterSrcAway;
+          const _pool =
+            _pitchSrc === "myteam"
+              ? myTeamRoster || []
+              : _pitchSrc && _pitchSrc.roster
+              ? _pitchSrc.roster
+              : [];
+          const p = _pool.find((x) => x.id === pid);
           if (!p) return;
           activePitcherList().forEach((x) => (x.active = false));
           activePitcherList().push({
