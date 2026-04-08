@@ -31724,28 +31724,8 @@
                 // repeat the column header on every page, so this correctly
                 // handles multi-page PDFs without cross-page row collisions.
                 var allPlayers = [];
-                pageItems.forEach(function (items, pi) {
-                  console.log(
-                    "[PDF] page",
-                    pi + 1,
-                    "— raw items:",
-                    items.length,
-                    "| first 5:",
-                    items.slice(0, 5).map(function (it) {
-                      return JSON.stringify({
-                        s: it.str,
-                        x: Math.round(it.x),
-                        y: Math.round(it.y),
-                      });
-                    })
-                  );
+                pageItems.forEach(function (items) {
                   var players = _parsePDFRosterItems(items);
-                  console.log(
-                    "[PDF] page",
-                    pi + 1,
-                    "— players found:",
-                    players.length
-                  );
                   allPlayers = allPlayers.concat(players);
                 });
                 resolve(allPlayers);
@@ -31858,41 +31838,11 @@
           }
 
           // ── 3. Filter to items below the header ───────────────────────────────
-          console.log(
-            "[PDF] headerFound:",
-            headerFound,
-            "| colX:",
-            JSON.stringify(colX),
-            "| headerY:",
-            Math.round(headerY)
-          );
-          console.log(
-            "[PDF] sorted top-5 Y values:",
-            sorted.slice(0, 5).map(function (it) {
-              return Math.round(it.y) + ':"' + it.str + '"';
-            })
-          );
-
           var dataItems = headerFound
             ? sorted.filter(function (it) {
                 return it.y < headerY - HDR_TOL;
               })
             : sorted;
-          console.log(
-            "[PDF] dataItems:",
-            dataItems.length,
-            "| first 5:",
-            dataItems.slice(0, 5).map(function (it) {
-              return (
-                '"' +
-                it.str +
-                '"@x=' +
-                Math.round(it.x) +
-                ",y=" +
-                Math.round(it.y)
-              );
-            })
-          );
 
           // ── 4. Helper: parse a bucket of items as one player ─────────────────
           function extractPlayer(cells) {
@@ -32028,44 +31978,67 @@
             };
           }
 
-          // ── 5. Jersey-number-as-delimiter parsing ─────────────────────────────
+          // ── 5. Two-pass nearest-jersey assignment ─────────────────────────────
+          // Pass 1: locate all jersey-number items in the num column.
+          // Pass 2: assign every other item to whichever jersey's Y it is closest
+          // to (within MAX_ROW_DIST). This prevents items that appear slightly
+          // above a jersey number from bleeding into the previous player's bucket.
           var players = [];
 
           if (headerFound && colX.num >= 0) {
-            // Each time a JNUM appears at the num-column X, it starts a new player bucket.
-            // Items between two jersey numbers belong to the same player (handles multi-line names).
-            var currentBucket = null;
+            var MAX_ROW_DIST = 30;
 
-            function flushBucket(bucket) {
-              if (!bucket || !bucket.length) return;
-              var p = extractPlayer(bucket);
-              if (p) players.push(p);
-            }
-
+            // Pass 1 — collect jersey anchors
+            var jerseyAnchors = [];
             dataItems.forEach(function (it) {
               var atNumCol = Math.abs(it.x - colX.num) < COL_SNAP;
-              // Strip leading "#" and trailing punctuation before testing — handles "#1", "1.", etc.
-              var cleanedStr = it.str
+              var cleaned = it.str
                 .trim()
                 .replace(/^#/, "")
                 .replace(/[.\s]+$/, "");
-              var isJersey = JNUM.test(cleanedStr);
-              if (atNumCol && isJersey) {
-                console.log(
-                  "[PDF] new bucket at jersey:",
-                  it.str,
-                  "x=",
-                  Math.round(it.x),
-                  "y=",
-                  Math.round(it.y)
-                );
-                flushBucket(currentBucket);
-                currentBucket = [it];
-              } else if (currentBucket) {
-                currentBucket.push(it);
+              if (atNumCol && JNUM.test(cleaned)) {
+                jerseyAnchors.push({ y: it.y, item: it });
               }
             });
-            flushBucket(currentBucket);
+
+            if (jerseyAnchors.length) {
+              // Build per-jersey buckets, seeded with the jersey item itself
+              var bucketMap = {};
+              jerseyAnchors.forEach(function (ja) {
+                bucketMap[ja.y] = [ja.item];
+              });
+
+              // Pass 2 — assign all other items to nearest jersey
+              dataItems.forEach(function (it) {
+                var atNumCol = Math.abs(it.x - colX.num) < COL_SNAP;
+                var cleaned = it.str
+                  .trim()
+                  .replace(/^#/, "")
+                  .replace(/[.\s]+$/, "");
+                if (atNumCol && JNUM.test(cleaned)) return; // already seeded
+                var best = null,
+                  bestDist = MAX_ROW_DIST + 1;
+                jerseyAnchors.forEach(function (ja) {
+                  var d = Math.abs(it.y - ja.y);
+                  if (d < bestDist) {
+                    bestDist = d;
+                    best = ja;
+                  }
+                });
+                if (best) bucketMap[best.y].push(it);
+              });
+
+              // Parse each bucket in top-to-bottom order
+              jerseyAnchors
+                .slice()
+                .sort(function (a, b) {
+                  return b.y - a.y;
+                })
+                .forEach(function (ja) {
+                  var p = extractPlayer(bucketMap[ja.y]);
+                  if (p) players.push(p);
+                });
+            }
           } else {
             // No reliable header/num column — fall back to Y-row grouping
             var ROW_TOL = 8;
