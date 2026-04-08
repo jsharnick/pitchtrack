@@ -18642,35 +18642,50 @@
             }
           });
 
-          // Add pitcher form
-          const rosterPitchers = (myTeamRoster || []).filter((p) =>
-            ["RHP", "LHP", "P", "UTL/RHP", "C/RHP", "3B/RHP"].includes(p.pos)
+          // Add pitcher form — show roster cards only for the pitching team
+          const _pitchSrc = S.isTop ? _rosterSrcHome : _rosterSrcAway;
+          const _pitchPool =
+            _pitchSrc === "myteam"
+              ? myTeamRoster || []
+              : _pitchSrc && _pitchSrc.roster
+              ? _pitchSrc.roster
+              : [];
+          const _pitcherPos = ["RHP", "LHP", "P", "UTL/RHP", "C/RHP", "3B/RHP"];
+          const primaryPitchers = _pitchPool.filter((p) =>
+            _pitcherPos.includes(p.pos)
           );
+          const otherPlayers = _pitchPool.filter(
+            (p) => !_pitcherPos.includes(p.pos)
+          );
+          const _mkPitcherCard = (p) =>
+            `<div onclick="mobFillPitcherFromRoster('${
+              p.id
+            }')" style="display:flex;align-items:center;gap:8px;padding:7px 8px;background:var(--surface3);border:1px solid var(--border);border-radius:6px;cursor:pointer;-webkit-tap-highlight-color:transparent">
+              <div style="font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:14px;color:var(--blue);width:30px;text-align:right;flex-shrink:0">#${
+                p.num || "—"
+              }</div>
+              <div style="flex:1;min-width:0">
+                <div style="font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:13px;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${
+                  p.name
+                }</div>
+                <div style="font-size:9px;color:var(--text3)">${
+                  p.pos || "—"
+                } · ${p.throw || "R"}HP</div>
+              </div>
+            </div>`;
           const pitcherRosterHtml =
-            rosterPitchers.length > 0
+            primaryPitchers.length > 0 || otherPlayers.length > 0
               ? `<div style="margin-top:8px;border-top:1px solid var(--border);padding-top:8px">
                 <div style="font-size:8px;letter-spacing:2px;color:var(--text3);text-transform:uppercase;font-weight:600;margin-bottom:6px">Add from Roster</div>
                 <div style="max-height:180px;overflow-y:auto;display:flex;flex-direction:column;gap:3px">
-                  ${rosterPitchers
-                    .map(
-                      (p) =>
-                        `<div onclick="mobFillPitcherFromRoster('${
-                          p.id
-                        }')" style="display:flex;align-items:center;gap:8px;padding:7px 8px;background:var(--surface3);border:1px solid var(--border);border-radius:6px;cursor:pointer;-webkit-tap-highlight-color:transparent">
-                      <div style="font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:14px;color:var(--blue);width:30px;text-align:right;flex-shrink:0">#${
-                        p.num || "—"
-                      }</div>
-                      <div style="flex:1;min-width:0">
-                        <div style="font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:13px;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${
-                          p.name
-                        }</div>
-                        <div style="font-size:9px;color:var(--text3)">${
-                          p.pos || "—"
-                        } · ${p.throw || "R"}HP</div>
-                      </div>
-                    </div>`
-                    )
-                    .join("")}
+                  ${primaryPitchers.map(_mkPitcherCard).join("")}
+                  ${
+                    otherPlayers.length > 0
+                      ? `<div style="font-size:8px;letter-spacing:2px;color:var(--text3);text-transform:uppercase;font-weight:600;margin-top:6px;margin-bottom:2px">Position Players</div>${otherPlayers
+                          .map(_mkPitcherCard)
+                          .join("")}`
+                      : ""
+                  }
                 </div>
               </div>`
               : "";
@@ -18737,7 +18752,14 @@
         }
 
         function mobFillPitcherFromRoster(pid) {
-          const p = myTeamRoster.find((x) => x.id === pid);
+          const _pitchSrc = S.isTop ? _rosterSrcHome : _rosterSrcAway;
+          const _pool =
+            _pitchSrc === "myteam"
+              ? myTeamRoster || []
+              : _pitchSrc && _pitchSrc.roster
+              ? _pitchSrc.roster
+              : [];
+          const p = _pool.find((x) => x.id === pid);
           if (!p) return;
           activePitcherList().forEach((x) => (x.active = false));
           activePitcherList().push({
@@ -18940,41 +18962,47 @@
                 "C/RHP",
                 "3B/RHP",
               ];
-              let rosterBatters = [];
-              if (_rosterSrc === "myteam") {
-                rosterBatters = (myTeamRoster || []).filter(
-                  (p) => !_pitcherPositions.includes(p.pos)
-                );
-              } else if (_rosterSrc && _rosterSrc.roster) {
-                rosterBatters = (_rosterSrc.roster || []).filter(
-                  (p) => !_pitcherPositions.includes(p.pos)
-                );
-              }
+              const _fullBatterPool =
+                _rosterSrc === "myteam"
+                  ? myTeamRoster || []
+                  : _rosterSrc && _rosterSrc.roster
+                  ? _rosterSrc.roster
+                  : [];
+              const primaryBatters = _fullBatterPool.filter(
+                (p) => !_pitcherPositions.includes(p.pos)
+              );
+              const pitcherPlayers = _fullBatterPool.filter((p) =>
+                _pitcherPositions.includes(p.pos)
+              );
+              const _mkBatterCard = (p) =>
+                `<div onclick="mobFillFromRoster('${
+                  p.id
+                }',${i})" style="display:flex;align-items:center;gap:8px;padding:7px 8px;background:var(--surface3);border:1px solid var(--border);border-radius:6px;cursor:pointer;-webkit-tap-highlight-color:transparent">
+                  <div style="font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:14px;color:var(--accent);width:30px;text-align:right;flex-shrink:0">#${
+                    p.num || "—"
+                  }</div>
+                  <div style="flex:1;min-width:0">
+                    <div style="font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:13px;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${
+                      p.name
+                    }</div>
+                    <div style="font-size:9px;color:var(--text3)">${
+                      p.pos || "—"
+                    } · ${p.bat || "R"}/${p.throw || "R"}</div>
+                  </div>
+                </div>`;
               const rosterPickerHtml =
-                rosterBatters.length > 0
+                _fullBatterPool.length > 0
                   ? `<div style="margin-top:8px;border-top:1px solid var(--border);padding-top:8px">
                     <div style="font-size:8px;letter-spacing:2px;color:var(--text3);text-transform:uppercase;font-weight:600;margin-bottom:6px">Pick from Roster</div>
                     <div style="max-height:200px;overflow-y:auto;display:flex;flex-direction:column;gap:3px">
-                      ${rosterBatters
-                        .map(
-                          (p) =>
-                            `<div onclick="mobFillFromRoster('${
-                              p.id
-                            }',${i})" style="display:flex;align-items:center;gap:8px;padding:7px 8px;background:var(--surface3);border:1px solid var(--border);border-radius:6px;cursor:pointer;-webkit-tap-highlight-color:transparent">
-                          <div style="font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:14px;color:var(--accent);width:30px;text-align:right;flex-shrink:0">#${
-                            p.num || "—"
-                          }</div>
-                          <div style="flex:1;min-width:0">
-                            <div style="font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:13px;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${
-                              p.name
-                            }</div>
-                            <div style="font-size:9px;color:var(--text3)">${
-                              p.pos || "—"
-                            } · ${p.bat || "R"}/${p.throw || "R"}</div>
-                          </div>
-                        </div>`
-                        )
-                        .join("")}
+                      ${primaryBatters.map(_mkBatterCard).join("")}
+                      ${
+                        pitcherPlayers.length > 0
+                          ? `<div style="font-size:8px;letter-spacing:2px;color:var(--text3);text-transform:uppercase;font-weight:600;margin-top:6px;margin-bottom:2px">Pitchers</div>${pitcherPlayers
+                              .map(_mkBatterCard)
+                              .join("")}`
+                          : ""
+                      }
                     </div>
                   </div>`
                   : "";
