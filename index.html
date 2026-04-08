@@ -848,7 +848,7 @@
         font-size: 10px;
         letter-spacing: 1px;
         text-transform: uppercase;
-        color: var(--text3);
+        color: var(--text);
         border-bottom: 2px solid var(--border);
         padding-bottom: 4px;
         margin-bottom: 10px;
@@ -863,7 +863,7 @@
         font-size: 8px;
         letter-spacing: 2px;
         text-transform: uppercase;
-        color: var(--text3);
+        color: var(--text);
         margin-top: 2px;
       }
       .scout-stat-grid {
@@ -886,7 +886,7 @@
         font-size: 7px;
         letter-spacing: 2px;
         text-transform: uppercase;
-        color: #8a909e;
+        color: #111318;
         margin-top: 1px;
       }
       .scout-table {
@@ -901,7 +901,7 @@
         font-size: 9px;
         letter-spacing: 0.5px;
         text-transform: uppercase;
-        color: #8a909e;
+        color: #111318;
         padding: 4px 6px;
         border-bottom: 1.5px solid #d4d8e0;
         text-align: center;
@@ -3206,7 +3206,7 @@
         font-size: 9px;
         letter-spacing: 2px;
         text-transform: uppercase;
-        color: var(--text3);
+        color: var(--text);
         margin-top: 4px;
         font-weight: 600;
       }
@@ -4630,6 +4630,41 @@
           max-height: 46vh !important;
           border-left: none !important;
           border-top: none !important;
+        }
+      }
+
+      /* ══ Recent filter button ════════════════════════════════════════ */
+      .recent-filter-btn {
+        font-family: "Barlow Condensed", sans-serif;
+        font-weight: 700;
+        font-size: 11px;
+        letter-spacing: 1.5px;
+        text-transform: uppercase;
+        padding: 5px 14px;
+        border-radius: 20px;
+        border: 1.5px solid var(--border2);
+        background: none;
+        color: var(--text3);
+        cursor: pointer;
+        white-space: nowrap;
+        transition: all 0.14s;
+        -webkit-tap-highlight-color: transparent;
+        touch-action: manipulation;
+        flex-shrink: 0;
+      }
+      .recent-filter-btn:hover {
+        color: var(--text2);
+        border-color: var(--text3);
+      }
+      .recent-filter-btn.rfb-active {
+        background: var(--accent);
+        color: #fff !important;
+        border-color: var(--accent) !important;
+      }
+      @media (max-width: 768px) {
+        .recent-filter-btn {
+          font-size: 10px;
+          padding: 4px 10px;
         }
       }
 
@@ -9331,7 +9366,7 @@
               <!-- ===== BASES ===== -->
               <polygon
                 fill="#f0ebe0"
-                points="280,458 270,468 270,478 290,478 290,468"
+                points="270,458 290,458 290,468 280,478 270,468"
               ></polygon>
               <rect
                 fill="#f0ebe0"
@@ -13970,6 +14005,8 @@
             )
               renderMobPitchers();
           } catch (e) {}
+          // Autosave silently after every half-inning
+          saveGame(true).catch(() => {});
         }
         function recordAtBatResult(type, label, rbi) {
           const key = currentBatterKey();
@@ -18135,7 +18172,7 @@
         }
 
         // ===================== SAVE GAME =====================
-        async function saveGame() {
+        async function saveGame(silent = false) {
           const awayTeam = qs("away-name-input").value.trim() || "AWAY";
           const homeTeam = qs("home-name-input").value.trim() || "HOME";
           const date = new Date().toISOString().split("T")[0];
@@ -18241,22 +18278,24 @@
               true
             );
 
-            toast(`Game saved! ${awayTeam} vs ${homeTeam} — ${date}`);
             try {
               unsavedGame = false;
               updateDot();
             } catch (e) {}
-            try {
-              const saveBtn = document.getElementById("sn-save-btn");
-              if (saveBtn) {
-                saveBtn.textContent = "✓ Saved";
-                saveBtn.classList.add("ok");
-                setTimeout(() => {
-                  saveBtn.textContent = "Save";
-                  saveBtn.classList.remove("ok");
-                }, 3000);
-              }
-            } catch (e) {}
+            if (!silent) {
+              toast(`Game saved! ${awayTeam} vs ${homeTeam} — ${date}`);
+              try {
+                const saveBtn = document.getElementById("sn-save-btn");
+                if (saveBtn) {
+                  saveBtn.textContent = "✓ Saved";
+                  saveBtn.classList.add("ok");
+                  setTimeout(() => {
+                    saveBtn.textContent = "Save";
+                    saveBtn.classList.remove("ok");
+                  }, 3000);
+                }
+              } catch (e) {}
+            }
           } catch (err) {
             toast("Save failed — " + (err?.message || "storage unavailable"));
             console.error("saveGame error:", err);
@@ -20335,6 +20374,19 @@
             : battingSection + pitchSection;
         }
 
+        function toggleRecentFilter() {
+          _recentFilter = !_recentFilter;
+          const v = currentView;
+          if (v && v.type === "pitcher") {
+            renderPitcher(v.data.team, v.data.name);
+            if (_lastPitcherTab)
+              setTimeout(() => pitcherTab(_lastPitcherTab), 0);
+          } else if (v && v.type === "player") {
+            renderPlayer(v.data.team, v.data.name);
+            if (_lastPlayerTab) setTimeout(() => playerTab(_lastPlayerTab), 0);
+          }
+        }
+
         function renderCompare() {
           const c = document.getElementById("hub-content");
           const allSlotDefs = [_cmpSlot1, _cmpSlot2, _cmpSlot3];
@@ -20586,6 +20638,7 @@
         // ===== VIEWS =====
         let _lastPlayerTab = "spray";
         let _lastPitcherTab = "zone";
+        let _recentFilter = false; // toggles last-3-games (pitcher) / last-5-games (hitter) filter
         let _cmpSlot1 = null; // {team, name, isPitcher} or null
         let _cmpSlot2 = null;
         let _cmpSlot3 = null;
@@ -20615,6 +20668,8 @@
           document.getElementById("hub-welcome").style.display = "none";
           document.getElementById("hub-content").style.display = "block";
           renderSidebar();
+          // Reset recent filter when navigating to a new player/pitcher
+          if (type === "player" || type === "pitcher") _recentFilter = false;
           if (type === "games") renderAllGames();
           else if (type === "team") renderTeam(data);
           else if (type === "player") {
@@ -21684,7 +21739,7 @@
     <line x1="388" y1="332" x2="280" y2="440" stroke="rgba(255,255,255,.22)" stroke-width="1.5"/>
 
     <!-- Bases -->
-    <polygon points="280,458 270,468 270,478 290,478 290,468" fill="#f0ebe0"/>
+    <polygon points="270,458 290,458 290,468 280,478 270,468" fill="#f0ebe0"/>
     <rect x="163" y="323" width="18" height="18" rx="2" fill="#f0ebe0" transform="rotate(45 172 332)"/>
     <rect x="271" y="215" width="18" height="18" rx="2" fill="#f0ebe0" transform="rotate(45 280 224)"/>
     <rect x="379" y="323" width="18" height="18" rx="2" fill="#f0ebe0" transform="rotate(45 388 332)"/>
@@ -24078,7 +24133,19 @@
 
         function renderPlayer(teamName, playerName) {
           try {
-            const games = getTeamGames(teamName);
+            const _allTeamGames = getTeamGames(teamName);
+            const games = _recentFilter
+              ? (() => {
+                  const names =
+                    _nameAliases[playerName] || new Set([playerName]);
+                  return [..._allTeamGames]
+                    .sort((a, b) => b.date.localeCompare(a.date))
+                    .filter((g) =>
+                      (g.pitchLog || []).some((p) => names.has(p.batter))
+                    )
+                    .slice(0, 5);
+                })()
+              : _allTeamGames;
             const stats = getPlayerCareerStats(teamName, playerName, games);
             const allPitches = getPlayerPitches(teamName, playerName, games);
 
@@ -24187,6 +24254,18 @@
     </div>
 
     <!-- Analysis Tabs -->
+    <div class="scout-print-hide" style="display:flex;justify-content:flex-end;align-items:center;gap:10px;margin-bottom:8px">
+      ${
+        _recentFilter
+          ? `<span style="font-family:'Barlow Condensed',sans-serif;font-size:11px;letter-spacing:1px;color:var(--text3);text-transform:uppercase">Showing last 5 games</span>`
+          : ""
+      }
+      <button class="recent-filter-btn${
+        _recentFilter ? " rfb-active" : ""
+      }" onclick="toggleRecentFilter()">
+        ${_recentFilter ? "⏱ Last 5 Games" : "⏱ Filter Recent"}
+      </button>
+    </div>
     <div class="tab-row" id="player-tab-row">
       <div class="tab active" onclick="playerTab('spray')">Spray Chart</div>
       <div class="tab" onclick="playerTab('zone')">Pitch Zone</div>
@@ -25214,7 +25293,22 @@
         // ===== PITCHER DETAIL VIEW =====
         function renderPitcher(teamName, pitcherName) {
           try {
-            const games = getTeamGames(teamName);
+            const _allTeamGames = getTeamGames(teamName);
+            const games = _recentFilter
+              ? (() => {
+                  const names =
+                    _nameAliases[pitcherName] || new Set([pitcherName]);
+                  return [..._allTeamGames]
+                    .sort((a, b) => b.date.localeCompare(a.date))
+                    .filter((g) =>
+                      (g.pitchLog || []).some(
+                        (p) =>
+                          p.pitcherTeam === teamName && names.has(p.pitcher)
+                      )
+                    )
+                    .slice(0, 3);
+                })()
+              : _allTeamGames;
             const allPitches = getPitcherPitches(teamName, pitcherName, games);
 
             let career = {
@@ -25391,6 +25485,18 @@
       <div class="stat-card"><div class="stat-card-val">${maxVel}</div><div class="stat-card-lbl">Max Velo</div></div>
     </div>
 
+    <div class="scout-print-hide" style="display:flex;justify-content:flex-end;align-items:center;gap:10px;margin-bottom:8px">
+      ${
+        _recentFilter
+          ? `<span style="font-family:'Barlow Condensed',sans-serif;font-size:11px;letter-spacing:1px;color:var(--text3);text-transform:uppercase">Showing last 3 appearances</span>`
+          : ""
+      }
+      <button class="recent-filter-btn${
+        _recentFilter ? " rfb-active" : ""
+      }" onclick="toggleRecentFilter()">
+        ${_recentFilter ? "⏱ Last 3 Games" : "⏱ Filter Recent"}
+      </button>
+    </div>
     <div class="tab-row" id="pitcher-tab-row">
       <div class="tab active" onclick="pitcherTab('zone')">Pitch Zone</div>
       <div class="tab" onclick="pitcherTab('mix')">Pitch Mix</div>
@@ -28597,6 +28703,34 @@
             .slice(0, 3)
             .map(([t]) => t);
           // top3Zones inlined in layout below
+
+          // Recent 50 pitches per type — only when NOT in recent-filter mode (filter already limits data)
+          const _recent50HTML = (() => {
+            if (top3Types.length === 0 || _recentFilter) return "";
+            const sorted = [...allPitches].sort((a, b) =>
+              (b.gameDate || "").localeCompare(a.gameDate || "")
+            );
+            const cols = top3Types
+              .map((t) => {
+                const r50 = sorted
+                  .filter((p) => p.pitchType === t)
+                  .slice(0, 50);
+                return `<div class="scout-section" style="margin-bottom:0">
+                <div class="scout-section-title" style="color:${
+                  typeColors[t] || "#8a909e"
+                }">${t} Last 50 · ${r50.length}P</div>
+                ${buildPitchZoneSVG(r50, 200, 185)}
+              </div>`;
+              })
+              .join("");
+            return `<div class="scout-section" style="margin:6px 0 4px;padding-top:6px;border-top:1px solid var(--border)">
+                <div class="scout-section-title" style="color:var(--text2)">Recent Pitch Locations · Last 50 Per Type</div>
+              </div>
+              <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:10px">
+                ${cols}
+              </div>`;
+          })();
+
           // Strike% by type bars
           const strBars = Object.entries(byType)
             .sort((a, b) => b[1].total - a[1].total)
@@ -28680,7 +28814,7 @@
         ]
           .map(
             ([l, v]) =>
-              `<div style="background:#f8f9fb;border:1px solid #e0e4ea;border-radius:6px;padding:6px 4px;text-align:center"><div style="font-weight:900;font-size:15px;color:#111318">${v}</div><div style="font-size:6px;letter-spacing:1.5px;text-transform:uppercase;color:#8a909e;margin-top:1px">${l}</div></div>`
+              `<div style="background:#f8f9fb;border:1px solid #e0e4ea;border-radius:6px;padding:6px 4px;text-align:center"><div style="font-weight:900;font-size:15px;color:#111318">${v}</div><div style="font-size:6px;letter-spacing:1.5px;text-transform:uppercase;color:#111318;margin-top:1px">${l}</div></div>`
           )
           .join("")}
       </div>
@@ -28733,6 +28867,7 @@
         .join("")}
     </div>
   </div>
+  <div class="scout-print-hide">${_recent50HTML}</div>
 
   <!-- Row 3: Count performance + Last 5 -->
   <div class="scout-r3" style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
@@ -32038,11 +32173,11 @@
             '.scout-bar-val { font-family:"Share Tech Mono",monospace; font-size:8px; color:#8a909e;',
             "  width:30px; text-align:right; flex-shrink:0; }",
             '.scout-big-stat { font-family:"Barlow Condensed",sans-serif; font-weight:900; font-size:26px; line-height:1; }',
-            '.scout-big-lbl { font-family:"Barlow",sans-serif; font-size:8px; font-weight:600; letter-spacing:0; text-transform:uppercase; color:#8a909e; margin-top:2px; }',
+            '.scout-big-lbl { font-family:"Barlow",sans-serif; font-size:8px; font-weight:600; letter-spacing:0; text-transform:uppercase; color:#111318; margin-top:2px; }',
             ".scout-section { margin-bottom:6px; break-inside:avoid; }",
             ".scout-card { background:#fff; border:1px solid #e0e4ea; border-radius:5px; padding:4px 3px; text-align:center; }",
             '.scout-card-val { font-family:"Barlow Condensed",sans-serif; font-weight:800; font-size:16px; }',
-            '.scout-card-lbl { font-family:"Barlow",sans-serif; font-size:8px; font-weight:500; color:#8a909e; margin-top:1px; }',
+            '.scout-card-lbl { font-family:"Barlow",sans-serif; font-size:8px; font-weight:600; color:#111318; margin-top:1px; }',
             ".scout-print-hide { display:none !important; }",
             "svg { max-width:100%; height:auto; }",
           ].join("\n");
