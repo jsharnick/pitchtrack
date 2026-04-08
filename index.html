@@ -31268,6 +31268,70 @@
 
         // ── Smart roster table parser (shared by CSV and XLSX) ──────────────────
         // Accepts any column ordering and handles many header naming conventions.
+        // Normalize a verbose or non-standard position string to an app position code.
+        // throwHand ("R" or "L") is used to resolve pitcher handedness from "Pitcher" etc.
+        // Returns null if the input cannot be mapped (caller should keep original or use a default).
+        function _normalizeRosterPos(raw, throwHand) {
+          if (!raw) return null;
+          const s = raw.trim();
+          if (!s) return null;
+
+          // Already a recognized app code — pass through
+          const KNOWN =
+            /^(C|1B|2B|3B|SS|OF|LF|CF|RF|INF|INF\/OF|1B\/OF|DH|RHP|LHP|P|UTL|UTL\/RHP|C\/RHP|C\/2B|SS\/2B|3B\/RHP)$/i;
+          if (KNOWN.test(s)) return s.toUpperCase();
+
+          const isL = String(throwHand || "R")
+            .toUpperCase()
+            .startsWith("L");
+          const pitchCode = isL ? "LHP" : "RHP";
+          const lo = s.toLowerCase().replace(/[-_]/g, " ");
+
+          const hasPitch = /pitch/i.test(lo);
+          const hasOF = /out.?field|outfielder/i.test(lo);
+          const hasIF = /in.?field|infielder/i.test(lo);
+          const hasC = /^catch|catcher/i.test(lo);
+          const has1B = /first.?base|1st.?base/i.test(lo);
+          const has2B = /second.?base|2nd.?base/i.test(lo);
+          const has3B = /third.?base|3rd.?base/i.test(lo);
+          const hasSS = /short.?stop/i.test(lo);
+          const hasDH = /design|^dh$/i.test(lo);
+          const hasUtil = /utilit|^utl$/i.test(lo);
+          const hasLF = /^left.?field$|^lf$/i.test(lo);
+          const hasCF = /^center.?field$|^cf$/i.test(lo);
+          const hasRF = /^right.?field$|^rf$/i.test(lo);
+
+          // Combo: pitcher + position player (e.g. "Outfield/Pitcher", "Catcher/Pitcher")
+          if (
+            hasPitch &&
+            (hasOF || hasIF || hasC || has3B || has1B || has2B || hasSS)
+          ) {
+            if (hasC) return isL ? "LHP" : "C/RHP";
+            if (has3B) return isL ? "LHP" : "3B/RHP";
+            return isL ? "LHP" : "UTL/RHP";
+          }
+
+          // Pure pitcher (including "Pitcher", "P", "Starting Pitcher", etc.)
+          if (hasPitch || /^p$/i.test(s)) return pitchCode;
+
+          // Specific outfield corners before generic OF
+          if (hasLF) return "LF";
+          if (hasCF) return "CF";
+          if (hasRF) return "RF";
+          if (hasOF) return "OF";
+
+          if (hasC) return "C";
+          if (has1B) return "1B";
+          if (has2B) return "2B";
+          if (has3B) return "3B";
+          if (hasSS) return "SS";
+          if (hasIF) return "INF";
+          if (hasDH) return "DH";
+          if (hasUtil) return "UTL";
+
+          return null; // unrecognized
+        }
+
         function _smartParseRosterTable(rows) {
           // Normalize a header cell to a plain lowercase key
           const norm = (s) =>
@@ -31564,6 +31628,8 @@
             // Skip rows that look like headers or totals
             if (/^(name|player|total|team)/i.test(name)) continue;
 
+            // Normalize verbose positions ("Pitcher" → RHP/LHP, "Outfielder" → OF, etc.)
+            pos = _normalizeRosterPos(pos, thr) || pos;
             if (!pos) pos = "OF";
             players.push({ name, num, pos, bat, throw: thr, ht, wt });
           }
@@ -31653,12 +31719,16 @@
                 );
               })
               .then(function (pageItems) {
-                // Flatten all items from all pages
-                var allItems = [];
+                // Parse each page independently so every page gets its own
+                // header detection and Y-row grouping.  Web-printed rosters
+                // repeat the column header on every page, so this correctly
+                // handles multi-page PDFs without cross-page row collisions.
+                var allPlayers = [];
                 pageItems.forEach(function (items) {
-                  allItems = allItems.concat(items);
+                  var players = _parsePDFRosterItems(items);
+                  allPlayers = allPlayers.concat(players);
                 });
-                resolve(_parsePDFRosterItems(allItems));
+                resolve(allPlayers);
               })
               .catch(function (err) {
                 alert("PDF error: " + err.message);
@@ -31671,42 +31741,58 @@
           // ── Regexes ─────────────────────────────────────────────────────────
           var POS =
             /^(C|1B|2B|3B|SS|OF|LF|CF|RF|INF|DH|RHP|LHP|P|UTL|1B\/OF|INF\/OF|C\/RHP|C\/2B|SS\/2B|3B\/RHP|UTL\/RHP)$/i;
+          var VERBOSE_POS =
+            /^(pitcher|pitching|outfield|outfielder|infield|infielder|catcher|first\s*base|second\s*base|third\s*base|shortstop|short\s*stop|designated\s*hitter|utility|left\s*field|center\s*field|right\s*field|outfield\/pitcher|pitcher\/outfield|infield\/pitcher|pitcher\/infield|catcher\/pitcher|pitcher\/catcher)$/i;
           var HT = /^\d[-']\d+["']?$/;
           var WT = /^\d{2,3}$/;
           var BT = /^[RLSBrlsb]\/[RLrl]$/;
           var JNUM = /^\d{1,2}$/;
           var YEAR_TOKEN =
-            /^(Fr\.|So\.|Jr\.|Sr\.|Gr\.|FY|FR|SO|JR|SR|GR|R-Fr\.|R-Jr\.|R-Sr\.|Fy\.|Fy|1st|2nd|3rd|4th|5th|Freshman|Sophomore|Junior|Senior|Graduate|Yr\.|Year)$/i;
+            /^(Fr\.|So\.|Jr\.|Sr\.|Gr\.|FY|FR|SO|JR|SR|GR|R-Fr\.|R-Jr\.|R-Sr\.|Fy\.|Fy|1st|2nd|3rd|4th|5th|Freshman|Sophomore|Sophmore|Junior|Senior|Graduate|Yr\.|Year)$/i;
 
-          // ── 1. Group raw items into Y-rows (3pt tolerance) ───────────────────
-          var ROW_TOLERANCE = 3;
-          var rows = [];
-          items.forEach(function (item) {
-            if (!item.str.trim()) return;
-            var y = Math.round(item.y);
-            var row = rows.find(function (r) {
-              return Math.abs(r.y - y) <= ROW_TOLERANCE;
+          // ── 1. Sort items top-to-bottom (high Y = top of page), left-to-right ─
+          var sorted = items
+            .filter(function (it) {
+              return it.str.trim();
+            })
+            .slice()
+            .sort(function (a, b) {
+              return b.y !== a.y ? b.y - a.y : a.x - b.x;
             });
-            if (!row) {
-              row = { y: y, cells: [] };
-              rows.push(row);
-            }
-            row.cells.push({ str: item.str.trim(), x: item.x });
-          });
-          rows.sort(function (a, b) {
-            return b.y - a.y;
-          }); // top-to-bottom
+          if (!sorted.length) return [];
 
-          // ── 2. Detect column header row ──────────────────────────────────────
-          var colX = { num: -1, name: -1, pos: -1, ht: -1, wt: -1, bt: -1 };
-          var headerRowIdx = -1;
-          for (var ri = 0; ri < Math.min(rows.length, 15); ri++) {
-            var row = rows[ri];
-            var strs = row.cells.map(function (c) {
-              return c.str.toLowerCase();
+          // ── 2. Find header row — scan first 80 items with 15pt Y-band ─────────
+          var HDR_TOL = 15;
+          var COL_SNAP = 20;
+          var colX = {
+            num: -1,
+            name: -1,
+            yr: -1,
+            pos: -1,
+            ht: -1,
+            wt: -1,
+            bt: -1,
+          };
+          var headerY = -1;
+          var headerFound = false;
+
+          var maxScan = Math.min(sorted.length, 80);
+          for (var si = 0; si < maxScan && !headerFound; si++) {
+            var candidateY = sorted[si].y;
+            var band = sorted.filter(function (it) {
+              return Math.abs(it.y - candidateY) <= HDR_TOL;
+            });
+            var strs = band.map(function (it) {
+              return it.str.toLowerCase().replace(/\.$/, "");
             });
             var hasNum = strs.some(function (s) {
-              return s === "no." || s === "#" || s === "no" || s === "jersey";
+              return (
+                s === "no" ||
+                s === "#" ||
+                s === "jersey" ||
+                s === "num" ||
+                s === "number"
+              );
             });
             var hasName = strs.some(function (s) {
               return s === "name" || s === "player";
@@ -31715,54 +31801,50 @@
               return s === "pos" || s === "position";
             });
             if ((hasNum || hasName) && hasPos) {
-              headerRowIdx = ri;
-              row.cells.forEach(function (c) {
-                var sl = c.str.toLowerCase();
+              headerFound = true;
+              headerY = candidateY;
+              band.forEach(function (it) {
+                var sl = it.str.toLowerCase().replace(/\.$/, "");
                 if (
-                  sl === "no." ||
-                  sl === "#" ||
                   sl === "no" ||
-                  sl === "jersey"
+                  sl === "#" ||
+                  sl === "jersey" ||
+                  sl === "num" ||
+                  sl === "number"
                 )
-                  colX.num = c.x;
-                if (sl === "name" || sl === "player") colX.name = c.x;
-                if (sl === "pos" || sl === "position") colX.pos = c.x;
-                if (sl === "ht" || sl === "height") colX.ht = c.x;
-                if (sl === "wt" || sl === "weight") colX.wt = c.x;
-                if (sl === "b/t" || sl === "b-t" || sl === "bat/thr")
-                  colX.bt = c.x;
+                  colX.num = it.x;
+                if (sl === "name" || sl === "player") colX.name = it.x;
+                if (
+                  sl === "yr" ||
+                  sl === "year" ||
+                  sl === "class" ||
+                  sl === "cl" ||
+                  sl === "grade"
+                )
+                  colX.yr = it.x;
+                if (sl === "pos" || sl === "position") colX.pos = it.x;
+                if (sl === "ht" || sl === "height") colX.ht = it.x;
+                if (sl === "wt" || sl === "weight") colX.wt = it.x;
+                if (
+                  sl === "b/t" ||
+                  sl === "b-t" ||
+                  sl === "bat/thr" ||
+                  sl === "b" ||
+                  sl === "t"
+                )
+                  colX.bt = it.x;
               });
-              break;
             }
           }
 
-          // ── 3. Detect page column width (for multi-column grid PDFs) ─────────
-          // If the header only covers part of the page width, many PDFs repeat
-          // the same column set across the page (e.g. 2 or 3 player columns).
-          // We detect this by finding the maximum x of any cell and computing
-          // how many times the single-column width fits across the page.
-          var COL_SNAP = 30;
-          var pageWidth = 0;
-          items.forEach(function (it) {
-            if (it.x > pageWidth) pageWidth = it.x;
-          });
-          // Estimate single-column width: from left edge to the rightmost anchor + some padding
-          var singleColWidth = 0;
-          if (colX.bt >= 0)
-            singleColWidth = Math.max(singleColWidth, colX.bt + 60);
-          if (colX.wt >= 0)
-            singleColWidth = Math.max(singleColWidth, colX.wt + 60);
-          if (colX.ht >= 0)
-            singleColWidth = Math.max(singleColWidth, colX.ht + 60);
-          if (colX.pos >= 0)
-            singleColWidth = Math.max(singleColWidth, colX.pos + 60);
-          // Number of repeated column sets on the page
-          var numCols =
-            singleColWidth > 0 && pageWidth > singleColWidth * 1.5
-              ? Math.round(pageWidth / singleColWidth)
-              : 1;
+          // ── 3. Filter to items below the header ───────────────────────────────
+          var dataItems = headerFound
+            ? sorted.filter(function (it) {
+                return it.y < headerY - HDR_TOL;
+              })
+            : sorted;
 
-          // ── 4. Helper: parse a single set of cells as one player ─────────────
+          // ── 4. Helper: parse a bucket of items as one player ─────────────────
           function extractPlayer(cells) {
             var num = "",
               name = "",
@@ -31772,7 +31854,7 @@
               bt = "";
             if (colX.num >= 0) {
               // Tightly-anchored columns checked first; name is the catch-all between
-              // the name anchor and the pos anchor.
+              // the name anchor and the pos anchor (excluding the YR column).
               cells.forEach(function (c) {
                 if (colX.num >= 0 && Math.abs(c.x - colX.num) < COL_SNAP) {
                   if (!num) num = c.str;
@@ -31794,8 +31876,15 @@
                   if (!pos) pos = c.str;
                   return;
                 }
+                // Skip the YR/class column — don't absorb year values into names
+                if (colX.yr >= 0 && Math.abs(c.x - colX.yr) < COL_SNAP) {
+                  return;
+                }
                 // Name: from name anchor up to (but not including) pos anchor
+                // Also stop before the YR column anchor if it exists
                 var nameEnd = colX.pos >= 0 ? colX.pos - COL_SNAP : Infinity;
+                if (colX.yr >= 0 && colX.yr - COL_SNAP < nameEnd)
+                  nameEnd = colX.yr - COL_SNAP;
                 if (
                   colX.name >= 0 &&
                   c.x >= colX.name - COL_SNAP &&
@@ -31834,7 +31923,10 @@
               }
               name = nameParts.join(" ");
               if (ti < tokens.length && YEAR_TOKEN.test(tokens[ti])) ti++;
-              if (ti < tokens.length && POS.test(tokens[ti]))
+              if (
+                ti < tokens.length &&
+                (POS.test(tokens[ti]) || VERBOSE_POS.test(tokens[ti]))
+              )
                 pos = tokens[ti++];
               if (ti < tokens.length && HT.test(tokens[ti])) ht = tokens[ti++];
               if (ti < tokens.length && WT.test(tokens[ti])) wt = tokens[ti++];
@@ -31850,17 +31942,16 @@
                 return (
                   !YEAR_TOKEN.test(w) &&
                   !POS.test(w) &&
+                  !VERBOSE_POS.test(w) &&
                   !HT.test(w) &&
                   !JNUM.test(w)
                 );
               })
               .join(" ")
               .trim();
-            pos = pos.toUpperCase().trim();
             bt = bt.toUpperCase().trim();
 
             if (!JNUM.test(num) || !name || name.length < 2) return null;
-            if (pos && !POS.test(pos)) pos = "";
             if (YEAR_TOKEN.test(name) || POS.test(name)) return null;
 
             var bat = "R",
@@ -31872,6 +31963,10 @@
                 thr = bm[2].toUpperCase();
               }
             }
+            // Normalize verbose/non-standard positions now that throw hand is known
+            pos =
+              _normalizeRosterPos(pos.trim(), thr) ||
+              (POS.test(pos.trim()) ? pos.trim().toUpperCase() : "");
             return {
               name: name,
               num: num,
@@ -31883,41 +31978,92 @@
             };
           }
 
-          // ── 5. Parse each row, splitting into sub-columns when needed ────────
+          // ── 5. Two-pass nearest-jersey assignment ─────────────────────────────
+          // Pass 1: locate all jersey-number items in the num column.
+          // Pass 2: assign every other item to whichever jersey's Y it is closest
+          // to (within MAX_ROW_DIST). This prevents items that appear slightly
+          // above a jersey number from bleeding into the previous player's bucket.
           var players = [];
-          var dataStart = headerRowIdx >= 0 ? headerRowIdx + 1 : 0;
 
-          for (var ri = dataStart; ri < rows.length; ri++) {
-            var row = rows[ri];
-            var cells = row.cells.slice().sort(function (a, b) {
-              return a.x - b.x;
+          if (headerFound && colX.num >= 0) {
+            var MAX_ROW_DIST = 30;
+
+            // Pass 1 — collect jersey anchors
+            var jerseyAnchors = [];
+            dataItems.forEach(function (it) {
+              var atNumCol = Math.abs(it.x - colX.num) < COL_SNAP;
+              var cleaned = it.str
+                .trim()
+                .replace(/^#/, "")
+                .replace(/[.\s]+$/, "");
+              if (atNumCol && JNUM.test(cleaned)) {
+                jerseyAnchors.push({ y: it.y, item: it });
+              }
             });
 
-            if (numCols > 1 && colX.num >= 0 && singleColWidth > 0) {
-              // Multi-column grid: split cells into per-column buckets by X offset
-              var buckets = [];
-              for (var ci = 0; ci < numCols; ci++) buckets.push([]);
-              cells.forEach(function (c) {
-                var colIdx = Math.min(
-                  Math.floor(c.x / singleColWidth),
-                  numCols - 1
-                );
-                // Normalize x to the first column's coordinate space
-                buckets[colIdx].push({
-                  str: c.str,
-                  x: c.x - colIdx * singleColWidth,
+            if (jerseyAnchors.length) {
+              // Build per-jersey buckets, seeded with the jersey item itself
+              var bucketMap = {};
+              jerseyAnchors.forEach(function (ja) {
+                bucketMap[ja.y] = [ja.item];
+              });
+
+              // Pass 2 — assign all other items to nearest jersey
+              dataItems.forEach(function (it) {
+                var atNumCol = Math.abs(it.x - colX.num) < COL_SNAP;
+                var cleaned = it.str
+                  .trim()
+                  .replace(/^#/, "")
+                  .replace(/[.\s]+$/, "");
+                if (atNumCol && JNUM.test(cleaned)) return; // already seeded
+                var best = null,
+                  bestDist = MAX_ROW_DIST + 1;
+                jerseyAnchors.forEach(function (ja) {
+                  var d = Math.abs(it.y - ja.y);
+                  if (d < bestDist) {
+                    bestDist = d;
+                    best = ja;
+                  }
                 });
+                if (best) bucketMap[best.y].push(it);
               });
-              buckets.forEach(function (bucket) {
-                if (!bucket.length) return;
-                var p = extractPlayer(bucket);
-                if (p) players.push(p);
-              });
-            } else {
-              // Single-column — parse the whole row as one player
-              var p = extractPlayer(cells);
-              if (p) players.push(p);
+
+              // Parse each bucket in top-to-bottom order
+              jerseyAnchors
+                .slice()
+                .sort(function (a, b) {
+                  return b.y - a.y;
+                })
+                .forEach(function (ja) {
+                  var p = extractPlayer(bucketMap[ja.y]);
+                  if (p) players.push(p);
+                });
             }
+          } else {
+            // No reliable header/num column — fall back to Y-row grouping
+            var ROW_TOL = 8;
+            var rows = [];
+            dataItems.forEach(function (it) {
+              var row = rows.find(function (r) {
+                return Math.abs(r.y - it.y) <= ROW_TOL;
+              });
+              if (!row) {
+                row = { y: it.y, cells: [] };
+                rows.push(row);
+              }
+              row.cells.push(it);
+            });
+            rows.sort(function (a, b) {
+              return b.y - a.y;
+            });
+            rows.forEach(function (row) {
+              var p = extractPlayer(
+                row.cells.slice().sort(function (a, b) {
+                  return a.x - b.x;
+                })
+              );
+              if (p) players.push(p);
+            });
           }
 
           return players;
