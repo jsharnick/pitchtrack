@@ -3338,6 +3338,36 @@
         margin-bottom: 12px;
         animation: fadeIn 0.15s;
       }
+      .opp-card.opp-selected {
+        border-color: var(--accent);
+        background: rgba(204, 26, 26, 0.1);
+        box-shadow: 0 0 0 2px rgba(204, 26, 26, 0.2);
+      }
+      .opp-card-check {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        width: 20px;
+        height: 20px;
+        border-radius: 50%;
+        border: 2px solid var(--border2);
+        background: var(--surface2);
+        display: none;
+        align-items: center;
+        justify-content: center;
+        font-size: 11px;
+        font-weight: 900;
+        color: #fff;
+        transition: all 0.13s;
+        pointer-events: none;
+      }
+      .opp-select-active .opp-card-check {
+        display: flex;
+      }
+      .opp-card.opp-selected .opp-card-check {
+        background: var(--accent);
+        border-color: var(--accent);
+      }
       .ts-selected-row {
         background: rgba(204, 26, 26, 0.07) !important;
         border-left-color: var(--accent) !important;
@@ -3636,6 +3666,7 @@
         padding: 20px 20px 16px;
         cursor: pointer;
         transition: border-color 0.18s, box-shadow 0.18s, background 0.18s;
+        position: relative;
         display: flex;
         flex-direction: column;
         gap: 0;
@@ -19480,6 +19511,40 @@
               _tsSelected.clear();
               _tsSelectMode = false;
               window._tsSelectMode = false;
+            } else if (gameId === "__opp_delete__") {
+              // Delete all games involving selected opponents AND remove from teams index
+              const teamsToDelete = Array.from(_hubOppSelected);
+              const gameIdsToDelete = allGames
+                .filter(
+                  (g) =>
+                    teamsToDelete.includes(g.awayTeam) ||
+                    teamsToDelete.includes(g.homeTeam)
+                )
+                .map((g) => g.id);
+              for (const id of gameIdsToDelete) {
+                await window.storage.delete(id, true);
+              }
+              // Also remove from teams index
+              let teamsRaw2;
+              try {
+                teamsRaw2 = await window.storage.get("pitchtrack_teams", true);
+              } catch (e) {}
+              const current2 = teamsRaw2 ? JSON.parse(teamsRaw2.value) : [];
+              const updated2 = current2.filter(
+                (t) =>
+                  !teamsToDelete.includes(typeof t === "string" ? t : t.name)
+              );
+              await window.storage.set(
+                "pitchtrack_teams",
+                JSON.stringify(updated2),
+                true
+              );
+              _hubOppSelected.clear();
+              _hubOppSelectMode = false;
+              window._hubOppSelectMode = false;
+              await hubRefreshAll();
+              renderOpponentsWelcome();
+              return;
             } else {
               await window.storage.delete(gameId, true);
             }
@@ -21200,6 +21265,9 @@
             return "";
           };
 
+          _hubOppSelectMode = false;
+          _hubOppSelected.clear();
+
           c.innerHTML = `<div class="page-header">
             <div><div class="page-title">Opponents</div>
             <div class="page-sub">${opponents.length} team${
@@ -21208,12 +21276,25 @@
             <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;justify-content:flex-end">
               <button class="hub-mob-action-btn" onclick="exportAllData()" title="Export all games as JSON">⬇ Export All</button>
               <button class="hub-mob-action-btn" onclick="triggerImport()" title="Import games from JSON">⬆ Import</button>
+              <button id="opp-select-btn" onclick="hubOppToggleSelectMode()" style="padding:6px 14px;border:1.5px solid var(--border2);border-radius:7px;background:none;color:var(--text2);font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:13px;cursor:pointer;transition:all .13s;-webkit-tap-highlight-color:transparent;touch-action:manipulation" onmouseover="this.style.borderColor='var(--accent)';this.style.color='var(--accent)'" onmouseout="if(!window._hubOppSelectMode){this.style.borderColor='var(--border2)';this.style.color='var(--text2)'}">Select</button>
             </div></div>
-            <div class="opp-grid">${teamStats
+            <div id="opp-select-bar" style="display:none" class="gh-select-bar">
+              <span id="opp-sel-count" style="font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:14px;color:var(--text);flex:1">0 selected</span>
+              <button onclick="hubOppSelectAll()" style="padding:5px 12px;border:1.5px solid var(--border2);border-radius:6px;background:none;color:var(--text2);font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:12px;cursor:pointer;-webkit-tap-highlight-color:transparent;touch-action:manipulation">Select All</button>
+              <button onclick="hubOppSelectNone()" style="padding:5px 12px;border:1.5px solid var(--border2);border-radius:6px;background:none;color:var(--text2);font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:12px;cursor:pointer;-webkit-tap-highlight-color:transparent;touch-action:manipulation">Deselect All</button>
+              <button id="opp-del-sel-btn" onclick="hubOppPromptDeleteSelected()" disabled style="padding:5px 14px;border:1.5px solid var(--border2);border-radius:6px;background:none;color:var(--text3);font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:12px;cursor:not-allowed;opacity:.45;transition:all .13s;-webkit-tap-highlight-color:transparent;touch-action:manipulation">Delete Selected</button>
+            </div>
+            <div class="opp-grid" id="opp-cards-grid">${teamStats
               .map(({ t, games, rec, avg, obp, ops, era, tHR, pK }) => {
-                return `<div class="opp-card" onclick="showView('team','${escAttr(
+                const isSel = _hubOppSelected.has(t);
+                return `<div class="opp-card${
+                  isSel ? " opp-selected" : ""
+                }" data-team="${escAttr(
                   t
-                )}')">
+                )}" onclick="_hubOppSelectMode ? hubOppToggleCard('${escAttr(
+                  t
+                )}') : showView('team','${escAttr(t)}')">
+                  <div class="opp-card-check">${isSel ? "✓" : ""}</div>
                   <div class="opp-card-name">${escHtml(t)}</div>
                   <div class="opp-card-record">${rec.w}-${rec.l}${
                   rec.t ? "-" + rec.t : ""
@@ -21270,6 +21351,110 @@
         // ===== ALL GAMES VIEW =====
         let _ghSelectMode = false;
         let _ghSelected = new Set();
+
+        // ===== HUB OPPONENTS SELECT MODE =====
+        let _hubOppSelectMode = false;
+        let _hubOppSelected = new Set(); // team names
+
+        function hubOppToggleSelectMode() {
+          _hubOppSelectMode = !_hubOppSelectMode;
+          _hubOppSelected.clear();
+          window._hubOppSelectMode = _hubOppSelectMode;
+          const bar = document.getElementById("opp-select-bar");
+          const btn = document.getElementById("opp-select-btn");
+          const grid = document.getElementById("opp-cards-grid");
+          if (bar) bar.style.display = _hubOppSelectMode ? "flex" : "none";
+          if (btn) {
+            btn.textContent = _hubOppSelectMode ? "Cancel" : "Select";
+            btn.style.borderColor = _hubOppSelectMode
+              ? "var(--accent)"
+              : "var(--border2)";
+            btn.style.color = _hubOppSelectMode
+              ? "var(--accent)"
+              : "var(--text2)";
+          }
+          if (grid)
+            grid.classList.toggle("opp-select-active", _hubOppSelectMode);
+          _renderOppCards();
+          _oppUpdateSelBar();
+        }
+
+        function hubOppToggleCard(teamName) {
+          if (_hubOppSelected.has(teamName)) _hubOppSelected.delete(teamName);
+          else _hubOppSelected.add(teamName);
+          const card = document.querySelector(
+            `.opp-card[data-team="${CSS.escape(teamName)}"]`
+          );
+          if (card) {
+            const sel = _hubOppSelected.has(teamName);
+            card.classList.toggle("opp-selected", sel);
+            const chk = card.querySelector(".opp-card-check");
+            if (chk) chk.textContent = sel ? "✓" : "";
+          }
+          _oppUpdateSelBar();
+        }
+
+        function hubOppSelectAll() {
+          document.querySelectorAll(".opp-card[data-team]").forEach((c) => {
+            _hubOppSelected.add(c.dataset.team);
+          });
+          _renderOppCards();
+          _oppUpdateSelBar();
+        }
+
+        function hubOppSelectNone() {
+          _hubOppSelected.clear();
+          _renderOppCards();
+          _oppUpdateSelBar();
+        }
+
+        function _renderOppCards() {
+          document.querySelectorAll(".opp-card[data-team]").forEach((card) => {
+            const t = card.dataset.team;
+            const sel = _hubOppSelected.has(t);
+            card.classList.toggle("opp-selected", sel);
+            const chk = card.querySelector(".opp-card-check");
+            if (chk) chk.textContent = sel ? "✓" : "";
+            card.style.cursor = _hubOppSelectMode ? "pointer" : "";
+          });
+        }
+
+        function _oppUpdateSelBar() {
+          const n = _hubOppSelected.size;
+          const countEl = document.getElementById("opp-sel-count");
+          const delBtn = document.getElementById("opp-del-sel-btn");
+          if (countEl)
+            countEl.textContent =
+              n === 0
+                ? "0 selected"
+                : `${n} team${n !== 1 ? "s" : ""} selected`;
+          if (delBtn) {
+            delBtn.disabled = n === 0;
+            delBtn.style.opacity = n === 0 ? ".45" : "1";
+            delBtn.style.cursor = n === 0 ? "not-allowed" : "pointer";
+            delBtn.style.borderColor =
+              n === 0 ? "var(--border2)" : "var(--accent)";
+            delBtn.style.color = n === 0 ? "var(--text3)" : "var(--accent)";
+          }
+        }
+
+        function hubOppPromptDeleteSelected() {
+          const n = _hubOppSelected.size;
+          if (!n) return;
+          const sub = document.getElementById("delete-confirm-sub");
+          if (sub)
+            sub.textContent = `All games for ${n} opponent${
+              n !== 1 ? "s" : ""
+            } will be permanently removed. This cannot be undone.`;
+          const titleEl = document.querySelector(
+            "#delete-confirm-modal [style*='font-size: 21px']"
+          );
+          if (titleEl)
+            titleEl.textContent = `Delete ${n} opponent${n !== 1 ? "s" : ""}?`;
+          _pendingDeleteId = "__opp_delete__";
+          document.getElementById("delete-confirm-modal").style.display =
+            "flex";
+        }
 
         function renderAllGames() {
           const c = document.getElementById("hub-content");
