@@ -22600,7 +22600,8 @@
     <div id="hub-tab-content-splits"       style="display:none">${buildTeamSplitsTab(
       players,
       teamName,
-      games
+      games,
+      pitchers
     )}</div>
     <div id="hub-tab-content-baserunning"  style="display:none">${buildTeamBaserunningTable(
       players,
@@ -22793,48 +22794,150 @@
     </table>`;
         }
 
-        function buildTeamSplitsTab(players, teamName, games) {
-          // Show a player picker then their splits inline
-          if (!players.length)
+        function buildTeamSplitsTab(players, teamName, games, pitchers) {
+          const hasBatters = players && players.length > 0;
+          const hasPitchers = pitchers && pitchers.length > 0;
+          if (!hasBatters && !hasPitchers)
             return '<div class="empty-state" style="padding:30px">No player data</div>';
-          const sorted = [...players].sort((a, b) => b.ab - a.ab);
-          const playerBtns = sorted
+
+          const sorted = hasBatters
+            ? [...players].sort((a, b) => b.ab - a.ab)
+            : [];
+          const sortedPitchers = hasPitchers
+            ? [...pitchers].sort((a, b) => b.pitches - a.pitches)
+            : [];
+
+          const batterBtns = sorted
             .map(
-              (p) => `
-    <button onclick="showTeamSplitsForPlayer('${escAttr(teamName)}','${escAttr(
-                p.name
-              )}')"
-      id="tsplit-btn-${escAttr(p.name)}"
-      style="padding:5px 12px;border:1px solid var(--border2);border-radius:20px;background:var(--surface3);color:var(--text2);font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:12px;cursor:pointer;transition:all .14s;white-space:nowrap"
-      onmouseover="this.style.borderColor='var(--accent)';this.style.color='var(--accent)'"
-      onmouseout="if(!this.classList.contains('active')){this.style.borderColor='var(--border2)';this.style.color='var(--text2)'}">
-      #${p.num || "?"} ${escHtml(p.name)}
-    </button>`
+              (p) =>
+                `<button onclick="showTeamSplitsForPlayer('${escAttr(
+                  teamName
+                )}','${escAttr(p.name)}','batter')"
+              id="tsplit-btn-${escAttr(p.name)}"
+              style="padding:5px 12px;border:1px solid var(--border2);border-radius:20px;background:var(--surface3);color:var(--text2);font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:12px;cursor:pointer;transition:all .14s;white-space:nowrap"
+              onmouseover="this.style.borderColor='var(--accent)';this.style.color='var(--accent)'"
+              onmouseout="if(!this.classList.contains('active')){this.style.borderColor='var(--border2)';this.style.color='var(--text2)'}">
+              #${p.num || "?"} ${escHtml(p.name)}
+            </button>`
+            )
+            .join("");
+
+          const pitcherBtns = sortedPitchers
+            .map(
+              (p) =>
+                `<button onclick="showTeamSplitsForPlayer('${escAttr(
+                  teamName
+                )}','${escAttr(p.name)}','pitcher')"
+              id="tsplit-btn-${escAttr(p.name)}"
+              style="padding:5px 12px;border:1px solid var(--border2);border-radius:20px;background:var(--surface3);color:var(--text2);font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:12px;cursor:pointer;transition:all .14s;white-space:nowrap"
+              onmouseover="this.style.borderColor='var(--accent)';this.style.color='var(--accent)'"
+              onmouseout="if(!this.classList.contains('active')){this.style.borderColor='var(--border2)';this.style.color='var(--text2)'}">
+              #${p.num || "?"} ${escHtml(p.name)}
+            </button>`
             )
             .join("");
 
           const first = sorted[0];
-          const firstSplits = first
+          const firstContent = first
             ? buildPlayerSplitsTab(teamName, first.name, games)
+            : sortedPitchers[0]
+            ? buildPitcherStatsTab(
+                teamName,
+                sortedPitchers[0].name,
+                games,
+                getPitcherPitches(teamName, sortedPitchers[0].name, games),
+                sortedPitchers[0]
+              )
+            : "";
+
+          const hasBoth = hasBatters && hasPitchers;
+          const innerToggle = hasBoth
+            ? `
+    <div style="display:flex;gap:0;margin-bottom:14px;border-bottom:2px solid var(--border)">
+      <button id="tsplit-mode-batters" onclick="switchTeamSplitsMode('batters','${escAttr(
+        teamName
+      )}')"
+        style="padding:6px 18px;border:none;background:none;font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:13px;letter-spacing:1px;cursor:pointer;color:var(--accent);border-bottom:2px solid var(--accent);margin-bottom:-2px">BATTERS</button>
+      <button id="tsplit-mode-pitchers" onclick="switchTeamSplitsMode('pitchers','${escAttr(
+        teamName
+      )}')"
+        style="padding:6px 18px;border:none;background:none;font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:13px;letter-spacing:1px;cursor:pointer;color:var(--text3);border-bottom:2px solid transparent;margin-bottom:-2px">PITCHERS</button>
+    </div>`
             : "";
 
           return `<div>
-    <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:18px;padding-bottom:14px;border-bottom:1px solid var(--border)" id="tsplit-player-bar">
-      ${playerBtns}
+    ${innerToggle}
+    <div id="tsplit-batter-bar" style="display:${
+      hasBatters ? "flex" : "none"
+    };flex-wrap:wrap;gap:6px;margin-bottom:14px;padding-bottom:14px;border-bottom:1px solid var(--border)">
+      ${batterBtns}
     </div>
-    <div id="tsplit-content">${firstSplits}</div>
+    <div id="tsplit-pitcher-bar" style="display:none;flex-wrap:wrap;gap:6px;margin-bottom:14px;padding-bottom:14px;border-bottom:1px solid var(--border)">
+      ${pitcherBtns}
+    </div>
+    <div id="tsplit-content">${firstContent}</div>
   </div>`;
         }
 
-        function showTeamSplitsForPlayer(teamName, playerName) {
+        function switchTeamSplitsMode(mode, teamName) {
+          const batterBar = document.getElementById("tsplit-batter-bar");
+          const pitcherBar = document.getElementById("tsplit-pitcher-bar");
+          const btnB = document.getElementById("tsplit-mode-batters");
+          const btnP = document.getElementById("tsplit-mode-pitchers");
+          if (batterBar)
+            batterBar.style.display = mode === "batters" ? "flex" : "none";
+          if (pitcherBar)
+            pitcherBar.style.display = mode === "pitchers" ? "flex" : "none";
+          if (btnB) {
+            btnB.style.color =
+              mode === "batters" ? "var(--accent)" : "var(--text3)";
+            btnB.style.borderBottomColor =
+              mode === "batters" ? "var(--accent)" : "transparent";
+          }
+          if (btnP) {
+            btnP.style.color =
+              mode === "pitchers" ? "var(--accent)" : "var(--text3)";
+            btnP.style.borderBottomColor =
+              mode === "pitchers" ? "var(--accent)" : "transparent";
+          }
+          // Clear active state on all player buttons
+          document.querySelectorAll('[id^="tsplit-btn-"]').forEach((b) => {
+            b.classList.remove("active");
+            b.style.background = "var(--surface3)";
+            b.style.borderColor = "var(--border2)";
+            b.style.color = "var(--text2)";
+          });
+          document.getElementById("tsplit-content").innerHTML = "";
+        }
+
+        function showTeamSplitsForPlayer(teamName, playerName, type) {
           const games = getTeamGames(teamName);
           const content = document.getElementById("tsplit-content");
-          if (content)
-            content.innerHTML = buildPlayerSplitsTab(
-              teamName,
-              playerName,
-              games
-            );
+          if (content) {
+            if (type === "pitcher") {
+              const allPitches = getPitcherPitches(teamName, playerName, games);
+              const pitchers = getTeamPitchers(teamName, games);
+              const career =
+                pitchers.find((p) => {
+                  const names =
+                    _nameAliases[playerName] || new Set([playerName]);
+                  return names.has(p.name);
+                }) || null;
+              content.innerHTML = buildPitcherStatsTab(
+                teamName,
+                playerName,
+                games,
+                allPitches,
+                career
+              );
+            } else {
+              content.innerHTML = buildPlayerSplitsTab(
+                teamName,
+                playerName,
+                games
+              );
+            }
+          }
           // Update active button
           document.querySelectorAll('[id^="tsplit-btn-"]').forEach((b) => {
             const isActive = b.id === "tsplit-btn-" + playerName;
@@ -26995,7 +27098,8 @@
     <div class="tab-row" id="pitcher-tab-row">
       <div class="tab active" onclick="pitcherTab('zone')">Pitch Zone</div>
       <div class="tab" onclick="pitcherTab('mix')">Pitch Mix</div>
-      <div class="tab" onclick="pitcherTab('splits')">Splits</div>
+      <div class="tab" onclick="pitcherTab('stats')">Stats</div>
+      <div class="tab" onclick="pitcherTab('splits')">Pitch Splits</div>
       <div class="tab" onclick="pitcherTab('gamelog')">Game Log</div>
       <div class="tab" onclick="pitcherTab('scouting')">Scouting Report</div>
     </div>
@@ -27026,6 +27130,10 @@
 
     <div id="ptab-p-mix" style="display:none">
       ${buildPitchMixTab(allPitches)}
+    </div>
+
+    <div id="ptab-p-stats" style="display:none">
+      ${buildPitcherStatsTab(teamName, pitcherName, games, allPitches, career)}
     </div>
 
     <div id="ptab-p-splits" style="display:none">
@@ -27059,13 +27167,22 @@
         function pitcherTab(tab) {
           _lastPitcherTab = tab;
           document.querySelectorAll("#pitcher-tab-row .tab").forEach((t, i) => {
-            const tabs = ["zone", "mix", "splits", "gamelog", "scouting"];
+            const tabs = [
+              "zone",
+              "mix",
+              "stats",
+              "splits",
+              "gamelog",
+              "scouting",
+            ];
             t.classList.toggle("active", tabs[i] === tab);
           });
-          ["zone", "mix", "splits", "gamelog", "scouting"].forEach((t) => {
-            const el = document.getElementById("ptab-p-" + t);
-            if (el) el.style.display = t === tab ? "block" : "none";
-          });
+          ["zone", "mix", "stats", "splits", "gamelog", "scouting"].forEach(
+            (t) => {
+              const el = document.getElementById("ptab-p-" + t);
+              if (el) el.style.display = t === tab ? "block" : "none";
+            }
+          );
           if (tab === "zone")
             setTimeout(() => selectAllPitchTypes("pitcher-zone-wrap"), 0);
         }
@@ -27742,6 +27859,316 @@
         : ""
     }
   `;
+        }
+
+        function buildPitcherStatsTab(
+          teamName,
+          pitcherName,
+          games,
+          allPitches,
+          career
+        ) {
+          // career: object from getTeamPitchers() with: games, pitches, strikes, k, bb, hits, outs, r, hbp, bf, swings
+          const c = career || {
+            games: 0,
+            pitches: 0,
+            strikes: 0,
+            k: 0,
+            bb: 0,
+            hits: 0,
+            outs: 0,
+            r: 0,
+            hbp: 0,
+            bf: 0,
+            swings: 0,
+          };
+          const ip = c.outs || 0;
+          const ipFull = ip / 3;
+          const ipDisp = ip > 0 ? Math.floor(ipFull) + "." + (ip % 3) : "0.0";
+          const fmtIP = (o) =>
+            o > 0 ? Math.floor(o / 3) + "." + (o % 3) : "0.0";
+          const era = ip > 0 ? (((c.r || 0) / ipFull) * 9).toFixed(2) : "—";
+          const whip =
+            ip > 0 ? (((c.bb || 0) + (c.hits || 0)) / ipFull).toFixed(2) : "—";
+          const k9 = ip > 0 ? (((c.k || 0) / ipFull) * 9).toFixed(1) : "—";
+          const bb9 = ip > 0 ? (((c.bb || 0) / ipFull) * 9).toFixed(1) : "—";
+          const kPct =
+            (c.bf || 0) > 0
+              ? (((c.k || 0) / c.bf) * 100).toFixed(1) + "%"
+              : "—";
+          const bbPct =
+            (c.bf || 0) > 0
+              ? (((c.bb || 0) / c.bf) * 100).toFixed(1) + "%"
+              : "—";
+          const strPct =
+            (c.pitches || 0) > 0
+              ? Math.round(((c.strikes || 0) / c.pitches) * 100) + "%"
+              : "—";
+          const kbb =
+            (c.bb || 0) > 0
+              ? ((c.k || 0) / c.bb).toFixed(2)
+              : (c.k || 0) > 0
+              ? "∞"
+              : "—";
+          const vels = allPitches
+            .map((p) => parseFloat(p.velocity))
+            .filter((v) => !isNaN(v) && v > 0);
+          const avgVel = vels.length
+            ? (vels.reduce((a, b) => a + b, 0) / vels.length).toFixed(1)
+            : "—";
+          const maxVel = vels.length ? Math.max(...vels).toFixed(1) : "—";
+
+          // --- Batting stats allowed (via _extractABs pipeline) ---
+          const pNames = _nameAliases[pitcherName] || new Set([pitcherName]);
+          const facedABs = [];
+          games.forEach((g) => {
+            const pitchLog = g.pitchLog || [];
+            const myPitches = pitchLog.filter(
+              (p) => pNames.has(p.pitcher) && p.pitcherTeam === teamName
+            );
+            if (!myPitches.length) return;
+            const oppTeam = g.awayTeam === teamName ? g.homeTeam : g.awayTeam;
+            const faced = [
+              ...new Set(myPitches.map((p) => p.batter).filter(Boolean)),
+            ];
+            faced.forEach((bName) => {
+              const bAbs = _extractABs(pitchLog, bName, oppTeam, g).filter(
+                (ab) => pNames.has(ab.pitcher)
+              );
+              bAbs.forEach((ab) => {
+                ab._bHand = ab.pitches[0]?.batterHand || "—";
+                ab._gameId = g.id;
+                ab._gameDate = g.date;
+                ab._opp = oppTeam;
+                ab._isHome = g.homeTeam === teamName;
+                facedABs.push(ab);
+              });
+            });
+          });
+
+          const _line = (absArr) =>
+            absArr.length ? _sumStats(absArr.map(_abToStats)) : null;
+          const _rates = (st) => {
+            if (!st || st.pa === 0) return null;
+            const obp = st.pa > 0 ? (st.h + st.bb + st.hbp) / st.pa : null;
+            const slg = st.ab > 0 ? st.tb / st.ab : null;
+            return {
+              pa: st.pa,
+              ab: st.ab,
+              h: st.h,
+              h2b: st.h2b,
+              h3b: st.h3b,
+              hr: st.hr,
+              k: st.k,
+              bb: st.bb,
+              hbp: st.hbp,
+              avg: st.ab > 0 ? st.h / st.ab : null,
+              obp,
+              slg,
+              ops: obp !== null && slg !== null ? obp + slg : null,
+              iso: st.ab > 0 ? (st.tb - st.h) / st.ab : null,
+              kpct: st.pa > 0 ? st.k / st.pa : null,
+              bbpct: st.pa > 0 ? st.bb / st.pa : null,
+            };
+          };
+
+          const fR = (v, d = 3) =>
+            v !== null && v !== undefined
+              ? v >= 1
+                ? v.toFixed(d)
+                : "." +
+                  Math.round(v * 1000)
+                    .toString()
+                    .padStart(3, "0")
+              : ".---";
+          const fP = (v) =>
+            v !== null && v !== undefined ? (v * 100).toFixed(1) + "%" : "—";
+          const colorAvg = (v) =>
+            v === null
+              ? ""
+              : v >= 0.3
+              ? "color:#cc1a1a;font-weight:800"
+              : v < 0.2
+              ? "color:#1a8a3a;font-weight:700"
+              : "";
+          const colorOPS = (v) =>
+            v === null
+              ? ""
+              : v >= 0.8
+              ? "color:#cc1a1a;font-weight:800"
+              : v < 0.6
+              ? "color:#1a8a3a;font-weight:700"
+              : "";
+
+          const overall = _rates(_line(facedABs));
+          const vsRHB = _rates(_line(facedABs.filter((a) => a._bHand === "R")));
+          const vsLHB = _rates(_line(facedABs.filter((a) => a._bHand === "L")));
+          const home = _rates(_line(facedABs.filter((a) => a._isHome)));
+          const away = _rates(_line(facedABs.filter((a) => !a._isHome)));
+          const hasHand = facedABs.some(
+            (a) => a._bHand === "R" || a._bHand === "L"
+          );
+
+          const allowedRow = (lbl, r, bold) => {
+            if (!r)
+              return `<tr><td style="font-weight:${
+                bold ? 700 : 500
+              }">${lbl}</td><td colspan="12" style="color:var(--text3);font-style:italic">No data</td></tr>`;
+            return `<tr>
+              <td style="font-weight:${bold ? 700 : 500};color:${
+              bold ? "var(--text)" : "var(--text2)"
+            }">${lbl}</td>
+              <td>${r.pa}</td><td>${r.ab}</td><td>${r.h}</td><td>${
+              r.h2b
+            }</td><td>${r.h3b}</td>
+              <td class="${r.hr > 0 ? "highlight" : ""}">${r.hr}</td>
+              <td>${r.bb}</td><td>${r.hbp || 0}</td><td>${r.k}</td>
+              <td style="${colorAvg(r.avg)}">${fR(r.avg)}</td>
+              <td>${fR(r.obp)}</td><td>${fR(r.slg)}</td>
+              <td style="${colorOPS(r.ops)}">${fR(r.ops)}</td>
+              <td>${fP(r.iso)}</td>
+              <td>${fP(r.kpct)}</td><td>${fP(r.bbpct)}</td>
+            </tr>`;
+          };
+
+          // Per-game rows (traditional pitching stats)
+          const gameRows = [];
+          games.forEach((g) => {
+            const pitchers =
+              g.awayTeam === teamName ? g.awayPitchers : g.homePitchers;
+            const p = (pitchers || []).find((x) => pNames.has(x.name));
+            if (!p || !p.pitches) return;
+            const opp = g.awayTeam === teamName ? g.homeTeam : g.awayTeam;
+            const gip = p.outs || 0;
+            const gipDisp = fmtIP(gip);
+            const gERA =
+              gip > 0 ? (((p.r || 0) / (gip / 3)) * 9).toFixed(2) : "—";
+            const gWHIP =
+              gip > 0
+                ? (((p.bb || 0) + (p.hits || 0)) / (gip / 3)).toFixed(2)
+                : "—";
+            const gSP =
+              p.pitches > 0
+                ? Math.round(((p.strikes || 0) / p.pitches) * 100) + "%"
+                : "—";
+            // Batting allowed this game from facedABs
+            const gABs = facedABs.filter((a) => a._gameId === g.id);
+            const gRates = _rates(_line(gABs));
+            gameRows.push(`<tr>
+              <td style="white-space:nowrap">${g.date}</td>
+              <td>${escHtml(opp)}</td>
+              <td>${gipDisp}</td>
+              <td>${p.pitches}</td>
+              <td>${p.bf || "—"}</td>
+              <td>${p.k || 0}</td>
+              <td>${p.bb || 0}</td>
+              <td>${p.hits || 0}</td>
+              <td>${p.r || 0}</td>
+              <td>${p.hbp || 0}</td>
+              <td class="${
+                parseFloat(gERA) >= 9
+                  ? "dim"
+                  : parseFloat(gERA) <= 2
+                  ? "good"
+                  : ""
+              }">${gERA}</td>
+              <td>${gWHIP}</td>
+              <td>${gSP}</td>
+              <td style="${colorAvg(gRates?.avg || null)}">${
+              gRates ? fR(gRates.avg) : ".---"
+            }</td>
+              <td style="${colorOPS(gRates?.ops || null)}">${
+              gRates ? fR(gRates.ops) : ".---"
+            }</td>
+            </tr>`);
+          });
+
+          const thStyle =
+            "padding:4px 6px;font-size:10px;letter-spacing:1px;text-transform:uppercase;color:var(--text3);font-weight:700;white-space:nowrap;border-bottom:2px solid var(--border);text-align:right";
+          const thLeft = thStyle + ";text-align:left";
+
+          return `
+    <div style="margin-bottom:28px">
+      <div class="section-title" style="margin-bottom:12px">Career Pitching</div>
+      <table class="data-table">
+        <thead><tr>
+          <th style="${thLeft}">G</th><th style="${thStyle}">IP</th><th style="${thStyle}">BF</th>
+          <th style="${thStyle}">P</th><th style="${thStyle}">K</th><th style="${thStyle}">BB</th>
+          <th style="${thStyle}">H</th><th style="${thStyle}">R</th><th style="${thStyle}">HBP</th>
+          <th style="${thStyle}">ERA</th><th style="${thStyle}">WHIP</th>
+          <th style="${thStyle}">K/9</th><th style="${thStyle}">BB/9</th><th style="${thStyle}">K/BB</th>
+          <th style="${thStyle}">K%</th><th style="${thStyle}">BB%</th>
+          <th style="${thStyle}">Str%</th><th style="${thStyle}">Avg MPH</th><th style="${thStyle}">Max MPH</th>
+        </tr></thead>
+        <tbody><tr>
+          <td>${c.games}</td><td>${ipDisp}</td><td>${c.bf || 0}</td>
+          <td>${c.pitches}</td><td>${c.k}</td><td>${c.bb}</td>
+          <td>${c.hits}</td><td>${c.r || 0}</td><td>${c.hbp || 0}</td>
+          <td style="${
+            parseFloat(era) >= 9
+              ? "color:#cc1a1a;font-weight:800"
+              : parseFloat(era) <= 2
+              ? "color:#1a8a3a;font-weight:800"
+              : ""
+          }">${era}</td>
+          <td>${whip}</td>
+          <td>${k9}</td><td>${bb9}</td><td>${kbb}</td>
+          <td>${kPct}</td><td>${bbPct}</td>
+          <td>${strPct}</td><td>${avgVel}</td><td>${maxVel}</td>
+        </tr></tbody>
+      </table>
+    </div>
+
+    <div style="margin-bottom:28px">
+      <div class="section-title" style="margin-bottom:12px">Batting Stats Allowed</div>
+      ${
+        facedABs.length === 0
+          ? '<div class="empty-state" style="padding:20px 0">No pitch log data — record new games to populate batting stats allowed.</div>'
+          : `<table class="data-table">
+        <thead><tr>
+          <th style="${thLeft}">Split</th>
+          <th style="${thStyle}">PA</th><th style="${thStyle}">AB</th><th style="${thStyle}">H</th>
+          <th style="${thStyle}">2B</th><th style="${thStyle}">3B</th><th style="${thStyle}">HR</th>
+          <th style="${thStyle}">BB</th><th style="${thStyle}">HBP</th><th style="${thStyle}">K</th>
+          <th style="${thStyle}">AVG</th><th style="${thStyle}">OBP</th><th style="${thStyle}">SLG</th>
+          <th style="${thStyle}">OPS</th><th style="${thStyle}">ISO</th>
+          <th style="${thStyle}">K%</th><th style="${thStyle}">BB%</th>
+        </tr></thead>
+        <tbody>
+          ${allowedRow("Overall", overall, true)}
+          ${allowedRow("Home", home, false)}
+          ${allowedRow("Away", away, false)}
+          ${hasHand ? allowedRow("vs RHB", vsRHB, false) : ""}
+          ${hasHand ? allowedRow("vs LHB", vsLHB, false) : ""}
+          ${
+            !hasHand
+              ? '<tr><td colspan="17" style="color:var(--text3);font-style:italic;font-size:11px">Batter handedness tracked from newly recorded games</td></tr>'
+              : ""
+          }
+        </tbody>
+      </table>`
+      }
+    </div>
+
+    ${
+      gameRows.length > 0
+        ? `
+    <div>
+      <div class="section-title" style="margin-bottom:12px">Game-by-Game Log</div>
+      <table class="data-table">
+        <thead><tr>
+          <th style="${thLeft}">Date</th><th style="${thLeft}">Opp</th>
+          <th style="${thStyle}">IP</th><th style="${thStyle}">P</th><th style="${thStyle}">BF</th>
+          <th style="${thStyle}">K</th><th style="${thStyle}">BB</th><th style="${thStyle}">H</th>
+          <th style="${thStyle}">R</th><th style="${thStyle}">HBP</th>
+          <th style="${thStyle}">ERA</th><th style="${thStyle}">WHIP</th><th style="${thStyle}">Str%</th>
+          <th style="${thStyle}">AVG Ag.</th><th style="${thStyle}">OPS Ag.</th>
+        </tr></thead>
+        <tbody>${gameRows.join("")}</tbody>
+      </table>
+    </div>`
+        : ""
+    }`;
         }
 
         function buildPitcherGameLog(teamName, pitcherName, games) {
@@ -30720,12 +31147,6 @@
     </div>
   </div>
 
-  <!-- Individual count splits — screen only (too detailed for print) -->
-  ${
-    indivCountHTML
-      ? `<div class="scout-print-hide">${indivCountHTML}</div>`
-      : ""
-  }
   </div>`;
         }
 
