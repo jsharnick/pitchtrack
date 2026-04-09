@@ -1047,6 +1047,39 @@
         #print-root .scout-report-page > div {
           break-inside: avoid;
         }
+
+        /* Pitcher report specific print tightening */
+        #scout-pitcher-report .scout-header {
+          padding-bottom: 5px !important;
+          margin-bottom: 8px !important;
+        }
+        #scout-pitcher-report .scout-header div[style*="font-size:32px"] {
+          font-size: 22px !important;
+        }
+        #scout-pitcher-report .scout-big-stat {
+          font-size: 18px !important;
+        }
+        #scout-pitcher-report .scout-r1,
+        #scout-pitcher-report .scout-r2,
+        #scout-pitcher-report .scout-r3 {
+          gap: 7px !important;
+          margin-bottom: 7px !important;
+        }
+        #scout-pitcher-report
+          .scout-r1
+          > div
+          > div[style*="grid-template-columns:repeat(3"] {
+          gap: 3px !important;
+        }
+        #scout-pitcher-report .scout-r1 > div > div > div {
+          padding: 3px 2px !important;
+        }
+        #scout-pitcher-report .scout-r1 > div > div > div > div:first-child {
+          font-size: 11px !important;
+        }
+        #scout-pitcher-report .scout-r1 > div > div > div > div:last-child {
+          font-size: 5px !important;
+        }
       }
       /* LAYOUT */
       #main {
@@ -13074,6 +13107,10 @@
           // Pitch type family
           const ptFamily = pitchTypeFamily(pitchType);
 
+          // Capture count BEFORE any increment so pitch log stores pre-pitch count
+          const _prePitchBalls = S.balls;
+          const _prePitchStrikes = S.strikes;
+
           let dotClass = "",
             logLabel = "";
 
@@ -13165,8 +13202,9 @@
             loc: zoneLabel(px, py),
             pitchX: px,
             pitchY: py,
-            balls: S.balls,
-            strikes: S.strikes,
+            balls: _prePitchBalls,
+            strikes: _prePitchStrikes,
+            _prePitchCount: true,
             batter: currentBatter()?.name || "—",
             inning: S.inning,
             isTop: S.isTop,
@@ -13178,6 +13216,7 @@
             pitcherHand:
               (S.isTop ? S.pitchersHome : S.pitchersAway).find((x) => x.active)
                 ?.hand || "R",
+            batterHand: currentBatter()?.hand || "—",
             runnersOn: { ...S.bases }, // snapshot of base state when pitch was thrown
             outs: S.outs,
             batterIdx: currentBatterIdx() % currentLineup().length,
@@ -20296,7 +20335,220 @@
               : null;
           const pMaxVelo = pVels.length > 0 ? Math.max(...pVels) : null;
 
-          // ── Splits ──
+          // ── Extended pitcher pitch-level metrics ──
+          // vs RHB / vs LHB
+          const ppRHB = pp.filter((p) => p.batterHand === "R");
+          const ppLHB = pp.filter((p) => p.batterHand === "L");
+          const _pWhiff = (arr) => {
+            const sw = arr.filter((p) => SWING_ALL.includes(p.outcome)).length;
+            const wh = arr.filter(
+              (p) => p.outcome === "strike-swinging"
+            ).length;
+            return sw > 0 ? wh / sw : null;
+          };
+          const _pStr = (arr) =>
+            arr.length > 0
+              ? arr.filter((p) => _isStrike(p.outcome)).length / arr.length
+              : null;
+          const pWhiffRateRHB = _pWhiff(ppRHB);
+          const pWhiffRateLHB = _pWhiff(ppLHB);
+          const pStrikePctRHB = _pStr(ppRHB);
+          const pStrikePctLHB = _pStr(ppLHB);
+
+          // TTO splits
+          const _pitchesByGameCmp = {};
+          pp.forEach((p, i) => {
+            const gid = p.gameId;
+            if (!_pitchesByGameCmp[gid]) _pitchesByGameCmp[gid] = [];
+            _pitchesByGameCmp[gid].push({ p, i });
+          });
+          const _cmpTTO = new Array(pp.length).fill(1);
+          Object.values(_pitchesByGameCmp).forEach((entries) => {
+            const ordered = [...entries].reverse();
+            const appearances = {};
+            let prevBI = null;
+            ordered.forEach(({ p, i }) => {
+              const bi = p.batterIdx;
+              if (bi !== prevBI) {
+                appearances[bi] = (appearances[bi] || 0) + 1;
+                prevBI = bi;
+              }
+              _cmpTTO[i] = appearances[bi] || 1;
+            });
+          });
+          const ppTTO1 = pp.filter((_, i) => _cmpTTO[i] === 1);
+          const ppTTO2 = pp.filter((_, i) => _cmpTTO[i] === 2);
+          const ppTTO3 = pp.filter((_, i) => _cmpTTO[i] >= 3);
+
+          // Reusable pitch-metrics bundle helper
+          const _pM = (arr) => {
+            if (!arr.length)
+              return {
+                str: null,
+                whiff: null,
+                zone: null,
+                fps: null,
+                chase: null,
+              };
+            const n = arr.length;
+            const strk = arr.filter((p) => _isStrike(p.outcome)).length;
+            const sw = arr.filter((p) => SWING_ALL.includes(p.outcome)).length;
+            const wh = arr.filter(
+              (p) => p.outcome === "strike-swinging"
+            ).length;
+            const iz = arr.filter((p) => IN_ZONE(p)).length;
+            const oz = arr.filter((p) => !IN_ZONE(p));
+            const ozSw = oz.filter((p) => SWING_ALL.includes(p.outcome)).length;
+            const fp = arr.filter((p) => _isFirstPitch(p));
+            const fpStr = fp.filter((p) => _isStrike(p.outcome)).length;
+            return {
+              str: strk / n,
+              whiff: sw > 0 ? wh / sw : null,
+              zone: iz / n,
+              fps: fp.length > 0 ? fpStr / fp.length : null,
+              chase: oz.length > 0 ? ozSw / oz.length : null,
+            };
+          };
+
+          // Home / Away split (by game)
+          const _gameIsHome = {};
+          games.forEach((g) => {
+            _gameIsHome[g.id] = g.homeTeam === team;
+          });
+          const ppHome = pp.filter((p) => _gameIsHome[p.gameId]);
+          const ppAway = pp.filter((p) => !_gameIsHome[p.gameId]);
+
+          // Runners-on splits
+          const ppBasesEmpty = pp.filter(
+            (p) =>
+              p.runnersOn &&
+              !p.runnersOn["1st"] &&
+              !p.runnersOn["2nd"] &&
+              !p.runnersOn["3rd"]
+          );
+          const ppRunnersOn = pp.filter(
+            (p) =>
+              p.runnersOn &&
+              (p.runnersOn["1st"] || p.runnersOn["2nd"] || p.runnersOn["3rd"])
+          );
+          const ppRISP = pp.filter(
+            (p) => p.runnersOn && (p.runnersOn["2nd"] || p.runnersOn["3rd"])
+          );
+
+          // Outs splits
+          const ppO0 = pp.filter((p) => p.outs === 0);
+          const ppO1 = pp.filter((p) => p.outs === 1);
+          const ppO2 = pp.filter((p) => p.outs === 2);
+
+          // Count splits
+          const ppFirstPitch = pp.filter((p) => _isFirstPitch(p));
+          const ppAheadCount = pp.filter((p) => p.strikes > p.balls);
+          const ppBehindCount = pp.filter((p) => p.balls > p.strikes);
+          const pp2Strike = pp.filter((p) => p.strikes === 2);
+          const ppFullCount = pp.filter(
+            (p) => p.balls === 3 && p.strikes === 2
+          );
+
+          // Pitcher splits object — all sections from the splits tab
+          const pSplits = {
+            home: _pM(ppHome),
+            away: _pM(ppAway),
+            vsRHB: _pM(ppRHB),
+            vsLHB: _pM(ppLHB),
+            tto1: _pM(ppTTO1),
+            tto2: _pM(ppTTO2),
+            tto3: _pM(ppTTO3),
+            basesEmpty: _pM(ppBasesEmpty),
+            runnersOn: _pM(ppRunnersOn),
+            risp: _pM(ppRISP),
+            out0: _pM(ppO0),
+            out1: _pM(ppO1),
+            out2: _pM(ppO2),
+            firstPitch: _pM(ppFirstPitch),
+            ahead: _pM(ppAheadCount),
+            behind: _pM(ppBehindCount),
+            twoStrike: _pM(pp2Strike),
+            fullCount: _pM(ppFullCount),
+          };
+
+          // Pitcher-faced AB extraction for allowed batting lines
+          // Reuses _extractABs infrastructure (alias-aware) from the opposing batter's perspective
+          const pFacedABs = (() => {
+            const pNames2 = _nameAliases[name] || new Set([name]);
+            const abs = [];
+            games.forEach((g) => {
+              const pitchLog = g.pitchLog || [];
+              const myPitches = pitchLog.filter(
+                (p) => pNames2.has(p.pitcher) && p.pitcherTeam === team
+              );
+              if (!myPitches.length) return;
+              const facedBatters = [
+                ...new Set(myPitches.map((p) => p.batter).filter(Boolean)),
+              ];
+              const oppTeam = g.awayTeam === team ? g.homeTeam : g.awayTeam;
+              facedBatters.forEach((bName) => {
+                const bAbs = _extractABs(pitchLog, bName, oppTeam, g).filter(
+                  (ab) => pNames2.has(ab.pitcher)
+                );
+                bAbs.forEach((ab) => {
+                  ab._bHand = ab.pitches[0]?.batterHand || "—";
+                  abs.push(ab);
+                });
+              });
+            });
+            return abs;
+          })();
+
+          const _allowedLine = (absArr) =>
+            absArr.length ? _sumStats(absArr.map(_abToStats)) : null;
+          const _allowedRates = (st) => {
+            if (!st || st.pa === 0) return null;
+            const obpV = st.pa > 0 ? (st.h + st.bb + st.hbp) / st.pa : null;
+            const slgV = st.ab > 0 ? st.tb / st.ab : null;
+            return {
+              pa: st.pa,
+              avg: st.ab > 0 ? st.h / st.ab : null,
+              obp: obpV,
+              slg: slgV,
+              ops: obpV !== null && slgV !== null ? obpV + slgV : null,
+              iso: st.ab > 0 ? (st.tb - st.h) / st.ab : null,
+              kpct: st.pa > 0 ? st.k / st.pa : null,
+              bbpct: st.pa > 0 ? st.bb / st.pa : null,
+              hr: st.hr,
+              h: st.h,
+              k: st.k,
+              bb: st.bb,
+            };
+          };
+
+          const pAllowed = {
+            overall: _allowedRates(_allowedLine(pFacedABs)),
+            vsRHB: _allowedRates(
+              _allowedLine(pFacedABs.filter((a) => a._bHand === "R"))
+            ),
+            vsLHB: _allowedRates(
+              _allowedLine(pFacedABs.filter((a) => a._bHand === "L"))
+            ),
+          };
+
+          // Top velocity pitch types
+          const _veloByTypeCmp = {};
+          pp.forEach((p) => {
+            const v = parseFloat(p.velocity);
+            if (isNaN(v) || v <= 0) return;
+            const t = p.pitchType && p.pitchType !== "—" ? p.pitchType : null;
+            if (!t) return;
+            if (!_veloByTypeCmp[t]) _veloByTypeCmp[t] = [];
+            _veloByTypeCmp[t].push(v);
+          });
+          const pVeloByType = Object.fromEntries(
+            Object.entries(_veloByTypeCmp)
+              .sort((a, b) => b[1].length - a[1].length)
+              .slice(0, 3)
+              .map(([t, vs]) => [t, vs.reduce((a, b) => a + b, 0) / vs.length])
+          );
+
+          // ── Batter splits ──
           const sortedGames = [...games].sort((a, b) =>
             a.date.localeCompare(b.date)
           );
@@ -20329,6 +20581,13 @@
             }),
             twoStrike: _splitSt((a) => a.pitches.some((p) => p.strikes === 2)),
           };
+
+          // Legacy single-value fields kept for backward compat with existing rows
+          const pStrikePctTTO1 = pSplits.tto1.str;
+          const pStrikePctTTO3 = pSplits.tto3.str;
+          const pWhiffRateTTO1 = pSplits.tto1.whiff;
+          const pWhiffRateTTO3 = pSplits.tto3.whiff;
+          const p2StrikeWhiffRate = pSplits.twoStrike.whiff;
 
           return {
             team,
@@ -20366,6 +20625,18 @@
             pFPSpct,
             pAvgVelo,
             pMaxVelo,
+            pWhiffRateRHB,
+            pWhiffRateLHB,
+            pStrikePctRHB,
+            pStrikePctLHB,
+            p2StrikeWhiffRate,
+            pStrikePctTTO1,
+            pStrikePctTTO3,
+            pWhiffRateTTO1,
+            pWhiffRateTTO3,
+            pVeloByType,
+            pSplits,
+            pAllowed,
             splits,
           };
         }
@@ -20469,6 +20740,26 @@
                   : null
               );
 
+            // Helper: format a pSplits metric
+            const ps = (sl, splitKey, metric) => {
+              const v = sl?.s?.pSplits?.[splitKey]?.[metric];
+              return v != null ? f(v, "pct") : NA;
+            };
+            // Helper: format pAllowed metric
+            const pa = (sl, splitKey, metric) => {
+              const v = sl?.s?.pAllowed?.[splitKey]?.[metric];
+              if (v == null) return NA;
+              return metric === "avg" ||
+                metric === "obp" ||
+                metric === "slg" ||
+                metric === "ops" ||
+                metric === "iso"
+                ? f(v, "rate")
+                : metric === "kpct" || metric === "bbpct"
+                ? f(v, "pct")
+                : f(v, "int");
+            };
+
             pitchSection = `
     <div class="cmp-stat-section-head">Pitching — Results</div>
     <table class="cmp-stat-table">${thead}<tbody>
@@ -20478,7 +20769,12 @@
         "high"
       )}
       ${r(
-        "Pitches Thrown",
+        "BF",
+        slots.map((sl) => (sl?.s?.pd ? f(sl.s.pd.bf, "int") : NA)),
+        "high"
+      )}
+      ${r(
+        "Pitches",
         slots.map((sl) => (sl?.s?.pd ? f(sl.s.pd.pitches, "int") : NA)),
         "high"
       )}
@@ -20493,9 +20789,23 @@
         "low"
       )}
       ${r(
-        "Hits Allowed",
+        "H Allowed",
         slots.map((sl) => (sl?.s?.pd ? f(sl.s.pd.hits, "int") : NA)),
         "low"
+      )}
+      ${r(
+        "Runs",
+        slots.map((sl) => (sl?.s?.pd ? f(sl.s.pd.r, "int") : NA)),
+        "low"
+      )}
+      ${r(
+        "K/BB",
+        slots.map((sl) => {
+          const pd = sl?.s?.pd;
+          if (!pd) return NA;
+          return pd.bb > 0 ? (pd.k / pd.bb).toFixed(2) : pd.k > 0 ? "∞" : NA;
+        }),
+        "high"
       )}
       ${r(
         "K%",
@@ -20510,6 +20820,46 @@
         slots.map((sl) => _cmpPctile(pctiles.p.bbBF, sl?.s?.pBBperBF))
       )}
     </tbody></table>
+
+    <div class="cmp-stat-section-head">Pitching — Allowed Batting Lines</div>
+    <table class="cmp-stat-table">${thead}<tbody>
+      ${r(
+        "AVG Against",
+        slots.map((sl) => pa(sl, "overall", "avg")),
+        "low"
+      )}
+      ${r(
+        "OBP Against",
+        slots.map((sl) => pa(sl, "overall", "obp")),
+        "low"
+      )}
+      ${r(
+        "SLG Against",
+        slots.map((sl) => pa(sl, "overall", "slg")),
+        "low"
+      )}
+      ${r(
+        "OPS Against",
+        slots.map((sl) => pa(sl, "overall", "ops")),
+        "low"
+      )}
+      ${r(
+        "ISO Against",
+        slots.map((sl) => pa(sl, "overall", "iso")),
+        "low"
+      )}
+      ${r(
+        "K% Against",
+        slots.map((sl) => pa(sl, "overall", "kpct")),
+        "high"
+      )}
+      ${r(
+        "BB% Against",
+        slots.map((sl) => pa(sl, "overall", "bbpct")),
+        "low"
+      )}
+    </tbody></table>
+
     <div class="cmp-stat-section-head">Pitching — Process</div>
     <table class="cmp-stat-table">${thead}<tbody>
       ${r(
@@ -20536,8 +20886,13 @@
         slots.map((sl) => _cmpPctile(pctiles.p.chaseRate, sl?.s?.pChaseRate))
       )}
       ${r(
-        "First Pitch Strike%",
+        "FPS%",
         slots.map((sl) => f(sl?.s?.pFPSpct, "pct")),
+        "high"
+      )}
+      ${r(
+        "2-Strike Whiff%",
+        slots.map((sl) => f(sl?.s?.p2StrikeWhiffRate, "pct")),
         "high"
       )}
       ${r(
@@ -20562,6 +20917,300 @@
         slots.map((sl) =>
           sl?.s?.pMaxVelo != null ? sl.s.pMaxVelo.toFixed(1) : NA
         ),
+        "high"
+      )}
+      ${(() => {
+        const typeSet = new Set(
+          slots.flatMap((sl) => Object.keys(sl?.s?.pVeloByType || {}))
+        );
+        return [...typeSet]
+          .sort()
+          .map((t) =>
+            r(
+              `Avg Velo (${t})`,
+              slots.map((sl) => {
+                const v = sl?.s?.pVeloByType?.[t];
+                return v != null ? v.toFixed(1) : NA;
+              }),
+              "high"
+            )
+          )
+          .join("");
+      })()}
+    </tbody></table>
+
+    <div class="cmp-stat-section-head">Pitching — vs Batter Handedness</div>
+    <table class="cmp-stat-table">${thead}<tbody>
+      ${r(
+        "vs RHB AVG Against",
+        slots.map((sl) => pa(sl, "vsRHB", "avg")),
+        "low"
+      )}
+      ${r(
+        "vs RHB OBP Against",
+        slots.map((sl) => pa(sl, "vsRHB", "obp")),
+        "low"
+      )}
+      ${r(
+        "vs RHB SLG Against",
+        slots.map((sl) => pa(sl, "vsRHB", "slg")),
+        "low"
+      )}
+      ${r(
+        "vs RHB OPS Against",
+        slots.map((sl) => pa(sl, "vsRHB", "ops")),
+        "low"
+      )}
+      ${r(
+        "vs RHB Strike%",
+        slots.map((sl) => ps(sl, "vsRHB", "str")),
+        "high"
+      )}
+      ${r(
+        "vs RHB Zone%",
+        slots.map((sl) => ps(sl, "vsRHB", "zone")),
+        "high"
+      )}
+      ${r(
+        "vs RHB Whiff%",
+        slots.map((sl) => ps(sl, "vsRHB", "whiff")),
+        "high"
+      )}
+      ${r(
+        "vs RHB FPS%",
+        slots.map((sl) => ps(sl, "vsRHB", "fps")),
+        "high"
+      )}
+      ${r(
+        "vs LHB AVG Against",
+        slots.map((sl) => pa(sl, "vsLHB", "avg")),
+        "low"
+      )}
+      ${r(
+        "vs LHB OBP Against",
+        slots.map((sl) => pa(sl, "vsLHB", "obp")),
+        "low"
+      )}
+      ${r(
+        "vs LHB SLG Against",
+        slots.map((sl) => pa(sl, "vsLHB", "slg")),
+        "low"
+      )}
+      ${r(
+        "vs LHB OPS Against",
+        slots.map((sl) => pa(sl, "vsLHB", "ops")),
+        "low"
+      )}
+      ${r(
+        "vs LHB Strike%",
+        slots.map((sl) => ps(sl, "vsLHB", "str")),
+        "high"
+      )}
+      ${r(
+        "vs LHB Zone%",
+        slots.map((sl) => ps(sl, "vsLHB", "zone")),
+        "high"
+      )}
+      ${r(
+        "vs LHB Whiff%",
+        slots.map((sl) => ps(sl, "vsLHB", "whiff")),
+        "high"
+      )}
+      ${r(
+        "vs LHB FPS%",
+        slots.map((sl) => ps(sl, "vsLHB", "fps")),
+        "high"
+      )}
+    </tbody></table>
+
+    <div class="cmp-stat-section-head">Pitching — Times Through Order</div>
+    <table class="cmp-stat-table">${thead}<tbody>
+      ${r(
+        "1st TTO Strike%",
+        slots.map((sl) => ps(sl, "tto1", "str")),
+        "high"
+      )}
+      ${r(
+        "1st TTO Zone%",
+        slots.map((sl) => ps(sl, "tto1", "zone")),
+        "high"
+      )}
+      ${r(
+        "1st TTO Whiff%",
+        slots.map((sl) => ps(sl, "tto1", "whiff")),
+        "high"
+      )}
+      ${r(
+        "2nd TTO Strike%",
+        slots.map((sl) => ps(sl, "tto2", "str")),
+        "high"
+      )}
+      ${r(
+        "2nd TTO Zone%",
+        slots.map((sl) => ps(sl, "tto2", "zone")),
+        "high"
+      )}
+      ${r(
+        "2nd TTO Whiff%",
+        slots.map((sl) => ps(sl, "tto2", "whiff")),
+        "high"
+      )}
+      ${r(
+        "3rd TTO+ Strike%",
+        slots.map((sl) => ps(sl, "tto3", "str")),
+        "high"
+      )}
+      ${r(
+        "3rd TTO+ Zone%",
+        slots.map((sl) => ps(sl, "tto3", "zone")),
+        "high"
+      )}
+      ${r(
+        "3rd TTO+ Whiff%",
+        slots.map((sl) => ps(sl, "tto3", "whiff")),
+        "high"
+      )}
+    </tbody></table>
+
+    <div class="cmp-stat-section-head">Pitching — Situational</div>
+    <table class="cmp-stat-table">${thead}<tbody>
+      ${r(
+        "Home Strike%",
+        slots.map((sl) => ps(sl, "home", "str")),
+        "high"
+      )}
+      ${r(
+        "Home Whiff%",
+        slots.map((sl) => ps(sl, "home", "whiff")),
+        "high"
+      )}
+      ${r(
+        "Home Zone%",
+        slots.map((sl) => ps(sl, "home", "zone")),
+        "high"
+      )}
+      ${r(
+        "Away Strike%",
+        slots.map((sl) => ps(sl, "away", "str")),
+        "high"
+      )}
+      ${r(
+        "Away Whiff%",
+        slots.map((sl) => ps(sl, "away", "whiff")),
+        "high"
+      )}
+      ${r(
+        "Away Zone%",
+        slots.map((sl) => ps(sl, "away", "zone")),
+        "high"
+      )}
+      ${r(
+        "Bases Empty Strike%",
+        slots.map((sl) => ps(sl, "basesEmpty", "str")),
+        "high"
+      )}
+      ${r(
+        "Bases Empty Whiff%",
+        slots.map((sl) => ps(sl, "basesEmpty", "whiff")),
+        "high"
+      )}
+      ${r(
+        "Runners On Strike%",
+        slots.map((sl) => ps(sl, "runnersOn", "str")),
+        "high"
+      )}
+      ${r(
+        "Runners On Whiff%",
+        slots.map((sl) => ps(sl, "runnersOn", "whiff")),
+        "high"
+      )}
+      ${r(
+        "RISP Strike%",
+        slots.map((sl) => ps(sl, "risp", "str")),
+        "high"
+      )}
+      ${r(
+        "RISP Whiff%",
+        slots.map((sl) => ps(sl, "risp", "whiff")),
+        "high"
+      )}
+      ${r(
+        "0 Outs Strike%",
+        slots.map((sl) => ps(sl, "out0", "str")),
+        "high"
+      )}
+      ${r(
+        "1 Out Strike%",
+        slots.map((sl) => ps(sl, "out1", "str")),
+        "high"
+      )}
+      ${r(
+        "2 Outs Strike%",
+        slots.map((sl) => ps(sl, "out2", "str")),
+        "high"
+      )}
+      ${r(
+        "2 Outs Whiff%",
+        slots.map((sl) => ps(sl, "out2", "whiff")),
+        "high"
+      )}
+    </tbody></table>
+
+    <div class="cmp-stat-section-head">Pitching — Count Splits</div>
+    <table class="cmp-stat-table">${thead}<tbody>
+      ${r(
+        "First Pitch Strike%",
+        slots.map((sl) => ps(sl, "firstPitch", "str")),
+        "high"
+      )}
+      ${r(
+        "Ahead Strike%",
+        slots.map((sl) => ps(sl, "ahead", "str")),
+        "high"
+      )}
+      ${r(
+        "Ahead Zone%",
+        slots.map((sl) => ps(sl, "ahead", "zone")),
+        "high"
+      )}
+      ${r(
+        "Ahead Whiff%",
+        slots.map((sl) => ps(sl, "ahead", "whiff")),
+        "high"
+      )}
+      ${r(
+        "Behind Strike%",
+        slots.map((sl) => ps(sl, "behind", "str")),
+        "high"
+      )}
+      ${r(
+        "Behind Zone%",
+        slots.map((sl) => ps(sl, "behind", "zone")),
+        "high"
+      )}
+      ${r(
+        "Behind Whiff%",
+        slots.map((sl) => ps(sl, "behind", "whiff")),
+        "high"
+      )}
+      ${r(
+        "2-Strike Whiff%",
+        slots.map((sl) => ps(sl, "twoStrike", "whiff")),
+        "high"
+      )}
+      ${r(
+        "2-Strike Chase%",
+        slots.map((sl) => ps(sl, "twoStrike", "chase")),
+        "high"
+      )}
+      ${r(
+        "Full Count Strike%",
+        slots.map((sl) => ps(sl, "fullCount", "str")),
+        "high"
+      )}
+      ${r(
+        "Full Count Whiff%",
+        slots.map((sl) => ps(sl, "fullCount", "whiff")),
         "high"
       )}
     </tbody></table>`;
@@ -20743,6 +21392,8 @@
                   const sg = st.ab > 0 ? st.tb / st.ab : null;
                   return o !== null && sg !== null ? _fmtRate(o + sg) : NA;
                 }
+                if (metric === "iso")
+                  return st.ab > 0 ? _fmtRate((st.tb - st.h) / st.ab) : NA;
                 if (metric === "kpct")
                   return st.pa > 0 ? f(st.k / st.pa, "pct") : NA;
                 if (metric === "bbpct")
@@ -20774,6 +21425,7 @@
                 { key: "obp", label: "OBP", dir: "high" },
                 { key: "slg", label: "SLG", dir: "high" },
                 { key: "ops", label: "OPS", dir: "high" },
+                { key: "iso", label: "ISO", dir: "high" },
                 { key: "kpct", label: "K%", dir: "low" },
                 { key: "bbpct", label: "BB%", dir: "high" },
               ];
@@ -25253,6 +25905,24 @@
     </div>`;
         }
 
+        // Pre-pitch count helper: returns { balls, strikes } as they were BEFORE the pitch was thrown.
+        // New entries (post-fix, flagged with _prePitchCount:true) store correct pre-pitch values directly.
+        // Old entries stored post-pitch counts for ball/strike/foul, so we reverse-engineer them.
+        function _ppc(p) {
+          if (p._prePitchCount)
+            return { balls: p.balls || 0, strikes: p.strikes || 0 };
+          const b = p.balls || 0,
+            s = p.strikes || 0,
+            o = p.outcome;
+          if (o === "ball") return { balls: Math.max(0, b - 1), strikes: s };
+          if (o === "strike-swinging" || o === "strike-looking")
+            return { balls: b, strikes: Math.max(0, s - 1) };
+          if (o === "foul")
+            return { balls: b, strikes: s > 0 ? Math.max(0, s - 1) : 0 };
+          // In-play (hits, outs, hbp, ci, error, sacbunt, sacfly): no increment happened — stored value is already pre-pitch
+          return { balls: b, strikes: s };
+        }
+
         // Strike outcomes: called K, swinging K, foul, any ball in play (batted ball = pitcher threw a strike)
         function _isStrike(o) {
           return [
@@ -25273,17 +25943,11 @@
         }
 
         // First pitch of an at-bat: tagged by _extractABs with _abPitchIndex===0
-        // Falls back to checking if balls+strikes post-pitch === 1 (only possible on first pitch)
+        // Falls back to _ppc() which correctly gives the pre-pitch count
         function _isFirstPitch(p) {
           if (p._abPitchIndex !== undefined) return p._abPitchIndex === 0;
-          // Fallback for pitch log entries not processed through _extractABs:
-          // After first pitch, total count increments are exactly 1 (ball OR strike, but not both)
-          const b = p.balls || 0,
-            s = p.strikes || 0;
-          // On first pitch: either b===1,s===0 (ball) or b===0,s===1 (strike/looking/swinging)
-          // or b===0,s===0 for foul on 0-0 (count stays 0-0 after foul on 0-0... wait no, s would be 1)
-          // Simple heuristic: first pitch has b+s <= 1
-          return b + s <= 1;
+          const c = _ppc(p);
+          return c.balls === 0 && c.strikes === 0;
         }
 
         function buildZoneTendencies(pitches) {
@@ -26112,7 +26776,9 @@
             games.forEach((g) => {
               const pitchers =
                 g.awayTeam === teamName ? g.awayPitchers : g.homePitchers;
-              const p = (pitchers || []).find((x) => x.name === pitcherName);
+              const _pNamesCareer =
+                _nameAliases[pitcherName] || new Set([pitcherName]);
+              const p = (pitchers || []).find((x) => _pNamesCareer.has(x.name));
               if (!p || !p.pitches) return;
               career.num = p.num || career.num;
               career.hand = p.hand || career.hand;
@@ -26267,6 +26933,53 @@
       <div class="stat-card"><div class="stat-card-val">${maxVel}</div><div class="stat-card-lbl">Max Velo</div></div>
     </div>
 
+    <div class="section-title" style="margin:14px 0 8px">Traditional Stats</div>
+    <div class="stat-cards" style="margin-bottom:14px">
+      ${(function () {
+        const ip = career.outs || 0;
+        const ipFull = ip / 3;
+        const ipDisplay = ip > 0 ? Math.floor(ipFull) + "." + (ip % 3) : "0.0";
+        const era = ip > 0 ? (((career.r || 0) / ipFull) * 9).toFixed(2) : "—";
+        const whip =
+          ip > 0
+            ? (((career.bb || 0) + (career.hits || 0)) / ipFull).toFixed(2)
+            : "—";
+        const ab = (career.bf || 0) - (career.bb || 0) - (career.hbp || 0);
+        const avgAgainst = ab > 0 ? _fmtRate((career.hits || 0) / ab) : ".---";
+        const obpAgainst =
+          (career.bf || 0) > 0
+            ? _fmtRate(
+                ((career.hits || 0) + (career.bb || 0) + (career.hbp || 0)) /
+                  career.bf
+              )
+            : ".---";
+        const k9 = ip > 0 ? (((career.k || 0) / ipFull) * 9).toFixed(1) : "—";
+        const bb9 = ip > 0 ? (((career.bb || 0) / ipFull) * 9).toFixed(1) : "—";
+        const kPct =
+          (career.bf || 0) > 0
+            ? Math.round(((career.k || 0) / career.bf) * 100) + "%"
+            : "—";
+        const bbPct =
+          (career.bf || 0) > 0
+            ? Math.round(((career.bb || 0) / career.bf) * 100) + "%"
+            : "—";
+        const card = (val, lbl, accent) =>
+          `<div class="stat-card${
+            accent ? " accent" : ""
+          }"><div class="stat-card-val">${val}</div><div class="stat-card-lbl">${lbl}</div></div>`;
+        return (
+          card(era, "ERA", true) +
+          card(whip, "WHIP", true) +
+          card(avgAgainst, "AVG Against") +
+          card(obpAgainst, "OBP Against") +
+          card(k9, "K/9") +
+          card(bb9, "BB/9") +
+          card(kPct, "K%") +
+          card(bbPct, "BB%")
+        );
+      })()}
+    </div>
+
     <div class="scout-print-hide" style="display:flex;justify-content:flex-end;align-items:center;gap:10px;margin-bottom:8px">
       ${
         _recentFilter
@@ -26367,18 +27080,23 @@
             return '<div class="empty-state">No pitch data logged yet.</div>';
 
           // Attach game context (home/away, gameId) to each pitch
-          const pitches = [];
+          // allPitches is already alias-resolved via getPitcherPitches(); build a
+          // game-context lookup map so we can attach _isHome without re-filtering.
+          const _gameCtxMap = {};
           games.forEach((g) => {
-            const isHome = g.homeTeam === teamName;
-            (g.pitchLog || []).forEach((p) => {
-              if (p.pitcher === pitcherName && p.pitcherTeam === teamName)
-                pitches.push({
-                  ...p,
-                  _isHome: isHome,
-                  _gameId: g.id,
-                  _gameDate: g.date,
-                });
-            });
+            _gameCtxMap[g.id] = {
+              isHome: g.homeTeam === teamName,
+              date: g.date,
+            };
+          });
+          const pitches = allPitches.map((p) => {
+            const ctx = _gameCtxMap[p.gameId] || {};
+            return {
+              ...p,
+              _isHome: ctx.isHome,
+              _gameId: p.gameId,
+              _gameDate: ctx.date || p.gameDate,
+            };
           });
           if (!pitches.length)
             return '<div class="empty-state">No pitch data logged yet.</div>';
@@ -26527,41 +27245,80 @@
             ),
           ];
 
-          // Count splits
+          // Count splits — every individual count with ≥1 pitch, plus key grouped counts
+          const _allCounts = [
+            [0, 0],
+            [0, 1],
+            [0, 2],
+            [1, 0],
+            [1, 1],
+            [1, 2],
+            [2, 0],
+            [2, 1],
+            [2, 2],
+            [3, 0],
+            [3, 1],
+            [3, 2],
+          ];
           const countRows = [
             _pRow(
-              "0-0 (First Pitch)",
-              pitches.filter((p) => _isFirstPitch(p))
+              "First Pitch (0-0)",
+              pitches.filter((p) => {
+                const c = _ppc(p);
+                return c.balls === 0 && c.strikes === 0;
+              })
             ),
             _pRow(
-              "1-1 Count",
-              pitches.filter(
-                (p) =>
-                  (p.balls === 1 &&
-                    p.strikes === 2 &&
-                    ["strike-swinging", "strike-looking", "foul"].includes(
-                      p.outcome
-                    )) ||
-                  (p.balls === 2 && p.strikes === 1 && p.outcome === "ball")
-              )
+              "Ahead in Count",
+              pitches.filter((p) => {
+                const c = _ppc(p);
+                return c.strikes > c.balls;
+              })
             ),
             _pRow(
-              "Ahead (0-1, 0-2)",
-              pitches.filter((p) => p.strikes > p.balls)
+              "Even Count (excl. 0-0)",
+              pitches.filter((p) => {
+                const c = _ppc(p);
+                return (
+                  c.balls === c.strikes && !(c.balls === 0 && c.strikes === 0)
+                );
+              })
             ),
             _pRow(
-              "Behind (1-0+)",
-              pitches.filter((p) => p.balls > p.strikes)
+              "Behind in Count",
+              pitches.filter((p) => {
+                const c = _ppc(p);
+                return c.balls > c.strikes;
+              })
             ),
             _pRow(
               "2-Strike",
-              pitches.filter((p) => p.strikes === 2)
+              pitches.filter((p) => _ppc(p).strikes === 2)
+            ),
+            _pRow(
+              "2-Strike (not full)",
+              pitches.filter((p) => {
+                const c = _ppc(p);
+                return c.strikes === 2 && c.balls < 3;
+              })
             ),
             _pRow(
               "Full Count (3-2)",
-              pitches.filter((p) => p.balls === 3 && p.strikes === 2)
+              pitches.filter((p) => {
+                const c = _ppc(p);
+                return c.balls === 3 && c.strikes === 2;
+              })
             ),
           ];
+          const individualCountRows = _allCounts
+            .map(([b, s]) => {
+              const subset = pitches.filter((p) => {
+                const c = _ppc(p);
+                return c.balls === b && c.strikes === s;
+              });
+              return subset.length >= 1 ? _pRow(`${b}-${s}`, subset) : null;
+            })
+            .filter(Boolean);
 
           // By inning
           const innings = [
@@ -26612,7 +27369,7 @@
                 })
               : [];
 
-          // By pitch type
+          // By pitch type (outcome splits)
           const typeSet = [
             ...new Set(
               pitches.map((p) =>
@@ -26632,15 +27389,111 @@
             )
           );
 
+          // vs Batter Handedness (requires batterHand in pitch log)
+          const handPitches = pitches.filter(
+            (p) => p.batterHand === "R" || p.batterHand === "L"
+          );
+          const handRows = [
+            _pRow(
+              "vs RHB",
+              pitches.filter((p) => p.batterHand === "R")
+            ),
+            _pRow(
+              "vs LHB",
+              pitches.filter((p) => p.batterHand === "L")
+            ),
+          ];
+          const handNote = !handPitches.length
+            ? `<div style="font-size:10px;color:var(--text3);font-style:italic;margin-top:4px">Batter handedness tracked starting from newly recorded games</div>`
+            : "";
+
+          // Times Through Order (TTO) — computed from pitcher-team pitch sequence per game
+          // pitchLog was unshifted (newest first) so reverse per-game to get chronological order
+          const _pitchesByGame = {};
+          pitches.forEach((p, i) => {
+            if (!_pitchesByGame[p._gameId]) _pitchesByGame[p._gameId] = [];
+            _pitchesByGame[p._gameId].push({ p, i });
+          });
+          Object.values(_pitchesByGame).forEach((entries) => {
+            const ordered = [...entries].reverse();
+            const appearances = {};
+            let prevBatterIdx = null;
+            ordered.forEach(({ p, i }) => {
+              const bi = p.batterIdx;
+              if (bi !== prevBatterIdx) {
+                appearances[bi] = (appearances[bi] || 0) + 1;
+                prevBatterIdx = bi;
+              }
+              pitches[i]._tto = appearances[bi] || 1;
+            });
+          });
+          const ttoRows = [
+            _pRow(
+              "1st Time Through",
+              pitches.filter((p) => p._tto === 1)
+            ),
+            _pRow(
+              "2nd Time Through",
+              pitches.filter((p) => p._tto === 2)
+            ),
+            _pRow(
+              "3rd Time Through+",
+              pitches.filter((p) => p._tto >= 3)
+            ),
+          ];
+
+          // Velocity by pitch type
+          const _veloByType = {};
+          pitches.forEach((p) => {
+            const v = parseFloat(p.velocity);
+            if (isNaN(v) || v <= 0) return;
+            const t = p.pitchType && p.pitchType !== "—" ? p.pitchType : null;
+            if (!t) return;
+            if (!_veloByType[t]) _veloByType[t] = [];
+            _veloByType[t].push(v);
+          });
+          const veloTypeKeys = Object.keys(_veloByType).sort();
+          const veloTableRows = veloTypeKeys.map((t) => {
+            const vs = _veloByType[t];
+            const avg = (vs.reduce((a, b) => a + b, 0) / vs.length).toFixed(1);
+            const max = Math.max(...vs).toFixed(1);
+            const min = Math.min(...vs).toFixed(1);
+            return `<tr>
+              <td style="font-weight:500;color:var(--text2)">${t}</td>
+              <td>${vs.length}</td>
+              <td style="font-weight:700">${avg}</td>
+              <td style="color:var(--green)">${max}</td>
+              <td style="color:var(--text3)">${min}</td>
+            </tr>`;
+          });
+          const veloTable = veloTableRows.length
+            ? `<div style="margin-bottom:28px">
+            <div style="font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:9px;letter-spacing:3px;text-transform:uppercase;color:var(--text3);margin-bottom:8px">Velocity by Pitch Type</div>
+            <div style="overflow-x:auto">
+            <table class="data-table" style="min-width:360px">
+              <thead><tr><th style="text-align:left;min-width:140px">Pitch</th><th>Count</th><th>Avg MPH</th><th>Max</th><th>Min</th></tr></thead>
+              <tbody>${veloTableRows.join("")}</tbody>
+            </table></div>
+          </div>`
+            : "";
+
           return `<div style="padding:4px 0">
             ${_pTable(homeAwayRows, "Home / Away")}
+            ${_pTable(handRows, "vs Batter Handedness")}${handNote}
+            ${_pTable(ttoRows, "Times Through the Order")}
             ${_pTable(runnersRows, "Runners on Base")}
             ${_pTable(outsRows, "Outs in Inning")}
-            ${_pTable(countRows, "Count Splits")}
+            ${_pTable(countRows, "Count Splits (Grouped)")}
+            ${
+              individualCountRows.length
+                ? _pTable(individualCountRows, "Individual Count Splits")
+                : ""
+            }
             ${innings.length ? _pTable(inningRows, "By Inning") : ""}
             ${_pTable(recentRows, "Recent Performance")}
             ${monthRows.length ? _pTable(monthRows, "By Month") : ""}
             ${typeRows.length ? _pTable(typeRows, "By Pitch Type") : ""}
+            ${veloTable}
           </div>`;
         }
 
@@ -26896,7 +27749,9 @@
           games.forEach((g) => {
             const pitchers =
               g.awayTeam === teamName ? g.awayPitchers : g.homePitchers;
-            const p = (pitchers || []).find((x) => x.name === pitcherName);
+            const _pNamesGL =
+              _nameAliases[pitcherName] || new Set([pitcherName]);
+            const p = (pitchers || []).find((x) => _pNamesGL.has(x.name));
             if (!p || !p.pitches) return;
             const opp = g.awayTeam === teamName ? g.homeTeam : g.awayTeam;
             const sp =
@@ -29450,12 +30305,14 @@
             .join("");
 
           // Last 5 games
+          const _scoutPNames =
+            _nameAliases[pitcherName] || new Set([pitcherName]);
           const last5 = sortedGames
             .slice(-5)
             .map((g) => {
               const pitchers =
                 g.awayTeam === teamName ? g.awayPitchers : g.homePitchers;
-              const p = (pitchers || []).find((x) => x.name === pitcherName);
+              const p = (pitchers || []).find((x) => _scoutPNames.has(x.name));
               if (!p || !p.pitches) return null;
               const gPitches = allPitches.filter((q) => q.inning);
               const sp2 =
@@ -29534,9 +30391,194 @@
             year: "numeric",
           });
 
-          return `<div class="scout-report-page" id="scout-pitcher-report">
+          // ── New analytics sections ──────────────────────────────────────────
+
+          // vs Batter Handedness
+          const _scoutSwingOuts = [
+            "strike-swinging",
+            "foul",
+            "single",
+            "double",
+            "triple",
+            "homerun",
+            "groundout",
+            "flyout",
+            "lineout",
+            "sacfly",
+            "sacbunt",
+            "error",
+          ];
+          function _scoutSplitRow(lbl, subset) {
+            if (!subset.length)
+              return `<tr><td>${lbl}</td><td colspan="5" style="color:#8a909e">—</td></tr>`;
+            const n = subset.length;
+            const str = subset.filter((p) => _isStrike(p.outcome)).length;
+            const sw = subset.filter((p) =>
+              _scoutSwingOuts.includes(p.outcome)
+            ).length;
+            const wh = subset.filter(
+              (p) => p.outcome === "strike-swinging"
+            ).length;
+            const fps = subset.filter((p) => _isFirstPitch(p));
+            const fpStr = fps.filter((p) => _isStrike(p.outcome)).length;
+            const sp2 = Math.round((str / n) * 100);
+            return `<tr>
+              <td style="font-weight:600">${lbl}</td><td>${n}</td>
+              <td class="${
+                sp2 >= 60 ? "scout-good" : sp2 < 50 ? "scout-highlight" : ""
+              }">${sp2}%</td>
+              <td>${Math.round((sw / n) * 100)}%</td>
+              <td>${sw > 0 ? Math.round((wh / sw) * 100) + "%" : "—"}</td>
+              <td style="color:#8a909e">${
+                fps.length > 0
+                  ? Math.round((fpStr / fps.length) * 100) + "%"
+                  : "—"
+              }</td>
+            </tr>`;
+          }
+
+          const _handPitchesScout = allPitches.filter(
+            (p) => p.batterHand === "R" || p.batterHand === "L"
+          );
+          const handSplitHTML = `
+            <div class="scout-section" style="margin-bottom:0">
+              <div class="scout-section-title">vs Batter Handedness</div>
+              ${
+                _handPitchesScout.length >= 2
+                  ? `<table class="scout-table">
+                <thead><tr><th style="text-align:left">Split</th><th>P</th><th>Str%</th><th>Sw%</th><th>Whiff%</th><th>FPS%</th></tr></thead>
+                <tbody>
+                  ${_scoutSplitRow(
+                    "vs RHB",
+                    allPitches.filter((p) => p.batterHand === "R")
+                  )}
+                  ${_scoutSplitRow(
+                    "vs LHB",
+                    allPitches.filter((p) => p.batterHand === "L")
+                  )}
+                </tbody>
+              </table>`
+                  : `<div style="font-size:9px;color:#8a909e;font-style:italic;padding:4px 0">Tracked in newly recorded games</div>`
+              }
+            </div>`;
+
+          // Times Through Order (TTO) — compute per-game from allPitches
+          const _ttoByIdx = {};
+          const _pitchesByGameScout = {};
+          allPitches.forEach((p, i) => {
+            const gid = p.gameId || p._gameId;
+            if (!_pitchesByGameScout[gid]) _pitchesByGameScout[gid] = [];
+            _pitchesByGameScout[gid].push({ p, i });
+          });
+          Object.values(_pitchesByGameScout).forEach((entries) => {
+            const ordered = [...entries].reverse();
+            const appearances = {};
+            let prevBI = null;
+            ordered.forEach(({ p, i }) => {
+              const bi = p.batterIdx;
+              if (bi !== prevBI) {
+                appearances[bi] = (appearances[bi] || 0) + 1;
+                prevBI = bi;
+              }
+              _ttoByIdx[i] = appearances[bi] || 1;
+            });
+          });
+          const _allPitchesWithTTO = allPitches.map((p, i) => ({
+            ...p,
+            _tto: _ttoByIdx[i] || 1,
+          }));
+          const ttoSplitHTML = `
+            <div class="scout-section" style="margin-bottom:0">
+              <div class="scout-section-title">Times Through the Order</div>
+              <table class="scout-table">
+                <thead><tr><th style="text-align:left">Split</th><th>P</th><th>Str%</th><th>Sw%</th><th>Whiff%</th><th>FPS%</th></tr></thead>
+                <tbody>
+                  ${_scoutSplitRow(
+                    "1st TTO",
+                    _allPitchesWithTTO.filter((p) => p._tto === 1)
+                  )}
+                  ${_scoutSplitRow(
+                    "2nd TTO",
+                    _allPitchesWithTTO.filter((p) => p._tto === 2)
+                  )}
+                  ${_scoutSplitRow(
+                    "3rd TTO+",
+                    _allPitchesWithTTO.filter((p) => p._tto >= 3)
+                  )}
+                </tbody>
+              </table>
+            </div>`;
+
+          // Individual count splits (12 counts)
+          const _scoutAllCounts = [
+            [0, 0],
+            [0, 1],
+            [0, 2],
+            [1, 0],
+            [1, 1],
+            [1, 2],
+            [2, 0],
+            [2, 1],
+            [2, 2],
+            [3, 0],
+            [3, 1],
+            [3, 2],
+          ];
+          const indivCountRows = _scoutAllCounts
+            .map(([b, s]) => {
+              const sub = allPitches.filter(
+                (p) => p.balls === b && p.strikes === s
+              );
+              return sub.length >= 1 ? _scoutSplitRow(`${b}-${s}`, sub) : null;
+            })
+            .filter(Boolean)
+            .join("");
+          const indivCountHTML = indivCountRows
+            ? `
+            <div class="scout-section" style="margin-top:12px">
+              <div class="scout-section-title">Individual Count Splits</div>
+              <table class="scout-table">
+                <thead><tr><th style="text-align:left">Count</th><th>P</th><th>Strike%</th><th>Swing%</th><th>Whiff%</th><th>FPS%</th></tr></thead>
+                <tbody>${indivCountRows}</tbody>
+              </table>
+            </div>`
+            : "";
+
+          // Velocity by pitch type
+          const _scoutVeloByType = {};
+          allPitches.forEach((p) => {
+            const v = parseFloat(p.velocity);
+            if (isNaN(v) || v <= 0) return;
+            const t = p.pitchType && p.pitchType !== "—" ? p.pitchType : null;
+            if (!t) return;
+            if (!_scoutVeloByType[t]) _scoutVeloByType[t] = [];
+            _scoutVeloByType[t].push(v);
+          });
+          const veloByTypeRows = Object.entries(_scoutVeloByType)
+            .sort((a, b) => b[1].length - a[1].length)
+            .map(([t, vs]) => {
+              const avg = (vs.reduce((a, b) => a + b, 0) / vs.length).toFixed(
+                1
+              );
+              const max = Math.max(...vs).toFixed(1);
+              const min = Math.min(...vs).toFixed(1);
+              return `<tr><td style="font-weight:600">${t}</td><td>${vs.length}</td><td style="font-weight:700">${avg}</td><td style="color:#1a7a3a">${max}</td><td style="color:#8a909e">${min}</td></tr>`;
+            })
+            .join("");
+          const veloByTypeHTML = veloByTypeRows
+            ? `
+            <div class="scout-section" style="margin-bottom:0">
+              <div class="scout-section-title">Velocity by Pitch Type</div>
+              <table class="scout-table">
+                <thead><tr><th style="text-align:left">Pitch</th><th>N</th><th>Avg</th><th>Max</th><th>Min</th></tr></thead>
+                <tbody>${veloByTypeRows}</tbody>
+              </table>
+            </div>`
+            : "";
+
+          return `<div class="scout-report-page" id="scout-pitcher-report" style="padding:14px;background:#fff;font-family:'Barlow Condensed',sans-serif;overflow:hidden;max-width:100%">
   <!-- Header -->
-  <div class="scout-header" style="display:flex;align-items:flex-start;justify-content:space-between;border-bottom:3px solid #1a5acc;padding-bottom:10px;margin-bottom:16px">
+  <div class="scout-header" style="display:flex;align-items:flex-start;justify-content:space-between;border-bottom:3px solid #1a5acc;padding-bottom:8px;margin-bottom:12px">
     <div>
       <div style="font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:10px;letter-spacing:3px;text-transform:uppercase;color:#1a5acc;margin-bottom:2px">Pitcher Scouting Report</div>
       <div style="font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:32px;color:#111318;line-height:1">#${
@@ -29557,7 +30599,7 @@
   </div>
 
   <!-- Row 1: Core stats | Outcome Breakdown | Pitch Mix -->
-  <div class="scout-r1" style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;margin-bottom:16px">
+  <div class="scout-r1" style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:10px">
     <div class="scout-section" style="margin-bottom:0">
       <div class="scout-section-title">Core Stats</div>
       <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:5px">
@@ -29589,7 +30631,7 @@
         ]
           .map(
             ([l, v]) =>
-              `<div style="background:#f8f9fb;border:1px solid #e0e4ea;border-radius:6px;padding:6px 4px;text-align:center"><div style="font-weight:900;font-size:15px;color:#111318">${v}</div><div style="font-size:6px;letter-spacing:1.5px;text-transform:uppercase;color:#111318;margin-top:1px">${l}</div></div>`
+              `<div style="background:#f8f9fb;border:1px solid #e0e4ea;border-radius:6px;padding:6px 4px;text-align:center"><div style="font-weight:700;font-size:14px;color:#111318">${v}</div><div style="font-size:6px;letter-spacing:1.5px;text-transform:uppercase;color:#8a909e;margin-top:1px">${l}</div></div>`
           )
           .join("")}
       </div>
@@ -29605,7 +30647,7 @@
   </div>
 
   <!-- Row 2: Arsenal table full width, then 4-column visual row below -->
-  <div style="margin-bottom:16px">
+  <div style="margin-bottom:10px">
     <div class="scout-section" style="margin-bottom:10px">
       <div class="scout-section-title">Pitch Arsenal</div>
       <table class="scout-table">
@@ -29644,26 +30686,46 @@
   </div>
   <div class="scout-print-hide">${_recent50HTML}</div>
 
-  <!-- Row 3: Count performance + Last 5 -->
-  <div class="scout-r3" style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
-    <div class="scout-section">
+  <!-- Row 3: Count performance | vs Handedness | TTO + Game Log + Velocity — 3-column, all fits on one page -->
+  <div class="scout-r3" style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:12px">
+    <!-- Col 1: Count performance -->
+    <div class="scout-section" style="margin-bottom:0">
       <div class="scout-section-title">Performance by Count</div>
       <table class="scout-table">
-        <thead><tr><th style="text-align:left">Situation</th><th>P</th><th>Strike%</th><th>Swing%</th><th>Whiff%</th></tr></thead>
+        <thead><tr><th style="text-align:left">Situation</th><th>P</th><th>Str%</th><th>Sw%</th><th>Whiff%</th></tr></thead>
         <tbody>${cRows}</tbody>
       </table>
     </div>
-    <div class="scout-section">
-      <div class="scout-section-title">Recent Game Log (Last 5)</div>
-      <table class="scout-table">
-        <thead><tr><th style="text-align:left">Date</th><th>Opp</th><th>P</th><th>K</th><th>BB</th><th>H</th><th>Str%</th></tr></thead>
-        <tbody>${
-          last5 ||
-          '<tr><td colspan="7" style="color:#8a909e">No games</td></tr>'
-        }</tbody>
-      </table>
+    <!-- Col 2: vs Handedness -->
+    <div class="scout-section" style="margin-bottom:0">
+      ${
+        handSplitHTML ||
+        `<div class="scout-section-title">vs Batter Handedness</div><div style="font-size:9px;color:#8a909e;font-style:italic">Tracked in newly recorded games</div>`
+      }
+    </div>
+    <!-- Col 3: TTO + Game Log + Velocity -->
+    <div style="display:flex;flex-direction:column;gap:10px">
+      ${ttoSplitHTML || ""}
+      ${veloByTypeHTML || ""}
+      <div class="scout-section" style="margin-bottom:0">
+        <div class="scout-section-title">Recent Game Log (Last 5)</div>
+        <table class="scout-table">
+          <thead><tr><th style="text-align:left">Date</th><th>Opp</th><th>P</th><th>K</th><th>BB</th><th>H</th><th>Str%</th></tr></thead>
+          <tbody>${
+            last5 ||
+            '<tr><td colspan="7" style="color:#8a909e">No games</td></tr>'
+          }</tbody>
+        </table>
+      </div>
     </div>
   </div>
+
+  <!-- Individual count splits — screen only (too detailed for print) -->
+  ${
+    indivCountHTML
+      ? `<div class="scout-print-hide">${indivCountHTML}</div>`
+      : ""
+  }
   </div>`;
         }
 
