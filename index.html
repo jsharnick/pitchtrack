@@ -22841,12 +22841,11 @@
           const firstContent = first
             ? buildPlayerSplitsTab(teamName, first.name, games)
             : sortedPitchers[0]
-            ? buildPitcherStatsTab(
+            ? buildPitcherSplitsTab(
                 teamName,
                 sortedPitchers[0].name,
                 games,
-                getPitcherPitches(teamName, sortedPitchers[0].name, games),
-                sortedPitchers[0]
+                getPitcherPitches(teamName, sortedPitchers[0].name, games)
               )
             : "";
 
@@ -22916,19 +22915,11 @@
           if (content) {
             if (type === "pitcher") {
               const allPitches = getPitcherPitches(teamName, playerName, games);
-              const pitchers = getTeamPitchers(teamName, games);
-              const career =
-                pitchers.find((p) => {
-                  const names =
-                    _nameAliases[playerName] || new Set([playerName]);
-                  return names.has(p.name);
-                }) || null;
-              content.innerHTML = buildPitcherStatsTab(
+              content.innerHTML = buildPitcherSplitsTab(
                 teamName,
                 playerName,
                 games,
-                allPitches,
-                career
+                allPitches
               );
             } else {
               content.innerHTML = buildPlayerSplitsTab(
@@ -27882,6 +27873,30 @@
             bf: 0,
             swings: 0,
           };
+          // Shared table helpers — defined first so all code below can use them
+          const tbl = (content) =>
+            `<div style="overflow-x:auto;margin-bottom:28px"><table style="width:100%;border-collapse:collapse;background:var(--surface);border-radius:10px;overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,.06)">${content}</table></div>`;
+          const th = (label, left) =>
+            `<th style="padding:8px 10px;font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:var(--text3);white-space:nowrap;background:var(--surface2);border-bottom:2px solid var(--border);text-align:${
+              left ? "left" : "center"
+            }">${label}</th>`;
+          const td = (val, style) =>
+            `<td style="padding:8px 10px;font-family:'Share Tech Mono',monospace;font-size:12px;color:var(--text2);text-align:center;border-bottom:1px solid var(--surface2);white-space:nowrap${
+              style ? ";" + style : ""
+            }">${val}</td>`;
+          const tdL = (val, bold) =>
+            `<td style="padding:8px 10px;font-family:'Barlow Condensed',sans-serif;font-weight:${
+              bold ? 700 : 600
+            };font-size:14px;color:${
+              bold ? "var(--text)" : "var(--text2)"
+            };text-align:left;border-bottom:1px solid var(--surface2);white-space:nowrap">${val}</td>`;
+          const eraColor = (v) =>
+            parseFloat(v) >= 9
+              ? "color:#cc1a1a;font-weight:800"
+              : parseFloat(v) <= 2
+              ? "color:#1a8a3a;font-weight:800"
+              : "";
+
           const ip = c.outs || 0;
           const ipFull = ip / 3;
           const ipDisp = ip > 0 ? Math.floor(ipFull) + "." + (ip % 3) : "0.0";
@@ -28011,23 +28026,19 @@
 
           const allowedRow = (lbl, r, bold) => {
             if (!r)
-              return `<tr><td style="font-weight:${
-                bold ? 700 : 500
-              }">${lbl}</td><td colspan="12" style="color:var(--text3);font-style:italic">No data</td></tr>`;
+              return `<tr>${tdL(
+                lbl,
+                bold
+              )}<td colspan="16" style="padding:8px 10px;color:var(--text3);font-style:italic;font-family:'Barlow Condensed',sans-serif;text-align:center">No data</td></tr>`;
             return `<tr>
-              <td style="font-weight:${bold ? 700 : 500};color:${
-              bold ? "var(--text)" : "var(--text2)"
-            }">${lbl}</td>
-              <td>${r.pa}</td><td>${r.ab}</td><td>${r.h}</td><td>${
-              r.h2b
-            }</td><td>${r.h3b}</td>
-              <td class="${r.hr > 0 ? "highlight" : ""}">${r.hr}</td>
-              <td>${r.bb}</td><td>${r.hbp || 0}</td><td>${r.k}</td>
-              <td style="${colorAvg(r.avg)}">${fR(r.avg)}</td>
-              <td>${fR(r.obp)}</td><td>${fR(r.slg)}</td>
-              <td style="${colorOPS(r.ops)}">${fR(r.ops)}</td>
-              <td>${fP(r.iso)}</td>
-              <td>${fP(r.kpct)}</td><td>${fP(r.bbpct)}</td>
+              ${tdL(lbl, bold)}
+              ${td(r.pa)}${td(r.ab)}${td(r.h)}${td(r.h2b)}${td(r.h3b)}
+              ${td(r.hr, r.hr > 0 ? "color:#cc1a1a;font-weight:800" : "")}
+              ${td(r.bb)}${td(r.hbp || 0)}${td(r.k)}
+              ${td(fR(r.avg), colorAvg(r.avg))}
+              ${td(fR(r.obp))}${td(fR(r.slg))}
+              ${td(fR(r.ops), colorOPS(r.ops))}
+              ${td(fP(r.iso))}${td(fP(r.kpct))}${td(fP(r.bbpct))}
             </tr>`;
           };
 
@@ -28055,68 +28066,43 @@
             const gABs = facedABs.filter((a) => a._gameId === g.id);
             const gRates = _rates(_line(gABs));
             gameRows.push(`<tr>
-              <td style="white-space:nowrap">${g.date}</td>
-              <td>${escHtml(opp)}</td>
-              <td>${gipDisp}</td>
-              <td>${p.pitches}</td>
-              <td>${p.bf || "—"}</td>
-              <td>${p.k || 0}</td>
-              <td>${p.bb || 0}</td>
-              <td>${p.hits || 0}</td>
-              <td>${p.r || 0}</td>
-              <td>${p.hbp || 0}</td>
-              <td class="${
-                parseFloat(gERA) >= 9
-                  ? "dim"
-                  : parseFloat(gERA) <= 2
-                  ? "good"
-                  : ""
-              }">${gERA}</td>
-              <td>${gWHIP}</td>
-              <td>${gSP}</td>
-              <td style="${colorAvg(gRates?.avg || null)}">${
-              gRates ? fR(gRates.avg) : ".---"
-            }</td>
-              <td style="${colorOPS(gRates?.ops || null)}">${
-              gRates ? fR(gRates.ops) : ".---"
-            }</td>
+              ${tdL(g.date, false)}${tdL(escHtml(opp), false)}
+              ${td(gipDisp)}${td(p.pitches)}${td(p.bf || "—")}
+              ${td(p.k || 0)}${td(p.bb || 0)}${td(p.hits || 0)}${td(
+              p.r || 0
+            )}${td(p.hbp || 0)}
+              ${td(gERA, eraColor(gERA))}${td(gWHIP)}${td(gSP)}
+              ${td(
+                gRates ? fR(gRates.avg) : ".---",
+                colorAvg(gRates?.avg ?? null)
+              )}
+              ${td(
+                gRates ? fR(gRates.ops) : ".---",
+                colorOPS(gRates?.ops ?? null)
+              )}
             </tr>`);
           });
-
-          const thStyle =
-            "padding:4px 6px;font-size:10px;letter-spacing:1px;text-transform:uppercase;color:var(--text3);font-weight:700;white-space:nowrap;border-bottom:2px solid var(--border);text-align:right";
-          const thLeft = thStyle + ";text-align:left";
 
           return `
     <div style="margin-bottom:28px">
       <div class="section-title" style="margin-bottom:12px">Career Pitching</div>
-      <table class="data-table">
+      ${tbl(`
         <thead><tr>
-          <th style="${thLeft}">G</th><th style="${thStyle}">IP</th><th style="${thStyle}">BF</th>
-          <th style="${thStyle}">P</th><th style="${thStyle}">K</th><th style="${thStyle}">BB</th>
-          <th style="${thStyle}">H</th><th style="${thStyle}">R</th><th style="${thStyle}">HBP</th>
-          <th style="${thStyle}">ERA</th><th style="${thStyle}">WHIP</th>
-          <th style="${thStyle}">K/9</th><th style="${thStyle}">BB/9</th><th style="${thStyle}">K/BB</th>
-          <th style="${thStyle}">K%</th><th style="${thStyle}">BB%</th>
-          <th style="${thStyle}">Str%</th><th style="${thStyle}">Avg MPH</th><th style="${thStyle}">Max MPH</th>
+          ${th("G", true)}${th("IP")}${th("BF")}${th("P")}${th("K")}${th(
+        "BB"
+      )}${th("H")}${th("R")}${th("HBP")}
+          ${th("ERA")}${th("WHIP")}${th("K/9")}${th("BB/9")}${th("K/BB")}
+          ${th("K%")}${th("BB%")}${th("Str%")}${th("Avg MPH")}${th("Max MPH")}
         </tr></thead>
         <tbody><tr>
-          <td>${c.games}</td><td>${ipDisp}</td><td>${c.bf || 0}</td>
-          <td>${c.pitches}</td><td>${c.k}</td><td>${c.bb}</td>
-          <td>${c.hits}</td><td>${c.r || 0}</td><td>${c.hbp || 0}</td>
-          <td style="${
-            parseFloat(era) >= 9
-              ? "color:#cc1a1a;font-weight:800"
-              : parseFloat(era) <= 2
-              ? "color:#1a8a3a;font-weight:800"
-              : ""
-          }">${era}</td>
-          <td>${whip}</td>
-          <td>${k9}</td><td>${bb9}</td><td>${kbb}</td>
-          <td>${kPct}</td><td>${bbPct}</td>
-          <td>${strPct}</td><td>${avgVel}</td><td>${maxVel}</td>
-        </tr></tbody>
-      </table>
+          ${tdL(c.games, true)}${td(ipDisp)}${td(c.bf || 0)}${td(
+        c.pitches
+      )}${td(c.k)}${td(c.bb)}
+          ${td(c.hits)}${td(c.r || 0)}${td(c.hbp || 0)}
+          ${td(era, eraColor(era))}${td(whip)}
+          ${td(k9)}${td(bb9)}${td(kbb)}
+          ${td(kPct)}${td(bbPct)}${td(strPct)}${td(avgVel)}${td(maxVel)}
+        </tr></tbody>`)}
     </div>
 
     <div style="margin-bottom:28px">
@@ -28124,15 +28110,15 @@
       ${
         facedABs.length === 0
           ? '<div class="empty-state" style="padding:20px 0">No pitch log data — record new games to populate batting stats allowed.</div>'
-          : `<table class="data-table">
+          : tbl(`
         <thead><tr>
-          <th style="${thLeft}">Split</th>
-          <th style="${thStyle}">PA</th><th style="${thStyle}">AB</th><th style="${thStyle}">H</th>
-          <th style="${thStyle}">2B</th><th style="${thStyle}">3B</th><th style="${thStyle}">HR</th>
-          <th style="${thStyle}">BB</th><th style="${thStyle}">HBP</th><th style="${thStyle}">K</th>
-          <th style="${thStyle}">AVG</th><th style="${thStyle}">OBP</th><th style="${thStyle}">SLG</th>
-          <th style="${thStyle}">OPS</th><th style="${thStyle}">ISO</th>
-          <th style="${thStyle}">K%</th><th style="${thStyle}">BB%</th>
+          ${th("Split", true)}${th("PA")}${th("AB")}${th("H")}${th("2B")}${th(
+              "3B"
+            )}${th("HR")}
+          ${th("BB")}${th("HBP")}${th("K")}
+          ${th("AVG")}${th("OBP")}${th("SLG")}${th("OPS")}${th("ISO")}${th(
+              "K%"
+            )}${th("BB%")}
         </tr></thead>
         <tbody>
           ${allowedRow("Overall", overall, true)}
@@ -28142,11 +28128,10 @@
           ${hasHand ? allowedRow("vs LHB", vsLHB, false) : ""}
           ${
             !hasHand
-              ? '<tr><td colspan="17" style="color:var(--text3);font-style:italic;font-size:11px">Batter handedness tracked from newly recorded games</td></tr>'
+              ? `<tr><td colspan="17" style="padding:8px 10px;color:var(--text3);font-style:italic;font-size:11px;font-family:'Barlow Condensed',sans-serif">Batter handedness tracked from newly recorded games</td></tr>`
               : ""
           }
-        </tbody>
-      </table>`
+        </tbody>`)
       }
     </div>
 
@@ -28155,17 +28140,13 @@
         ? `
     <div>
       <div class="section-title" style="margin-bottom:12px">Game-by-Game Log</div>
-      <table class="data-table">
+      ${tbl(`
         <thead><tr>
-          <th style="${thLeft}">Date</th><th style="${thLeft}">Opp</th>
-          <th style="${thStyle}">IP</th><th style="${thStyle}">P</th><th style="${thStyle}">BF</th>
-          <th style="${thStyle}">K</th><th style="${thStyle}">BB</th><th style="${thStyle}">H</th>
-          <th style="${thStyle}">R</th><th style="${thStyle}">HBP</th>
-          <th style="${thStyle}">ERA</th><th style="${thStyle}">WHIP</th><th style="${thStyle}">Str%</th>
-          <th style="${thStyle}">AVG Ag.</th><th style="${thStyle}">OPS Ag.</th>
+          ${th("Date", true)}${th("Opp", true)}${th("IP")}${th("P")}${th("BF")}
+          ${th("K")}${th("BB")}${th("H")}${th("R")}${th("HBP")}
+          ${th("ERA")}${th("WHIP")}${th("Str%")}${th("AVG Ag.")}${th("OPS Ag.")}
         </tr></thead>
-        <tbody>${gameRows.join("")}</tbody>
-      </table>
+        <tbody>${gameRows.join("")}</tbody>`)}
     </div>`
         : ""
     }`;
