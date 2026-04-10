@@ -3431,6 +3431,28 @@
         font-size: 16px;
         flex: 1;
       }
+      .game-team-name-wrap {
+        white-space: nowrap;
+      }
+      .game-team-rename-btn {
+        background: none;
+        border: none;
+        padding: 0 3px;
+        cursor: pointer;
+        color: var(--text3);
+        font-size: 11px;
+        opacity: 0;
+        transition: opacity 0.15s, color 0.15s;
+        vertical-align: middle;
+        line-height: 1;
+        border-radius: 3px;
+      }
+      .game-row:hover .game-team-rename-btn {
+        opacity: 1;
+      }
+      .game-team-rename-btn:hover {
+        color: var(--accent) !important;
+      }
       .game-score {
         font-family: "Barlow Condensed", sans-serif;
         font-weight: 900;
@@ -7688,6 +7710,25 @@
               flex-shrink: 0;
             "
           />
+          <button
+            onclick="showAbsorbModal(_getMyTeamName())"
+            title="Reassign game records from old team names into this team"
+            style="
+              padding: 5px 10px;
+              background: var(--surface2);
+              border: 1px solid var(--border2);
+              border-radius: 6px;
+              font-family: 'Barlow Condensed', sans-serif;
+              font-weight: 700;
+              font-size: 11px;
+              color: var(--text3);
+              cursor: pointer;
+              white-space: nowrap;
+              flex-shrink: 0;
+            "
+          >
+            &#x21BA; Absorb Old Names
+          </button>
           <div
             id="myteam-subtitle"
             style="
@@ -8065,12 +8106,241 @@
               >
                 🗑
               </button>
+              <button
+                onclick="showAbsorbModal(document.getElementById('opp-detail-name').value.trim())"
+                title="Reassign game records tracked under an old name to this opponent"
+                style="
+                  padding: 5px 10px;
+                  background: var(--surface2);
+                  border: 1px solid var(--border2);
+                  border-radius: 6px;
+                  font-family: 'Barlow Condensed', sans-serif;
+                  font-weight: 700;
+                  font-size: 11px;
+                  color: var(--text3);
+                  cursor: pointer;
+                  white-space: nowrap;
+                  flex-shrink: 0;
+                "
+              >
+                &#x21BA; Claim History
+              </button>
             </div>
           </div>
           <div
             id="opp-detail-roster"
             style="flex: 1; overflow-y: auto; padding: 14px 16px"
           ></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Rename Team modal -->
+    <div
+      id="rename-team-modal"
+      style="
+        display: none;
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.7);
+        z-index: 2200;
+        align-items: center;
+        justify-content: center;
+      "
+    >
+      <div
+        style="
+          background: var(--surface);
+          border-radius: 12px;
+          padding: 24px;
+          max-width: 360px;
+          width: 92%;
+          display: flex;
+          flex-direction: column;
+          gap: 14px;
+          box-shadow: 0 8px 32px rgba(0, 0, 0, 0.32);
+        "
+      >
+        <div
+          style="
+            font-family: 'Barlow Condensed', sans-serif;
+            font-weight: 800;
+            font-size: 18px;
+            color: var(--text);
+          "
+        >
+          Rename Team
+        </div>
+        <div
+          id="rename-team-from"
+          style="
+            font-size: 12px;
+            color: var(--text3);
+            font-family: 'Barlow', sans-serif;
+          "
+        ></div>
+        <input
+          id="rename-team-input"
+          placeholder="New team name"
+          onkeydown="if(event.key==='Enter')confirmRenameTeam()"
+          style="
+            padding: 8px 12px;
+            border: 1px solid var(--border2);
+            border-radius: 6px;
+            background: var(--surface3);
+            color: var(--text);
+            font-family: 'Barlow Condensed', sans-serif;
+            font-weight: 700;
+            font-size: 15px;
+            width: 100%;
+            box-sizing: border-box;
+          "
+        />
+        <div
+          style="
+            font-size: 11px;
+            color: var(--text3);
+            font-family: 'Barlow', sans-serif;
+          "
+        >
+          This will update all game records that use this name.
+        </div>
+        <div style="display: flex; gap: 8px; justify-content: flex-end">
+          <button
+            onclick="closeRenameTeamModal()"
+            style="
+              padding: 7px 16px;
+              background: var(--surface2);
+              border: 1px solid var(--border2);
+              border-radius: 6px;
+              font-family: 'Barlow Condensed', sans-serif;
+              font-weight: 700;
+              font-size: 13px;
+              color: var(--text2);
+              cursor: pointer;
+            "
+          >
+            Cancel
+          </button>
+          <button
+            id="rename-team-confirm-btn"
+            onclick="confirmRenameTeam()"
+            style="
+              padding: 7px 16px;
+              background: var(--accent);
+              border: none;
+              border-radius: 6px;
+              font-family: 'Barlow Condensed', sans-serif;
+              font-weight: 700;
+              font-size: 13px;
+              color: #fff;
+              cursor: pointer;
+            "
+          >
+            Rename
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Absorb Historical Team Names modal -->
+    <div
+      id="absorb-modal"
+      style="
+        display: none;
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.7);
+        z-index: 2200;
+        align-items: center;
+        justify-content: center;
+      "
+    >
+      <div
+        style="
+          background: var(--surface);
+          border-radius: 12px;
+          padding: 24px;
+          max-width: 400px;
+          width: 92%;
+          max-height: 80vh;
+          display: flex;
+          flex-direction: column;
+          gap: 14px;
+          box-shadow: 0 8px 32px rgba(0, 0, 0, 0.32);
+        "
+      >
+        <div
+          id="absorb-modal-title"
+          style="
+            font-family: 'Barlow Condensed', sans-serif;
+            font-weight: 800;
+            font-size: 18px;
+            color: var(--text);
+          "
+        >
+          Absorb Historical Names
+        </div>
+        <div
+          id="absorb-modal-desc"
+          style="
+            font-size: 12px;
+            color: var(--text3);
+            font-family: 'Barlow', sans-serif;
+            line-height: 1.5;
+          "
+        ></div>
+        <div
+          id="absorb-modal-list"
+          style="
+            overflow-y: auto;
+            max-height: 260px;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+          "
+        ></div>
+        <div
+          style="
+            display: flex;
+            gap: 8px;
+            justify-content: flex-end;
+            margin-top: 4px;
+          "
+        >
+          <button
+            onclick="closeAbsorbModal()"
+            style="
+              padding: 7px 16px;
+              background: var(--surface2);
+              border: 1px solid var(--border2);
+              border-radius: 6px;
+              font-family: 'Barlow Condensed', sans-serif;
+              font-weight: 700;
+              font-size: 13px;
+              color: var(--text2);
+              cursor: pointer;
+            "
+          >
+            Cancel
+          </button>
+          <button
+            id="absorb-confirm-btn"
+            onclick="confirmAbsorb()"
+            style="
+              padding: 7px 16px;
+              background: var(--accent);
+              border: none;
+              border-radius: 6px;
+              font-family: 'Barlow Condensed', sans-serif;
+              font-weight: 700;
+              font-size: 13px;
+              color: #fff;
+              cursor: pointer;
+            "
+          >
+            Absorb Selected
+          </button>
         </div>
       </div>
     </div>
@@ -19516,6 +19786,198 @@
           }
         }
 
+        // ── TEAM NAME RENAME / MERGE / ABSORB ────────────────────────────
+        let _renameTeamOldName = null;
+
+        function showRenameTeam(oldName) {
+          _renameTeamOldName = oldName;
+          document.getElementById(
+            "rename-team-from"
+          ).textContent = `Current name: "${oldName}"`;
+          const input = document.getElementById("rename-team-input");
+          input.value = oldName;
+          const btn = document.getElementById("rename-team-confirm-btn");
+          btn.textContent = "Rename";
+          btn.disabled = false;
+          document.getElementById("rename-team-modal").style.display = "flex";
+          setTimeout(() => {
+            input.focus();
+            input.select();
+          }, 80);
+        }
+
+        function closeRenameTeamModal() {
+          document.getElementById("rename-team-modal").style.display = "none";
+        }
+
+        async function confirmRenameTeam() {
+          const newName = document
+            .getElementById("rename-team-input")
+            .value.trim();
+          if (!newName || newName === _renameTeamOldName) {
+            closeRenameTeamModal();
+            return;
+          }
+          const btn = document.getElementById("rename-team-confirm-btn");
+          btn.textContent = "Saving…";
+          btn.disabled = true;
+          // Rename in game records
+          const count = await _mergeTeamNameInGames(
+            _renameTeamOldName,
+            newName
+          );
+          // If old name matches a loaded opponent, rename it there too
+          const opp = (_opponents || []).find(
+            (o) => o.name === _renameTeamOldName
+          );
+          if (opp) {
+            opp.name = newName;
+            try {
+              await window.storage.set(
+                "pitchtrack_opp_" + opp.id,
+                JSON.stringify(opp),
+                true
+              );
+              const raw = await window.storage.get(
+                "pitchtrack_opponents",
+                true
+              );
+              const idx = raw ? JSON.parse(raw.value) : [];
+              const entry = idx.find((e) => e.id === opp.id);
+              if (entry) entry.name = newName;
+              await window.storage.set(
+                "pitchtrack_opponents",
+                JSON.stringify(idx),
+                true
+              );
+            } catch (e) {}
+          }
+          closeRenameTeamModal();
+          toast(
+            `Renamed to "${newName}" — ${count} game${
+              count !== 1 ? "s" : ""
+            } updated.`
+          );
+          await hubRefreshAll();
+        }
+
+        async function _mergeTeamNameInGames(fromName, toName) {
+          const keys = (await window.storage.list("ptgame_", true))?.keys || [];
+          let count = 0;
+          for (const key of keys) {
+            try {
+              const raw = await window.storage.get(key, true);
+              if (!raw?.value) continue;
+              const g = JSON.parse(raw.value);
+              let changed = false;
+              if (g.awayTeam === fromName) {
+                g.awayTeam = toName;
+                changed = true;
+              }
+              if (g.homeTeam === fromName) {
+                g.homeTeam = toName;
+                changed = true;
+              }
+              if (changed) {
+                await window.storage.set(key, JSON.stringify(g), true);
+                count++;
+              }
+            } catch (e) {
+              console.warn("merge error:", key, e);
+            }
+          }
+          try {
+            const raw = await window.storage.get("pitchtrack_teams", true);
+            const teams = raw ? JSON.parse(raw.value) : [];
+            const idx = teams.indexOf(fromName);
+            if (idx !== -1) teams.splice(idx, 1);
+            if (!teams.includes(toName)) teams.push(toName);
+            await window.storage.set(
+              "pitchtrack_teams",
+              JSON.stringify(teams),
+              true
+            );
+          } catch (e) {}
+          return count;
+        }
+
+        let _absorbTargetName = null;
+
+        function showAbsorbModal(targetName) {
+          if (!targetName) {
+            toast("No team name set yet.");
+            return;
+          }
+          _absorbTargetName = targetName;
+          const myTeamName = _getMyTeamName();
+          const oppNames = new Set((_opponents || []).map((o) => o.name));
+          const reserved = new Set([
+            ...(myTeamName ? [myTeamName] : []),
+            ...oppNames,
+            targetName,
+          ]);
+          const available = (allTeams || []).filter((n) => !reserved.has(n));
+
+          document.getElementById(
+            "absorb-modal-title"
+          ).textContent = `Absorb Into "${targetName}"`;
+          document.getElementById("absorb-modal-desc").textContent =
+            available.length === 0
+              ? "No unassigned historical team names found. All known names are already accounted for."
+              : `Select historical team names whose game records should be reassigned to "${targetName}".`;
+
+          const list = document.getElementById("absorb-modal-list");
+          list.innerHTML =
+            available.length === 0
+              ? `<div style="font-size:12px;color:var(--text3);padding:8px 0">Nothing to absorb.</div>`
+              : available
+                  .map(
+                    (name) => `
+              <label style="display:flex;align-items:center;gap:10px;padding:8px 10px;border:1px solid var(--border);border-radius:6px;cursor:pointer;background:var(--surface2)">
+                <input type="checkbox" value="${escHtml(
+                  name
+                )}" style="width:16px;height:16px;accent-color:var(--accent)">
+                <span style="font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:14px;color:var(--text)">${escHtml(
+                  name
+                )}</span>
+              </label>`
+                  )
+                  .join("");
+
+          const confirmBtn = document.getElementById("absorb-confirm-btn");
+          confirmBtn.textContent = "Absorb Selected";
+          confirmBtn.disabled = false;
+          confirmBtn.style.display = available.length === 0 ? "none" : "";
+          document.getElementById("absorb-modal").style.display = "flex";
+        }
+
+        function closeAbsorbModal() {
+          document.getElementById("absorb-modal").style.display = "none";
+        }
+
+        async function confirmAbsorb() {
+          const checked = [
+            ...document.querySelectorAll(
+              "#absorb-modal-list input[type=checkbox]:checked"
+            ),
+          ];
+          if (!checked.length) {
+            closeAbsorbModal();
+            return;
+          }
+          const btn = document.getElementById("absorb-confirm-btn");
+          btn.textContent = "Working…";
+          btn.disabled = true;
+          let total = 0;
+          for (const cb of checked) {
+            total += await _mergeTeamNameInGames(cb.value, _absorbTargetName);
+          }
+          closeAbsorbModal();
+          toast(`Done! ${total} game${total !== 1 ? "s" : ""} updated.`);
+          await hubRefreshAll();
+        }
+        // ─────────────────────────────────────────────────────────────────
+
         let _pendingDeleteId = null;
 
         function promptDeleteGame(gameId, label) {
@@ -22263,7 +22725,14 @@
                   t
                 )}') : showView('team','${escAttr(t)}')">
                   <div class="opp-card-check">${isSel ? "✓" : ""}</div>
-                  <div class="opp-card-name">${escHtml(t)}</div>
+                  <div style="display:flex;align-items:center;gap:6px;justify-content:space-between">
+                    <div class="opp-card-name" style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis">${escHtml(
+                      t
+                    )}</div>
+                    <button onclick="event.stopPropagation();showRenameTeam('${escAttr(
+                      t
+                    )}')" title="Rename this team" style="background:none;border:none;padding:2px 5px;cursor:pointer;color:var(--text3);font-size:13px;border-radius:4px;flex-shrink:0;line-height:1" onmouseover="this.style.color='var(--accent)'" onmouseout="this.style.color='var(--text3)'">✏</button>
+                  </div>
                   <div class="opp-card-record">${rec.w}-${rec.l}${
                   rec.t ? "-" + rec.t : ""
                 } &nbsp;·&nbsp; ${games.length}G</div>
@@ -22478,11 +22947,27 @@
 
             div.innerHTML = `
       <div class="game-date">${g.date}</div>
-      <div class="game-teams">${escHtml(
-        g.awayTeam
-      )} <span style="color:var(--text3);font-weight:400">vs</span> ${escHtml(
+      <div class="game-teams">
+        <span class="game-team-name-wrap">
+          ${escHtml(
+            g.awayTeam
+          )}<button onclick="event.stopPropagation();showRenameTeam('${escAttr(
+              g.awayTeam
+            )}')" title="Rename ${escHtml(
+              g.awayTeam
+            )}" class="game-team-rename-btn">✏</button>
+        </span>
+        <span style="color:var(--text3);font-weight:400"> vs </span>
+        <span class="game-team-name-wrap">
+          ${escHtml(
+            g.homeTeam
+          )}<button onclick="event.stopPropagation();showRenameTeam('${escAttr(
               g.homeTeam
-            )}</div>
+            )}')" title="Rename ${escHtml(
+              g.homeTeam
+            )}" class="game-team-rename-btn">✏</button>
+        </span>
+      </div>
       <div class="game-meta" style="flex:1;font-size:11px;color:var(--text3)">${
         g.totalPitches || 0
       } pitches · ${g.innings} inn</div>
