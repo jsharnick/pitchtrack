@@ -3318,6 +3318,10 @@
       th.sorted {
         color: var(--accent);
       }
+      th[onclick]:hover {
+        color: var(--accent);
+        opacity: 0.8;
+      }
 
       /* ── Game log list ── */
       .game-row {
@@ -5061,10 +5065,11 @@
         letter-spacing: 0.5px;
         padding: 3px 10px;
         border-radius: 99px;
-        border: 1px solid var(--blue);
-        background: var(--blue);
+        border: 1px solid rgba(204, 26, 26, 0.6);
+        background: rgba(204, 26, 26, 0.82);
         color: #fff;
         cursor: pointer;
+        box-shadow: 0 0 7px rgba(204, 26, 26, 0.28);
         -webkit-tap-highlight-color: transparent;
         touch-action: manipulation;
       }
@@ -5072,6 +5077,7 @@
         background: transparent;
         color: var(--text2);
         border-color: var(--border);
+        box-shadow: none;
       }
       /* Stat table */
       .cmp-stat-section-head {
@@ -22403,7 +22409,7 @@
             const displayNum = isPitcher
               ? (s.pd && s.pd.num) || (s.num !== "—" ? s.num : null) || "—"
               : s.num || "—";
-            const numColor = isPitcher ? "var(--blue)" : "var(--accent)";
+            const numColor = "var(--accent)";
             const badge = isPitcher
               ? s.pos && s.pos !== "—"
                 ? escHtml(s.pos)
@@ -23628,20 +23634,72 @@
           });
         }
 
+        function teamTabSort(tableId, colIdx) {
+          const table = document.getElementById(tableId);
+          if (!table) return;
+          const tbody = table.querySelector("tbody");
+          if (!tbody) return;
+          const curCol = parseInt(table.dataset.sortCol ?? "-1");
+          const curDir = parseInt(table.dataset.sortDir ?? "-1");
+          const newDir = curCol === colIdx ? -curDir : -1; // descending by default
+          table.dataset.sortCol = colIdx;
+          table.dataset.sortDir = newDir;
+          // Update header indicators
+          table.querySelectorAll("thead th").forEach((th, i) => {
+            const arrow = th.querySelector(".sort-arrow");
+            if (arrow) arrow.remove();
+            th.classList.remove("sorted");
+            if (i === colIdx) {
+              th.classList.add("sorted");
+              const a = document.createElement("span");
+              a.className = "sort-arrow";
+              a.textContent = newDir === -1 ? " ▼" : " ▲";
+              a.style.cssText = "font-size:9px;opacity:0.7";
+              th.appendChild(a);
+            }
+          });
+          // Sort rows
+          const rows = [...tbody.querySelectorAll("tr")];
+          rows.sort((a, b) => {
+            const aRaw = (a.cells[colIdx]?.textContent ?? "").trim();
+            const bRaw = (b.cells[colIdx]?.textContent ?? "").trim();
+            const aNum = parseFloat(aRaw.replace("%", "").replace("∞", "999"));
+            const bNum = parseFloat(bRaw.replace("%", "").replace("∞", "999"));
+            if (!isNaN(aNum) && !isNaN(bNum)) return (aNum - bNum) * newDir;
+            if (aRaw === "—" && bRaw !== "—") return newDir; // push "—" to bottom
+            if (aRaw !== "—" && bRaw === "—") return -newDir;
+            return aRaw.localeCompare(bRaw) * newDir;
+          });
+          rows.forEach((r) => tbody.appendChild(r));
+        }
+
         function buildBatterTable(players, teamName) {
           if (!players.length)
             return '<div class="empty-state">No batter data</div>';
           const sorted = [...players].sort((a, b) => b.ab - a.ab);
           return `
     <div class="section-title">Batting Stats</div>
-    <table class="data-table">
+    <table class="data-table" id="hub-batter-table">
       <thead><tr>
-        <th>Player</th><th>#</th><th>Pos</th><th>G</th><th>PA</th><th>AB</th><th>H</th>
-        <th>2B</th><th>3B</th><th>HR</th><th>R</th><th>RBI</th><th>BB</th><th>K</th><th>HBP</th>
-        <th class="${sortCol === "avg" ? "sorted" : ""}">AVG</th>
-        <th class="${sortCol === "obp" ? "sorted" : ""}">OBP</th>
-        <th class="${sortCol === "slg" ? "sorted" : ""}">SLG</th>
-        <th class="${sortCol === "ops" ? "sorted" : ""}">OPS</th>
+        <th onclick="teamTabSort('hub-batter-table',0)" style="cursor:pointer">Player</th>
+        <th onclick="teamTabSort('hub-batter-table',1)" style="cursor:pointer">#</th>
+        <th onclick="teamTabSort('hub-batter-table',2)" style="cursor:pointer">Pos</th>
+        <th onclick="teamTabSort('hub-batter-table',3)" style="cursor:pointer">G</th>
+        <th onclick="teamTabSort('hub-batter-table',4)" style="cursor:pointer">PA</th>
+        <th onclick="teamTabSort('hub-batter-table',5)" style="cursor:pointer">AB</th>
+        <th onclick="teamTabSort('hub-batter-table',6)" style="cursor:pointer">H</th>
+        <th onclick="teamTabSort('hub-batter-table',7)" style="cursor:pointer">2B</th>
+        <th onclick="teamTabSort('hub-batter-table',8)" style="cursor:pointer">3B</th>
+        <th onclick="teamTabSort('hub-batter-table',9)" style="cursor:pointer">HR</th>
+        <th onclick="teamTabSort('hub-batter-table',10)" style="cursor:pointer">R</th>
+        <th onclick="teamTabSort('hub-batter-table',11)" style="cursor:pointer">RBI</th>
+        <th onclick="teamTabSort('hub-batter-table',12)" style="cursor:pointer">BB</th>
+        <th onclick="teamTabSort('hub-batter-table',13)" style="cursor:pointer">K</th>
+        <th onclick="teamTabSort('hub-batter-table',14)" style="cursor:pointer">HBP</th>
+        <th onclick="teamTabSort('hub-batter-table',15)" style="cursor:pointer">AVG</th>
+        <th onclick="teamTabSort('hub-batter-table',16)" style="cursor:pointer">OBP</th>
+        <th onclick="teamTabSort('hub-batter-table',17)" style="cursor:pointer">SLG</th>
+        <th onclick="teamTabSort('hub-batter-table',18)" style="cursor:pointer">OPS</th>
       </tr></thead>
       <tbody>${sorted
         .map((p) => {
@@ -23703,11 +23761,26 @@
           const sorted = [...pitchers].sort((a, b) => b.pitches - a.pitches);
           return `
     <div class="section-title">Pitching Stats</div>
-    <table class="data-table">
+    <table class="data-table" id="hub-pitcher-table">
       <thead><tr>
-        <th>Pitcher</th><th>#</th><th>T</th><th>G</th><th>IP</th><th>BF</th><th>P</th><th>K</th><th>BB</th>
-        <th>H</th><th>R</th><th>HBP</th><th>K/9</th><th>BB/9</th><th>K/BB</th><th>Str%</th>
-        <th>Swng%</th><th>Lk%</th>
+        <th onclick="teamTabSort('hub-pitcher-table',0)" style="cursor:pointer">Pitcher</th>
+        <th onclick="teamTabSort('hub-pitcher-table',1)" style="cursor:pointer">#</th>
+        <th onclick="teamTabSort('hub-pitcher-table',2)" style="cursor:pointer">T</th>
+        <th onclick="teamTabSort('hub-pitcher-table',3)" style="cursor:pointer">G</th>
+        <th onclick="teamTabSort('hub-pitcher-table',4)" style="cursor:pointer">IP</th>
+        <th onclick="teamTabSort('hub-pitcher-table',5)" style="cursor:pointer">BF</th>
+        <th onclick="teamTabSort('hub-pitcher-table',6)" style="cursor:pointer">P</th>
+        <th onclick="teamTabSort('hub-pitcher-table',7)" style="cursor:pointer">K</th>
+        <th onclick="teamTabSort('hub-pitcher-table',8)" style="cursor:pointer">BB</th>
+        <th onclick="teamTabSort('hub-pitcher-table',9)" style="cursor:pointer">H</th>
+        <th onclick="teamTabSort('hub-pitcher-table',10)" style="cursor:pointer">R</th>
+        <th onclick="teamTabSort('hub-pitcher-table',11)" style="cursor:pointer">HBP</th>
+        <th onclick="teamTabSort('hub-pitcher-table',12)" style="cursor:pointer">K/9</th>
+        <th onclick="teamTabSort('hub-pitcher-table',13)" style="cursor:pointer">BB/9</th>
+        <th onclick="teamTabSort('hub-pitcher-table',14)" style="cursor:pointer">K/BB</th>
+        <th onclick="teamTabSort('hub-pitcher-table',15)" style="cursor:pointer">Str%</th>
+        <th onclick="teamTabSort('hub-pitcher-table',16)" style="cursor:pointer">Swng%</th>
+        <th onclick="teamTabSort('hub-pitcher-table',17)" style="cursor:pointer">Lk%</th>
       </tr></thead>
       <tbody>${sorted
         .map((p) => {
@@ -23942,14 +24015,12 @@
             });
             const att = sb + cs;
             const sbPct = att > 0 ? Math.round((sb / att) * 100) + "%" : "—";
-            return `<tr>
-      <td><a href="#" onclick="event.preventDefault();showView('player',JSON.stringify({team:'${escAttr(
-        teamName
-      )}',name:'${escAttr(
+            return `<tr class="player-row" data-team="${escAttr(
+              teamName
+            )}" data-name="${escAttr(
               p.name
-            )}']))" style="color:inherit;text-decoration:none"><strong>${escHtml(
-              p.name
-            )}</strong></a></td>
+            )}" onclick="hubNavPlayer(this,'player')">
+      <td>${escHtml(p.name)}</td>
       <td class="dim">${p.pos || "—"}</td>
       <td>${r}</td>
       <td>${rbi}</td>
@@ -23963,8 +24034,19 @@
           });
 
           return `<div class="section-title" style="margin-bottom:10px">Baserunning</div>
-    <table class="data-table">
-    <thead><tr><th>Player</th><th>Pos</th><th>R</th><th>RBI</th><th>SB</th><th>CS</th><th>Att</th><th>SB%</th><th>PO</th><th>Adv</th></tr></thead>
+    <table class="data-table" id="hub-baserunning-table">
+    <thead><tr>
+      <th onclick="teamTabSort('hub-baserunning-table',0)" style="cursor:pointer">Player</th>
+      <th onclick="teamTabSort('hub-baserunning-table',1)" style="cursor:pointer">Pos</th>
+      <th onclick="teamTabSort('hub-baserunning-table',2)" style="cursor:pointer">R</th>
+      <th onclick="teamTabSort('hub-baserunning-table',3)" style="cursor:pointer">RBI</th>
+      <th onclick="teamTabSort('hub-baserunning-table',4)" style="cursor:pointer">SB</th>
+      <th onclick="teamTabSort('hub-baserunning-table',5)" style="cursor:pointer">CS</th>
+      <th onclick="teamTabSort('hub-baserunning-table',6)" style="cursor:pointer">Att</th>
+      <th onclick="teamTabSort('hub-baserunning-table',7)" style="cursor:pointer">SB%</th>
+      <th onclick="teamTabSort('hub-baserunning-table',8)" style="cursor:pointer">PO</th>
+      <th onclick="teamTabSort('hub-baserunning-table',9)" style="cursor:pointer">Adv</th>
+    </tr></thead>
     <tbody>${rows.join("")}</tbody>
   </table>`;
         }
@@ -24011,8 +24093,12 @@
             .map((p) => {
               const tc = p.po + p.a + p.e;
               const fpct = tc > 0 ? _fmtRate((p.po + p.a) / tc) : "—";
-              return `<tr>
-        <td><strong>${escHtml(p.name)}</strong></td>
+              return `<tr class="player-row" data-team="${escAttr(
+                teamName
+              )}" data-name="${escAttr(
+                p.name
+              )}" onclick="hubNavPlayer(this,'player')">
+        <td>${escHtml(p.name)}</td>
         <td class="dim">${p.pos || "—"}</td>
         <td class="accent">${p.po}</td>
         <td>${p.a}</td>
@@ -24032,8 +24118,16 @@
       <div class="stat-card"><div class="stat-card-val">${tE}</div><div class="stat-card-lbl">Team E</div></div>
       <div class="stat-card"><div class="stat-card-val">${tFpct}</div><div class="stat-card-lbl">Team FPCT</div></div>
     </div>
-    <table class="data-table">
-    <thead><tr><th>Player</th><th>Pos</th><th>PO</th><th>A</th><th>E</th><th>TC</th><th>FPCT</th></tr></thead>
+    <table class="data-table" id="hub-defense-table">
+    <thead><tr>
+      <th onclick="teamTabSort('hub-defense-table',0)" style="cursor:pointer">Player</th>
+      <th onclick="teamTabSort('hub-defense-table',1)" style="cursor:pointer">Pos</th>
+      <th onclick="teamTabSort('hub-defense-table',2)" style="cursor:pointer">PO</th>
+      <th onclick="teamTabSort('hub-defense-table',3)" style="cursor:pointer">A</th>
+      <th onclick="teamTabSort('hub-defense-table',4)" style="cursor:pointer">E</th>
+      <th onclick="teamTabSort('hub-defense-table',5)" style="cursor:pointer">TC</th>
+      <th onclick="teamTabSort('hub-defense-table',6)" style="cursor:pointer">FPCT</th>
+    </tr></thead>
     <tbody>${rows.join("")}</tbody>
   </table>`;
         }
