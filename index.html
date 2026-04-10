@@ -20589,6 +20589,44 @@
           const pWhiffRateTTO3 = pSplits.tto3.whiff;
           const p2StrikeWhiffRate = pSplits.twoStrike.whiff;
 
+          // Fielding aggregates
+          let _fPO = 0,
+            _fA = 0,
+            _fE = 0;
+          games.forEach((g) => {
+            Object.values(g.fieldingStats || {}).forEach((f) => {
+              const fNames = _nameAliases[name] || new Set([name]);
+              if (!fNames.has(f.name)) return;
+              if (g.awayTeam !== team && g.homeTeam !== team) return;
+              _fPO += f.po || 0;
+              _fA += f.a || 0;
+              _fE += f.e || 0;
+            });
+          });
+          const _fTC = _fPO + _fA + _fE;
+          const fielding = {
+            po: _fPO,
+            a: _fA,
+            e: _fE,
+            tc: _fTC,
+            fpct: _fTC > 0 ? (_fPO + _fA) / _fTC : null,
+          };
+
+          // Pitcher conventional stats
+          const pitcherConv = (() => {
+            if (!pd) return null;
+            const ip = pd.outs || 0;
+            const ipF = ip / 3;
+            return {
+              ip,
+              ipDisp: ip > 0 ? Math.floor(ipF) + "." + (ip % 3) : "0.0",
+              era: ip > 0 ? ((pd.r || 0) / ipF) * 9 : null,
+              whip: ip > 0 ? ((pd.bb || 0) + (pd.hits || 0)) / ipF : null,
+              k9: ip > 0 ? ((pd.k || 0) / ipF) * 9 : null,
+              bb9: ip > 0 ? ((pd.bb || 0) / ipF) * 9 : null,
+            };
+          })();
+
           return {
             team,
             name,
@@ -20638,6 +20676,8 @@
             pSplits,
             pAllowed,
             splits,
+            fielding,
+            pitcherConv,
           };
         }
 
@@ -20761,6 +20801,44 @@
             };
 
             pitchSection = `
+    <div class="cmp-stat-section-head">Pitching — Traditional</div>
+    <table class="cmp-stat-table">${thead}<tbody>
+      ${r(
+        "IP",
+        slots.map((sl) => sl?.s?.pitcherConv?.ipDisp ?? NA),
+        "high"
+      )}
+      ${r(
+        "ERA",
+        slots.map((sl) =>
+          sl?.s?.pitcherConv?.era != null ? sl.s.pitcherConv.era.toFixed(2) : NA
+        ),
+        "low"
+      )}
+      ${r(
+        "WHIP",
+        slots.map((sl) =>
+          sl?.s?.pitcherConv?.whip != null
+            ? sl.s.pitcherConv.whip.toFixed(2)
+            : NA
+        ),
+        "low"
+      )}
+      ${r(
+        "K/9",
+        slots.map((sl) =>
+          sl?.s?.pitcherConv?.k9 != null ? sl.s.pitcherConv.k9.toFixed(1) : NA
+        ),
+        "high"
+      )}
+      ${r(
+        "BB/9",
+        slots.map((sl) =>
+          sl?.s?.pitcherConv?.bb9 != null ? sl.s.pitcherConv.bb9.toFixed(1) : NA
+        ),
+        "low"
+      )}
+    </tbody></table>
     <div class="cmp-stat-section-head">Pitching — Results</div>
     <table class="cmp-stat-table">${thead}<tbody>
       ${r(
@@ -21220,7 +21298,7 @@
           let battingSection = "";
           if (showBatting) {
             battingSection = `
-    <div class="cmp-stat-section-head">Batting — Results</div>
+    <div class="cmp-stat-section-head">Batting — Standard</div>
     <table class="cmp-stat-table">${thead}<tbody>
       ${r(
         "Games",
@@ -21232,6 +21310,79 @@
         slots.map((sl) => f(sl?.s?.pa, "int")),
         "high"
       )}
+      ${r(
+        "AB",
+        slots.map((sl) => f(sl?.s?.ab, "int")),
+        "high"
+      )}
+      ${r(
+        "R",
+        slots.map((sl) => f(sl?.s?.r, "int")),
+        "high"
+      )}
+      ${r(
+        "H",
+        slots.map((sl) => f(sl?.s?.hits, "int")),
+        "high"
+      )}
+      ${r(
+        "2B",
+        slots.map((sl) => f(sl?.s?.doubles, "int")),
+        "high"
+      )}
+      ${r(
+        "3B",
+        slots.map((sl) => f(sl?.s?.triples, "int")),
+        "high"
+      )}
+      ${r(
+        "HR",
+        slots.map((sl) => f(sl?.s?.hr, "int")),
+        "high"
+      )}
+      ${r(
+        "RBI",
+        slots.map((sl) => f(sl?.s?.rbi, "int")),
+        "high"
+      )}
+      ${r(
+        "BB",
+        slots.map((sl) => f(sl?.s?.bb, "int")),
+        "high"
+      )}
+      ${r(
+        "K",
+        slots.map((sl) => f(sl?.s?.k, "int")),
+        "low"
+      )}
+      ${r(
+        "HBP",
+        slots.map((sl) => f(sl?.s?.hbp, "int")),
+        "none"
+      )}
+      ${r(
+        "SB",
+        slots.map((sl) => f(sl?.s?.sb, "int")),
+        "high"
+      )}
+      ${r(
+        "CS",
+        slots.map((sl) => f(sl?.s?.cs, "int")),
+        "low"
+      )}
+      ${r(
+        "SB%",
+        slots.map((sl) => {
+          const sb = sl?.s?.sb || 0,
+            cs = sl?.s?.cs || 0,
+            att = sb + cs;
+          return att > 0 ? f(sb / att, "pct") : NA;
+        }),
+        "high"
+      )}
+    </tbody></table>
+    <div class="cmp-stat-section-head">Batting — Rate Stats</div>
+    <table class="cmp-stat-table">${thead}<tbody>
       ${r(
         "AVG",
         slots.map((sl) => f(sl?.s?.avg, "rate")),
@@ -21257,38 +21408,57 @@
         slots.map((sl) => _cmpPctile(pctiles.b.ops, sl?.s?.ops))
       )}
       ${r(
-        "H",
-        slots.map((sl) => f(sl?.s?.hits, "int")),
+        "ISO",
+        slots.map((sl) => f(sl?.s?.iso, "rate")),
+        "high",
+        slots.map((sl) => _cmpPctile(pctiles.b.iso, sl?.s?.iso))
+      )}
+      ${r(
+        "BABIP",
+        slots.map((sl) => f(sl?.s?.babip, "rate")),
+        "high",
+        slots.map((sl) => _cmpPctile(pctiles.b.babip, sl?.s?.babip))
+      )}
+      ${r(
+        "K%",
+        slots.map((sl) => f(sl?.s?.kpct, "pct")),
+        "low",
+        slots.map((sl) => _cmpPctile(pctiles.b.kpct, sl?.s?.kpct))
+      )}
+      ${r(
+        "BB%",
+        slots.map((sl) => f(sl?.s?.bbpct, "pct")),
+        "high",
+        slots.map((sl) => _cmpPctile(pctiles.b.bbpct, sl?.s?.bbpct))
+      )}
+    </tbody></table>
+    <div class="cmp-stat-section-head">Fielding</div>
+    <table class="cmp-stat-table">${thead}<tbody>
+      ${r(
+        "PO",
+        slots.map((sl) => f(sl?.s?.fielding?.po, "int")),
         "high"
       )}
       ${r(
-        "2B",
-        slots.map((sl) => f(sl?.s?.doubles, "int")),
+        "A",
+        slots.map((sl) => f(sl?.s?.fielding?.a, "int")),
         "high"
       )}
       ${r(
-        "HR",
-        slots.map((sl) => f(sl?.s?.hr, "int")),
-        "high"
-      )}
-      ${r(
-        "BB",
-        slots.map((sl) => f(sl?.s?.bb, "int")),
-        "high"
-      )}
-      ${r(
-        "K",
-        slots.map((sl) => f(sl?.s?.k, "int")),
+        "E",
+        slots.map((sl) => f(sl?.s?.fielding?.e, "int")),
         "low"
       )}
       ${r(
-        "RBI",
-        slots.map((sl) => f(sl?.s?.rbi, "int")),
+        "TC",
+        slots.map((sl) => f(sl?.s?.fielding?.tc, "int")),
         "high"
       )}
       ${r(
-        "SB",
-        slots.map((sl) => f(sl?.s?.sb, "int")),
+        "FPCT",
+        slots.map((sl) =>
+          sl?.s?.fielding?.fpct != null ? _fmtRate(sl.s.fielding.fpct) : NA
+        ),
         "high"
       )}
     </tbody></table>
@@ -25798,10 +25968,15 @@
       <div class="tab active" onclick="playerTab('spray')">Spray Chart</div>
       <div class="tab" onclick="playerTab('zone')">Pitch Zone</div>
       <div class="tab" onclick="playerTab('breakdown')">Pitch Breakdown</div>
+      <div class="tab" onclick="playerTab('stats')">Stats</div>
       <div class="tab" onclick="playerTab('splits')">Splits</div>
       <div class="tab" onclick="playerTab('baserunning')">Baserunning</div>
       <div class="tab" onclick="playerTab('scouting')">Scouting Report</div>
       <div class="tab" onclick="playerTab('gamelog')">Game Log</div>
+    </div>
+
+    <div id="ptab-stats" style="display:none">
+      ${buildBatterStatsTab(teamName, playerName, games, stats, allPitches)}
     </div>
 
     <div id="ptab-splits" style="display:none">
@@ -25893,6 +26068,7 @@
               "spray",
               "zone",
               "breakdown",
+              "stats",
               "splits",
               "baserunning",
               "scouting",
@@ -25904,6 +26080,7 @@
             "spray",
             "zone",
             "breakdown",
+            "stats",
             "splits",
             "baserunning",
             "scouting",
@@ -26255,6 +26432,338 @@
     </div>`
         : ""
     }`;
+        }
+
+        function buildBatterStatsTab(
+          teamName,
+          playerName,
+          games,
+          stats,
+          allPitches
+        ) {
+          // stats: aggregated career object from getPlayerCareerStats()
+          const s = stats || {};
+          const pa =
+            s.pa != null ? s.pa : (s.ab || 0) + (s.bb || 0) + (s.hbp || 0);
+          const tb =
+            (s.hits || 0) -
+            (s.doubles || 0) -
+            (s.triples || 0) -
+            (s.hr || 0) +
+            (s.doubles || 0) * 2 +
+            (s.triples || 0) * 3 +
+            (s.hr || 0) * 4;
+          const avg = (s.ab || 0) > 0 ? s.hits / s.ab : null;
+          const obp =
+            pa > 0
+              ? ((s.hits || 0) + (s.bb || 0) + (s.hbp || 0) + (s.ci || 0)) / pa
+              : null;
+          const slg = (s.ab || 0) > 0 ? tb / s.ab : null;
+          const ops = obp !== null && slg !== null ? obp + slg : null;
+          const iso = (s.ab || 0) > 0 ? (tb - (s.hits || 0)) / s.ab : null;
+          const babipD = (s.ab || 0) - (s.k || 0) - (s.hr || 0);
+          const babip =
+            babipD > 0 ? ((s.hits || 0) - (s.hr || 0)) / babipD : null;
+          const kPct = pa > 0 ? (s.k || 0) / pa : null;
+          const bbPct = pa > 0 ? (s.bb || 0) / pa : null;
+          const sbAtt = (s.sb || 0) + (s.cs || 0);
+          const sbPct = sbAtt > 0 ? (s.sb || 0) / sbAtt : null;
+          const ppa =
+            pa > 0 && (s.pitchesSeen || 0) > 0
+              ? (s.pitchesSeen || allPitches.length) / pa
+              : null;
+
+          const fR = (v) =>
+            v !== null && v !== undefined ? _fmtRate(v) : ".---";
+          const fP = (v, dec = 1) =>
+            v !== null && v !== undefined ? (v * 100).toFixed(dec) + "%" : "—";
+          const fI = (v) =>
+            v !== null && v !== undefined ? Math.round(v).toString() : "—";
+
+          // Shared table helpers (same pattern as buildPitcherStatsTab)
+          const tbl = (content) =>
+            `<div style="overflow-x:auto;margin-bottom:28px"><table style="width:100%;border-collapse:collapse;background:var(--surface);border-radius:10px;overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,.06)">${content}</table></div>`;
+          const th = (label, left) =>
+            `<th style="padding:8px 10px;font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:var(--text3);white-space:nowrap;background:var(--surface2);border-bottom:2px solid var(--border);text-align:${
+              left ? "left" : "center"
+            }">${label}</th>`;
+          const td = (val, style) =>
+            `<td style="padding:8px 10px;font-family:'Share Tech Mono',monospace;font-size:12px;color:var(--text2);text-align:center;border-bottom:1px solid var(--surface2);white-space:nowrap${
+              style ? ";" + style : ""
+            }">${val}</td>`;
+          const tdL = (val, bold) =>
+            `<td style="padding:8px 10px;font-family:'Barlow Condensed',sans-serif;font-weight:${
+              bold ? 700 : 600
+            };font-size:14px;color:${
+              bold ? "var(--text)" : "var(--text2)"
+            };text-align:left;border-bottom:1px solid var(--surface2);white-space:nowrap">${val}</td>`;
+
+          const avgColor = (v) =>
+            v === null
+              ? ""
+              : v >= 0.3
+              ? "color:#cc1a1a;font-weight:800"
+              : v < 0.2
+              ? "color:#8a909e"
+              : "";
+          const opsColor = (v) =>
+            v === null
+              ? ""
+              : v >= 0.8
+              ? "color:#cc1a1a;font-weight:800"
+              : v < 0.6
+              ? "color:#1a8a3a;font-weight:700"
+              : "";
+
+          // ── Career batting line ──
+          const careerSection = `
+    <div style="margin-bottom:28px">
+      <div class="section-title" style="margin-bottom:12px">Career Batting</div>
+      ${tbl(`
+        <thead><tr>
+          ${th("G", true)}${th("PA")}${th("AB")}${th("R")}${th("H")}${th(
+        "2B"
+      )}${th("3B")}${th("HR")}
+          ${th("RBI")}${th("BB")}${th("HBP")}${th("K")}${th("SB")}${th(
+        "CS"
+      )}${th("SB%")}
+          ${th("AVG")}${th("OBP")}${th("SLG")}${th("OPS")}${th("ISO")}${th(
+        "BABIP"
+      )}
+          ${th("K%")}${th("BB%")}${th("P/PA")}
+        </tr></thead>
+        <tbody><tr>
+          ${tdL(s.games || 0, true)}
+          ${td(pa)}${td(s.ab || 0)}${td(s.r || 0)}${td(s.hits || 0)}
+          ${td(s.doubles || 0)}${td(s.triples || 0)}
+          ${td(
+            s.hr || 0,
+            (s.hr || 0) > 0 ? "color:#cc1a1a;font-weight:800" : ""
+          )}
+          ${td(s.rbi || 0)}${td(s.bb || 0)}${td(s.hbp || 0)}${td(s.k || 0)}
+          ${td(s.sb || 0)}${td(s.cs || 0)}${td(fP(sbPct))}
+          ${td(fR(avg), avgColor(avg))}
+          ${td(fR(obp))}${td(fR(slg))}
+          ${td(fR(ops), opsColor(ops))}
+          ${td(fR(iso))}${td(fR(babip))}
+          ${td(fP(kPct))}${td(fP(bbPct))}
+          ${td(ppa !== null ? ppa.toFixed(2) : "—")}
+        </tr></tbody>`)}
+    </div>`;
+
+          // ── Batting splits table ──
+          const sortedGames = [...games].sort((a, b) =>
+            a.date.localeCompare(b.date)
+          );
+          const allABs = sortedGames.flatMap((g) =>
+            _extractABs(g.pitchLog || [], playerName, teamName, g)
+          );
+          const _splitSt = (filterFn) => {
+            const rows = allABs.filter(filterFn).map(_abToStats);
+            return rows.length ? _sumStats(rows) : null;
+          };
+          const splitDefs = [
+            { label: "Overall", st: _splitSt(() => true) },
+            { label: "vs LHP", st: _splitSt((a) => a.pitcherHand === "L") },
+            { label: "vs RHP", st: _splitSt((a) => a.pitcherHand !== "L") },
+            { label: "Home", st: _splitSt((a) => a.isHome) },
+            { label: "Away", st: _splitSt((a) => !a.isHome) },
+            {
+              label: "RISP",
+              st: _splitSt((a) => a.runnersOn?.["2nd"] || a.runnersOn?.["3rd"]),
+            },
+            {
+              label: "Bases Empty",
+              st: _splitSt(
+                (a) =>
+                  !a.runnersOn?.["1st"] &&
+                  !a.runnersOn?.["2nd"] &&
+                  !a.runnersOn?.["3rd"]
+              ),
+            },
+            {
+              label: "Runners On",
+              st: _splitSt(
+                (a) =>
+                  a.runnersOn?.["1st"] ||
+                  a.runnersOn?.["2nd"] ||
+                  a.runnersOn?.["3rd"]
+              ),
+            },
+            {
+              label: "2-Strike",
+              st: _splitSt((a) => a.pitches.some((p) => _ppc(p).strikes === 2)),
+            },
+          ];
+
+          const splitRowFn = (lbl, st, bold) => {
+            if (!st || st.pa === 0)
+              return `<tr>${tdL(
+                lbl,
+                bold
+              )}<td colspan="13" style="padding:8px 10px;color:var(--text3);font-style:italic;font-family:'Barlow Condensed',sans-serif;text-align:center">No data</td></tr>`;
+            const stb =
+              (st.hits || 0) -
+              (st.h2b || 0) -
+              (st.h3b || 0) -
+              (st.hr || 0) +
+              (st.h2b || 0) * 2 +
+              (st.h3b || 0) * 3 +
+              (st.hr || 0) * 4;
+            const stObp = st.pa > 0 ? (st.h + st.bb + st.hbp) / st.pa : null;
+            const stSlg = st.ab > 0 ? stb / st.ab : null;
+            const stOps =
+              stObp !== null && stSlg !== null ? stObp + stSlg : null;
+            const stIso = st.ab > 0 ? (stb - st.h) / st.ab : null;
+            return `<tr>
+              ${tdL(lbl, bold)}
+              ${td(st.pa)}${td(st.ab)}${td(st.h)}${td(st.h2b)}${td(st.h3b)}
+              ${td(st.hr, st.hr > 0 ? "color:#cc1a1a;font-weight:800" : "")}
+              ${td(st.bb)}${td(st.hbp)}${td(st.k)}
+              ${td(
+                fR(st.ab > 0 ? st.h / st.ab : null),
+                avgColor(st.ab > 0 ? st.h / st.ab : null)
+              )}
+              ${td(fR(stObp))}${td(fR(stSlg))}
+              ${td(fR(stOps), opsColor(stOps))}
+              ${td(fR(stIso))}
+              ${td(st.pa > 0 ? fP(st.k / st.pa) : "")}${td(
+              st.pa > 0 ? fP(st.bb / st.pa) : ""
+            )}
+            </tr>`;
+          };
+
+          const splitsSection = `
+    <div style="margin-bottom:28px">
+      <div class="section-title" style="margin-bottom:12px">Batting Splits</div>
+      ${tbl(`
+        <thead><tr>
+          ${th("Split", true)}${th("PA")}${th("AB")}${th("H")}${th("2B")}${th(
+        "3B"
+      )}${th("HR")}
+          ${th("BB")}${th("HBP")}${th("K")}
+          ${th("AVG")}${th("OBP")}${th("SLG")}${th("OPS")}${th("ISO")}
+          ${th("K%")}${th("BB%")}
+        </tr></thead>
+        <tbody>
+          ${splitDefs
+            .map(({ label, st }, i) => splitRowFn(label, st, i === 0))
+            .join("")}
+        </tbody>`)}
+    </div>`;
+
+          // ── Fielding ──
+          let fPO = 0,
+            fA = 0,
+            fE = 0;
+          const fByPos = {};
+          games.forEach((g) => {
+            Object.values(g.fieldingStats || {}).forEach((f) => {
+              const fNames = _nameAliases[playerName] || new Set([playerName]);
+              if (!fNames.has(f.name)) return;
+              if (g.awayTeam !== teamName && g.homeTeam !== teamName) return;
+              fPO += f.po || 0;
+              fA += f.a || 0;
+              fE += f.e || 0;
+              const pos = f.pos || "—";
+              if (!fByPos[pos]) fByPos[pos] = { po: 0, a: 0, e: 0 };
+              fByPos[pos].po += f.po || 0;
+              fByPos[pos].a += f.a || 0;
+              fByPos[pos].e += f.e || 0;
+            });
+          });
+          const fTC = fPO + fA + fE;
+          const fFPCT = fTC > 0 ? _fmtRate((fPO + fA) / fTC) : "—";
+
+          const fieldingSection =
+            fTC > 0
+              ? `
+    <div style="margin-bottom:28px">
+      <div class="section-title" style="margin-bottom:12px">Fielding</div>
+      ${tbl(`
+        <thead><tr>
+          ${th("Pos", true)}${th("PO")}${th("A")}${th("E")}${th("TC")}${th(
+        "FPCT"
+      )}
+        </tr></thead>
+        <tbody>
+          ${Object.entries(fByPos)
+            .map(([pos, f]) => {
+              const tc = f.po + f.a + f.e;
+              return `<tr>${tdL(pos, false)}${td(f.po)}${td(f.a)}${td(
+                f.e,
+                f.e > 0 ? "color:#cc1a1a" : ""
+              )}${td(tc)}${td(
+                tc > 0 ? _fmtRate((f.po + f.a) / tc) : "—"
+              )}</tr>`;
+            })
+            .join("")}
+          <tr>${tdL("Total", true)}${td(fPO)}${td(fA)}${td(
+        fE,
+        fE > 0 ? "color:#cc1a1a" : ""
+      )}${td(fTC)}${td(fFPCT)}</tr>
+        </tbody>`)}
+    </div>`
+              : "";
+
+          // ── Game-by-game log ──
+          const gameRows = [];
+          games.forEach((g) => {
+            const isHome = g.homeTeam === teamName;
+            const batters = isHome ? g.homeBatters : g.awayBatters;
+            const names = _nameAliases[playerName] || new Set([playerName]);
+            const p = batters?.find((b) => names.has(b.name));
+            if (!p || (p.ab || 0) + (p.bb || 0) + (p.hbp || 0) === 0) return;
+            const gpa =
+              p.pa != null ? p.pa : (p.ab || 0) + (p.bb || 0) + (p.hbp || 0);
+            const gtb =
+              (p.hits || 0) -
+              (p.doubles || 0) -
+              (p.triples || 0) -
+              (p.hr || 0) +
+              (p.doubles || 0) * 2 +
+              (p.triples || 0) * 3 +
+              (p.hr || 0) * 4;
+            const gavg = (p.ab || 0) > 0 ? _fmtRate(p.hits / p.ab) : ".---";
+            const gobp =
+              gpa > 0
+                ? _fmtRate(((p.hits || 0) + (p.bb || 0) + (p.hbp || 0)) / gpa)
+                : ".---";
+            const gslg = (p.ab || 0) > 0 ? _fmtRate(gtb / p.ab) : ".---";
+            const opp = isHome ? g.awayTeam : g.homeTeam;
+            gameRows.push(`<tr>
+              ${tdL(g.date, false)}${tdL(escHtml(opp), false)}
+              ${td(gpa)}${td(p.ab || 0)}${td(p.hits || 0)}
+              ${td(p.doubles || 0)}${td(p.triples || 0)}
+              ${td(
+                p.hr || 0,
+                (p.hr || 0) > 0 ? "color:#cc1a1a;font-weight:800" : ""
+              )}
+              ${td(p.rbi || 0)}${td(p.bb || 0)}${td(p.hbp || 0)}${td(p.k || 0)}
+              ${td(p.sb || 0)}${td(p.pitchesSeen || "—")}
+              ${td(gavg, avgColor((p.ab || 0) > 0 ? p.hits / p.ab : null))}
+              ${td(gobp)}${td(gslg)}
+            </tr>`);
+          });
+
+          const gameLogSection = gameRows.length
+            ? `
+    <div>
+      <div class="section-title" style="margin-bottom:12px">Game-by-Game Log</div>
+      ${tbl(`
+        <thead><tr>
+          ${th("Date", true)}${th("Opp", true)}
+          ${th("PA")}${th("AB")}${th("H")}${th("2B")}${th("3B")}${th("HR")}
+          ${th("RBI")}${th("BB")}${th("HBP")}${th("K")}${th("SB")}${th("P/PA")}
+          ${th("AVG")}${th("OBP")}${th("SLG")}
+        </tr></thead>
+        <tbody>${gameRows.join("")}</tbody>`)}
+    </div>`
+            : "";
+
+          return (
+            careerSection + splitsSection + fieldingSection + gameLogSection
+          );
         }
 
         function buildPlayerGameLog(teamName, playerName, games) {
