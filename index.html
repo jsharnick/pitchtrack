@@ -5013,6 +5013,44 @@
         -webkit-tap-highlight-color: transparent;
         touch-action: manipulation;
       }
+      /* Section filter bar */
+      .cmp-filter-bar {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 6px;
+        padding: 10px 0 8px;
+        border-bottom: 1px solid var(--border);
+        margin-bottom: 4px;
+      }
+      .cmp-filter-label {
+        font-family: "Barlow Condensed", sans-serif;
+        font-size: 10px;
+        font-weight: 700;
+        letter-spacing: 1.5px;
+        text-transform: uppercase;
+        color: var(--text3);
+        margin-right: 4px;
+      }
+      .cmp-filter-pill {
+        font-family: "Barlow Condensed", sans-serif;
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: 0.5px;
+        padding: 3px 10px;
+        border-radius: 99px;
+        border: 1px solid var(--blue);
+        background: var(--blue);
+        color: #fff;
+        cursor: pointer;
+        -webkit-tap-highlight-color: transparent;
+        touch-action: manipulation;
+      }
+      .cmp-filter-pill--off {
+        background: transparent;
+        color: var(--text2);
+        border-color: var(--border);
+      }
       /* Stat table */
       .cmp-stat-section-head {
         font-family: "Barlow Condensed", sans-serif;
@@ -20801,6 +20839,9 @@
             };
 
             pitchSection = `
+<div data-cmp-section="pitch-traditional" style="${
+              _cmpHiddenSections.has("pitch-traditional") ? "display:none" : ""
+            }">
     <div class="cmp-stat-section-head">Pitching — Traditional</div>
     <table class="cmp-stat-table">${thead}<tbody>
       ${r(
@@ -20839,6 +20880,10 @@
         "low"
       )}
     </tbody></table>
+</div>
+<div data-cmp-section="pitch-results" style="${
+              _cmpHiddenSections.has("pitch-results") ? "display:none" : ""
+            }">
     <div class="cmp-stat-section-head">Pitching — Results</div>
     <table class="cmp-stat-table">${thead}<tbody>
       ${r(
@@ -20899,6 +20944,10 @@
       )}
     </tbody></table>
 
+</div>
+<div data-cmp-section="pitch-allowed" style="${
+              _cmpHiddenSections.has("pitch-allowed") ? "display:none" : ""
+            }">
     <div class="cmp-stat-section-head">Pitching — Allowed Batting Lines</div>
     <table class="cmp-stat-table">${thead}<tbody>
       ${r(
@@ -20937,7 +20986,10 @@
         "low"
       )}
     </tbody></table>
-
+</div>
+<div data-cmp-section="pitch-process" style="${
+              _cmpHiddenSections.has("pitch-process") ? "display:none" : ""
+            }">
     <div class="cmp-stat-section-head">Pitching — Process</div>
     <table class="cmp-stat-table">${thead}<tbody>
       ${r(
@@ -21016,7 +21068,10 @@
           .join("");
       })()}
     </tbody></table>
-
+</div>
+<div data-cmp-section="pitch-handedness" style="${
+              _cmpHiddenSections.has("pitch-handedness") ? "display:none" : ""
+            }">
     <div class="cmp-stat-section-head">Pitching — vs Batter Handedness</div>
     <table class="cmp-stat-table">${thead}<tbody>
       ${r(
@@ -21101,6 +21156,10 @@
       )}
     </tbody></table>
 
+</div>
+<div data-cmp-section="pitch-tto" style="${
+              _cmpHiddenSections.has("pitch-tto") ? "display:none" : ""
+            }">
     <div class="cmp-stat-section-head">Pitching — Times Through Order</div>
     <table class="cmp-stat-table">${thead}<tbody>
       ${r(
@@ -21149,7 +21208,10 @@
         "high"
       )}
     </tbody></table>
-
+</div>
+<div data-cmp-section="pitch-situational" style="${
+              _cmpHiddenSections.has("pitch-situational") ? "display:none" : ""
+            }">
     <div class="cmp-stat-section-head">Pitching — Situational</div>
     <table class="cmp-stat-table">${thead}<tbody>
       ${r(
@@ -21233,7 +21295,10 @@
         "high"
       )}
     </tbody></table>
-
+</div>
+<div data-cmp-section="pitch-count" style="${
+              _cmpHiddenSections.has("pitch-count") ? "display:none" : ""
+            }">
     <div class="cmp-stat-section-head">Pitching — Count Splits</div>
     <table class="cmp-stat-table">${thead}<tbody>
       ${r(
@@ -21291,13 +21356,17 @@
         slots.map((sl) => ps(sl, "fullCount", "whiff")),
         "high"
       )}
-    </tbody></table>`;
+    </tbody></table>
+</div>`;
           }
 
           // ── BATTING SECTION ───────────────────────────────────────────
           let battingSection = "";
           if (showBatting) {
             battingSection = `
+<div data-cmp-section="bat-standard" style="${
+              _cmpHiddenSections.has("bat-standard") ? "display:none" : ""
+            }">
     <div class="cmp-stat-section-head">Batting — Standard</div>
     <table class="cmp-stat-table">${thead}<tbody>
       ${r(
@@ -21381,6 +21450,10 @@
         "high"
       )}
     </tbody></table>
+</div>
+<div data-cmp-section="bat-rate" style="${
+              _cmpHiddenSections.has("bat-rate") ? "display:none" : ""
+            }">
     <div class="cmp-stat-section-head">Batting — Rate Stats</div>
     <table class="cmp-stat-table">${thead}<tbody>
       ${r(
@@ -21432,6 +21505,10 @@
         slots.map((sl) => _cmpPctile(pctiles.b.bbpct, sl?.s?.bbpct))
       )}
     </tbody></table>
+</div>
+<div data-cmp-section="fielding" style="${
+              _cmpHiddenSections.has("fielding") ? "display:none" : ""
+            }">
     <div class="cmp-stat-section-head">Fielding</div>
     <table class="cmp-stat-table">${thead}<tbody>
       ${r(
@@ -21462,6 +21539,10 @@
         "high"
       )}
     </tbody></table>
+</div>
+<div data-cmp-section="bat-process" style="${
+              _cmpHiddenSections.has("bat-process") ? "display:none" : ""
+            }">
     <div class="cmp-stat-section-head">Batting — Process</div>
     <table class="cmp-stat-table">${thead}<tbody>
       ${r(
@@ -21521,6 +21602,10 @@
         "none"
       )}
     </tbody></table>
+</div>
+<div data-cmp-section="bat-ball" style="${
+              _cmpHiddenSections.has("bat-ball") ? "display:none" : ""
+            }">
     <div class="cmp-stat-section-head">Batted Ball Profile</div>
     <table class="cmp-stat-table">${thead}<tbody>
       ${r(
@@ -21538,7 +21623,8 @@
         slots.map((sl) => f(sl?.s?.bFBpct, "pct")),
         "none"
       )}
-    </tbody></table>`;
+    </tbody></table>
+</div>`;
 
             // ── SPLITS SECTION ──
             const hasSplitData = slots.some(
@@ -21622,10 +21708,14 @@
                 .join("");
 
               battingSection += `
+<div data-cmp-section="splits" style="${
+                _cmpHiddenSections.has("splits") ? "display:none" : ""
+              }">
     <div class="cmp-stat-section-head">Splits</div>
     <table class="cmp-stat-table">${thead}<tbody>
       ${splitRows}
-    </tbody></table>`;
+    </tbody></table>
+</div>`;
             }
           }
 
@@ -21756,9 +21846,51 @@
             .map((sd, i) => slotHTML(sd, i + 1))
             .join("");
 
+          const hasPitcher = filledSlots.some(
+            (sl) => sl?.isPitcher || sl?.s?.pd?.pitches > 0
+          );
+          const hasBatter = filledSlots.some((sl) => (sl?.s?.ab || 0) > 0);
+          const pitcherPills = hasPitcher
+            ? [
+                ["pitch-traditional", "Traditional"],
+                ["pitch-results", "Results"],
+                ["pitch-allowed", "Allowed Lines"],
+                ["pitch-process", "Process"],
+                ["pitch-handedness", "vs Hand"],
+                ["pitch-tto", "TTO"],
+                ["pitch-situational", "Situational"],
+                ["pitch-count", "Count Splits"],
+              ]
+            : [];
+          const batterPills = hasBatter
+            ? [
+                ["bat-standard", "Batting"],
+                ["bat-rate", "Rate Stats"],
+                ["fielding", "Fielding"],
+                ["bat-process", "Bat Process"],
+                ["bat-ball", "Batted Ball"],
+                ["splits", "Splits"],
+              ]
+            : [];
+          const allPills = [...pitcherPills, ...batterPills];
+          const filterBar =
+            filledSlots.length >= 1 && allPills.length > 0
+              ? `<div class="cmp-filter-bar"><span class="cmp-filter-label">Sections:</span>${allPills
+                  .map(
+                    ([key, label]) =>
+                      `<button class="cmp-filter-pill${
+                        _cmpHiddenSections.has(key)
+                          ? " cmp-filter-pill--off"
+                          : ""
+                      }" data-cmp-filter="${key}" onclick="toggleCmpSection('${key}')">${label}</button>`
+                  )
+                  .join("")}</div>`
+              : "";
+
           c.innerHTML = `
     <div class="page-header"><div><div class="page-title">Compare Players</div><div class="page-sub">Up to 3 players · rate stats + percentile rankings</div></div></div>
     <div class="cmp-slots">${slotsHTML}</div>
+    ${filterBar}
     ${statsHTML}`;
         }
 
@@ -21908,6 +22040,20 @@
         let _cmpSlot3 = null;
         let _cmpPickerSlot = 1;
         let _cmpPickerTeam = null;
+        let _cmpHiddenSections = new Set(); // keys of sections currently hidden in compare view
+
+        function toggleCmpSection(key) {
+          if (_cmpHiddenSections.has(key)) _cmpHiddenSections.delete(key);
+          else _cmpHiddenSections.add(key);
+          const el = document.querySelector(`[data-cmp-section="${key}"]`);
+          if (el) el.style.display = _cmpHiddenSections.has(key) ? "none" : "";
+          const btn = document.querySelector(`[data-cmp-filter="${key}"]`);
+          if (btn)
+            btn.classList.toggle(
+              "cmp-filter-pill--off",
+              _cmpHiddenSections.has(key)
+            );
+        }
 
         function showView(type, data, preserveTab) {
           // data may be a JSON string (from onclick attributes) or an object
