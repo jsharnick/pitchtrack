@@ -21459,7 +21459,13 @@
         function renderAllGames() {
           const c = document.getElementById("hub-content");
           if (!allGames.length) {
-            c.innerHTML = `<div class="page-header"><div><div class="page-title">Game History</div></div></div>
+            c.innerHTML = `
+    <div class="page-header">
+      <div><div class="page-title">Game History</div></div>
+      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;justify-content:flex-end">
+        <button class="hub-mob-action-btn" onclick="triggerImport()" title="Import games from JSON" style="-webkit-tap-highlight-color:transparent;touch-action:manipulation">⬆ Import</button>
+      </div>
+    </div>
     <div class="empty-state"><div class="empty-icon"></div>No games saved yet.<br>Use the Save Game button in PitchTrack after each game.</div>`;
             return;
           }
