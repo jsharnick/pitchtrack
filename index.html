@@ -8452,6 +8452,107 @@
       </div>
     </div>
 
+    <!-- Merge Player modal -->
+    <div
+      id="merge-player-modal"
+      style="
+        display: none;
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.7);
+        z-index: 2200;
+        align-items: center;
+        justify-content: center;
+      "
+    >
+      <div
+        style="
+          background: var(--surface);
+          border-radius: 12px;
+          padding: 24px;
+          max-width: 400px;
+          width: 92%;
+          max-height: 80vh;
+          display: flex;
+          flex-direction: column;
+          gap: 14px;
+          box-shadow: 0 8px 32px rgba(0, 0, 0, 0.32);
+        "
+      >
+        <div
+          style="
+            font-family: 'Barlow Condensed', sans-serif;
+            font-weight: 800;
+            font-size: 18px;
+            color: var(--text);
+          "
+        >
+          Merge Player
+        </div>
+        <div
+          id="merge-player-desc"
+          style="
+            font-size: 12px;
+            color: var(--text3);
+            font-family: 'Barlow', sans-serif;
+            line-height: 1.5;
+          "
+        ></div>
+        <div
+          id="merge-player-list"
+          style="
+            overflow-y: auto;
+            max-height: 260px;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+          "
+        ></div>
+        <div
+          style="
+            display: flex;
+            gap: 8px;
+            justify-content: flex-end;
+            margin-top: 4px;
+          "
+        >
+          <button
+            onclick="closeMergePlayerModal()"
+            style="
+              padding: 8px 18px;
+              background: var(--surface2);
+              border: 1.5px solid var(--border2);
+              border-radius: 6px;
+              font-family: 'Barlow Condensed', sans-serif;
+              font-weight: 700;
+              font-size: 13px;
+              color: var(--text2);
+              cursor: pointer;
+            "
+          >
+            Cancel
+          </button>
+          <button
+            id="merge-player-confirm-btn"
+            onclick="confirmMergePlayer()"
+            style="
+              padding: 8px 18px;
+              background: var(--accent);
+              border: none;
+              border-radius: 6px;
+              font-family: 'Barlow Condensed', sans-serif;
+              font-weight: 700;
+              font-size: 13px;
+              color: #fff;
+              cursor: pointer;
+            "
+          >
+            Merge
+          </button>
+        </div>
+      </div>
+    </div>
+
     <!-- Opponent player add/edit modal (mirrors myteam-modal) -->
     <div
       id="opp-player-modal"
@@ -20069,6 +20170,242 @@
           return count;
         }
 
+        // ── Player Name Merge ──────────────────────────────────────────────
+        let _mergePlayerCtx = null; // { teamName, fromName, fromNum, playerType }
+
+        async function _mergePlayerNameInGames(
+          teamName,
+          fromName,
+          fromNum,
+          toName,
+          toNum
+        ) {
+          // Match by name+num so same-name players with different jersey numbers are treated separately
+          const numEq = (a, b) =>
+            a === undefined ||
+            a === "" ||
+            b === undefined ||
+            b === "" ||
+            String(a) === String(b);
+          const srcMatch = (p) => p.name === fromName && numEq(fromNum, p.num);
+          const tgtMatch = (p) => p.name === toName && numEq(toNum, p.num);
+
+          const keys = (await window.storage.list("ptgame_", true))?.keys || [];
+          let count = 0;
+          for (const key of keys) {
+            try {
+              const raw = await window.storage.get(key, true);
+              if (!raw?.value) continue;
+              const g = JSON.parse(raw.value);
+              if (g.awayTeam !== teamName && g.homeTeam !== teamName) continue;
+              let changed = false;
+
+              // Rename in pitchLog — no num field, skip if names are already identical
+              if (fromName !== toName) {
+                for (const p of g.pitchLog || []) {
+                  if (p.batter === fromName) {
+                    p.batter = toName;
+                    changed = true;
+                  }
+                  if (p.pitcher === fromName) {
+                    p.pitcher = toName;
+                    changed = true;
+                  }
+                }
+              }
+
+              // Merge batter stat records (matched by name+num)
+              for (const side of ["homeBatters", "awayBatters"]) {
+                if (!g[side]) continue;
+                const fi = g[side].findIndex(srcMatch);
+                if (fi === -1) continue;
+                const ti = g[side].findIndex(tgtMatch);
+                if (ti !== -1) {
+                  // Both present — sum numeric fields into target, remove source
+                  const src = g[side][fi],
+                    tgt = g[side][ti];
+                  for (const k of Object.keys(src)) {
+                    if (
+                      typeof src[k] === "number" &&
+                      typeof tgt[k] === "number"
+                    )
+                      tgt[k] += src[k];
+                  }
+                  g[side].splice(fi, 1);
+                } else {
+                  g[side][fi].name = toName;
+                  if (toNum !== undefined && toNum !== "")
+                    g[side][fi].num = toNum;
+                }
+                changed = true;
+              }
+
+              // Merge pitcher stat records (matched by name+num)
+              for (const side of ["homePitchers", "awayPitchers"]) {
+                if (!g[side]) continue;
+                const fi = g[side].findIndex(srcMatch);
+                if (fi === -1) continue;
+                const ti = g[side].findIndex(tgtMatch);
+                if (ti !== -1) {
+                  const src = g[side][fi],
+                    tgt = g[side][ti];
+                  for (const k of Object.keys(src)) {
+                    if (
+                      typeof src[k] === "number" &&
+                      typeof tgt[k] === "number"
+                    )
+                      tgt[k] += src[k];
+                  }
+                  g[side].splice(fi, 1);
+                } else {
+                  g[side][fi].name = toName;
+                  if (toNum !== undefined && toNum !== "")
+                    g[side][fi].num = toNum;
+                }
+                changed = true;
+              }
+
+              // Rename in fieldingStats
+              if (g.fieldingStats) {
+                for (const k of Object.keys(g.fieldingStats)) {
+                  if (g.fieldingStats[k].name !== fromName) continue;
+                  const tk = Object.keys(g.fieldingStats).find(
+                    (k2) => g.fieldingStats[k2].name === toName
+                  );
+                  if (tk) {
+                    const src = g.fieldingStats[k],
+                      tgt = g.fieldingStats[tk];
+                    for (const fk of Object.keys(src)) {
+                      if (typeof src[fk] === "number")
+                        tgt[fk] = (tgt[fk] || 0) + src[fk];
+                    }
+                    delete g.fieldingStats[k];
+                  } else {
+                    g.fieldingStats[k].name = toName;
+                  }
+                  changed = true;
+                }
+              }
+
+              if (changed) {
+                await window.storage.set(key, JSON.stringify(g), true);
+                count++;
+              }
+            } catch (e) {
+              console.warn("merge player error:", key, e);
+            }
+          }
+          return count;
+        }
+
+        function showMergePlayerModal(
+          teamName,
+          fromName,
+          fromNum,
+          playerType,
+          event
+        ) {
+          if (event) event.stopPropagation();
+          _mergePlayerCtx = { teamName, fromName, fromNum, playerType };
+          const desc = document.getElementById("merge-player-desc");
+          const list = document.getElementById("merge-player-list");
+          const fromLabel = fromNum ? `${fromName} (#${fromNum})` : fromName;
+          desc.textContent = `Select the player to absorb "${fromLabel}" into. All stats across every game record will be combined. This cannot be undone.`;
+          // Build list of other players of same type, excluding the exact from player by name+num
+          const allGames = getTeamGames(teamName);
+          let others = [];
+          if (playerType === "pitcher") {
+            others = getTeamPitchers(teamName, allGames)
+              .filter(
+                (p) =>
+                  !(
+                    p.name === fromName &&
+                    String(p.num || "") === String(fromNum || "")
+                  )
+              )
+              .sort((a, b) => a.name.localeCompare(b.name));
+          } else {
+            others = getTeamRoster(teamName, allGames)
+              .filter(
+                (p) =>
+                  !(
+                    p.name === fromName &&
+                    String(p.num || "") === String(fromNum || "")
+                  )
+              )
+              .sort((a, b) => a.name.localeCompare(b.name));
+          }
+          list.innerHTML = others.length
+            ? others
+                .map((p) => {
+                  const val = JSON.stringify({
+                    name: p.name,
+                    num: p.num || "",
+                  });
+                  const lbl = p.num
+                    ? `${p.name} <span style="color:var(--text3);font-size:12px">#${p.num}</span>`
+                    : escHtml(p.name);
+                  return `<label style="display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:7px;border:1.5px solid var(--border2);cursor:pointer;font-family:'Barlow Condensed',sans-serif;font-size:14px;color:var(--text)">
+                <input type="radio" name="merge-player-target" value="${escAttr(
+                  val
+                )}" style="accent-color:var(--accent)">
+                ${lbl}
+              </label>`;
+                })
+                .join("")
+            : `<div style="color:var(--text3);font-size:12px;font-family:'Barlow',sans-serif">No other players to merge into.</div>`;
+          const modal = document.getElementById("merge-player-modal");
+          modal.style.display = "flex";
+        }
+
+        function closeMergePlayerModal() {
+          document.getElementById("merge-player-modal").style.display = "none";
+          _mergePlayerCtx = null;
+        }
+
+        async function confirmMergePlayer() {
+          const sel = document.querySelector(
+            'input[name="merge-player-target"]:checked'
+          );
+          if (!sel) {
+            alert("Please select a player to merge into.");
+            return;
+          }
+          if (!_mergePlayerCtx) return;
+          const { teamName, fromName, fromNum, playerType } = _mergePlayerCtx;
+          let toName, toNum;
+          try {
+            const parsed = JSON.parse(sel.value);
+            toName = parsed.name;
+            toNum = parsed.num;
+          } catch (e) {
+            toName = sel.value; // fallback for old-format values
+          }
+          const fromLabel = fromNum ? `${fromName} (#${fromNum})` : fromName;
+          const toLabel = toNum ? `${toName} (#${toNum})` : toName;
+          const ok = confirm(
+            `Merge "${fromLabel}" into "${toLabel}"?\n\nAll stats for "${fromLabel}" will be combined into "${toLabel}" across every game record. This cannot be undone.`
+          );
+          if (!ok) return;
+          const btn = document.getElementById("merge-player-confirm-btn");
+          btn.textContent = "Merging…";
+          btn.disabled = true;
+          const count = await _mergePlayerNameInGames(
+            teamName,
+            fromName,
+            fromNum,
+            toName,
+            toNum
+          );
+          closeMergePlayerModal();
+          hubRefreshAll();
+          alert(
+            `Done. Merged "${fromName}" into "${toName}" across ${count} game record${
+              count !== 1 ? "s" : ""
+            }.`
+          );
+        }
+
         let _absorbTargetName = null;
 
         function showAbsorbModal(targetName) {
@@ -21110,12 +21447,19 @@
 
           // Count splits
           const ppFirstPitch = pp.filter((p) => _isFirstPitch(p));
-          const ppAheadCount = pp.filter((p) => p.strikes > p.balls);
-          const ppBehindCount = pp.filter((p) => p.balls > p.strikes);
-          const pp2Strike = pp.filter((p) => p.strikes === 2);
-          const ppFullCount = pp.filter(
-            (p) => p.balls === 3 && p.strikes === 2
-          );
+          const ppAheadCount = pp.filter((p) => {
+            const c = _ppc(p);
+            return c.strikes > c.balls;
+          });
+          const ppBehindCount = pp.filter((p) => {
+            const c = _ppc(p);
+            return c.balls > c.strikes;
+          });
+          const pp2Strike = pp.filter((p) => _ppc(p).strikes === 2);
+          const ppFullCount = pp.filter((p) => {
+            const c = _ppc(p);
+            return c.balls === 3 && c.strikes === 2;
+          });
 
           // Pitcher splits object — all sections from the splits tab
           const pSplits = {
@@ -22370,6 +22714,35 @@
           }
         }
 
+        function reRenderScoutingReport(type, teamName, playerName) {
+          _scoutRecentFilter = !_scoutRecentFilter;
+          const allGames = getTeamGames(teamName);
+          const names = _nameAliases[playerName] || new Set([playerName]);
+          const n = type === "hitter" ? 5 : 3;
+          const games = _scoutRecentFilter
+            ? [...allGames]
+                .sort((a, b) => b.date.localeCompare(a.date))
+                .filter((g) =>
+                  type === "hitter"
+                    ? (g.pitchLog || []).some((p) => names.has(p.batter))
+                    : (g.pitchLog || []).some(
+                        (p) =>
+                          p.pitcherTeam === teamName && names.has(p.pitcher)
+                      )
+                )
+                .slice(0, n)
+            : allGames;
+          const html =
+            type === "hitter"
+              ? buildHitterScoutingReport(teamName, playerName, games)
+              : buildPitcherScoutingReport(teamName, playerName, games);
+          const el =
+            document.getElementById("ptab-scouting-content") ||
+            document.getElementById("ptab-p-scouting-content") ||
+            document.getElementById("scout-report-content");
+          if (el) el.innerHTML = html;
+        }
+
         function renderCompare() {
           const c = document.getElementById("hub-content");
           const allSlotDefs = [_cmpSlot1, _cmpSlot2, _cmpSlot3];
@@ -22665,6 +23038,7 @@
         let _lastPlayerTab = "spray";
         let _lastPitcherTab = "zone";
         let _recentFilter = false; // toggles last-3-games (pitcher) / last-5-games (hitter) filter
+        let _scoutRecentFilter = false; // toggles last-N-games filter on scouting reports specifically
         let _cmpSlot1 = null; // {team, name, isPitcher} or null
         let _cmpSlot2 = null;
         let _cmpSlot3 = null;
@@ -22709,7 +23083,10 @@
           document.getElementById("hub-content").style.display = "block";
           renderSidebar();
           // Reset recent filter when navigating to a new player/pitcher
-          if (type === "player" || type === "pitcher") _recentFilter = false;
+          if (type === "player" || type === "pitcher") {
+            _recentFilter = false;
+            _scoutRecentFilter = false;
+          }
           if (type === "games") renderAllGames();
           else if (type === "team") renderTeam(data);
           else if (type === "player") {
@@ -23693,13 +24070,16 @@
         <th onclick="teamTabSort('hub-batter-table',9)" style="cursor:pointer">HR</th>
         <th onclick="teamTabSort('hub-batter-table',10)" style="cursor:pointer">R</th>
         <th onclick="teamTabSort('hub-batter-table',11)" style="cursor:pointer">RBI</th>
-        <th onclick="teamTabSort('hub-batter-table',12)" style="cursor:pointer">BB</th>
-        <th onclick="teamTabSort('hub-batter-table',13)" style="cursor:pointer">K</th>
-        <th onclick="teamTabSort('hub-batter-table',14)" style="cursor:pointer">HBP</th>
-        <th onclick="teamTabSort('hub-batter-table',15)" style="cursor:pointer">AVG</th>
-        <th onclick="teamTabSort('hub-batter-table',16)" style="cursor:pointer">OBP</th>
-        <th onclick="teamTabSort('hub-batter-table',17)" style="cursor:pointer">SLG</th>
-        <th onclick="teamTabSort('hub-batter-table',18)" style="cursor:pointer">OPS</th>
+        <th onclick="teamTabSort('hub-batter-table',12)" style="cursor:pointer">SB</th>
+        <th onclick="teamTabSort('hub-batter-table',13)" style="cursor:pointer">CS</th>
+        <th onclick="teamTabSort('hub-batter-table',14)" style="cursor:pointer">BB</th>
+        <th onclick="teamTabSort('hub-batter-table',15)" style="cursor:pointer">K</th>
+        <th onclick="teamTabSort('hub-batter-table',16)" style="cursor:pointer">HBP</th>
+        <th onclick="teamTabSort('hub-batter-table',17)" style="cursor:pointer">AVG</th>
+        <th onclick="teamTabSort('hub-batter-table',18)" style="cursor:pointer">OBP</th>
+        <th onclick="teamTabSort('hub-batter-table',19)" style="cursor:pointer">SLG</th>
+        <th onclick="teamTabSort('hub-batter-table',20)" style="cursor:pointer">OPS</th>
+        <th style="width:28px"></th>
       </tr></thead>
       <tbody>${sorted
         .map((p) => {
@@ -23740,6 +24120,8 @@
           <td class="${p.hr > 0 ? "highlight" : ""}">${p.hr}</td>
           <td>${p.r || 0}</td>
           <td>${p.rbi || 0}</td>
+          <td class="${(p.sb || 0) > 0 ? "accent" : ""}">${p.sb || 0}</td>
+          <td>${p.cs || 0}</td>
           <td>${p.bb}</td>
           <td>${p.k}</td>
           <td>${p.hbp || 0}</td>
@@ -23749,6 +24131,11 @@
           <td class="${ops >= 0.8 ? "good" : ops < 0.6 ? "dim" : ""}">${fmtAvg(
             ops
           )}</td>
+          <td onclick="event.stopPropagation()" style="padding:2px 4px"><button onclick="showMergePlayerModal('${escAttr(
+            teamName
+          )}','${escAttr(p.name)}','${escAttr(
+            String(p.num || "")
+          )}','batter',event)" title="Merge player" style="background:none;border:none;cursor:pointer;color:var(--text3);font-size:12px;padding:2px 4px;border-radius:4px;line-height:1" onmouseover="this.style.color='var(--accent)'" onmouseout="this.style.color='var(--text3)'">⇢</button></td>
         </tr>`;
         })
         .join("")}</tbody>
@@ -23781,6 +24168,7 @@
         <th onclick="teamTabSort('hub-pitcher-table',15)" style="cursor:pointer">Str%</th>
         <th onclick="teamTabSort('hub-pitcher-table',16)" style="cursor:pointer">Swng%</th>
         <th onclick="teamTabSort('hub-pitcher-table',17)" style="cursor:pointer">Lk%</th>
+        <th style="width:28px"></th>
       </tr></thead>
       <tbody>${sorted
         .map((p) => {
@@ -23827,6 +24215,15 @@
           <td class="${sp >= 65 ? "good" : sp < 55 ? "dim" : ""}">${sp}%</td>
           <td>${swp}%</td>
           <td>${lkp}%</td>
+          <td onclick="event.stopPropagation()" style="padding:2px 4px">${
+            teamName
+              ? `<button onclick="showMergePlayerModal('${escAttr(
+                  teamName
+                )}','${escAttr(p.name)}','${escAttr(
+                  String(p.num || "")
+                )}','pitcher',event)" title="Merge player" style="background:none;border:none;cursor:pointer;color:var(--text3);font-size:12px;padding:2px 4px;border-radius:4px;line-height:1" onmouseover="this.style.color='var(--accent)'" onmouseout="this.style.color='var(--text3)'">⇢</button>`
+              : ""
+          }</td>
         </tr>`;
         })
         .join("")}</tbody>
@@ -23984,29 +24381,21 @@
           if (!players.length)
             return '<div class="empty-state">No player data</div>';
           const rows = players.map((p) => {
-            let r = 0,
-              rbi = 0,
-              sb = 0,
-              cs = 0,
-              po = 0,
-              wpAdv = 0,
+            // Use alias-resolved aggregated values from getTeamRoster() for consistency
+            const r = p.r || 0;
+            const rbi = p.rbi || 0;
+            const sb = p.sb || 0;
+            const cs = p.cs || 0;
+            const po = p.po || 0;
+            // Only iterate games for game-log derived adv stats (no batter stat lookup)
+            let wpAdv = 0,
               pbAdv = 0,
               errAdv = 0;
+            const aliases = _nameAliases[p.name] || new Set([p.name]);
             games.forEach((g) => {
-              const isHome = g.homeTeam === teamName;
-              const b = (isHome ? g.homeBatters : g.awayBatters)?.find(
-                (x) => x.name === p.name
-              );
-              if (b) {
-                sb += b.sb || 0;
-                cs += b.cs || 0;
-                po += b.po || 0;
-                r += b.r || 0;
-                rbi += b.rbi || 0;
-              }
               (g.gameLog || []).forEach((e) => {
                 const txt = (e.title || "") + (e.detail || "");
-                if (!txt.includes(p.name)) return;
+                if (![...aliases].some((n) => txt.includes(n))) return;
                 if (txt.includes("Wild Pitch") && txt.includes("→")) wpAdv++;
                 if (txt.includes("Passed Ball") && txt.includes("→")) pbAdv++;
                 if (txt.includes("Advances on Error") && txt.includes("→"))
@@ -26861,6 +27250,7 @@
       <div class="tab" onclick="playerTab('stats')">Stats</div>
       <div class="tab" onclick="playerTab('splits')">Splits</div>
       <div class="tab" onclick="playerTab('baserunning')">Baserunning</div>
+      <div class="tab" onclick="playerTab('defense')">Defense</div>
       <div class="tab" onclick="playerTab('scouting')">Scouting Report</div>
       <div class="tab" onclick="playerTab('gamelog')">Game Log</div>
     </div>
@@ -26881,11 +27271,19 @@
               playerName
             )}','hitter')" style="padding:7px 18px;background:var(--accent);border:none;border-radius:7px;color:#fff;font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:14px;letter-spacing:1px;cursor:pointer;display:flex;align-items:center;gap:7px">🖨 Print Report</button>
       </div>
-      ${buildHitterScoutingReport(teamName, playerName, games)}
+      <div id="ptab-scouting-content">${buildHitterScoutingReport(
+        teamName,
+        playerName,
+        games
+      )}</div>
     </div>
 
     <div id="ptab-baserunning" style="display:none">
       ${buildBaserunningTab(stats, games, teamName, playerName)}
+    </div>
+
+    <div id="ptab-defense" style="display:none">
+      ${buildDefenseTab(stats, games, teamName, playerName)}
     </div>
 
     <div id="ptab-spray">
@@ -26961,6 +27359,7 @@
               "stats",
               "splits",
               "baserunning",
+              "defense",
               "scouting",
               "gamelog",
             ];
@@ -26973,6 +27372,7 @@
             "stats",
             "splits",
             "baserunning",
+            "defense",
             "scouting",
             "gamelog",
           ].forEach((t) => {
@@ -27914,6 +28314,11 @@
                   hbp: 0,
                   ci: 0,
                   pitchesSeen: 0,
+                  r: 0,
+                  rbi: 0,
+                  sb: 0,
+                  cs: 0,
+                  po: 0,
                 };
               const m = playerMap[key];
               const pa =
@@ -27932,6 +28337,11 @@
               m.hbp += p.hbp || 0;
               m.ci += p.ci || 0;
               m.pitchesSeen += p.pitchesSeen || 0;
+              m.r += p.r || 0;
+              m.rbi += p.rbi || 0;
+              m.sb += p.sb || 0;
+              m.cs += p.cs || 0;
+              m.po += p.po || 0;
             });
           });
           const merged = _mergeStatMapByPlayer(playerMap);
@@ -28191,7 +28601,7 @@
             }"><div class="stat-card-val">${val}</div><div class="stat-card-lbl">${lbl}</div></div>`;
 
           return `
-    <div style="margin-bottom:28px">
+    <div>
       <div class="section-title" style="margin-bottom:12px">Baserunning</div>
       <div class="stat-cards">
         ${card(r, "Runs Scored", true)}
@@ -28205,7 +28615,35 @@
         ${card(pbAdv, "PB Advances")}
         ${card(errAdv, "Error Advances")}
       </div>
-    </div>
+    </div>`;
+        }
+
+        function buildDefenseTab(stats, games, teamName, playerName) {
+          const aliases = _nameAliases[playerName] || new Set([playerName]);
+          let fPO = 0,
+            fA = 0,
+            fE = 0;
+          games.forEach((g) => {
+            Object.values(g.fieldingStats || {}).forEach((f) => {
+              if (
+                aliases.has(f.name) &&
+                (g.awayTeam === teamName || g.homeTeam === teamName)
+              ) {
+                fPO += f.po || 0;
+                fA += f.a || 0;
+                fE += f.e || 0;
+              }
+            });
+          });
+          const tc = fPO + fA + fE;
+          const fpct = tc > 0 ? _fmtRate((fPO + fA) / tc) : "—";
+
+          const card = (val, lbl, accent = false) =>
+            `<div class="stat-card${
+              accent ? " accent" : ""
+            }"><div class="stat-card-val">${val}</div><div class="stat-card-lbl">${lbl}</div></div>`;
+
+          return `
     <div>
       <div class="section-title" style="margin-bottom:12px">Defense</div>
       <div class="stat-cards">
@@ -28543,7 +28981,11 @@
               pitcherName
             )}','pitcher')" style="padding:7px 18px;background:var(--accent);border:none;border-radius:7px;color:#fff;font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:14px;letter-spacing:1px;cursor:pointer;display:flex;align-items:center;gap:7px">🖨 Print Report</button>
       </div>
-      ${buildPitcherScoutingReport(teamName, pitcherName, games)}
+      <div id="ptab-p-scouting-content">${buildPitcherScoutingReport(
+        teamName,
+        pitcherName,
+        games
+      )}</div>
     </div>
   ${_pitcherSidebar.mobilePills}</div>${_pitcherSidebar.sidebar}</div>`;
           } catch (e) {
@@ -30790,6 +31232,7 @@
         }
 
         function showScoutingReport(type, teamName, playerName) {
+          _scoutRecentFilter = false;
           const games = getTeamGames(teamName);
           const el = document.getElementById("scout-report-content");
           if (!el) return;
@@ -31431,7 +31874,22 @@
                 )
               : 0;
 
+          const _hitterScoutFilterBar = `<div class="scout-print-hide" style="display:flex;justify-content:flex-end;align-items:center;gap:10px;margin-bottom:10px">
+  ${
+    _scoutRecentFilter
+      ? `<span style="font-family:'Barlow Condensed',sans-serif;font-size:11px;letter-spacing:1px;color:var(--text3);text-transform:uppercase">Showing last 5 games</span>`
+      : ""
+  }
+  <button class="recent-filter-btn${
+    _scoutRecentFilter ? " rfb-active" : ""
+  }" onclick="reRenderScoutingReport('hitter','${escAttr(teamName)}','${escAttr(
+            playerName
+          )}')">${
+            _scoutRecentFilter ? "⏱ Last 5 Games" : "⏱ Filter Recent"
+          }</button>
+</div>`;
           return `<div class="scout-report-page" id="scout-hitter-report" style="padding:16px;background:#fff;font-family:'Barlow Condensed',sans-serif;overflow:hidden;max-width:100%">
+  ${_hitterScoutFilterBar}
   <!-- Header -->
   <div class="scout-header" style="display:flex;align-items:flex-start;justify-content:space-between;border-bottom:3px solid #cc1a1a;padding-bottom:6px;margin-bottom:8px">
     <div>
@@ -32048,23 +32506,41 @@
 
           // Count discipline rows
           const countSit = [
-            { lbl: "0-0 (FPS)", fn: (p) => p.balls === 0 && p.strikes === 0 },
+            {
+              lbl: "0-0 (FPS)",
+              fn: (p) => {
+                const c = _ppc(p);
+                return c.balls === 0 && c.strikes === 0;
+              },
+            },
             {
               lbl: "1-1 Count",
-              fn: (p) =>
-                (p.balls === 1 &&
-                  p.strikes === 2 &&
-                  ["strike-swinging", "strike-looking", "foul"].includes(
-                    p.outcome
-                  )) ||
-                (p.balls === 2 && p.strikes === 1 && p.outcome === "ball"),
+              fn: (p) => {
+                const c = _ppc(p);
+                return c.balls === 1 && c.strikes === 1;
+              },
             },
-            { lbl: "Ahead (0-1,0-2)", fn: (p) => p.strikes > p.balls },
-            { lbl: "Behind (1-0+)", fn: (p) => p.balls > p.strikes },
-            { lbl: "2-Strike", fn: (p) => p.strikes === 2 },
+            {
+              lbl: "Ahead (0-1,0-2)",
+              fn: (p) => {
+                const c = _ppc(p);
+                return c.strikes > c.balls;
+              },
+            },
+            {
+              lbl: "Behind (1-0+)",
+              fn: (p) => {
+                const c = _ppc(p);
+                return c.balls > c.strikes;
+              },
+            },
+            { lbl: "2-Strike", fn: (p) => _ppc(p).strikes === 2 },
             {
               lbl: "Full Count",
-              fn: (p) => p.balls === 3 && p.strikes === 2,
+              fn: (p) => {
+                const c = _ppc(p);
+                return c.balls === 3 && c.strikes === 2;
+              },
             },
           ];
           const cRows = countSit
@@ -32383,7 +32859,22 @@
             </div>`
             : "";
 
+          const _pitcherScoutFilterBar = `<div class="scout-print-hide" style="display:flex;justify-content:flex-end;align-items:center;gap:10px;margin-bottom:10px">
+  ${
+    _scoutRecentFilter
+      ? `<span style="font-family:'Barlow Condensed',sans-serif;font-size:11px;letter-spacing:1px;color:var(--text3);text-transform:uppercase">Showing last 3 appearances</span>`
+      : ""
+  }
+  <button class="recent-filter-btn${
+    _scoutRecentFilter ? " rfb-active" : ""
+  }" onclick="reRenderScoutingReport('pitcher','${escAttr(
+            teamName
+          )}','${escAttr(pitcherName)}')">${
+            _scoutRecentFilter ? "⏱ Last 3 Games" : "⏱ Filter Recent"
+          }</button>
+</div>`;
           return `<div class="scout-report-page" id="scout-pitcher-report" style="padding:14px;background:#fff;font-family:'Barlow Condensed',sans-serif;overflow:hidden;max-width:100%">
+  ${_pitcherScoutFilterBar}
   <!-- Header -->
   <div class="scout-header" style="display:flex;align-items:flex-start;justify-content:space-between;border-bottom:3px solid #1a5acc;padding-bottom:8px;margin-bottom:12px">
     <div>
