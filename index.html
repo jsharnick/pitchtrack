@@ -27034,8 +27034,10 @@
             });
 
           // ── Plate discipline ──
+          const _batterAliases =
+            _nameAliases[playerName] || new Set([playerName]);
           const allPitches = sortedGames.flatMap((g) =>
-            (g.pitchLog || []).filter((p) => p.batter === playerName)
+            (g.pitchLog || []).filter((p) => _batterAliases.has(p.batter))
           );
           const swingOutcomes = [
             "strike-swinging",
@@ -27131,7 +27133,17 @@
             ) + "%"
           : "—",
       ],
-      ["P/PA", allABs.length > 0 ? (total / allABs.length).toFixed(2) : "—"],
+      [
+        "P/PA",
+        (() => {
+          if (allABs.length > 0 && total > 0)
+            return (total / allABs.length).toFixed(2);
+          const cs = getPlayerCareerStats(teamName, playerName, sortedGames);
+          const pa = cs.pa || 0,
+            ps = cs.pitchesSeen || 0;
+          return pa > 0 && ps > 0 ? (ps / pa).toFixed(2) : "—";
+        })(),
+      ],
       [
         "Hard Hit%",
         contact > 0
