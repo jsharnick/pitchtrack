@@ -350,6 +350,183 @@
       }
 
       /* ═══ PANELS ═══ */
+      /* ── Dark mode theme toggle ── */
+      .theme-toggle-btn {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        padding: 4px 10px;
+        border-radius: 20px;
+        cursor: pointer;
+        border: 1px solid rgba(255, 255, 255, 0.18);
+        background: rgba(255, 255, 255, 0.08);
+        color: rgba(255, 255, 255, 0.7);
+        font-family: "Barlow Condensed", sans-serif;
+        font-weight: 700;
+        font-size: 11px;
+        letter-spacing: 1px;
+        text-transform: uppercase;
+        transition: all 0.18s;
+        flex-shrink: 0;
+        margin-left: 8px;
+      }
+      .theme-toggle-btn:hover {
+        background: rgba(255, 255, 255, 0.16);
+        color: #fff;
+      }
+      #theme-fab-REMOVED {
+        position: fixed;
+        bottom: 20px;
+        right: 20px;
+        z-index: 600;
+        width: 44px;
+        height: 44px;
+        border-radius: 50%;
+        border: none;
+        background: var(--surface);
+        box-shadow: 0 2px 12px rgba(0, 0, 0, 0.18);
+        cursor: pointer;
+        font-size: 20px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.18s;
+        color: var(--text2);
+      }
+      #theme-fab-REMOVED:hover {
+        box-shadow: 0 4px 18px rgba(0, 0, 0, 0.28);
+        transform: scale(1.08);
+      }
+      /* Dark mode overrides for hardcoded light colors */
+      body.dark .data-table th,
+      body.dark .data-table td {
+        border-color: var(--border);
+      }
+      body.dark .data-table th {
+        background: var(--surface2);
+        color: var(--text2);
+      }
+      body.dark .data-table td {
+        background: var(--surface);
+        color: var(--text);
+      }
+      body.dark .player-row:hover td {
+        background: var(--surface2) !important;
+      }
+      body.dark input,
+      body.dark select,
+      body.dark textarea {
+        background: var(--surface2);
+        color: var(--text);
+        border-color: var(--border2);
+      }
+      /* Tracker: pitch buttons */
+      body.dark .outcome-btn {
+        background: var(--surface2);
+        color: var(--text);
+        border-color: var(--border2);
+      }
+      body.dark .pitch-type-btn {
+        background: var(--surface2);
+        color: var(--text2);
+        border-color: var(--border2);
+      }
+      body.dark .pitch-type-btn.selected {
+        background: rgba(204, 26, 26, 0.18);
+      }
+      /* Velocity input wrapper */
+      body.dark .vel-wrap {
+        background: var(--surface2);
+        border-color: var(--border2);
+      }
+      /* Strike zone canvas background */
+      body.dark #strike-zone {
+        background: var(--surface2);
+        border-color: var(--border2);
+      }
+      /* Scout cards */
+      body.dark .scout-card {
+        background: var(--surface2) !important;
+        border-color: var(--border) !important;
+        color: var(--text) !important;
+      }
+      body.dark .scout-report-page,
+      body.dark .scout-section {
+        background: var(--surface) !important;
+        color: var(--text) !important;
+      }
+      body.dark .scout-table th {
+        background: var(--surface3) !important;
+        color: var(--text2) !important;
+        border-color: var(--border) !important;
+      }
+      body.dark .scout-table td {
+        color: var(--text2) !important;
+        border-color: var(--border) !important;
+      }
+      body.dark .scout-bar-track {
+        background: var(--surface3) !important;
+      }
+      body.dark .scout-section-title {
+        color: var(--text3) !important;
+      }
+      /* Save modal */
+      body.dark .sm-box {
+        background: var(--surface);
+        border-color: var(--border2);
+        color: var(--text);
+      }
+      body.dark .sm-skip {
+        background: var(--surface2);
+        color: var(--text2);
+        border-color: var(--border) !important;
+      }
+      body.dark .sm-skip:hover {
+        background: var(--surface3);
+        color: var(--text);
+      }
+      body.dark #home-screen {
+        background: var(--bg);
+      }
+      /* Hub + tracker panel backgrounds */
+      body.dark #hub-app,
+      body.dark #panel-tracker {
+        background: var(--bg);
+      }
+      /* Hub misc */
+      body.dark .section-title {
+        color: var(--text2);
+      }
+      body.dark .empty-state {
+        color: var(--text3);
+      }
+      body.dark .tab-row {
+        border-color: var(--border);
+      }
+      body.dark .tab {
+        color: var(--text2);
+      }
+      body.dark .tab.active,
+      body.dark .tab:hover {
+        color: var(--accent);
+      }
+      /* Hub top tabs */
+      body.dark .hub-top-tab {
+        color: var(--text2);
+      }
+      body.dark .hub-top-tab:hover {
+        color: var(--text);
+      }
+      body.dark .hub-top-tab.active {
+        color: var(--accent);
+      }
+      /* Page header text */
+      body.dark .page-title {
+        color: var(--text);
+      }
+      body.dark .page-sub {
+        color: var(--text2);
+      }
       #panel-wrap {
         position: fixed;
         top: 44px;
@@ -520,6 +697,27 @@
         --green: #1a8a3a;
         --blue: #1a5acc;
         --sky: #1a88b8;
+      }
+      body.dark {
+        --bg: #0f1117;
+        --surface: #1a1d27;
+        --surface2: #22263a;
+        --surface3: #2a2e40;
+        --border: #2e3248;
+        --border2: #3a3f58;
+        --text: #e8eaf0;
+        --text2: #9da3b8;
+        --text3: #5c6280;
+        --strike: #e05050;
+        --klook: #f07830;
+        --ball: #4a80e8;
+        --foul: #d08030;
+        --hit: #3ab86a;
+        --hbp: #aa44ee;
+        --green: #3ab86a;
+        --blue: #4a80e8;
+        --sky: #3aaad8;
+        --gold: #d4a020;
       }
       * {
         margin: 0;
@@ -3017,6 +3215,20 @@
         --blue: #1a5acc;
         --gold: #b8860b;
       }
+      body.dark {
+        --bg: #0f1117;
+        --surface: #1a1d27;
+        --surface2: #22263a;
+        --surface3: #2a2e40;
+        --border: #2e3248;
+        --border2: #3a3f58;
+        --text: #e8eaf0;
+        --text2: #9da3b8;
+        --text3: #5c6280;
+        --green: #3ab86a;
+        --blue: #4a80e8;
+        --gold: #d4a020;
+      }
       * {
         margin: 0;
         padding: 0;
@@ -5381,6 +5593,30 @@
           YAK FACTORY · WHERE TRADITION MEETS INNOVATION
         </div>
       </div>
+      <button
+        id="hs-theme-btn"
+        onclick="toggleDarkMode()"
+        title="Toggle dark mode"
+        style="
+          position: absolute;
+          bottom: 20px;
+          right: 20px;
+          padding: 6px 14px;
+          border-radius: 20px;
+          cursor: pointer;
+          border: 1px solid rgba(255, 255, 255, 0.18);
+          background: rgba(255, 255, 255, 0.08);
+          color: rgba(255, 255, 255, 0.7);
+          font-family: 'Barlow Condensed', sans-serif;
+          font-weight: 700;
+          font-size: 11px;
+          letter-spacing: 1px;
+          text-transform: uppercase;
+          transition: all 0.18s;
+        "
+      >
+        Dark Mode
+      </button>
     </div>
     <div id="shell-nav">
       <div class="sn-logo" onclick="navHome()">PT</div>
@@ -5397,6 +5633,14 @@
         Opponents
       </div>
       <div class="sn-spacer"></div>
+      <button
+        class="theme-toggle-btn"
+        id="sn-theme-btn"
+        onclick="toggleDarkMode()"
+        title="Toggle dark mode"
+      >
+        Dark Mode
+      </button>
       <button
         class="sn-save"
         id="sn-resume-btn"
@@ -12883,6 +13127,28 @@
           var mt = document.getElementById("mob-tabs");
           if (mt) mt.style.setProperty("display", "none", "important");
         }
+
+        // ── Dark mode toggle ──────────────────────────────────────────────
+        function toggleDarkMode() {
+          const isDark = document.body.classList.toggle("dark");
+          localStorage.setItem("ptDarkMode", isDark ? "1" : "0");
+          _applyDarkModeUI(isDark);
+        }
+        function _applyDarkModeUI(isDark) {
+          const label = isDark ? "Light Mode" : "Dark Mode";
+          const navBtn = document.getElementById("sn-theme-btn");
+          const hsBtn = document.getElementById("hs-theme-btn");
+          if (navBtn) navBtn.textContent = label;
+          if (hsBtn) hsBtn.textContent = label;
+        }
+        // Apply saved preference on load
+        (function () {
+          const saved = localStorage.getItem("ptDarkMode");
+          if (saved === "1") {
+            document.body.classList.add("dark");
+            _applyDarkModeUI(true);
+          }
+        })();
 
         function openPanel(name, skipPrompt) {
           if (
