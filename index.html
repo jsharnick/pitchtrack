@@ -23693,13 +23693,15 @@
         <th onclick="teamTabSort('hub-batter-table',9)" style="cursor:pointer">HR</th>
         <th onclick="teamTabSort('hub-batter-table',10)" style="cursor:pointer">R</th>
         <th onclick="teamTabSort('hub-batter-table',11)" style="cursor:pointer">RBI</th>
-        <th onclick="teamTabSort('hub-batter-table',12)" style="cursor:pointer">BB</th>
-        <th onclick="teamTabSort('hub-batter-table',13)" style="cursor:pointer">K</th>
-        <th onclick="teamTabSort('hub-batter-table',14)" style="cursor:pointer">HBP</th>
-        <th onclick="teamTabSort('hub-batter-table',15)" style="cursor:pointer">AVG</th>
-        <th onclick="teamTabSort('hub-batter-table',16)" style="cursor:pointer">OBP</th>
-        <th onclick="teamTabSort('hub-batter-table',17)" style="cursor:pointer">SLG</th>
-        <th onclick="teamTabSort('hub-batter-table',18)" style="cursor:pointer">OPS</th>
+        <th onclick="teamTabSort('hub-batter-table',12)" style="cursor:pointer">SB</th>
+        <th onclick="teamTabSort('hub-batter-table',13)" style="cursor:pointer">CS</th>
+        <th onclick="teamTabSort('hub-batter-table',14)" style="cursor:pointer">BB</th>
+        <th onclick="teamTabSort('hub-batter-table',15)" style="cursor:pointer">K</th>
+        <th onclick="teamTabSort('hub-batter-table',16)" style="cursor:pointer">HBP</th>
+        <th onclick="teamTabSort('hub-batter-table',17)" style="cursor:pointer">AVG</th>
+        <th onclick="teamTabSort('hub-batter-table',18)" style="cursor:pointer">OBP</th>
+        <th onclick="teamTabSort('hub-batter-table',19)" style="cursor:pointer">SLG</th>
+        <th onclick="teamTabSort('hub-batter-table',20)" style="cursor:pointer">OPS</th>
       </tr></thead>
       <tbody>${sorted
         .map((p) => {
@@ -23740,6 +23742,8 @@
           <td class="${p.hr > 0 ? "highlight" : ""}">${p.hr}</td>
           <td>${p.r || 0}</td>
           <td>${p.rbi || 0}</td>
+          <td class="${(p.sb || 0) > 0 ? "accent" : ""}">${p.sb || 0}</td>
+          <td>${p.cs || 0}</td>
           <td>${p.bb}</td>
           <td>${p.k}</td>
           <td>${p.hbp || 0}</td>
@@ -27914,6 +27918,10 @@
                   hbp: 0,
                   ci: 0,
                   pitchesSeen: 0,
+                  r: 0,
+                  rbi: 0,
+                  sb: 0,
+                  cs: 0,
                 };
               const m = playerMap[key];
               const pa =
@@ -27932,6 +27940,10 @@
               m.hbp += p.hbp || 0;
               m.ci += p.ci || 0;
               m.pitchesSeen += p.pitchesSeen || 0;
+              m.r += p.r || 0;
+              m.rbi += p.rbi || 0;
+              m.sb += p.sb || 0;
+              m.cs += p.cs || 0;
             });
           });
           const merged = _mergeStatMapByPlayer(playerMap);
