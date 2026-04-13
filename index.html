@@ -1046,6 +1046,7 @@
         font-weight: 900;
         font-size: 36px;
         line-height: 1;
+        color: var(--text);
       }
       .scout-big-lbl {
         font-size: 8px;
@@ -4441,7 +4442,7 @@
           margin-bottom: 14px;
         }
         .mob-score-card {
-          background: #fff;
+          background: var(--surface);
           border: 1px solid var(--border);
           border-radius: 10px;
           padding: 12px;
@@ -4469,7 +4470,7 @@
 
         /* pitcher/batter info row */
         .mob-pb-row {
-          background: #fff;
+          background: var(--surface);
           border: 1px solid var(--border);
           border-radius: 10px;
           padding: 12px 14px;
@@ -7203,7 +7204,7 @@
               <div class="mob-section-title">Inning</div>
               <div
                 style="
-                  background: #fff;
+                  background: var(--surface);
                   border: 1px solid var(--border);
                   border-radius: 10px;
                   padding: 12px 14px;
@@ -7241,7 +7242,7 @@
               <div class="mob-section-title">Outs</div>
               <div
                 style="
-                  background: #fff;
+                  background: var(--surface);
                   border: 1px solid var(--border);
                   border-radius: 10px;
                   padding: 12px 14px;
@@ -26651,21 +26652,21 @@
           return `
     <div id="${bdId}" data-pitches='${pitchesJson.replace(/'/g, "&#39;")}'>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">
-      <div style="background:#fff;border:1px solid #d4d8e0;border-radius:8px;padding:10px 14px;text-align:center">
+      <div style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:10px 14px;text-align:center">
         <div style="font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:26px;color:#cc1a1a">${avgVel}</div>
-        <div style="font-size:8px;letter-spacing:2px;color:#8a909e;text-transform:uppercase">Avg Velo</div>
+        <div style="font-size:8px;letter-spacing:2px;color:var(--text3);text-transform:uppercase">Avg Velo</div>
       </div>
-      <div style="background:#fff;border:1px solid #d4d8e0;border-radius:8px;padding:10px 14px;text-align:center">
-        <div style="font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:26px">${maxVel}</div>
-        <div style="font-size:8px;letter-spacing:2px;color:#8a909e;text-transform:uppercase">Max Velo</div>
+      <div style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:10px 14px;text-align:center">
+        <div style="font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:26px;color:var(--text)">${maxVel}</div>
+        <div style="font-size:8px;letter-spacing:2px;color:var(--text3);text-transform:uppercase">Max Velo</div>
       </div>
-      <div style="background:#fff;border:1px solid #d4d8e0;border-radius:8px;padding:10px 14px;text-align:center">
-        <div style="font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:26px">${zonePct}%</div>
-        <div style="font-size:8px;letter-spacing:2px;color:#8a909e;text-transform:uppercase">Zone%</div>
+      <div style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:10px 14px;text-align:center">
+        <div style="font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:26px;color:var(--text)">${zonePct}%</div>
+        <div style="font-size:8px;letter-spacing:2px;color:var(--text3);text-transform:uppercase">Zone%</div>
       </div>
-      <div style="background:#fff;border:1px solid #d4d8e0;border-radius:8px;padding:10px 14px;text-align:center">
-        <div style="font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:26px">${swingPct}%</div>
-        <div style="font-size:8px;letter-spacing:2px;color:#8a909e;text-transform:uppercase">Swing%</div>
+      <div style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:10px 14px;text-align:center">
+        <div style="font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:26px;color:var(--text)">${swingPct}%</div>
+        <div style="font-size:8px;letter-spacing:2px;color:var(--text3);text-transform:uppercase">Swing%</div>
       </div>
     </div>
 
@@ -27417,8 +27418,8 @@
         ([
           l,
           v,
-        ]) => `<div style="background:#fff;border:1px solid var(--border);border-radius:8px;padding:10px;text-align:center">
-      <div style="font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:22px">${v}</div>
+        ]) => `<div style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:10px;text-align:center">
+      <div style="font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:22px;color:var(--text)">${v}</div>
       <div style="font-size:8px;letter-spacing:2px;color:var(--text3);text-transform:uppercase">${l}</div>
     </div>`
       )
@@ -27969,7 +27970,7 @@
               const col = typeColors[t] || "#8a909e";
               return `<div style="display:flex;align-items:center;gap:8px;margin-bottom:5px">
         <div style="font-family:'Share Tech Mono',monospace;font-size:10px;color:${col};width:28px;flex-shrink:0;font-weight:700">${t}</div>
-        <div style="flex:1;min-width:0;max-width:55%;background:#e8eaee;border-radius:3px;height:12px;overflow:hidden">
+        <div style="flex:1;min-width:0;max-width:55%;background:var(--surface3);border-radius:3px;height:12px;overflow:hidden">
           <div style="width:${pct}%;height:100%;background:${col};border-radius:3px;opacity:.85"></div>
         </div>
         <div style="font-family:'Share Tech Mono',monospace;font-size:10px;color:#8a909e;white-space:nowrap;flex-shrink:0;text-align:right">${d.strikes}/${d.total} · ${pct}%</div>
@@ -27982,8 +27983,8 @@
             n,
             col,
             extra = ""
-          ) => `<div style="display:flex;align-items:center;justify-content:space-between;padding:6px 10px;border-radius:6px;margin-bottom:4px;background:#f8f9fb">
-    <span style="font-family:'Barlow Condensed',sans-serif;font-weight:600;font-size:13px;color:#4a5060">${label}</span>
+          ) => `<div style="display:flex;align-items:center;justify-content:space-between;padding:6px 10px;border-radius:6px;margin-bottom:4px;background:var(--surface2)">
+    <span style="font-family:'Barlow Condensed',sans-serif;font-weight:600;font-size:13px;color:var(--text2)">${label}</span>
     <span style="font-family:'Share Tech Mono',monospace;font-size:11px;color:${
       col || "#8a909e"
     }">${n}${extra}</span>
@@ -29893,31 +29894,31 @@
           ).length;
           const swingPct = total > 0 ? Math.round((swings / total) * 100) : 0;
           return `<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px">
-    <div style="background:#fff;border:1px solid #d4d8e0;border-radius:8px;padding:10px 14px;text-align:center">
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:10px 14px;text-align:center">
       <div style="font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:26px;color:#cc1a1a">${avgVel}</div>
-      <div style="font-size:8px;letter-spacing:2px;color:#8a909e;text-transform:uppercase">Avg Velo</div>
+      <div style="font-size:8px;letter-spacing:2px;color:var(--text3);text-transform:uppercase">Avg Velo</div>
     </div>
-    <div style="background:#fff;border:1px solid #d4d8e0;border-radius:8px;padding:10px 14px;text-align:center">
-      <div style="font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:26px">${maxVel}</div>
-      <div style="font-size:8px;letter-spacing:2px;color:#8a909e;text-transform:uppercase">Max Velo</div>
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:10px 14px;text-align:center">
+      <div style="font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:26px;color:var(--text)">${maxVel}</div>
+      <div style="font-size:8px;letter-spacing:2px;color:var(--text3);text-transform:uppercase">Max Velo</div>
     </div>
-    <div style="background:#fff;border:1px solid #d4d8e0;border-radius:8px;padding:10px 14px;text-align:center">
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:10px 14px;text-align:center">
       <div style="font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:26px;color:#cc1a1a">${strPct}%</div>
-      <div style="font-size:8px;letter-spacing:2px;color:#8a909e;text-transform:uppercase">Strike%</div>
+      <div style="font-size:8px;letter-spacing:2px;color:var(--text3);text-transform:uppercase">Strike%</div>
     </div>
-    <div style="background:#fff;border:1px solid #d4d8e0;border-radius:8px;padding:10px 14px;text-align:center">
-      <div style="font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:26px">${
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:10px 14px;text-align:center">
+      <div style="font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:26px;color:var(--text)">${
         fpsPct !== null ? fpsPct + "%" : "—"
       }</div>
-      <div style="font-size:8px;letter-spacing:2px;color:#8a909e;text-transform:uppercase">FPS%</div>
+      <div style="font-size:8px;letter-spacing:2px;color:var(--text3);text-transform:uppercase">FPS%</div>
     </div>
-    <div style="background:#fff;border:1px solid #d4d8e0;border-radius:8px;padding:10px 14px;text-align:center">
-      <div style="font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:26px">${zonePct}%</div>
-      <div style="font-size:8px;letter-spacing:2px;color:#8a909e;text-transform:uppercase">Zone%</div>
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:10px 14px;text-align:center">
+      <div style="font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:26px;color:var(--text)">${zonePct}%</div>
+      <div style="font-size:8px;letter-spacing:2px;color:var(--text3);text-transform:uppercase">Zone%</div>
     </div>
-    <div style="background:#fff;border:1px solid #d4d8e0;border-radius:8px;padding:10px 14px;text-align:center">
-      <div style="font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:26px">${swingPct}%</div>
-      <div style="font-size:8px;letter-spacing:2px;color:#8a909e;text-transform:uppercase">Swing%</div>
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:10px 14px;text-align:center">
+      <div style="font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:26px;color:var(--text)">${swingPct}%</div>
+      <div style="font-size:8px;letter-spacing:2px;color:var(--text3);text-transform:uppercase">Swing%</div>
     </div>
   </div>`;
         }
@@ -32270,7 +32271,7 @@
   <div class="scout-header" style="display:flex;align-items:flex-start;justify-content:space-between;border-bottom:3px solid #cc1a1a;padding-bottom:6px;margin-bottom:8px">
     <div>
       <div style="font-family:'Barlow',sans-serif;font-weight:700;font-size:10px;letter-spacing:1px;text-transform:uppercase;color:#cc1a1a;margin-bottom:2px">Hitter Scouting Report</div>
-      <div style="font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:24px;color:#111318;line-height:1">#${
+      <div style="font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:24px;color:var(--text);line-height:1">#${
         stats.num || "—"
       } ${escHtml(playerName)}</div>
       <div style="font-family:'Barlow',sans-serif;font-size:11px;font-weight:400;color:#8a909e;margin-top:3px">${
@@ -32282,8 +32283,8 @@
     <div style="display:flex;gap:20px;align-items:flex-end;flex-shrink:0">
       ${[
         ["AVG", f(avg), "#cc1a1a"],
-        ["OBP", f(obp), "#111318"],
-        ["SLG", f(slg), "#111318"],
+        ["OBP", f(obp), "var(--text)"],
+        ["SLG", f(slg), "var(--text)"],
         [
           "OPS",
           f(ops),
@@ -33255,7 +33256,7 @@
   <div class="scout-header" style="display:flex;align-items:flex-start;justify-content:space-between;border-bottom:3px solid #1a5acc;padding-bottom:8px;margin-bottom:12px">
     <div>
       <div style="font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:10px;letter-spacing:3px;text-transform:uppercase;color:#1a5acc;margin-bottom:2px">Pitcher Scouting Report</div>
-      <div style="font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:32px;color:#111318;line-height:1">#${
+      <div style="font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:32px;color:var(--text);line-height:1">#${
         career.num || "—"
       } ${escHtml(pitcherName)}</div>
       <div style="font-size:12px;color:#8a909e;margin-top:3px">${
