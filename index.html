@@ -490,7 +490,9 @@
       }
       /* Hub + tracker panel backgrounds */
       body.dark #hub-app,
-      body.dark #panel-tracker {
+      body.dark #panel-tracker,
+      body.dark #panel-myteam,
+      body.dark #panel-opponents {
         background: var(--bg);
       }
       /* Hub misc */
@@ -13131,7 +13133,6 @@
         // ── Dark mode toggle ──────────────────────────────────────────────
         function toggleDarkMode() {
           const isDark = document.body.classList.toggle("dark");
-          localStorage.setItem("ptDarkMode", isDark ? "1" : "0");
           _applyDarkModeUI(isDark);
         }
         function _applyDarkModeUI(isDark) {
@@ -13141,14 +13142,6 @@
           if (navBtn) navBtn.textContent = label;
           if (hsBtn) hsBtn.textContent = label;
         }
-        // Apply saved preference on load
-        (function () {
-          const saved = localStorage.getItem("ptDarkMode");
-          if (saved === "1") {
-            document.body.classList.add("dark");
-            _applyDarkModeUI(true);
-          }
-        })();
 
         function openPanel(name, skipPrompt) {
           if (
