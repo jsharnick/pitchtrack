@@ -22377,6 +22377,35 @@
           }
         }
 
+        function reRenderScoutingReport(type, teamName, playerName) {
+          _scoutRecentFilter = !_scoutRecentFilter;
+          const allGames = getTeamGames(teamName);
+          const names = _nameAliases[playerName] || new Set([playerName]);
+          const n = type === "hitter" ? 5 : 3;
+          const games = _scoutRecentFilter
+            ? [...allGames]
+                .sort((a, b) => b.date.localeCompare(a.date))
+                .filter((g) =>
+                  type === "hitter"
+                    ? (g.pitchLog || []).some((p) => names.has(p.batter))
+                    : (g.pitchLog || []).some(
+                        (p) =>
+                          p.pitcherTeam === teamName && names.has(p.pitcher)
+                      )
+                )
+                .slice(0, n)
+            : allGames;
+          const html =
+            type === "hitter"
+              ? buildHitterScoutingReport(teamName, playerName, games)
+              : buildPitcherScoutingReport(teamName, playerName, games);
+          const el =
+            document.getElementById("ptab-scouting-content") ||
+            document.getElementById("ptab-p-scouting-content") ||
+            document.getElementById("scout-report-content");
+          if (el) el.innerHTML = html;
+        }
+
         function renderCompare() {
           const c = document.getElementById("hub-content");
           const allSlotDefs = [_cmpSlot1, _cmpSlot2, _cmpSlot3];
@@ -22672,6 +22701,7 @@
         let _lastPlayerTab = "spray";
         let _lastPitcherTab = "zone";
         let _recentFilter = false; // toggles last-3-games (pitcher) / last-5-games (hitter) filter
+        let _scoutRecentFilter = false; // toggles last-N-games filter on scouting reports specifically
         let _cmpSlot1 = null; // {team, name, isPitcher} or null
         let _cmpSlot2 = null;
         let _cmpSlot3 = null;
@@ -22716,7 +22746,10 @@
           document.getElementById("hub-content").style.display = "block";
           renderSidebar();
           // Reset recent filter when navigating to a new player/pitcher
-          if (type === "player" || type === "pitcher") _recentFilter = false;
+          if (type === "player" || type === "pitcher") {
+            _recentFilter = false;
+            _scoutRecentFilter = false;
+          }
           if (type === "games") renderAllGames();
           else if (type === "team") renderTeam(data);
           else if (type === "player") {
@@ -26885,7 +26918,11 @@
               playerName
             )}','hitter')" style="padding:7px 18px;background:var(--accent);border:none;border-radius:7px;color:#fff;font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:14px;letter-spacing:1px;cursor:pointer;display:flex;align-items:center;gap:7px">🖨 Print Report</button>
       </div>
-      ${buildHitterScoutingReport(teamName, playerName, games)}
+      <div id="ptab-scouting-content">${buildHitterScoutingReport(
+        teamName,
+        playerName,
+        games
+      )}</div>
     </div>
 
     <div id="ptab-baserunning" style="display:none">
@@ -28591,7 +28628,11 @@
               pitcherName
             )}','pitcher')" style="padding:7px 18px;background:var(--accent);border:none;border-radius:7px;color:#fff;font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:14px;letter-spacing:1px;cursor:pointer;display:flex;align-items:center;gap:7px">🖨 Print Report</button>
       </div>
-      ${buildPitcherScoutingReport(teamName, pitcherName, games)}
+      <div id="ptab-p-scouting-content">${buildPitcherScoutingReport(
+        teamName,
+        pitcherName,
+        games
+      )}</div>
     </div>
   ${_pitcherSidebar.mobilePills}</div>${_pitcherSidebar.sidebar}</div>`;
           } catch (e) {
@@ -30838,6 +30879,7 @@
         }
 
         function showScoutingReport(type, teamName, playerName) {
+          _scoutRecentFilter = false;
           const games = getTeamGames(teamName);
           const el = document.getElementById("scout-report-content");
           if (!el) return;
@@ -31479,7 +31521,22 @@
                 )
               : 0;
 
+          const _hitterScoutFilterBar = `<div class="scout-print-hide" style="display:flex;justify-content:flex-end;align-items:center;gap:10px;margin-bottom:10px">
+  ${
+    _scoutRecentFilter
+      ? `<span style="font-family:'Barlow Condensed',sans-serif;font-size:11px;letter-spacing:1px;color:var(--text3);text-transform:uppercase">Showing last 5 games</span>`
+      : ""
+  }
+  <button class="recent-filter-btn${
+    _scoutRecentFilter ? " rfb-active" : ""
+  }" onclick="reRenderScoutingReport('hitter','${escAttr(teamName)}','${escAttr(
+            playerName
+          )}')">${
+            _scoutRecentFilter ? "⏱ Last 5 Games" : "⏱ Filter Recent"
+          }</button>
+</div>`;
           return `<div class="scout-report-page" id="scout-hitter-report" style="padding:16px;background:#fff;font-family:'Barlow Condensed',sans-serif;overflow:hidden;max-width:100%">
+  ${_hitterScoutFilterBar}
   <!-- Header -->
   <div class="scout-header" style="display:flex;align-items:flex-start;justify-content:space-between;border-bottom:3px solid #cc1a1a;padding-bottom:6px;margin-bottom:8px">
     <div>
@@ -32449,7 +32506,22 @@
             </div>`
             : "";
 
+          const _pitcherScoutFilterBar = `<div class="scout-print-hide" style="display:flex;justify-content:flex-end;align-items:center;gap:10px;margin-bottom:10px">
+  ${
+    _scoutRecentFilter
+      ? `<span style="font-family:'Barlow Condensed',sans-serif;font-size:11px;letter-spacing:1px;color:var(--text3);text-transform:uppercase">Showing last 3 appearances</span>`
+      : ""
+  }
+  <button class="recent-filter-btn${
+    _scoutRecentFilter ? " rfb-active" : ""
+  }" onclick="reRenderScoutingReport('pitcher','${escAttr(
+            teamName
+          )}','${escAttr(pitcherName)}')">${
+            _scoutRecentFilter ? "⏱ Last 3 Games" : "⏱ Filter Recent"
+          }</button>
+</div>`;
           return `<div class="scout-report-page" id="scout-pitcher-report" style="padding:14px;background:#fff;font-family:'Barlow Condensed',sans-serif;overflow:hidden;max-width:100%">
+  ${_pitcherScoutFilterBar}
   <!-- Header -->
   <div class="scout-header" style="display:flex;align-items:flex-start;justify-content:space-between;border-bottom:3px solid #1a5acc;padding-bottom:8px;margin-bottom:12px">
     <div>
