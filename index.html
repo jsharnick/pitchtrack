@@ -21110,12 +21110,19 @@
 
           // Count splits
           const ppFirstPitch = pp.filter((p) => _isFirstPitch(p));
-          const ppAheadCount = pp.filter((p) => p.strikes > p.balls);
-          const ppBehindCount = pp.filter((p) => p.balls > p.strikes);
-          const pp2Strike = pp.filter((p) => p.strikes === 2);
-          const ppFullCount = pp.filter(
-            (p) => p.balls === 3 && p.strikes === 2
-          );
+          const ppAheadCount = pp.filter((p) => {
+            const c = _ppc(p);
+            return c.strikes > c.balls;
+          });
+          const ppBehindCount = pp.filter((p) => {
+            const c = _ppc(p);
+            return c.balls > c.strikes;
+          });
+          const pp2Strike = pp.filter((p) => _ppc(p).strikes === 2);
+          const ppFullCount = pp.filter((p) => {
+            const c = _ppc(p);
+            return c.balls === 3 && c.strikes === 2;
+          });
 
           // Pitcher splits object — all sections from the splits tab
           const pSplits = {
@@ -23988,29 +23995,21 @@
           if (!players.length)
             return '<div class="empty-state">No player data</div>';
           const rows = players.map((p) => {
-            let r = 0,
-              rbi = 0,
-              sb = 0,
-              cs = 0,
-              po = 0,
-              wpAdv = 0,
+            // Use alias-resolved aggregated values from getTeamRoster() for consistency
+            const r = p.r || 0;
+            const rbi = p.rbi || 0;
+            const sb = p.sb || 0;
+            const cs = p.cs || 0;
+            const po = p.po || 0;
+            // Only iterate games for game-log derived adv stats (no batter stat lookup)
+            let wpAdv = 0,
               pbAdv = 0,
               errAdv = 0;
+            const aliases = _nameAliases[p.name] || new Set([p.name]);
             games.forEach((g) => {
-              const isHome = g.homeTeam === teamName;
-              const b = (isHome ? g.homeBatters : g.awayBatters)?.find(
-                (x) => x.name === p.name
-              );
-              if (b) {
-                sb += b.sb || 0;
-                cs += b.cs || 0;
-                po += b.po || 0;
-                r += b.r || 0;
-                rbi += b.rbi || 0;
-              }
               (g.gameLog || []).forEach((e) => {
                 const txt = (e.title || "") + (e.detail || "");
-                if (!txt.includes(p.name)) return;
+                if (![...aliases].some((n) => txt.includes(n))) return;
                 if (txt.includes("Wild Pitch") && txt.includes("→")) wpAdv++;
                 if (txt.includes("Passed Ball") && txt.includes("→")) pbAdv++;
                 if (txt.includes("Advances on Error") && txt.includes("→"))
@@ -26865,6 +26864,7 @@
       <div class="tab" onclick="playerTab('stats')">Stats</div>
       <div class="tab" onclick="playerTab('splits')">Splits</div>
       <div class="tab" onclick="playerTab('baserunning')">Baserunning</div>
+      <div class="tab" onclick="playerTab('defense')">Defense</div>
       <div class="tab" onclick="playerTab('scouting')">Scouting Report</div>
       <div class="tab" onclick="playerTab('gamelog')">Game Log</div>
     </div>
@@ -26890,6 +26890,10 @@
 
     <div id="ptab-baserunning" style="display:none">
       ${buildBaserunningTab(stats, games, teamName, playerName)}
+    </div>
+
+    <div id="ptab-defense" style="display:none">
+      ${buildDefenseTab(stats, games, teamName, playerName)}
     </div>
 
     <div id="ptab-spray">
@@ -26965,6 +26969,7 @@
               "stats",
               "splits",
               "baserunning",
+              "defense",
               "scouting",
               "gamelog",
             ];
@@ -26977,6 +26982,7 @@
             "stats",
             "splits",
             "baserunning",
+            "defense",
             "scouting",
             "gamelog",
           ].forEach((t) => {
@@ -27922,6 +27928,7 @@
                   rbi: 0,
                   sb: 0,
                   cs: 0,
+                  po: 0,
                 };
               const m = playerMap[key];
               const pa =
@@ -27944,6 +27951,7 @@
               m.rbi += p.rbi || 0;
               m.sb += p.sb || 0;
               m.cs += p.cs || 0;
+              m.po += p.po || 0;
             });
           });
           const merged = _mergeStatMapByPlayer(playerMap);
@@ -28203,7 +28211,7 @@
             }"><div class="stat-card-val">${val}</div><div class="stat-card-lbl">${lbl}</div></div>`;
 
           return `
-    <div style="margin-bottom:28px">
+    <div>
       <div class="section-title" style="margin-bottom:12px">Baserunning</div>
       <div class="stat-cards">
         ${card(r, "Runs Scored", true)}
@@ -28217,7 +28225,35 @@
         ${card(pbAdv, "PB Advances")}
         ${card(errAdv, "Error Advances")}
       </div>
-    </div>
+    </div>`;
+        }
+
+        function buildDefenseTab(stats, games, teamName, playerName) {
+          const aliases = _nameAliases[playerName] || new Set([playerName]);
+          let fPO = 0,
+            fA = 0,
+            fE = 0;
+          games.forEach((g) => {
+            Object.values(g.fieldingStats || {}).forEach((f) => {
+              if (
+                aliases.has(f.name) &&
+                (g.awayTeam === teamName || g.homeTeam === teamName)
+              ) {
+                fPO += f.po || 0;
+                fA += f.a || 0;
+                fE += f.e || 0;
+              }
+            });
+          });
+          const tc = fPO + fA + fE;
+          const fpct = tc > 0 ? _fmtRate((fPO + fA) / tc) : "—";
+
+          const card = (val, lbl, accent = false) =>
+            `<div class="stat-card${
+              accent ? " accent" : ""
+            }"><div class="stat-card-val">${val}</div><div class="stat-card-lbl">${lbl}</div></div>`;
+
+          return `
     <div>
       <div class="section-title" style="margin-bottom:12px">Defense</div>
       <div class="stat-cards">
@@ -32060,23 +32096,41 @@
 
           // Count discipline rows
           const countSit = [
-            { lbl: "0-0 (FPS)", fn: (p) => p.balls === 0 && p.strikes === 0 },
+            {
+              lbl: "0-0 (FPS)",
+              fn: (p) => {
+                const c = _ppc(p);
+                return c.balls === 0 && c.strikes === 0;
+              },
+            },
             {
               lbl: "1-1 Count",
-              fn: (p) =>
-                (p.balls === 1 &&
-                  p.strikes === 2 &&
-                  ["strike-swinging", "strike-looking", "foul"].includes(
-                    p.outcome
-                  )) ||
-                (p.balls === 2 && p.strikes === 1 && p.outcome === "ball"),
+              fn: (p) => {
+                const c = _ppc(p);
+                return c.balls === 1 && c.strikes === 1;
+              },
             },
-            { lbl: "Ahead (0-1,0-2)", fn: (p) => p.strikes > p.balls },
-            { lbl: "Behind (1-0+)", fn: (p) => p.balls > p.strikes },
-            { lbl: "2-Strike", fn: (p) => p.strikes === 2 },
+            {
+              lbl: "Ahead (0-1,0-2)",
+              fn: (p) => {
+                const c = _ppc(p);
+                return c.strikes > c.balls;
+              },
+            },
+            {
+              lbl: "Behind (1-0+)",
+              fn: (p) => {
+                const c = _ppc(p);
+                return c.balls > c.strikes;
+              },
+            },
+            { lbl: "2-Strike", fn: (p) => _ppc(p).strikes === 2 },
             {
               lbl: "Full Count",
-              fn: (p) => p.balls === 3 && p.strikes === 2,
+              fn: (p) => {
+                const c = _ppc(p);
+                return c.balls === 3 && c.strikes === 2;
+              },
             },
           ];
           const cRows = countSit
