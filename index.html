@@ -886,6 +886,13 @@
         box-shadow: 0 0 12px rgba(245, 200, 66, 0.9);
         transform: translate(-50%, -50%) scale(1.18);
       }
+      .fpos-btn.fpos-po {
+        background: #cc7a00;
+        border-color: #cc7a00;
+        opacity: 0.7;
+        cursor: default;
+        transform: translate(-50%, -50%);
+      }
       .count-dots {
         display: flex;
         gap: 5px;
@@ -1914,8 +1921,8 @@
         width: 22px;
         height: 22px;
         border-radius: 50%;
-        border: 2.5px dashed rgba(0, 0, 0, 0.45);
-        background: rgba(0, 0, 0, 0.07);
+        border: 2.5px dashed rgba(255, 255, 255, 0.7);
+        background: rgba(255, 255, 255, 0.18);
         transform: translate(-50%, -50%);
         pointer-events: none;
         z-index: 5;
@@ -2116,7 +2123,7 @@
         padding: 5px 6px;
         border: 1.5px solid var(--border2);
         border-radius: 7px;
-        background: #ffffff;
+        background: var(--surface);
         color: var(--text2);
         font-family: "Barlow Condensed", sans-serif;
         font-weight: 700;
@@ -2273,7 +2280,7 @@
         display: flex;
         align-items: center;
         gap: 4px;
-        background: #ffffff;
+        background: var(--surface);
         border: 1px solid var(--border);
         border-radius: 5px;
         padding: 4px 7px;
@@ -2312,7 +2319,7 @@
         padding: 5px 4px;
         border: 1px solid var(--border2);
         border-radius: 5px;
-        background: #ffffff;
+        background: var(--surface);
         color: var(--text2);
         font-family: "Barlow Condensed", sans-serif;
         font-weight: 700;
@@ -2379,7 +2386,7 @@
       }
 
       #play-blurb-wrap {
-        background: #ffffff;
+        background: var(--surface);
         border-top: 1px solid var(--border);
         border-bottom: 1px solid var(--border);
         padding: 7px 16px;
@@ -2432,7 +2439,7 @@
         margin-left: 4px;
       }
       #ab-strip {
-        background: #ffffff;
+        background: var(--surface);
         border-top: 1px solid var(--border);
         padding: 6px 12px;
         display: flex;
@@ -2741,7 +2748,7 @@
         display: flex;
       }
       .modal-box {
-        background: #ffffff;
+        background: var(--surface2);
         border: 1px solid var(--border2);
         border-radius: 14px;
         padding: 22px;
@@ -2851,7 +2858,7 @@
         align-items: center;
         gap: 10px;
         padding: 8px 11px;
-        background: #ffffff;
+        background: var(--surface);
         border: 1px solid var(--border2);
         border-radius: 7px;
         cursor: pointer;
@@ -2928,7 +2935,7 @@
         padding: 9px 6px;
         border: 1.5px solid var(--border2);
         border-radius: 7px;
-        background: #ffffff;
+        background: var(--surface);
         color: var(--text2);
         font-family: "Barlow Condensed", sans-serif;
         font-weight: 700;
@@ -6714,7 +6721,7 @@
                           padding: 6px 4px;
                           border: 1.5px solid var(--border2);
                           border-radius: 7px;
-                          background: #fff;
+                          background: var(--surface);
                           color: var(--text2);
                           font-family: 'Barlow Condensed', sans-serif;
                           font-weight: 700;
@@ -6742,7 +6749,7 @@
                           padding: 6px 4px;
                           border: 1.5px solid var(--border2);
                           border-radius: 7px;
-                          background: #fff;
+                          background: var(--surface);
                           color: var(--text2);
                           font-family: 'Barlow Condensed', sans-serif;
                           font-weight: 700;
@@ -6770,7 +6777,7 @@
                           padding: 6px 4px;
                           border: 1.5px solid var(--border2);
                           border-radius: 7px;
-                          background: #fff;
+                          background: var(--surface);
                           color: var(--text2);
                           font-family: 'Barlow Condensed', sans-serif;
                           font-weight: 700;
@@ -6799,7 +6806,7 @@
                           padding: 6px 4px;
                           border: 1.5px solid var(--border2);
                           border-radius: 7px;
-                          background: #fff;
+                          background: var(--surface);
                           color: var(--text2);
                           font-family: 'Barlow Condensed', sans-serif;
                           font-weight: 700;
@@ -10605,6 +10612,7 @@
             </div>
           </div>
           <button
+            id="fielder-skip-btn"
             onclick="_fielderSkip()"
             style="
               background: none;
@@ -11987,7 +11995,7 @@
     >
       <div
         style="
-          background: #ffffff;
+          background: var(--surface2);
           border: 1px solid var(--border2);
           border-radius: 14px;
           padding: 22px;
@@ -12024,11 +12032,11 @@
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px">
           <button
             onclick="commitError('1st')"
-            onmouseout="this.style.borderColor='var(--border2)';this.style.background='#f4f5f7'"
+            onmouseout="this.style.borderColor='var(--border2)';this.style.background='var(--surface3)'"
             onmouseover="this.style.borderColor='var(--accent)';this.style.background='rgba(204,26,26,.06)'"
             style="
               padding: 14px;
-              background: #f4f5f7;
+              background: var(--surface3);
               border: 1.5px solid var(--border2);
               border-radius: 9px;
               cursor: pointer;
@@ -12054,11 +12062,11 @@
           </button>
           <button
             onclick="commitError('2nd')"
-            onmouseout="this.style.borderColor='var(--border2)';this.style.background='#f4f5f7'"
+            onmouseout="this.style.borderColor='var(--border2)';this.style.background='var(--surface3)'"
             onmouseover="this.style.borderColor='var(--accent)';this.style.background='rgba(204,26,26,.06)'"
             style="
               padding: 14px;
-              background: #f4f5f7;
+              background: var(--surface3);
               border: 1.5px solid var(--border2);
               border-radius: 9px;
               cursor: pointer;
@@ -12084,11 +12092,11 @@
           </button>
           <button
             onclick="commitError('3rd')"
-            onmouseout="this.style.borderColor='var(--border2)';this.style.background='#f4f5f7'"
+            onmouseout="this.style.borderColor='var(--border2)';this.style.background='var(--surface3)'"
             onmouseover="this.style.borderColor='var(--accent)';this.style.background='rgba(204,26,26,.06)'"
             style="
               padding: 14px;
-              background: #f4f5f7;
+              background: var(--surface3);
               border: 1.5px solid var(--border2);
               border-radius: 9px;
               cursor: pointer;
@@ -12114,11 +12122,11 @@
           </button>
           <button
             onclick="commitError('home')"
-            onmouseout="this.style.borderColor='var(--border2)';this.style.background='#f4f5f7'"
+            onmouseout="this.style.borderColor='var(--border2)';this.style.background='var(--surface3)'"
             onmouseover="this.style.borderColor='var(--green)';this.style.background='rgba(26,138,58,.06)'"
             style="
               padding: 14px;
-              background: #f4f5f7;
+              background: var(--surface3);
               border: 1.5px solid var(--border2);
               border-radius: 9px;
               cursor: pointer;
@@ -13593,7 +13601,7 @@
               if (sub) sub.style.display = "none";
               const btn = qs("ipc-" + c);
               if (btn) {
-                btn.style.background = "#fff";
+                btn.style.background = "var(--surface)";
                 btn.style.borderColor = "var(--border2)";
                 btn.style.color = "var(--text2)";
               }
@@ -13614,7 +13622,7 @@
             const btn = qs("ipc-" + c);
             const sub = qs("ipc-sub-" + c);
             if (btn) {
-              btn.style.background = "#fff";
+              btn.style.background = "var(--surface)";
               btn.style.borderColor = "var(--border2)";
               btn.style.color = "var(--text2)";
               btn.style.borderWidth = "1.5px";
@@ -13639,7 +13647,9 @@
             const sub = qs("ipc-sub-" + c);
             const active = c === cat;
             if (btn) {
-              btn.style.background = active ? "rgba(204,26,26,.08)" : "#fff";
+              btn.style.background = active
+                ? "rgba(204,26,26,.08)"
+                : "var(--surface)";
               btn.style.borderColor = active
                 ? "var(--accent)"
                 : "var(--border2)";
@@ -14469,7 +14479,7 @@
               if (s) s.style.display = "none";
               const b = qs("ipc-" + c);
               if (b) {
-                b.style.background = "#fff";
+                b.style.background = "var(--surface)";
                 b.style.borderColor = "var(--border2)";
                 b.style.color = "var(--text2)";
               }
@@ -14503,7 +14513,7 @@
               if (s) s.style.display = "none";
               const b = qs("ipc-" + c);
               if (b) {
-                b.style.background = "#fff";
+                b.style.background = "var(--surface)";
                 b.style.borderColor = "var(--border2)";
                 b.style.color = "var(--text2)";
               }
@@ -14760,6 +14770,7 @@
             }
           }
           newBases[hit.newBase] = true;
+          S.runnerNames[hit.newBase] = currentBatter()?.name || null;
           S.bases = newBases;
           for (let i = 0; i < runs; i++) addRun();
           if (runs > 0) {
@@ -18245,22 +18256,29 @@
           const batter = currentBatter()?.name || "Batter";
           // 1. Spray chart → 2. Fielder modal → 3. Resolve game logic
           openSprayModal("error", entry || {}, () => {
-            openFielderModal("error", "Error", batter, (fielder) => {
-              const posNum = {
-                P: 1,
-                C: 2,
-                "1B": 3,
-                "2B": 4,
-                "3B": 5,
-                SS: 6,
-                LF: 7,
-                CF: 8,
-                RF: 9,
-              };
-              S._lastErrorFielder = fielder || null;
-              S._lastErrorPosNum = fielder ? posNum[fielder] || "" : null;
-              _resolveError(base, entry);
-            });
+            // errorMode=true: single-select, callback receives position string directly
+            openFielderModal(
+              "error",
+              "Error",
+              batter,
+              (fielder) => {
+                const posNum = {
+                  P: 1,
+                  C: 2,
+                  "1B": 3,
+                  "2B": 4,
+                  "3B": 5,
+                  SS: 6,
+                  LF: 7,
+                  CF: 8,
+                  RF: 9,
+                };
+                S._lastErrorFielder = fielder || null;
+                S._lastErrorPosNum = fielder ? posNum[fielder] || "" : null;
+                _resolveError(base, entry);
+              },
+              true
+            );
           });
         }
         function _resolveError(base, entry) {
@@ -18708,7 +18726,8 @@
             if (_cp) _cp.outs = (_cp.outs || 0) + 1;
           }
           // Ask who made the play in the field — blurb is built AFTER so it has fielder info
-          openFielderModal(outcome, logLabel, batter, (fielder) => {
+          // result is {putout, assists[]} or null if skipped
+          openFielderModal(outcome, logLabel, batter, (result) => {
             const posNum = {
               P: 1,
               C: 2,
@@ -18720,34 +18739,26 @@
               CF: 8,
               RF: 9,
             };
+            const fielder = result?.putout || null;
+            const assists = result?.assists || [];
             let scoreStr = "";
             if (fielder) {
-              const n = posNum[fielder] || "";
-              if (outcome === "flyout" || outcome === "sacfly")
-                scoreStr = `F${n}`;
-              else if (outcome === "lineout") scoreStr = `L${n}`;
-              else if (outcome === "groundout" || outcome === "sacbunt")
-                scoreStr = `${n}-3`;
-              else scoreStr = `${n}`;
+              if (outcome === "flyout" || outcome === "sacfly") {
+                scoreStr = `F${posNum[fielder] || ""}`;
+              } else if (outcome === "lineout") {
+                scoreStr = `L${posNum[fielder] || ""}`;
+              } else {
+                // Build full assist chain: e.g. SS→1B = "6-3"
+                const chain = [...assists, fielder]
+                  .map((p) => posNum[p] || "?")
+                  .join("-");
+                scoreStr = chain;
+              }
             }
             // Store for blurb — must be set before updatePlayBlurb is called
             S._lastFielder = fielder || null;
             S._lastScoreStr = scoreStr || null;
-            // Track fielding stats: PO on the fielder who recorded the out
-            // For ground outs/sac bunts the play typically ends at 1B — credit
-            // an assist to the fielder who fielded it and a PO to the 1B,
-            // unless the fielder IS the 1B (unassisted putout).
-            if (fielder) {
-              if (
-                (outcome === "groundout" || outcome === "sacbunt") &&
-                fielder !== "1B"
-              ) {
-                _trackFielding(fielder, "a"); // fielder gets the assist
-                _trackFielding("1B", "po"); // 1B gets the putout
-              } else {
-                _trackFielding(fielder, "po"); // all other outs: straight PO
-              }
-            }
+            // PO and assists already tracked inside _fielderSelect / _fielderSkip
             updatePlayBlurb(
               outcome,
               pitchType,
@@ -18758,8 +18769,11 @@
               S.bases,
               { balls: S.balls, strikes: S.strikes }
             );
+            const assistStr = assists.length > 0 ? assists.join("-") + "-" : "";
             const fielderStr = fielder
-              ? ` · ${fielder}${scoreStr ? " (" + scoreStr + ")" : ""}`
+              ? ` · ${assistStr}${fielder}${
+                  scoreStr ? " (" + scoreStr + ")" : ""
+                }`
               : "";
             logEvent(
               "🟤",
@@ -30908,10 +30922,28 @@
         // ===================== FIELDER MODAL =====================
         let _fielderCallback = null;
         let _fielderContext = null; // {outcome, logLabel, batter}
+        let _fielderPendingPO = null; // pos picked in step 1 (putout)
+        let _fielderAssists = []; // positions picked in step 2
+        let _fielderInAssistMode = false; // true after putout is selected
 
-        function openFielderModal(outcome, logLabel, batter, callback) {
+        // errorMode: true = single-select only (no PO tracking, no assist step)
+        function openFielderModal(
+          outcome,
+          logLabel,
+          batter,
+          callback,
+          errorMode
+        ) {
           _fielderCallback = callback;
-          _fielderContext = { outcome, logLabel, batter };
+          _fielderContext = {
+            outcome,
+            logLabel,
+            batter,
+            errorMode: !!errorMode,
+          };
+          _fielderPendingPO = null;
+          _fielderAssists = [];
+          _fielderInAssistMode = false;
 
           // Build a position → player name map from the current defensive lineup
           const isHomeDefending = S.isTop;
@@ -30926,7 +30958,7 @@
 
           // Annotate every position button with the player name
           document.querySelectorAll(".fpos-btn").forEach((btn) => {
-            btn.classList.remove("selected");
+            btn.classList.remove("selected", "fpos-po");
             const pos =
               btn.getAttribute("data-pos") ||
               btn.textContent.trim().toUpperCase();
@@ -30938,29 +30970,96 @@
             }
           });
 
-          qs("fielder-title").textContent = "Who made the play?";
-          qs("fielder-sub").textContent = `${logLabel} — ${batter}`;
+          // Phase 1: assist selection (who fielded the ball)
+          qs("fielder-title").textContent = "Who fielded the ball?";
+          qs(
+            "fielder-sub"
+          ).textContent = `${logLabel} — ${batter} · tap all who touched it`;
+          const skipBtn = document.getElementById("fielder-skip-btn");
+          if (skipBtn) skipBtn.textContent = "Next →";
+          _fielderInAssistMode = true; // start in "assist" phase (fielding chain)
           qs("fielder-modal").style.display = "flex";
         }
 
         function _fielderSelect(pos) {
-          // Highlight selected
-          document
-            .querySelectorAll(".fpos-btn")
-            .forEach((b) => b.classList.remove("selected"));
-          event.currentTarget.classList.add("selected");
-          // Brief visual feedback then close
-          setTimeout(() => {
-            qs("fielder-modal").style.display = "none";
-            if (_fielderCallback) _fielderCallback(pos);
-            _fielderCallback = null;
-          }, 180);
+          // Error mode: single select, immediate callback with position string
+          if (_fielderContext?.errorMode) {
+            document
+              .querySelectorAll(".fpos-btn")
+              .forEach((b) => b.classList.remove("selected"));
+            event.currentTarget.classList.add("selected");
+            setTimeout(() => {
+              qs("fielder-modal").style.display = "none";
+              if (_fielderCallback) _fielderCallback(pos);
+              _fielderCallback = null;
+            }, 180);
+            return;
+          }
+
+          if (_fielderInAssistMode) {
+            // Phase 1: toggle who touched the ball (multi-select assist candidates)
+            const btn = document.querySelector(`.fpos-btn[data-pos="${pos}"]`);
+            if (_fielderAssists.includes(pos)) {
+              _fielderAssists = _fielderAssists.filter((p) => p !== pos);
+              btn?.classList.remove("selected");
+            } else {
+              _fielderAssists.push(pos);
+              btn?.classList.add("selected");
+            }
+          } else {
+            // Phase 2: select the single putout fielder (can't be in assist list)
+            if (_fielderAssists.includes(pos)) return;
+            document.querySelectorAll(".fpos-btn").forEach((b) => {
+              if (!_fielderAssists.includes(b.getAttribute("data-pos")))
+                b.classList.remove("selected", "fpos-po");
+            });
+            _fielderPendingPO = pos;
+            const btn = document.querySelector(`.fpos-btn[data-pos="${pos}"]`);
+            btn?.classList.add("fpos-po");
+          }
         }
 
         function _fielderSkip() {
-          qs("fielder-modal").style.display = "none";
-          if (_fielderCallback) _fielderCallback(null);
-          _fielderCallback = null;
+          if (_fielderContext?.errorMode) {
+            // Error mode skip — no fielder
+            qs("fielder-modal").style.display = "none";
+            if (_fielderCallback) _fielderCallback(null);
+            _fielderCallback = null;
+            return;
+          }
+          if (_fielderInAssistMode) {
+            // "Next →" — done selecting who fielded; move to putout step
+            _fielderInAssistMode = false;
+            _fielderPendingPO = null;
+            // Mark assist buttons so putout step knows to exclude them
+            // Transition UI to putout selection
+            qs("fielder-title").textContent = "Who recorded the out?";
+            qs("fielder-sub").textContent =
+              "Select the fielder who made the putout";
+            const skipBtn = document.getElementById("fielder-skip-btn");
+            if (skipBtn) skipBtn.textContent = "Done";
+            // Keep selected assists highlighted; dim them slightly to distinguish
+            document.querySelectorAll(".fpos-btn").forEach((b) => {
+              const p = b.getAttribute("data-pos");
+              if (_fielderAssists.includes(p)) {
+                b.classList.add("selected");
+              }
+            });
+          } else {
+            // "Done" — commit everything and return result
+            if (_fielderPendingPO) _trackFielding(_fielderPendingPO, "po");
+            _fielderAssists.forEach((p) => _trackFielding(p, "a"));
+            const result = {
+              putout: _fielderPendingPO,
+              assists: [..._fielderAssists],
+            };
+            qs("fielder-modal").style.display = "none";
+            _fielderInAssistMode = false;
+            _fielderPendingPO = null;
+            _fielderAssists = [];
+            if (_fielderCallback) _fielderCallback(result);
+            _fielderCallback = null;
+          }
         }
 
         // ===================== FULLSCREEN =====================
