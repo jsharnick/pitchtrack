@@ -10630,7 +10630,10 @@
           </button>
         </div>
         <!-- Field SVG with position buttons -->
-        <div style="position: relative; width: 100%; user-select: none">
+        <div
+          id="fielder-field-wrap"
+          style="position: relative; width: 100%; user-select: none"
+        >
           <svg
             style="
               width: 100%;
@@ -10870,6 +10873,11 @@
             C
           </button>
         </div>
+        <!-- Error type / throw direction choice panel (error flow only) -->
+        <div
+          id="fielder-error-choice"
+          style="display: none; margin-top: 12px"
+        ></div>
       </div>
     </div>
     <div
@@ -18256,12 +18264,11 @@
           const batter = currentBatter()?.name || "Batter";
           // 1. Spray chart → 2. Fielder modal → 3. Resolve game logic
           openSprayModal("error", entry || {}, () => {
-            // errorMode=true: single-select, callback receives position string directly
             openFielderModal(
               "error",
               "Error",
               batter,
-              (fielder) => {
+              (result) => {
                 const posNum = {
                   P: 1,
                   C: 2,
@@ -18273,8 +18280,24 @@
                   CF: 8,
                   RF: 9,
                 };
-                S._lastErrorFielder = fielder || null;
-                S._lastErrorPosNum = fielder ? posNum[fielder] || "" : null;
+                // result: { fielder, errorPlayer, errorType, throwDir } or null (no fielder)
+                const errorPlayer = result?.errorPlayer || null;
+                const fielderWho = result?.fielder || null;
+                S._lastErrorFielder = errorPlayer || null;
+                S._lastErrorPosNum = errorPlayer
+                  ? posNum[errorPlayer] || ""
+                  : null;
+                S._lastErrorType = result?.errorType || null;
+                S._lastErrorFielderWho = fielderWho || null;
+                // Track fielding stats
+                if (errorPlayer) _trackFielding(errorPlayer, "e");
+                if (
+                  result?.throwDir === "dropped" &&
+                  fielderWho &&
+                  fielderWho !== errorPlayer
+                ) {
+                  _trackFielding(fielderWho, "a");
+                }
                 _resolveError(base, entry);
               },
               true
@@ -18283,12 +18306,24 @@
         }
         function _resolveError(base, entry) {
           const batter = currentBatter()?.name || "Batter";
-          const fielder = S._lastErrorFielder;
+          const errorPlayer = S._lastErrorFielder; // who committed the error
+          const fielderWho = S._lastErrorFielderWho; // who fielded/threw (may differ)
           const posNum = S._lastErrorPosNum;
-          const fielderStr = fielder ? ` · E${posNum} (${fielder})` : "";
+          const errorType = S._lastErrorType;
+          // Build descriptive suffix: E6 (SS dropped throw, 3B threw)
+          let fielderStr = "";
+          if (errorPlayer) {
+            fielderStr = ` · E${posNum} (${errorPlayer}`;
+            if (
+              errorType === "throwing" &&
+              fielderWho &&
+              fielderWho !== errorPlayer
+            ) {
+              fielderStr += `, threw by ${fielderWho}`;
+            }
+            fielderStr += ")";
+          }
           const runs = base === "home" ? 1 : 0;
-          // Track error on fielder
-          if (fielder) _trackFielding(fielder, "e");
           // Build blurb now — fielder is already set on S._lastErrorFielder
           updatePlayBlurb(
             "error",
@@ -30926,7 +30961,80 @@
         let _fielderAssists = []; // positions picked in step 2
         let _fielderInAssistMode = false; // true after putout is selected
 
-        // errorMode: true = single-select only (no PO tracking, no assist step)
+        // Error-mode multi-phase state
+        let _errorPhase = "fielder"; // "fielder" | "error-type" | "throw-direction" | "recipient"
+        let _errorFielder = null; // who fielded/threw the ball (always recorded)
+
+        function _errorChooseType(type) {
+          const btnStyle = `padding:14px 10px;border-radius:10px;cursor:pointer;border:1.5px solid var(--border2);background:var(--surface3);color:var(--text);font-family:'Barlow Condensed',sans-serif;text-align:center;transition:all 0.15s;`;
+          if (type === "fielding") {
+            const result = {
+              fielder: _errorFielder,
+              errorPlayer: _errorFielder,
+              errorType: "fielding",
+            };
+            _errorCloseAndCommit(result);
+          } else {
+            _errorPhase = "throw-direction";
+            qs("fielder-title").textContent = "Who committed the error?";
+            qs("fielder-sub").textContent = `${_errorFielder} threw the ball`;
+            document.getElementById("fielder-skip-btn").textContent = "← Back";
+            const div = document.getElementById("fielder-error-choice");
+            div.innerHTML = `<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:4px">
+              <button onclick="_errorChooseThrow('bad-throw')" style="${btnStyle}">
+                <div style="font-size:15px;font-weight:900;letter-spacing:0.5px">Bad Throw</div>
+                <div style="font-size:10px;opacity:0.7;margin-top:3px">${_errorFielder} threw it poorly</div>
+              </button>
+              <button onclick="_errorChooseThrow('dropped')" style="${btnStyle}">
+                <div style="font-size:15px;font-weight:900;letter-spacing:0.5px">Dropped Throw</div>
+                <div style="font-size:10px;opacity:0.7;margin-top:3px">Recipient couldn't handle it</div>
+              </button>
+            </div>`;
+          }
+        }
+
+        function _errorChooseThrow(direction) {
+          if (direction === "bad-throw") {
+            const result = {
+              fielder: _errorFielder,
+              errorPlayer: _errorFielder,
+              errorType: "throwing",
+              throwDir: "bad-throw",
+            };
+            _errorCloseAndCommit(result);
+          } else {
+            // Need to pick the recipient
+            _errorPhase = "recipient";
+            const choiceDiv = document.getElementById("fielder-error-choice");
+            choiceDiv.style.display = "none";
+            const fieldWrap = document.getElementById("fielder-field-wrap");
+            fieldWrap.style.display = "block";
+            qs("fielder-title").textContent = "Who dropped the throw?";
+            qs(
+              "fielder-sub"
+            ).textContent = `${_errorFielder} threw — pick who couldn't handle it`;
+            document.getElementById("fielder-skip-btn").textContent = "← Back";
+            // Reset buttons, mark original fielder as thrower (gold, unselectable)
+            document.querySelectorAll(".fpos-btn").forEach((b) => {
+              b.classList.remove("selected", "fpos-po");
+              if (b.getAttribute("data-pos") === _errorFielder)
+                b.classList.add("fpos-po");
+            });
+          }
+        }
+
+        function _errorCloseAndCommit(result) {
+          qs("fielder-modal").style.display = "none";
+          document.getElementById("fielder-error-choice").style.display =
+            "none";
+          document.getElementById("fielder-field-wrap").style.display = "block";
+          _errorPhase = "fielder";
+          _errorFielder = null;
+          if (_fielderCallback) _fielderCallback(result);
+          _fielderCallback = null;
+        }
+
+        // errorMode: true = multi-phase error capture flow
         function openFielderModal(
           outcome,
           logLabel,
@@ -30944,6 +31052,11 @@
           _fielderPendingPO = null;
           _fielderAssists = [];
           _fielderInAssistMode = false;
+          _errorPhase = "fielder";
+          _errorFielder = null;
+          document.getElementById("fielder-error-choice").style.display =
+            "none";
+          document.getElementById("fielder-field-wrap").style.display = "block";
 
           // Build a position → player name map from the current defensive lineup
           const isHomeDefending = S.isTop;
@@ -30970,29 +31083,78 @@
             }
           });
 
-          // Phase 1: assist selection (who fielded the ball)
-          qs("fielder-title").textContent = "Who fielded the ball?";
-          qs(
-            "fielder-sub"
-          ).textContent = `${logLabel} — ${batter} · tap all who touched it`;
-          const skipBtn = document.getElementById("fielder-skip-btn");
-          if (skipBtn) skipBtn.textContent = "Next →";
-          _fielderInAssistMode = true; // start in "assist" phase (fielding chain)
+          if (errorMode) {
+            // Error flow phase 1: who fielded the ball (always captured)
+            qs("fielder-title").textContent = "Who fielded the ball?";
+            qs(
+              "fielder-sub"
+            ).textContent = `Error — ${batter} · always recorded`;
+            const skipBtn = document.getElementById("fielder-skip-btn");
+            if (skipBtn) skipBtn.textContent = "Skip";
+          } else {
+            // Normal play: Phase 1 = assist selection (who touched the ball)
+            qs("fielder-title").textContent = "Who fielded the ball?";
+            qs(
+              "fielder-sub"
+            ).textContent = `${logLabel} — ${batter} · tap all who touched it`;
+            const skipBtn = document.getElementById("fielder-skip-btn");
+            if (skipBtn) skipBtn.textContent = "Next →";
+            _fielderInAssistMode = true;
+          }
           qs("fielder-modal").style.display = "flex";
         }
 
         function _fielderSelect(pos) {
           // Error mode: single select, immediate callback with position string
           if (_fielderContext?.errorMode) {
-            document
-              .querySelectorAll(".fpos-btn")
-              .forEach((b) => b.classList.remove("selected"));
-            event.currentTarget.classList.add("selected");
-            setTimeout(() => {
-              qs("fielder-modal").style.display = "none";
-              if (_fielderCallback) _fielderCallback(pos);
-              _fielderCallback = null;
-            }, 180);
+            if (_errorPhase === "fielder") {
+              // Highlight selection, then transition to error-type choice
+              document
+                .querySelectorAll(".fpos-btn")
+                .forEach((b) => b.classList.remove("selected"));
+              document
+                .querySelector(`.fpos-btn[data-pos="${pos}"]`)
+                ?.classList.add("selected");
+              _errorFielder = pos;
+              _errorPhase = "error-type";
+              // Switch to choice panel
+              document.getElementById("fielder-field-wrap").style.display =
+                "none";
+              qs("fielder-title").textContent = "Type of error?";
+              qs("fielder-sub").textContent = `${pos} fielded the ball`;
+              document.getElementById("fielder-skip-btn").textContent =
+                "← Back";
+              const btnStyle = `padding:14px 10px;border-radius:10px;cursor:pointer;border:1.5px solid var(--border2);background:var(--surface3);color:var(--text);font-family:'Barlow Condensed',sans-serif;text-align:center;transition:all 0.15s;width:100%;`;
+              const choiceDiv = document.getElementById("fielder-error-choice");
+              choiceDiv.style.display = "block";
+              choiceDiv.innerHTML = `<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:4px">
+                <button onclick="_errorChooseType('fielding')" style="${btnStyle}">
+                  <div style="font-size:15px;font-weight:900;letter-spacing:0.5px">Fielding Error</div>
+                  <div style="font-size:10px;opacity:0.7;margin-top:3px">Bobbled or dropped</div>
+                </button>
+                <button onclick="_errorChooseType('throwing')" style="${btnStyle}">
+                  <div style="font-size:15px;font-weight:900;letter-spacing:0.5px">Throwing Error</div>
+                  <div style="font-size:10px;opacity:0.7;margin-top:3px">Ball was thrown</div>
+                </button>
+              </div>`;
+            } else if (_errorPhase === "recipient") {
+              // Can't pick the original thrower as recipient
+              if (pos === _errorFielder) return;
+              document.querySelectorAll(".fpos-btn").forEach((b) => {
+                if (b.getAttribute("data-pos") !== _errorFielder)
+                  b.classList.remove("selected");
+              });
+              document
+                .querySelector(`.fpos-btn[data-pos="${pos}"]`)
+                ?.classList.add("selected");
+              const result = {
+                fielder: _errorFielder,
+                errorPlayer: pos,
+                errorType: "throwing",
+                throwDir: "dropped",
+              };
+              setTimeout(() => _errorCloseAndCommit(result), 180);
+            }
             return;
           }
 
@@ -31021,10 +31183,74 @@
 
         function _fielderSkip() {
           if (_fielderContext?.errorMode) {
-            // Error mode skip — no fielder
-            qs("fielder-modal").style.display = "none";
-            if (_fielderCallback) _fielderCallback(null);
-            _fielderCallback = null;
+            if (_errorPhase === "fielder") {
+              // No fielder at all — skip entirely
+              qs("fielder-modal").style.display = "none";
+              document.getElementById("fielder-error-choice").style.display =
+                "none";
+              document.getElementById("fielder-field-wrap").style.display =
+                "block";
+              _errorPhase = "fielder";
+              _errorFielder = null;
+              if (_fielderCallback) _fielderCallback(null);
+              _fielderCallback = null;
+            } else if (_errorPhase === "error-type") {
+              // Back to fielder selection
+              _errorPhase = "fielder";
+              _errorFielder = null;
+              document.getElementById("fielder-error-choice").style.display =
+                "none";
+              document.getElementById("fielder-field-wrap").style.display =
+                "block";
+              qs("fielder-title").textContent = "Who fielded the ball?";
+              qs(
+                "fielder-sub"
+              ).textContent = `Error — ${_fielderContext.batter} · always recorded`;
+              document.getElementById("fielder-skip-btn").textContent = "Skip";
+              document
+                .querySelectorAll(".fpos-btn")
+                .forEach((b) => b.classList.remove("selected", "fpos-po"));
+            } else if (_errorPhase === "throw-direction") {
+              // Back to error-type choice
+              _errorPhase = "error-type";
+              qs("fielder-title").textContent = "Type of error?";
+              qs(
+                "fielder-sub"
+              ).textContent = `${_errorFielder} fielded the ball`;
+              const btnStyle = `padding:14px 10px;border-radius:10px;cursor:pointer;border:1.5px solid var(--border2);background:var(--surface3);color:var(--text);font-family:'Barlow Condensed',sans-serif;text-align:center;transition:all 0.15s;width:100%;`;
+              const choiceDiv = document.getElementById("fielder-error-choice");
+              choiceDiv.innerHTML = `<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:4px">
+                <button onclick="_errorChooseType('fielding')" style="${btnStyle}">
+                  <div style="font-size:15px;font-weight:900;letter-spacing:0.5px">Fielding Error</div>
+                  <div style="font-size:10px;opacity:0.7;margin-top:3px">Bobbled or dropped</div>
+                </button>
+                <button onclick="_errorChooseType('throwing')" style="${btnStyle}">
+                  <div style="font-size:15px;font-weight:900;letter-spacing:0.5px">Throwing Error</div>
+                  <div style="font-size:10px;opacity:0.7;margin-top:3px">Ball was thrown</div>
+                </button>
+              </div>`;
+              choiceDiv.style.display = "block";
+            } else if (_errorPhase === "recipient") {
+              // Back to throw-direction
+              _errorPhase = "throw-direction";
+              document.getElementById("fielder-field-wrap").style.display =
+                "none";
+              qs("fielder-title").textContent = "Who committed the error?";
+              qs("fielder-sub").textContent = `${_errorFielder} threw the ball`;
+              const btnStyle = `padding:14px 10px;border-radius:10px;cursor:pointer;border:1.5px solid var(--border2);background:var(--surface3);color:var(--text);font-family:'Barlow Condensed',sans-serif;text-align:center;transition:all 0.15s;width:100%;`;
+              const div = document.getElementById("fielder-error-choice");
+              div.style.display = "block";
+              div.innerHTML = `<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:4px">
+                <button onclick="_errorChooseThrow('bad-throw')" style="${btnStyle}">
+                  <div style="font-size:15px;font-weight:900;letter-spacing:0.5px">Bad Throw</div>
+                  <div style="font-size:10px;opacity:0.7;margin-top:3px">${_errorFielder} threw it poorly</div>
+                </button>
+                <button onclick="_errorChooseThrow('dropped')" style="${btnStyle}">
+                  <div style="font-size:15px;font-weight:900;letter-spacing:0.5px">Dropped Throw</div>
+                  <div style="font-size:10px;opacity:0.7;margin-top:3px">Recipient couldn't handle it</div>
+                </button>
+              </div>`;
+            }
             return;
           }
           if (_fielderInAssistMode) {
