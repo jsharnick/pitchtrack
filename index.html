@@ -1921,12 +1921,16 @@
         width: 22px;
         height: 22px;
         border-radius: 50%;
-        border: 2.5px dashed rgba(255, 255, 255, 0.7);
-        background: rgba(255, 255, 255, 0.18);
+        border: 2.5px dashed rgba(0, 0, 0, 0.5);
+        background: rgba(0, 0, 0, 0.12);
         transform: translate(-50%, -50%);
         pointer-events: none;
         z-index: 5;
         animation: placePulse 1s ease-in-out infinite;
+      }
+      body.dark .zone-placeholder {
+        border-color: rgba(255, 255, 255, 0.7);
+        background: rgba(255, 255, 255, 0.18);
       }
       @keyframes placePulse {
         0%,
