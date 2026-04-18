@@ -5051,32 +5051,34 @@
         width: 100%;
         border-collapse: collapse;
         font-family: "Barlow Condensed", sans-serif;
-        font-size: 13px;
+        font-size: 15px;
       }
       .scout-card-table th {
         background: var(--surface2);
         color: var(--text2);
-        font-weight: 700;
-        font-size: 11px;
+        font-weight: 900;
+        font-size: 12px;
         letter-spacing: 0.8px;
         text-transform: uppercase;
-        padding: 6px 8px;
+        padding: 5px 8px;
         text-align: left;
-        border-bottom: 1px solid var(--border);
+        border-bottom: 2px solid var(--border);
         white-space: nowrap;
       }
       .scout-card-table th.num {
         text-align: center;
       }
       .scout-card-table td {
-        padding: 7px 8px;
-        border-bottom: 1px solid var(--border);
+        padding: 4px 8px;
+        border-bottom: 2px solid var(--border);
         color: var(--text);
         vertical-align: middle;
+        font-weight: 600;
       }
       .scout-card-table td.num {
         text-align: center;
         color: var(--text2);
+        font-weight: 700;
       }
       .scout-card-table tr:last-child td {
         border-bottom: none;
@@ -5167,6 +5169,10 @@
       }
       /* ── Print styles ── */
       @media print {
+        @page {
+          size: 7in 4in;
+          margin: 0.12in 0.15in;
+        }
         body.scout-printing > *:not(#print-scout-frame) {
           display: none !important;
         }
@@ -37381,10 +37387,10 @@
             "*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }",
             'html, body { background: #fff; font-family: "Barlow Condensed", sans-serif; color: #111318;',
             "  -webkit-print-color-adjust: exact; print-color-adjust: exact; }",
-            "@page { size: 8.5in 11in portrait; margin: 0.25in; }",
+            "@page { size: 7in 4in; margin: 0.12in 0.15in; }",
             // No transform here — JS will measure and inject exact scale per page
             ".scout-report-page {",
-            "  width: 8in;", // natural unscaled width — JS scales it to fit
+            "  width: 6.7in;", // natural unscaled width — JS scales it to fit
             "  background: #fff;",
             '  font-family: "Barlow Condensed", sans-serif;',
             "  transform-origin: top left;",
@@ -37396,12 +37402,12 @@
             '.scout-section-title { font-family:"Barlow",sans-serif; font-weight:700; font-size:10px;',
             "  letter-spacing:0.5px; text-transform:uppercase; color:#8a909e;",
             "  border-bottom:2px solid #d4d8e0; padding-bottom:2px; margin-bottom:4px; }",
-            '.scout-table { width:100%; border-collapse:collapse; font-size:9px; font-family:"Barlow",sans-serif; }',
-            '.scout-table th { font-family:"Barlow",sans-serif; font-weight:700; font-size:8px;',
-            "  letter-spacing:0; text-transform:uppercase; color:#8a909e; padding:2px 3px;",
-            "  border-bottom:1.5px solid #d4d8e0; text-align:center; background:#f8f9fb; }",
-            ".scout-table td { padding:2px 3px; border-bottom:1px solid #e8eaee; text-align:center;",
-            '  font-family:"Barlow",sans-serif; font-size:9px; }',
+            '.scout-table { width:100%; border-collapse:collapse; font-size:6.5px; font-family:"Barlow",sans-serif; }',
+            '.scout-table th { font-family:"Barlow",sans-serif; font-weight:700; font-size:6px;',
+            "  letter-spacing:0; text-transform:uppercase; color:#8a909e; padding:1px 2px;",
+            "  border-bottom:1px solid #d4d8e0; text-align:center; background:#f8f9fb; }",
+            ".scout-table td { padding:1px 2px; border-bottom:0.5px solid #e8eaee; text-align:center;",
+            '  font-family:"Barlow",sans-serif; font-size:6.5px; }',
             ".scout-table td:first-child { text-align:left; font-weight:600; color:#4a5060; }",
             ".scout-table tr:last-child td { border-bottom:none; }",
             ".scout-highlight { color:#cc1a1a; font-weight:800; }",
@@ -37437,13 +37443,12 @@
           const autoScaleScript = `
     document.fonts.ready.then(function(){
       var pages = document.querySelectorAll('.scout-report-page');
-      // Printable area at 96dpi: 8in wide x 10.5in tall = 768 x 1008px
-      var printW = 768;
-      var printH = 1008;
+      // Printable area at 96dpi: 6.7in wide x 3.76in tall (7x4in minus margins)
+      var printW = 643;
+      var printH = 340;
       pages.forEach(function(page){
-        // Reset any previous transform so we measure natural size
-        page.style.transform = '';
-        page.style.marginBottom = '';
+        // Reset any previous scale
+        page.style.zoom = '';
         var w = page.scrollWidth;
         var h = page.scrollHeight;
         // Scale to fit both dimensions — use whichever axis is the tighter constraint
@@ -37451,11 +37456,8 @@
         var scaleH = printH / h;
         var scale  = Math.min(scaleX, scaleH, 1); // never scale up, only down
         if(scale < 1){
-          page.style.transform = 'scale(' + scale + ')';
-          page.style.transformOrigin = 'top left';
-          // Collapse the space the scaled element leaves behind
-          // (scaled height = h*scale, but element still occupies h px)
-          page.style.marginBottom = (h * scale - h) + 'px';
+          page.style.zoom = scale;
+          // zoom affects layout flow so page breaks calculate correctly
         }
       });
       window.print();
@@ -37920,6 +37922,48 @@
                 );
               }).length;
 
+              // AVG by pitch family
+              const famStats = {
+                fb: { h: 0, ab: 0 },
+                br: { h: 0, ab: 0 },
+                os: { h: 0, ab: 0 },
+              };
+              const _AB_END = new Set([
+                "single",
+                "double",
+                "triple",
+                "homerun",
+                "groundout",
+                "flyout",
+                "lineout",
+                "strikeout-swinging",
+                "strikeout-looking",
+                "error",
+              ]);
+              const _HIT_END = new Set([
+                "single",
+                "double",
+                "triple",
+                "homerun",
+              ]);
+              pitches.forEach((px) => {
+                const fam = pitchTypeFamily(_normPT(px.pitchType) || "");
+                if (!famStats[fam]) return;
+                if (_AB_END.has(px.outcome)) {
+                  famStats[fam].ab++;
+                  if (_HIT_END.has(px.outcome)) famStats[fam].h++;
+                }
+              });
+              const avgFB = famStats.fb.ab
+                ? _scoutAvg(famStats.fb.h, famStats.fb.ab)
+                : "—";
+              const avgBR = famStats.br.ab
+                ? _scoutAvg(famStats.br.h, famStats.br.ab)
+                : "—";
+              const avgCH = famStats.os.ab
+                ? _scoutAvg(famStats.os.h, famStats.os.ab)
+                : "—";
+
               // Spray bar HTML
               const pullW = Math.round((pull / ipTotal) * 100);
               const centW = Math.round((center / ipTotal) * 100);
@@ -37994,6 +38038,9 @@
                   ? `<span style="font-size:11px;font-weight:700;">${hotPT[0]}</span> <span style="color:var(--text3);font-size:10px;">(${hotPT[1]}H)</span>`
                   : "—"
               }</td>
+              <td class="num">${avgFB}</td>
+              <td class="num">${avgBR}</td>
+              <td class="num">${avgCH}</td>
             </tr>`;
             })
             .join("");
@@ -38133,6 +38180,9 @@
                   <th class="num">2K K%</th>
                   <th class="num">Sw%</th>
                   <th>Hits Off</th>
+                  <th class="num">vs FB</th>
+                  <th class="num">vs BR</th>
+                  <th class="num">vs CH</th>
                 </tr></thead>
                 <tbody>${hitterRows}</tbody>
               </table></div>`
@@ -38311,6 +38361,47 @@
                     ? "Oppo"
                     : "Middle";
                 const domBB = gb > fb && gb > ld ? "GB" : fb > ld ? "FB" : "LD";
+                // AVG by pitch family
+                const famStatsPr = {
+                  fb: { h: 0, ab: 0 },
+                  br: { h: 0, ab: 0 },
+                  os: { h: 0, ab: 0 },
+                };
+                const _AB_ENDp = new Set([
+                  "single",
+                  "double",
+                  "triple",
+                  "homerun",
+                  "groundout",
+                  "flyout",
+                  "lineout",
+                  "strikeout-swinging",
+                  "strikeout-looking",
+                  "error",
+                ]);
+                const _HIT_ENDp = new Set([
+                  "single",
+                  "double",
+                  "triple",
+                  "homerun",
+                ]);
+                pitches.forEach((px) => {
+                  const fam = pitchTypeFamily(_normPT(px.pitchType) || "");
+                  if (!famStatsPr[fam]) return;
+                  if (_AB_ENDp.has(px.outcome)) {
+                    famStatsPr[fam].ab++;
+                    if (_HIT_ENDp.has(px.outcome)) famStatsPr[fam].h++;
+                  }
+                });
+                const avgFBp = famStatsPr.fb.ab
+                  ? _scoutAvg(famStatsPr.fb.h, famStatsPr.fb.ab)
+                  : "—";
+                const avgBRp = famStatsPr.br.ab
+                  ? _scoutAvg(famStatsPr.br.h, famStatsPr.br.ab)
+                  : "—";
+                const avgCHp = famStatsPr.os.ab
+                  ? _scoutAvg(famStatsPr.os.h, famStatsPr.os.ab)
+                  : "—";
                 return `<tr>
                 <td style="font-weight:700;">${p.name}</td>
                 <td class="num">${p.num || "—"}</td>
@@ -38323,7 +38414,7 @@
                 <td class="num">${_scoutPct(p.bb, p.pa)}</td>
                 <td>${
                   inPlay.length
-                    ? `<div class="spray-bar"><div class="pull-seg" style="width:${pullW}%"></div><div class="ctr-seg" style="width:${centW}%"></div><div class="oppo-seg" style="width:${oppoW}%"></div></div><div style="font-size:9px;font-weight:700;margin-top:2px;"><span style="color:#c03030">${pullW}% Pull</span> <span style="color:#888">${centW}% Mid</span> <span style="color:#1e6a2a">${oppoW}% Oppo</span></div>`
+                    ? `<div class="spray-bar"><div class="pull-seg" style="width:${pullW}%"></div><div class="ctr-seg" style="width:${centW}%"></div><div class="oppo-seg" style="width:${oppoW}%"></div></div><div style="font-size:6px;font-weight:700;margin-top:1px;"><span style="color:#c03030">${pullW}% Pull</span> <span style="color:#888">${centW}% Mid</span> <span style="color:#1e6a2a">${oppoW}% Oppo</span></div>`
                     : "—"
                 }</td>
                 <td><span class="pill ${
@@ -38349,6 +38440,9 @@
                   pitches.length ? _scoutPct(swings, pitches.length) : "—"
                 }</td>
                 <td>${hotPT ? `${hotPT[0]} (${hotPT[1]}H)` : "—"}</td>
+                <td class="num">${avgFBp}</td>
+                <td class="num">${avgBRp}</td>
+                <td class="num">${avgCHp}</td>
               </tr>`;
               })
               .join("");
@@ -38359,6 +38453,7 @@
                 <th class="num">K%</th><th class="num">BB%</th>
                 <th>Spray (Pull·Ctr·Oppo)</th><th>Profile</th>
                 <th class="num">FP Sw%</th><th class="num">2K K%</th><th class="num">Sw%</th><th>Hits Off</th>
+                <th class="num">vs FB</th><th class="num">vs BR</th><th class="num">vs CH</th>
               </tr></thead>
               <tbody>${rows}</tbody>
             </table>
