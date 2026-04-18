@@ -38223,21 +38223,21 @@
           const printCSS = `
             <style>
               * { box-sizing: border-box; }
-              body { font-family: 'Arial', sans-serif; font-size: 11px; margin: 0; color: #111; background: #fff; }
-              h1 { font-size: 16px; font-weight: 900; letter-spacing: 1px; text-transform: uppercase; margin: 0 0 6px; }
-              h2 { font-size: 13px; font-weight: 700; letter-spacing: 0.5px; text-transform: uppercase; margin: 0 0 6px; color: #555; border-bottom: 2px solid #222; padding-bottom: 4px; }
-              .page { padding: 14px 16px; page-break-after: always; }
+              body { font-family: 'Arial Narrow', 'Barlow Condensed', Arial, sans-serif; font-size: 7px; margin: 0; color: #111; background: #fff; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+              h1 { font-size: 10px; font-weight: 900; letter-spacing: 0.5px; text-transform: uppercase; margin: 0 0 3px; }
+              h2 { font-size: 8px; font-weight: 700; letter-spacing: 0.3px; text-transform: uppercase; margin: 0 0 3px; color: #555; border-bottom: 1px solid #222; padding-bottom: 2px; }
+              .page { padding: 6px 8px; page-break-after: always; overflow: hidden; }
               .page:last-child { page-break-after: avoid; }
-              table { width: 100%; border-collapse: collapse; font-size: 10px; margin-bottom: 10px; }
-              th { background: #222; color: #fff; font-weight: 700; font-size: 9px; letter-spacing: 0.6px; text-transform: uppercase; padding: 4px 5px; text-align: left; white-space: nowrap; }
+              table { width: 100%; border-collapse: collapse; font-size: 7px; margin-bottom: 4px; }
+              th { background: #333; color: #fff; font-weight: 700; font-size: 6px; letter-spacing: 0; text-transform: uppercase; padding: 1.5px 2px; text-align: left; }
               th.num, td.num { text-align: center; }
-              td { padding: 4px 5px; border-bottom: 1px solid #e0e0e0; vertical-align: middle; }
+              td { padding: 1.5px 2px; border-bottom: 0.5px solid #e0e0e0; vertical-align: middle; font-size: 7px; }
               tr:nth-child(even) td { background: #f9f9f9; }
-              .spray-bar { display: flex; height: 8px; border-radius: 3px; overflow: hidden; min-width: 60px; }
+              .spray-bar { display: flex; height: 5px; border-radius: 2px; overflow: hidden; }
               .pull-seg { background: #e84a4a; height: 100%; }
               .ctr-seg { background: #aaa; height: 100%; }
               .oppo-seg { background: #2d8a3e; height: 100%; }
-              .pill { display: inline-block; padding: 1px 5px; border-radius: 8px; font-size: 9px; font-weight: 700; }
+              .pill { display: inline-block; padding: 0px 2px; border-radius: 4px; font-size: 6px; font-weight: 700; }
               .pill-pull { background: #fde8e8; color: #c03030; }
               .pill-oppo { background: #d4f0db; color: #1e6a2a; }
               .pill-middle { background: #eee; color: #555; }
@@ -38245,9 +38245,9 @@
               .pill-gb { background: #d4f0db; color: #1e6a2a; }
               .pill-fb { background: #fde8e8; color: #c03030; }
               .pill-ld { background: #fff8d4; color: #9a7000; }
-              .legend { font-size: 9px; color: #888; margin-top: 4px; }
-              .legend span { margin-right: 10px; }
-              .dsided-note { font-size: 9px; color: #888; text-align: center; margin: 8px 0 0; border-top: 1px dashed #ccc; padding-top: 6px; }
+              .legend { font-size: 6px; color: #888; margin-top: 3px; }
+              .legend span { margin-right: 6px; }
+              .dsided-note { font-size: 6px; color: #888; text-align: center; margin: 4px 0 0; border-top: 0.5px dashed #ccc; padding-top: 3px; }
             </style>`;
 
           const teamName = _scoutSelectedTeam;
@@ -38414,7 +38414,7 @@
                 <td class="num">${_scoutPct(p.bb, p.pa)}</td>
                 <td>${
                   inPlay.length
-                    ? `<div class="spray-bar"><div class="pull-seg" style="width:${pullW}%"></div><div class="ctr-seg" style="width:${centW}%"></div><div class="oppo-seg" style="width:${oppoW}%"></div></div><div style="font-size:6px;font-weight:700;margin-top:1px;"><span style="color:#c03030">${pullW}% Pull</span> <span style="color:#888">${centW}% Mid</span> <span style="color:#1e6a2a">${oppoW}% Oppo</span></div>`
+                    ? `<div class="spray-bar"><div class="pull-seg" style="width:${pullW}%"></div><div class="ctr-seg" style="width:${centW}%"></div><div class="oppo-seg" style="width:${oppoW}%"></div></div><div style="font-size:5.5px;margin-top:1px;white-space:nowrap;"><span style="color:#c03030">${pullW}P</span>·<span style="color:#888">${centW}M</span>·<span style="color:#1e6a2a">${oppoW}O</span></div>`
                     : "—"
                 }</td>
                 <td><span class="pill ${
