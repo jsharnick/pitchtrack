@@ -6792,6 +6792,34 @@
                         >
                       </button>
                       <button
+                        onclick="commitIntentionalWalk()"
+                        onmouseout="this.style.borderColor='var(--border2)';this.style.color='var(--text3)'"
+                        onmouseover="this.style.borderColor='var(--accent)';this.style.color='var(--accent)'"
+                        style="
+                          display: flex;
+                          align-items: center;
+                          gap: 5px;
+                          padding: 3px 8px 3px 6px;
+                          background: var(--surface2);
+                          border: 1px solid var(--border2);
+                          border-radius: 5px;
+                          cursor: pointer;
+                          transition: all 0.14s;
+                          color: var(--text3);
+                        "
+                        title="Intentional Walk"
+                      >
+                        <span
+                          style="
+                            font-family: 'Barlow Condensed', sans-serif;
+                            font-weight: 700;
+                            font-size: 10px;
+                            letter-spacing: 1px;
+                          "
+                          >IBB</span
+                        >
+                      </button>
+                      <button
                         onclick="openPitchClockModal()"
                         onmouseout="this.style.borderColor='var(--border2)';this.style.color='var(--text3)'"
                         onmouseover="this.style.borderColor='var(--accent)';this.style.color='var(--accent)'"
@@ -14380,6 +14408,9 @@
           renderLiveScoutingTab();
           checkPitchCountWarning(p);
 
+          // Auto-save every pitch (debounced 2s — catches crashes mid-inning)
+          _scheduleAutoSave();
+
           // Build blurb for mid-AB pitches immediately; AB-ending ones update after resolution
           const _blurbCount = { balls: S.balls, strikes: S.strikes };
 
@@ -19614,6 +19645,123 @@
         }
 
         // ===================== SAVE GAME =====================
+        // ── Auto-save helpers ─────────────────────────────────────────────────
+        // Debounced per-pitch save — waits 2s after last pitch before writing.
+        // Prevents hammering storage on rapid pitch entry while still catching crashes.
+        let _autoSaveTimer = null;
+        function _scheduleAutoSave() {
+          clearTimeout(_autoSaveTimer);
+          _autoSaveTimer = setTimeout(() => {
+            if (S.gameId || (S.pitchLog && S.pitchLog.length > 0)) {
+              saveGame(true).catch(() => {});
+            }
+          }, 2000);
+        }
+
+        // Synchronous emergency write to localStorage on page hide/unload.
+        // Cannot await async storage here — write directly so nothing is lost.
+        function _emergencyWrite() {
+          try {
+            if (!S.pitchLog || S.pitchLog.length === 0) return;
+            if (!S.gameId) S.gameId = "ptgame_" + Date.now();
+            const awayTeam =
+              (
+                document.getElementById("away-name-input") || {}
+              ).value?.trim() || "AWAY";
+            const homeTeam =
+              (
+                document.getElementById("home-name-input") || {}
+              ).value?.trim() || "HOME";
+            // Build a minimal game snapshot — same shape as saveGame
+            const snap = {
+              id: S.gameId,
+              date: new Date().toISOString().split("T")[0],
+              awayTeam,
+              homeTeam,
+              awayScore: S.awayScore,
+              homeScore: S.homeScore,
+              innings: S.inning,
+              pitchLog: S.pitchLog,
+              inningRuns: S.inningRuns,
+              gameLog: S.gameLog,
+              awayBatters: [],
+              homeBatters: [],
+              awayPitchers: S.pitchersAway
+                ? S.pitchersAway.map((p) => ({ ...p }))
+                : [],
+              homePitchers: S.pitchersHome
+                ? S.pitchersHome.map((p) => ({ ...p }))
+                : [],
+              fieldingStats: JSON.parse(JSON.stringify(S.fieldingStats || {})),
+              totalPitches: S.pitchLog.length,
+              resumable: {
+                gameId: S.gameId,
+                awayScore: S.awayScore,
+                homeScore: S.homeScore,
+                inning: S.inning,
+                isTop: S.isTop,
+                outs: S.outs,
+                balls: S.balls,
+                strikes: S.strikes,
+                bases: { ...S.bases },
+                awayBatterIdx: S.awayBatterIdx,
+                homeBatterIdx: S.homeBatterIdx,
+                lineupAway: S.lineupAway
+                  ? S.lineupAway.map((p) => ({ ...p }))
+                  : [],
+                lineupHome: S.lineupHome
+                  ? S.lineupHome.map((p) => ({ ...p }))
+                  : [],
+                pitchersAway: S.pitchersAway
+                  ? S.pitchersAway.map((p) => ({ ...p }))
+                  : [],
+                pitchersHome: S.pitchersHome
+                  ? S.pitchersHome.map((p) => ({ ...p }))
+                  : [],
+                pitchLog: S.pitchLog.map((p) => ({ ...p })),
+                inningRuns: [...S.inningRuns],
+                gameLog: [...S.gameLog],
+                batterStats: JSON.parse(JSON.stringify(S.batterStats || {})),
+                lineupResults: JSON.parse(
+                  JSON.stringify(S.lineupResults || {})
+                ),
+                currentAtBatPitches: [...(S.currentAtBatPitches || [])],
+                pitchCount: S.pitchCount,
+              },
+            };
+            window.localStorage.setItem("pt_" + S.gameId, JSON.stringify(snap));
+            // Update team index synchronously
+            try {
+              const teamsRaw = window.localStorage.getItem(
+                "pt_pitchtrack_teams"
+              );
+              const teams = teamsRaw ? JSON.parse(teamsRaw) : [];
+              [awayTeam, homeTeam].forEach((t) => {
+                const lower = t.toLowerCase();
+                if (!teams.find((x) => x.toLowerCase() === lower))
+                  teams.push(t);
+              });
+              window.localStorage.setItem(
+                "pt_pitchtrack_teams",
+                JSON.stringify(teams)
+              );
+            } catch (e) {}
+          } catch (e) {}
+        }
+
+        // Save when tab becomes hidden (user switches apps, closes tab, etc.)
+        document.addEventListener("visibilitychange", () => {
+          if (document.visibilityState === "hidden") {
+            _emergencyWrite();
+          }
+        });
+
+        // Last-resort synchronous write on page unload
+        window.addEventListener("beforeunload", () => {
+          _emergencyWrite();
+        });
+        // ─────────────────────────────────────────────────────────────────────
+
         async function saveGame(silent = false) {
           const awayTeam = qs("away-name-input").value.trim() || "AWAY";
           const homeTeam = qs("home-name-input").value.trim() || "HOME";
@@ -29355,7 +29503,7 @@
 
         function aggregateBattersFromGame(batters) {
           return (batters || [])
-            .filter((b) => (b.ab || 0) + (b.bb || 0) + (b.hbp || 0) > 0)
+            .filter((b) => (b.pa || 0) > 0)
             .map((b) => ({ ...b, games: 1 }));
         }
         function aggregatePitchersFromGame(pitchers) {
@@ -30836,6 +30984,26 @@
         }
         function closePickoffModal() {
           qs("pickoff-modal").style.display = "none";
+        }
+
+        function commitIntentionalWalk() {
+          const p = activePitcher();
+          if (p) {
+            p.bb = (p.bb || 0) + 1;
+            p.ibb = (p.ibb || 0) + 1;
+            p.bf = (p.bf || 0) + 1;
+          }
+          toast("Intentional Walk!");
+          logEvent(
+            "🚶",
+            "Intentional Walk (IBB)",
+            `${currentBatter()?.name || "Batter"} takes first · ${
+              p ? p.name : ""
+            }`
+          );
+          recordAtBatResult("BB", "BB");
+          advanceOnWalk();
+          _scheduleAutoSave();
         }
 
         function openRunnersModal() {
