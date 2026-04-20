@@ -85,7 +85,7 @@
         position: relative;
         z-index: 1;
         width: 100%;
-        max-width: 860px;
+        max-width: 1200px;
         padding: 32px;
         display: flex;
         flex-direction: column;
@@ -127,7 +127,7 @@
 
       .hs-cards {
         display: grid;
-        grid-template-columns: 1fr 1fr 1fr 1fr;
+        grid-template-columns: repeat(5, 1fr);
         gap: 18px;
         width: 100%;
       }
@@ -136,12 +136,12 @@
         background: rgba(255, 255, 255, 0.055);
         border: 1.5px solid rgba(255, 255, 255, 0.1);
         border-radius: 18px;
-        padding: 20px 22px 18px;
+        padding: 16px 16px 14px;
         cursor: pointer;
         transition: all 0.22s cubic-bezier(0.22, 1, 0.36, 1);
         display: flex;
         flex-direction: column;
-        gap: 8px;
+        gap: 6px;
         backdrop-filter: blur(16px);
         position: relative;
         overflow: hidden;
@@ -172,20 +172,20 @@
       .hs-card-title {
         font-family: "Barlow Condensed", sans-serif;
         font-weight: 900;
-        font-size: 22px;
+        font-size: 19px;
         color: #fff;
         letter-spacing: 1px;
         text-transform: uppercase;
         text-align: center;
       }
       .hs-card-desc {
-        font-size: 11.5px;
+        font-size: 10.5px;
         color: rgba(255, 255, 255, 0.5);
-        line-height: 1.5;
+        line-height: 1.45;
         text-align: center;
       }
       .hs-tags {
-        display: flex;
+        display: none;
         flex-wrap: wrap;
         gap: 4px;
         margin-top: 1px;
@@ -203,7 +203,7 @@
       }
       .hs-cta {
         margin-top: auto;
-        padding: 8px 0;
+        padding: 7px 0;
         border-radius: 9px;
         background: rgba(255, 255, 255, 0.08);
         border: 1px solid rgba(255, 255, 255, 0.14);
@@ -350,6 +350,186 @@
       }
 
       /* ═══ PANELS ═══ */
+      /* ── Dark mode theme toggle ── */
+      .theme-toggle-btn {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        padding: 4px 10px;
+        border-radius: 20px;
+        cursor: pointer;
+        border: 1px solid rgba(255, 255, 255, 0.18);
+        background: rgba(255, 255, 255, 0.08);
+        color: rgba(255, 255, 255, 0.7);
+        font-family: "Barlow Condensed", sans-serif;
+        font-weight: 700;
+        font-size: 11px;
+        letter-spacing: 1px;
+        text-transform: uppercase;
+        transition: all 0.18s;
+        flex-shrink: 0;
+        margin-left: 8px;
+      }
+      .theme-toggle-btn:hover {
+        background: rgba(255, 255, 255, 0.16);
+        color: #fff;
+      }
+      #theme-fab-REMOVED {
+        position: fixed;
+        bottom: 20px;
+        right: 20px;
+        z-index: 600;
+        width: 44px;
+        height: 44px;
+        border-radius: 50%;
+        border: none;
+        background: var(--surface);
+        box-shadow: 0 2px 12px rgba(0, 0, 0, 0.18);
+        cursor: pointer;
+        font-size: 20px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.18s;
+        color: var(--text2);
+      }
+      #theme-fab-REMOVED:hover {
+        box-shadow: 0 4px 18px rgba(0, 0, 0, 0.28);
+        transform: scale(1.08);
+      }
+      /* Dark mode overrides for hardcoded light colors */
+      body.dark .data-table th,
+      body.dark .data-table td {
+        border-color: var(--border);
+      }
+      body.dark .data-table th {
+        background: var(--surface2);
+        color: var(--text2);
+      }
+      body.dark .data-table td {
+        background: var(--surface);
+        color: var(--text);
+      }
+      body.dark .player-row:hover td {
+        background: var(--surface2) !important;
+      }
+      body.dark input,
+      body.dark select,
+      body.dark textarea {
+        background: var(--surface2);
+        color: var(--text);
+        border-color: var(--border2);
+      }
+      /* Tracker: pitch buttons */
+      body.dark .outcome-btn {
+        background: var(--surface2);
+        color: var(--text);
+        border-color: var(--border2);
+      }
+      body.dark .pitch-type-btn {
+        background: var(--surface2);
+        color: var(--text2);
+        border-color: var(--border2);
+      }
+      body.dark .pitch-type-btn.selected {
+        background: rgba(204, 26, 26, 0.18);
+      }
+      /* Velocity input wrapper */
+      body.dark .vel-wrap {
+        background: var(--surface2);
+        border-color: var(--border2);
+      }
+      /* Strike zone canvas background */
+      body.dark #strike-zone {
+        background: var(--surface2);
+        border-color: var(--border2);
+      }
+      /* Scout cards */
+      body.dark .scout-card {
+        background: var(--surface2) !important;
+        border-color: var(--border) !important;
+        color: var(--text) !important;
+      }
+      body.dark .scout-report-page,
+      body.dark .scout-section {
+        background: var(--surface) !important;
+        color: var(--text) !important;
+      }
+      body.dark .scout-table th {
+        background: var(--surface3) !important;
+        color: var(--text2) !important;
+        border-color: var(--border) !important;
+      }
+      body.dark .scout-table td {
+        color: var(--text2) !important;
+        border-color: var(--border) !important;
+      }
+      body.dark .scout-bar-track {
+        background: var(--surface3) !important;
+      }
+      body.dark .scout-section-title {
+        color: var(--text3) !important;
+      }
+      /* Save modal */
+      body.dark .sm-box {
+        background: var(--surface);
+        border-color: var(--border2);
+        color: var(--text);
+      }
+      body.dark .sm-skip {
+        background: var(--surface2);
+        color: var(--text2);
+        border-color: var(--border) !important;
+      }
+      body.dark .sm-skip:hover {
+        background: var(--surface3);
+        color: var(--text);
+      }
+      body.dark #home-screen {
+        background: var(--bg);
+      }
+      /* Hub + tracker panel backgrounds */
+      body.dark #hub-app,
+      body.dark #panel-tracker,
+      body.dark #panel-myteam,
+      body.dark #panel-opponents,
+      body.dark #panel-scout-overview {
+        background: var(--bg);
+      }
+      /* Hub misc */
+      body.dark .section-title {
+        color: var(--text2);
+      }
+      body.dark .empty-state {
+        color: var(--text3);
+      }
+      body.dark .tab-row {
+        border-color: var(--border);
+      }
+      body.dark .tab {
+        color: var(--text2);
+      }
+      body.dark .tab.active,
+      body.dark .tab:hover {
+        color: var(--accent);
+      }
+      /* Hub top tabs */
+      body.dark .hub-top-tab {
+        color: var(--text2);
+      }
+      body.dark .hub-top-tab:hover {
+        color: var(--text);
+      }
+      body.dark .hub-top-tab.active {
+        color: var(--accent);
+      }
+      /* Page header text */
+      body.dark .page-title {
+        color: var(--text);
+      }
+      body.dark .page-sub {
+        color: var(--text2);
+      }
       #panel-wrap {
         position: fixed;
         top: 44px;
@@ -521,6 +701,27 @@
         --blue: #1a5acc;
         --sky: #1a88b8;
       }
+      body.dark {
+        --bg: #0f1117;
+        --surface: #1a1d27;
+        --surface2: #22263a;
+        --surface3: #2a2e40;
+        --border: #2e3248;
+        --border2: #3a3f58;
+        --text: #e8eaf0;
+        --text2: #9da3b8;
+        --text3: #5c6280;
+        --strike: #e05050;
+        --klook: #f07830;
+        --ball: #4a80e8;
+        --foul: #d08030;
+        --hit: #3ab86a;
+        --hbp: #aa44ee;
+        --green: #3ab86a;
+        --blue: #4a80e8;
+        --sky: #3aaad8;
+        --gold: #d4a020;
+      }
       * {
         margin: 0;
         padding: 0;
@@ -686,6 +887,13 @@
         box-shadow: 0 0 12px rgba(245, 200, 66, 0.9);
         transform: translate(-50%, -50%) scale(1.18);
       }
+      .fpos-btn.fpos-po {
+        background: #cc7a00;
+        border-color: #cc7a00;
+        opacity: 0.7;
+        cursor: default;
+        transform: translate(-50%, -50%);
+      }
       .count-dots {
         display: flex;
         gap: 5px;
@@ -846,6 +1054,7 @@
         font-weight: 900;
         font-size: 36px;
         line-height: 1;
+        color: var(--text);
       }
       .scout-big-lbl {
         font-size: 8px;
@@ -1713,12 +1922,16 @@
         width: 22px;
         height: 22px;
         border-radius: 50%;
-        border: 2.5px dashed rgba(0, 0, 0, 0.45);
-        background: rgba(0, 0, 0, 0.07);
+        border: 2.5px dashed rgba(0, 0, 0, 0.5);
+        background: rgba(0, 0, 0, 0.12);
         transform: translate(-50%, -50%);
         pointer-events: none;
         z-index: 5;
         animation: placePulse 1s ease-in-out infinite;
+      }
+      body.dark .zone-placeholder {
+        border-color: rgba(255, 255, 255, 0.7);
+        background: rgba(255, 255, 255, 0.18);
       }
       @keyframes placePulse {
         0%,
@@ -1915,7 +2128,7 @@
         padding: 5px 6px;
         border: 1.5px solid var(--border2);
         border-radius: 7px;
-        background: #ffffff;
+        background: var(--surface);
         color: var(--text2);
         font-family: "Barlow Condensed", sans-serif;
         font-weight: 700;
@@ -2072,7 +2285,7 @@
         display: flex;
         align-items: center;
         gap: 4px;
-        background: #ffffff;
+        background: var(--surface);
         border: 1px solid var(--border);
         border-radius: 5px;
         padding: 4px 7px;
@@ -2111,7 +2324,7 @@
         padding: 5px 4px;
         border: 1px solid var(--border2);
         border-radius: 5px;
-        background: #ffffff;
+        background: var(--surface);
         color: var(--text2);
         font-family: "Barlow Condensed", sans-serif;
         font-weight: 700;
@@ -2178,7 +2391,7 @@
       }
 
       #play-blurb-wrap {
-        background: #ffffff;
+        background: var(--surface);
         border-top: 1px solid var(--border);
         border-bottom: 1px solid var(--border);
         padding: 7px 16px;
@@ -2231,7 +2444,7 @@
         margin-left: 4px;
       }
       #ab-strip {
-        background: #ffffff;
+        background: var(--surface);
         border-top: 1px solid var(--border);
         padding: 6px 12px;
         display: flex;
@@ -2540,7 +2753,7 @@
         display: flex;
       }
       .modal-box {
-        background: #ffffff;
+        background: var(--surface2);
         border: 1px solid var(--border2);
         border-radius: 14px;
         padding: 22px;
@@ -2650,7 +2863,7 @@
         align-items: center;
         gap: 10px;
         padding: 8px 11px;
-        background: #ffffff;
+        background: var(--surface);
         border: 1px solid var(--border2);
         border-radius: 7px;
         cursor: pointer;
@@ -2727,7 +2940,7 @@
         padding: 9px 6px;
         border: 1.5px solid var(--border2);
         border-radius: 7px;
-        background: #ffffff;
+        background: var(--surface);
         color: var(--text2);
         font-family: "Barlow Condensed", sans-serif;
         font-weight: 700;
@@ -3016,6 +3229,20 @@
         --green: #1a8a3a;
         --blue: #1a5acc;
         --gold: #b8860b;
+      }
+      body.dark {
+        --bg: #0f1117;
+        --surface: #1a1d27;
+        --surface2: #22263a;
+        --surface3: #2a2e40;
+        --border: #2e3248;
+        --border2: #3a3f58;
+        --text: #e8eaf0;
+        --text2: #9da3b8;
+        --text3: #5c6280;
+        --green: #3ab86a;
+        --blue: #4a80e8;
+        --gold: #d4a020;
       }
       * {
         margin: 0;
@@ -3833,26 +4060,41 @@
         }
         .hs-cards {
           grid-template-columns: 1fr;
-          gap: 14px;
+          gap: 10px;
         }
         .hs-card {
-          padding: 24px 20px;
+          padding: 14px 16px 12px;
+          gap: 5px;
+          flex-direction: row;
+          align-items: center;
+          text-align: left;
+        }
+        .hs-card > div[style] {
+          text-align: left;
+          flex: 1;
         }
         .hs-card-title {
-          font-size: 22px;
+          text-align: left;
         }
         .hs-card-desc {
-          font-size: 12px;
-        }
-        .hs-tags {
-          gap: 4px;
-        }
-        .hs-tag {
-          font-size: 7.5px;
+          text-align: left;
         }
         .hs-cta {
-          font-size: 13px;
-          padding: 9px 0;
+          display: none;
+        }
+        .hs-card-title {
+          font-size: 17px;
+        }
+        .hs-card-desc {
+          font-size: 10px;
+          line-height: 1.4;
+        }
+        .hs-tags {
+          display: none;
+        }
+        .hs-cta {
+          font-size: 12px;
+          padding: 7px 0;
         }
 
         /* ── KEEP: hides preview button on real mobile devices ── */
@@ -4227,7 +4469,7 @@
           margin-bottom: 14px;
         }
         .mob-score-card {
-          background: #fff;
+          background: var(--surface);
           border: 1px solid var(--border);
           border-radius: 10px;
           padding: 12px;
@@ -4255,7 +4497,7 @@
 
         /* pitcher/batter info row */
         .mob-pb-row {
-          background: #fff;
+          background: var(--surface);
           border: 1px solid var(--border);
           border-radius: 10px;
           padding: 12px 14px;
@@ -4737,6 +4979,208 @@
         flex-direction: column;
         overflow: hidden;
         background: #f0f2f5;
+      }
+      /* ── Scouting Overview panel ── */
+      #panel-scout-overview {
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+        background: var(--bg);
+      }
+      #scout-overview-header {
+        padding: 14px 20px 10px;
+        border-bottom: 1px solid var(--border);
+        flex-shrink: 0;
+      }
+      #scout-overview-header h2 {
+        font-family: "Barlow Condensed", sans-serif;
+        font-weight: 900;
+        font-size: 22px;
+        color: var(--text);
+        margin: 0 0 10px;
+        letter-spacing: 0.5px;
+      }
+      #scout-team-btns {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+      }
+      .scout-team-btn {
+        padding: 6px 14px;
+        border-radius: 20px;
+        border: 1.5px solid var(--border2);
+        background: var(--surface);
+        color: var(--text2);
+        font-family: "Barlow Condensed", sans-serif;
+        font-weight: 700;
+        font-size: 13px;
+        cursor: pointer;
+        transition: all 0.15s;
+        letter-spacing: 0.5px;
+      }
+      .scout-team-btn:hover {
+        border-color: var(--accent);
+        color: var(--accent);
+      }
+      .scout-team-btn.active {
+        background: var(--accent);
+        border-color: var(--accent);
+        color: #fff;
+      }
+      #scout-overview-body {
+        flex: 1;
+        overflow-y: auto;
+        padding: 16px 20px;
+      }
+      /* Scouting card tables */
+      .scout-card-section {
+        margin-bottom: 28px;
+      }
+      .scout-card-section-title {
+        font-family: "Barlow Condensed", sans-serif;
+        font-weight: 900;
+        font-size: 16px;
+        letter-spacing: 1px;
+        text-transform: uppercase;
+        color: var(--text2);
+        margin: 0 0 10px;
+        padding-bottom: 4px;
+        border-bottom: 2px solid var(--border);
+      }
+      .scout-card-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-family: "Barlow Condensed", sans-serif;
+        font-size: 15px;
+      }
+      .scout-card-table th {
+        background: var(--surface2);
+        color: var(--text2);
+        font-weight: 900;
+        font-size: 12px;
+        letter-spacing: 0.8px;
+        text-transform: uppercase;
+        padding: 5px 8px;
+        text-align: left;
+        border-bottom: 2px solid var(--border);
+        white-space: nowrap;
+      }
+      .scout-card-table th.num {
+        text-align: center;
+      }
+      .scout-card-table td {
+        padding: 4px 8px;
+        border-bottom: 2px solid var(--border);
+        color: var(--text);
+        vertical-align: middle;
+        font-weight: 600;
+      }
+      .scout-card-table td.num {
+        text-align: center;
+        color: var(--text2);
+        font-weight: 700;
+      }
+      .scout-card-table tr:last-child td {
+        border-bottom: none;
+      }
+      .scout-card-table tr:hover td {
+        background: var(--surface);
+      }
+      .scout-spray-bar {
+        display: flex;
+        height: 10px;
+        border-radius: 4px;
+        overflow: hidden;
+        min-width: 80px;
+        gap: 1px;
+      }
+      .scout-spray-seg {
+        height: 100%;
+        transition: width 0.3s;
+      }
+      .scout-tendency-pill {
+        display: inline-block;
+        padding: 2px 7px;
+        border-radius: 10px;
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: 0.5px;
+      }
+      .pill-pull {
+        background: rgba(232, 74, 74, 0.12);
+        color: #e84a4a;
+      }
+      .pill-oppo {
+        background: rgba(45, 138, 62, 0.15);
+        color: #2d8a3e;
+      }
+      .pill-middle {
+        background: rgba(150, 150, 150, 0.15);
+        color: #888;
+      }
+      .pill-center {
+        background: rgba(150, 150, 150, 0.15);
+        color: #888;
+      }
+      .pill-gb {
+        background: rgba(45, 138, 62, 0.12);
+        color: #2d8a3e;
+      }
+      .pill-fb {
+        background: rgba(232, 74, 74, 0.1);
+        color: #e84a4a;
+      }
+      .pill-ld {
+        background: rgba(232, 200, 74, 0.18);
+        color: #e8c84a;
+      }
+      .pill-k {
+        background: rgba(204, 26, 26, 0.12);
+        color: var(--accent);
+      }
+      .pill-bb {
+        background: rgba(106, 232, 122, 0.15);
+        color: #4ae88a;
+      }
+      .scout-print-bar {
+        display: flex;
+        gap: 10px;
+        margin-bottom: 16px;
+        align-items: center;
+      }
+      .scout-print-btn {
+        padding: 8px 18px;
+        border-radius: 8px;
+        border: 1.5px solid var(--border2);
+        background: var(--surface2);
+        color: var(--text);
+        font-family: "Barlow Condensed", sans-serif;
+        font-weight: 700;
+        font-size: 13px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        transition: all 0.15s;
+      }
+      .scout-print-btn:hover {
+        border-color: var(--accent);
+        color: var(--accent);
+      }
+      /* ── Print styles ── */
+      @media print {
+        @page {
+          size: 7in 4in;
+          margin: 0.12in 0.15in;
+        }
+        body.scout-printing > *:not(#print-scout-frame) {
+          display: none !important;
+        }
+        body.scout-printing #print-scout-frame {
+          display: block !important;
+          position: static;
+          width: 100%;
+        }
       }
       /* ── Opponents: list-of-tiles view ── */
       .opp-tiles-grid {
@@ -5335,6 +5779,18 @@
             </div>
             <div class="hs-cta">Manage Opponents</div>
           </div>
+          <div class="hs-card" onclick="openPanel('scout-overview')">
+            <div class="hs-card-icon"></div>
+            <div style="text-align: center; width: 100%">
+              <div class="hs-card-title">Scouting Cards</div>
+              <div class="hs-card-desc">
+                Printable scouting cards for any team in your game history.
+                Hitter spray tendencies, pitcher arsenals, count splits — one
+                page, ready for the dugout.
+              </div>
+            </div>
+            <div class="hs-cta">View Scouting Cards</div>
+          </div>
         </div>
         <!-- ── KEEP: Mobile Preview button — localhost/Live Server only, hidden everywhere else via CSS+JS ── -->
         <div id="mob-preview-wrap" style="margin-top: 24px; text-align: center">
@@ -5381,6 +5837,30 @@
           YAK FACTORY · WHERE TRADITION MEETS INNOVATION
         </div>
       </div>
+      <button
+        id="hs-theme-btn"
+        onclick="toggleDarkMode()"
+        title="Toggle dark mode"
+        style="
+          position: absolute;
+          bottom: 20px;
+          right: 20px;
+          padding: 6px 14px;
+          border-radius: 20px;
+          cursor: pointer;
+          border: 1px solid rgba(255, 255, 255, 0.18);
+          background: rgba(255, 255, 255, 0.08);
+          color: rgba(255, 255, 255, 0.7);
+          font-family: 'Barlow Condensed', sans-serif;
+          font-weight: 700;
+          font-size: 11px;
+          letter-spacing: 1px;
+          text-transform: uppercase;
+          transition: all 0.18s;
+        "
+      >
+        Dark Mode
+      </button>
     </div>
     <div id="shell-nav">
       <div class="sn-logo" onclick="navHome()">PT</div>
@@ -5396,7 +5876,22 @@
       <div class="sn-tab" id="sntab-opponents" onclick="openPanel('opponents')">
         Opponents
       </div>
+      <div
+        class="sn-tab"
+        id="sntab-scout-overview"
+        onclick="openPanel('scout-overview')"
+      >
+        Scouting Cards
+      </div>
       <div class="sn-spacer"></div>
+      <button
+        class="theme-toggle-btn"
+        id="sn-theme-btn"
+        onclick="toggleDarkMode()"
+        title="Toggle dark mode"
+      >
+        Dark Mode
+      </button>
       <button
         class="sn-save"
         id="sn-resume-btn"
@@ -6467,7 +6962,7 @@
                           padding: 6px 4px;
                           border: 1.5px solid var(--border2);
                           border-radius: 7px;
-                          background: #fff;
+                          background: var(--surface);
                           color: var(--text2);
                           font-family: 'Barlow Condensed', sans-serif;
                           font-weight: 700;
@@ -6495,7 +6990,7 @@
                           padding: 6px 4px;
                           border: 1.5px solid var(--border2);
                           border-radius: 7px;
-                          background: #fff;
+                          background: var(--surface);
                           color: var(--text2);
                           font-family: 'Barlow Condensed', sans-serif;
                           font-weight: 700;
@@ -6523,7 +7018,7 @@
                           padding: 6px 4px;
                           border: 1.5px solid var(--border2);
                           border-radius: 7px;
-                          background: #fff;
+                          background: var(--surface);
                           color: var(--text2);
                           font-family: 'Barlow Condensed', sans-serif;
                           font-weight: 700;
@@ -6552,7 +7047,7 @@
                           padding: 6px 4px;
                           border: 1.5px solid var(--border2);
                           border-radius: 7px;
-                          background: #fff;
+                          background: var(--surface);
                           color: var(--text2);
                           font-family: 'Barlow Condensed', sans-serif;
                           font-weight: 700;
@@ -6957,7 +7452,7 @@
               <div class="mob-section-title">Inning</div>
               <div
                 style="
-                  background: #fff;
+                  background: var(--surface);
                   border: 1px solid var(--border);
                   border-radius: 10px;
                   padding: 12px 14px;
@@ -6995,7 +7490,7 @@
               <div class="mob-section-title">Outs</div>
               <div
                 style="
-                  background: #fff;
+                  background: var(--surface);
                   border: 1px solid var(--border);
                   border-radius: 10px;
                   padding: 12px 14px;
@@ -8141,6 +8636,29 @@
       </div>
     </div>
 
+    <!-- ══ SCOUTING OVERVIEW PANEL ══════════════════════════════════════════ -->
+    <div class="app-panel" id="panel-scout-overview">
+      <div id="scout-overview-header">
+        <h2>Scouting Overview</h2>
+        <div id="scout-team-btns"></div>
+      </div>
+      <div id="scout-overview-body">
+        <div
+          id="scout-overview-content"
+          style="
+            color: var(--text2);
+            font-family: 'Barlow Condensed', sans-serif;
+            font-size: 15px;
+            padding: 20px 0;
+          "
+        >
+          Select a team above to generate scouting cards.
+        </div>
+      </div>
+    </div>
+    <!-- Hidden print frame -->
+    <div id="print-scout-frame" style="display: none"></div>
+
     <!-- Assign to Saved Opponent modal -->
     <div
       id="assign-opp-modal"
@@ -8479,76 +8997,154 @@
           box-shadow: 0 8px 32px rgba(0, 0, 0, 0.32);
         "
       >
-        <div
-          style="
-            font-family: 'Barlow Condensed', sans-serif;
-            font-weight: 800;
-            font-size: 18px;
-            color: var(--text);
-          "
-        >
-          Merge Player
-        </div>
-        <div
-          id="merge-player-desc"
-          style="
-            font-size: 12px;
-            color: var(--text3);
-            font-family: 'Barlow', sans-serif;
-            line-height: 1.5;
-          "
-        ></div>
-        <div
-          id="merge-player-list"
-          style="
-            overflow-y: auto;
-            max-height: 260px;
-            display: flex;
-            flex-direction: column;
-            gap: 6px;
-          "
-        ></div>
-        <div
-          style="
-            display: flex;
-            gap: 8px;
-            justify-content: flex-end;
-            margin-top: 4px;
-          "
-        >
-          <button
-            onclick="closeMergePlayerModal()"
+        <!-- Step 1: Pick target -->
+        <div id="merge-step-1">
+          <div
             style="
-              padding: 8px 18px;
-              background: var(--surface2);
-              border: 1.5px solid var(--border2);
-              border-radius: 6px;
               font-family: 'Barlow Condensed', sans-serif;
-              font-weight: 700;
+              font-weight: 800;
+              font-size: 18px;
+              color: var(--text);
+              margin-bottom: 10px;
+            "
+          >
+            Merge Player
+          </div>
+          <div
+            id="merge-player-desc"
+            style="
+              font-size: 12px;
+              color: var(--text3);
+              font-family: 'Barlow', sans-serif;
+              line-height: 1.5;
+              margin-bottom: 10px;
+            "
+          ></div>
+          <div
+            id="merge-player-list"
+            style="
+              overflow-y: auto;
+              max-height: 240px;
+              display: flex;
+              flex-direction: column;
+              gap: 6px;
+            "
+          ></div>
+          <div
+            style="
+              display: flex;
+              gap: 8px;
+              justify-content: flex-end;
+              margin-top: 14px;
+            "
+          >
+            <button
+              onclick="closeMergePlayerModal()"
+              style="
+                padding: 8px 18px;
+                background: var(--surface2);
+                border: 1.5px solid var(--border2);
+                border-radius: 6px;
+                font-family: 'Barlow Condensed', sans-serif;
+                font-weight: 700;
+                font-size: 13px;
+                color: var(--text2);
+                cursor: pointer;
+              "
+            >
+              Cancel
+            </button>
+            <button
+              onclick="_mergePlayerNext()"
+              style="
+                padding: 8px 18px;
+                background: var(--accent);
+                border: none;
+                border-radius: 6px;
+                font-family: 'Barlow Condensed', sans-serif;
+                font-weight: 700;
+                font-size: 13px;
+                color: #fff;
+                cursor: pointer;
+              "
+            >
+              Next →
+            </button>
+          </div>
+        </div>
+        <!-- Step 2: Confirm -->
+        <div id="merge-step-2" style="display: none">
+          <div
+            style="
+              font-family: 'Barlow Condensed', sans-serif;
+              font-weight: 800;
+              font-size: 18px;
+              color: var(--text);
+              margin-bottom: 10px;
+            "
+          >
+            Are you sure?
+          </div>
+          <div
+            id="merge-confirm-text"
+            style="
               font-size: 13px;
               color: var(--text2);
-              cursor: pointer;
+              font-family: 'Barlow', sans-serif;
+              line-height: 1.6;
+              background: var(--surface2);
+              border: 1.5px solid var(--border2);
+              border-radius: 8px;
+              padding: 14px;
+              margin-bottom: 4px;
             "
-          >
-            Cancel
-          </button>
-          <button
-            id="merge-player-confirm-btn"
-            onclick="confirmMergePlayer()"
+          ></div>
+          <div
             style="
-              padding: 8px 18px;
-              background: var(--accent);
-              border: none;
-              border-radius: 6px;
-              font-family: 'Barlow Condensed', sans-serif;
-              font-weight: 700;
-              font-size: 13px;
-              color: #fff;
-              cursor: pointer;
+              font-size: 11px;
+              color: var(--accent);
+              font-family: 'Barlow', sans-serif;
+              font-weight: 600;
+              margin-bottom: 14px;
             "
           >
-            Merge
-          </button>
+            ⚠ This cannot be undone.
+          </div>
+          <div style="display: flex; gap: 8px; justify-content: flex-end">
+            <button
+              onclick="_mergePlayerBack()"
+              style="
+                padding: 8px 18px;
+                background: var(--surface2);
+                border: 1.5px solid var(--border2);
+                border-radius: 6px;
+                font-family: 'Barlow Condensed', sans-serif;
+                font-weight: 700;
+                font-size: 13px;
+                color: var(--text2);
+                cursor: pointer;
+              "
+            >
+              ← Back
+            </button>
+            <button
+              id="merge-player-confirm-btn"
+              onclick="confirmMergePlayer()"
+              style="
+                padding: 8px 18px;
+                background: var(--accent);
+                border: none;
+                border-radius: 6px;
+                font-family: 'Barlow Condensed', sans-serif;
+                font-weight: 700;
+                font-size: 13px;
+                color: #fff;
+                cursor: pointer;
+              "
+            >
+              Merge
+            </button>
+          </div>
         </div>
       </div>
     </div>
@@ -10280,6 +10876,7 @@
             </div>
           </div>
           <button
+            id="fielder-skip-btn"
             onclick="_fielderSkip()"
             style="
               background: none;
@@ -10297,7 +10894,10 @@
           </button>
         </div>
         <!-- Field SVG with position buttons -->
-        <div style="position: relative; width: 100%; user-select: none">
+        <div
+          id="fielder-field-wrap"
+          style="position: relative; width: 100%; user-select: none"
+        >
           <svg
             style="
               width: 100%;
@@ -10537,6 +11137,11 @@
             C
           </button>
         </div>
+        <!-- Error type / throw direction choice panel (error flow only) -->
+        <div
+          id="fielder-error-choice"
+          style="display: none; margin-top: 12px"
+        ></div>
       </div>
     </div>
     <div
@@ -11662,7 +12267,7 @@
     >
       <div
         style="
-          background: #ffffff;
+          background: var(--surface2);
           border: 1px solid var(--border2);
           border-radius: 14px;
           padding: 22px;
@@ -11699,11 +12304,11 @@
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px">
           <button
             onclick="commitError('1st')"
-            onmouseout="this.style.borderColor='var(--border2)';this.style.background='#f4f5f7'"
+            onmouseout="this.style.borderColor='var(--border2)';this.style.background='var(--surface3)'"
             onmouseover="this.style.borderColor='var(--accent)';this.style.background='rgba(204,26,26,.06)'"
             style="
               padding: 14px;
-              background: #f4f5f7;
+              background: var(--surface3);
               border: 1.5px solid var(--border2);
               border-radius: 9px;
               cursor: pointer;
@@ -11729,11 +12334,11 @@
           </button>
           <button
             onclick="commitError('2nd')"
-            onmouseout="this.style.borderColor='var(--border2)';this.style.background='#f4f5f7'"
+            onmouseout="this.style.borderColor='var(--border2)';this.style.background='var(--surface3)'"
             onmouseover="this.style.borderColor='var(--accent)';this.style.background='rgba(204,26,26,.06)'"
             style="
               padding: 14px;
-              background: #f4f5f7;
+              background: var(--surface3);
               border: 1.5px solid var(--border2);
               border-radius: 9px;
               cursor: pointer;
@@ -11759,11 +12364,11 @@
           </button>
           <button
             onclick="commitError('3rd')"
-            onmouseout="this.style.borderColor='var(--border2)';this.style.background='#f4f5f7'"
+            onmouseout="this.style.borderColor='var(--border2)';this.style.background='var(--surface3)'"
             onmouseover="this.style.borderColor='var(--accent)';this.style.background='rgba(204,26,26,.06)'"
             style="
               padding: 14px;
-              background: #f4f5f7;
+              background: var(--surface3);
               border: 1.5px solid var(--border2);
               border-radius: 9px;
               cursor: pointer;
@@ -11789,11 +12394,11 @@
           </button>
           <button
             onclick="commitError('home')"
-            onmouseout="this.style.borderColor='var(--border2)';this.style.background='#f4f5f7'"
+            onmouseout="this.style.borderColor='var(--border2)';this.style.background='var(--surface3)'"
             onmouseover="this.style.borderColor='var(--green)';this.style.background='rgba(26,138,58,.06)'"
             style="
               padding: 14px;
-              background: #f4f5f7;
+              background: var(--surface3);
               border: 1.5px solid var(--border2);
               border-radius: 9px;
               cursor: pointer;
@@ -12806,6 +13411,19 @@
           if (mt) mt.style.setProperty("display", "none", "important");
         }
 
+        // ── Dark mode toggle ──────────────────────────────────────────────
+        function toggleDarkMode() {
+          const isDark = document.body.classList.toggle("dark");
+          _applyDarkModeUI(isDark);
+        }
+        function _applyDarkModeUI(isDark) {
+          const label = isDark ? "Light Mode" : "Dark Mode";
+          const navBtn = document.getElementById("sn-theme-btn");
+          const hsBtn = document.getElementById("hs-theme-btn");
+          if (navBtn) navBtn.textContent = label;
+          if (hsBtn) hsBtn.textContent = label;
+        }
+
         function openPanel(name, skipPrompt) {
           if (
             !skipPrompt &&
@@ -12872,6 +13490,13 @@
               oppLoad();
             } catch (e) {
               console.warn("opponents", e);
+            }
+          }
+          if (name === "scout-overview") {
+            try {
+              scoutOverviewLoad();
+            } catch (e) {
+              console.warn("scout-overview", e);
             }
           }
         }
@@ -13255,7 +13880,7 @@
               if (sub) sub.style.display = "none";
               const btn = qs("ipc-" + c);
               if (btn) {
-                btn.style.background = "#fff";
+                btn.style.background = "var(--surface)";
                 btn.style.borderColor = "var(--border2)";
                 btn.style.color = "var(--text2)";
               }
@@ -13276,7 +13901,7 @@
             const btn = qs("ipc-" + c);
             const sub = qs("ipc-sub-" + c);
             if (btn) {
-              btn.style.background = "#fff";
+              btn.style.background = "var(--surface)";
               btn.style.borderColor = "var(--border2)";
               btn.style.color = "var(--text2)";
               btn.style.borderWidth = "1.5px";
@@ -13301,7 +13926,9 @@
             const sub = qs("ipc-sub-" + c);
             const active = c === cat;
             if (btn) {
-              btn.style.background = active ? "rgba(204,26,26,.08)" : "#fff";
+              btn.style.background = active
+                ? "rgba(204,26,26,.08)"
+                : "var(--surface)";
               btn.style.borderColor = active
                 ? "var(--accent)"
                 : "var(--border2)";
@@ -14131,7 +14758,7 @@
               if (s) s.style.display = "none";
               const b = qs("ipc-" + c);
               if (b) {
-                b.style.background = "#fff";
+                b.style.background = "var(--surface)";
                 b.style.borderColor = "var(--border2)";
                 b.style.color = "var(--text2)";
               }
@@ -14165,7 +14792,7 @@
               if (s) s.style.display = "none";
               const b = qs("ipc-" + c);
               if (b) {
-                b.style.background = "#fff";
+                b.style.background = "var(--surface)";
                 b.style.borderColor = "var(--border2)";
                 b.style.color = "var(--text2)";
               }
@@ -14422,6 +15049,7 @@
             }
           }
           newBases[hit.newBase] = true;
+          S.runnerNames[hit.newBase] = currentBatter()?.name || null;
           S.bases = newBases;
           for (let i = 0; i < runs; i++) addRun();
           if (runs > 0) {
@@ -17907,32 +18535,66 @@
           const batter = currentBatter()?.name || "Batter";
           // 1. Spray chart → 2. Fielder modal → 3. Resolve game logic
           openSprayModal("error", entry || {}, () => {
-            openFielderModal("error", "Error", batter, (fielder) => {
-              const posNum = {
-                P: 1,
-                C: 2,
-                "1B": 3,
-                "2B": 4,
-                "3B": 5,
-                SS: 6,
-                LF: 7,
-                CF: 8,
-                RF: 9,
-              };
-              S._lastErrorFielder = fielder || null;
-              S._lastErrorPosNum = fielder ? posNum[fielder] || "" : null;
-              _resolveError(base, entry);
-            });
+            openFielderModal(
+              "error",
+              "Error",
+              batter,
+              (result) => {
+                const posNum = {
+                  P: 1,
+                  C: 2,
+                  "1B": 3,
+                  "2B": 4,
+                  "3B": 5,
+                  SS: 6,
+                  LF: 7,
+                  CF: 8,
+                  RF: 9,
+                };
+                // result: { fielder, errorPlayer, errorType, throwDir } or null (no fielder)
+                const errorPlayer = result?.errorPlayer || null;
+                const fielderWho = result?.fielder || null;
+                S._lastErrorFielder = errorPlayer || null;
+                S._lastErrorPosNum = errorPlayer
+                  ? posNum[errorPlayer] || ""
+                  : null;
+                S._lastErrorType = result?.errorType || null;
+                S._lastErrorFielderWho = fielderWho || null;
+                // Track fielding stats
+                if (errorPlayer) _trackFielding(errorPlayer, "e");
+                if (
+                  result?.throwDir === "dropped" &&
+                  fielderWho &&
+                  fielderWho !== errorPlayer
+                ) {
+                  _trackFielding(fielderWho, "a");
+                }
+                _resolveError(base, entry);
+              },
+              true
+            );
           });
         }
         function _resolveError(base, entry) {
           const batter = currentBatter()?.name || "Batter";
-          const fielder = S._lastErrorFielder;
+          const errorPlayer = S._lastErrorFielder; // who committed the error
+          const fielderWho = S._lastErrorFielderWho; // who fielded/threw (may differ)
           const posNum = S._lastErrorPosNum;
-          const fielderStr = fielder ? ` · E${posNum} (${fielder})` : "";
+          const errorType = S._lastErrorType;
+          // Build descriptive suffix: E6 (SS dropped throw, 3B threw)
+          let fielderStr = "";
+          if (errorPlayer) {
+            fielderStr = ` · E${posNum} (${errorPlayer}`;
+            if (
+              errorType === "throwing" &&
+              fielderWho &&
+              fielderWho !== errorPlayer
+            ) {
+              fielderStr += `, threw by ${fielderWho}`;
+            }
+            fielderStr += ")";
+          }
           const runs = base === "home" ? 1 : 0;
-          // Track error on fielder
-          if (fielder) _trackFielding(fielder, "e");
           // Build blurb now — fielder is already set on S._lastErrorFielder
           updatePlayBlurb(
             "error",
@@ -18370,7 +19032,8 @@
             if (_cp) _cp.outs = (_cp.outs || 0) + 1;
           }
           // Ask who made the play in the field — blurb is built AFTER so it has fielder info
-          openFielderModal(outcome, logLabel, batter, (fielder) => {
+          // result is {putout, assists[]} or null if skipped
+          openFielderModal(outcome, logLabel, batter, (result) => {
             const posNum = {
               P: 1,
               C: 2,
@@ -18382,34 +19045,26 @@
               CF: 8,
               RF: 9,
             };
+            const fielder = result?.putout || null;
+            const assists = result?.assists || [];
             let scoreStr = "";
             if (fielder) {
-              const n = posNum[fielder] || "";
-              if (outcome === "flyout" || outcome === "sacfly")
-                scoreStr = `F${n}`;
-              else if (outcome === "lineout") scoreStr = `L${n}`;
-              else if (outcome === "groundout" || outcome === "sacbunt")
-                scoreStr = `${n}-3`;
-              else scoreStr = `${n}`;
+              if (outcome === "flyout" || outcome === "sacfly") {
+                scoreStr = `F${posNum[fielder] || ""}`;
+              } else if (outcome === "lineout") {
+                scoreStr = `L${posNum[fielder] || ""}`;
+              } else {
+                // Build full assist chain: e.g. SS→1B = "6-3"
+                const chain = [...assists, fielder]
+                  .map((p) => posNum[p] || "?")
+                  .join("-");
+                scoreStr = chain;
+              }
             }
             // Store for blurb — must be set before updatePlayBlurb is called
             S._lastFielder = fielder || null;
             S._lastScoreStr = scoreStr || null;
-            // Track fielding stats: PO on the fielder who recorded the out
-            // For ground outs/sac bunts the play typically ends at 1B — credit
-            // an assist to the fielder who fielded it and a PO to the 1B,
-            // unless the fielder IS the 1B (unassisted putout).
-            if (fielder) {
-              if (
-                (outcome === "groundout" || outcome === "sacbunt") &&
-                fielder !== "1B"
-              ) {
-                _trackFielding(fielder, "a"); // fielder gets the assist
-                _trackFielding("1B", "po"); // 1B gets the putout
-              } else {
-                _trackFielding(fielder, "po"); // all other outs: straight PO
-              }
-            }
+            // PO and assists already tracked inside _fielderSelect / _fielderSkip
             updatePlayBlurb(
               outcome,
               pitchType,
@@ -18420,8 +19075,11 @@
               S.bases,
               { balls: S.balls, strikes: S.strikes }
             );
+            const assistStr = assists.length > 0 ? assists.join("-") + "-" : "";
             const fielderStr = fielder
-              ? ` · ${fielder}${scoreStr ? " (" + scoreStr + ")" : ""}`
+              ? ` · ${assistStr}${fielder}${
+                  scoreStr ? " (" + scoreStr + ")" : ""
+                }`
               : "";
             logEvent(
               "🟤",
@@ -20360,10 +21018,16 @@
 
         function closeMergePlayerModal() {
           document.getElementById("merge-player-modal").style.display = "none";
+          // Reset both steps and button state so the modal is clean next time
+          document.getElementById("merge-step-1").style.display = "";
+          document.getElementById("merge-step-2").style.display = "none";
+          const btn = document.getElementById("merge-player-confirm-btn");
+          btn.textContent = "Merge";
+          btn.disabled = false;
           _mergePlayerCtx = null;
         }
 
-        async function confirmMergePlayer() {
+        function _mergePlayerNext() {
           const sel = document.querySelector(
             'input[name="merge-player-target"]:checked'
           );
@@ -20371,22 +21035,43 @@
             alert("Please select a player to merge into.");
             return;
           }
-          if (!_mergePlayerCtx) return;
-          const { teamName, fromName, fromNum, playerType } = _mergePlayerCtx;
+          const { fromName, fromNum } = _mergePlayerCtx;
           let toName, toNum;
           try {
             const parsed = JSON.parse(sel.value);
             toName = parsed.name;
             toNum = parsed.num;
           } catch (e) {
-            toName = sel.value; // fallback for old-format values
+            toName = sel.value;
           }
+          _mergePlayerCtx.toName = toName;
+          _mergePlayerCtx.toNum = toNum;
           const fromLabel = fromNum ? `${fromName} (#${fromNum})` : fromName;
           const toLabel = toNum ? `${toName} (#${toNum})` : toName;
-          const ok = confirm(
-            `Merge "${fromLabel}" into "${toLabel}"?\n\nAll stats for "${fromLabel}" will be combined into "${toLabel}" across every game record. This cannot be undone.`
-          );
-          if (!ok) return;
+          document.getElementById(
+            "merge-confirm-text"
+          ).innerHTML = `Merge <strong>${escHtml(
+            fromLabel
+          )}</strong> into <strong>${escHtml(
+            toLabel
+          )}</strong>?<br><br>All stats tracked for <strong>${escHtml(
+            fromLabel
+          )}</strong> will be combined into <strong>${escHtml(
+            toLabel
+          )}</strong> across every game record.`;
+          document.getElementById("merge-step-1").style.display = "none";
+          document.getElementById("merge-step-2").style.display = "";
+        }
+
+        function _mergePlayerBack() {
+          document.getElementById("merge-step-2").style.display = "none";
+          document.getElementById("merge-step-1").style.display = "";
+        }
+
+        async function confirmMergePlayer() {
+          if (!_mergePlayerCtx) return;
+          const { teamName, fromName, fromNum, toName, toNum } =
+            _mergePlayerCtx;
           const btn = document.getElementById("merge-player-confirm-btn");
           btn.textContent = "Merging…";
           btn.disabled = true;
@@ -20399,8 +21084,8 @@
           );
           closeMergePlayerModal();
           hubRefreshAll();
-          alert(
-            `Done. Merged "${fromName}" into "${toName}" across ${count} game record${
+          toast(
+            `Merged "${fromName}" into "${toName}" across ${count} game record${
               count !== 1 ? "s" : ""
             }.`
           );
@@ -26287,21 +26972,21 @@
           return `
     <div id="${bdId}" data-pitches='${pitchesJson.replace(/'/g, "&#39;")}'>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">
-      <div style="background:#fff;border:1px solid #d4d8e0;border-radius:8px;padding:10px 14px;text-align:center">
+      <div style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:10px 14px;text-align:center">
         <div style="font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:26px;color:#cc1a1a">${avgVel}</div>
-        <div style="font-size:8px;letter-spacing:2px;color:#8a909e;text-transform:uppercase">Avg Velo</div>
+        <div style="font-size:8px;letter-spacing:2px;color:var(--text3);text-transform:uppercase">Avg Velo</div>
       </div>
-      <div style="background:#fff;border:1px solid #d4d8e0;border-radius:8px;padding:10px 14px;text-align:center">
-        <div style="font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:26px">${maxVel}</div>
-        <div style="font-size:8px;letter-spacing:2px;color:#8a909e;text-transform:uppercase">Max Velo</div>
+      <div style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:10px 14px;text-align:center">
+        <div style="font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:26px;color:var(--text)">${maxVel}</div>
+        <div style="font-size:8px;letter-spacing:2px;color:var(--text3);text-transform:uppercase">Max Velo</div>
       </div>
-      <div style="background:#fff;border:1px solid #d4d8e0;border-radius:8px;padding:10px 14px;text-align:center">
-        <div style="font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:26px">${zonePct}%</div>
-        <div style="font-size:8px;letter-spacing:2px;color:#8a909e;text-transform:uppercase">Zone%</div>
+      <div style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:10px 14px;text-align:center">
+        <div style="font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:26px;color:var(--text)">${zonePct}%</div>
+        <div style="font-size:8px;letter-spacing:2px;color:var(--text3);text-transform:uppercase">Zone%</div>
       </div>
-      <div style="background:#fff;border:1px solid #d4d8e0;border-radius:8px;padding:10px 14px;text-align:center">
-        <div style="font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:26px">${swingPct}%</div>
-        <div style="font-size:8px;letter-spacing:2px;color:#8a909e;text-transform:uppercase">Swing%</div>
+      <div style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:10px 14px;text-align:center">
+        <div style="font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:26px;color:var(--text)">${swingPct}%</div>
+        <div style="font-size:8px;letter-spacing:2px;color:var(--text3);text-transform:uppercase">Swing%</div>
       </div>
     </div>
 
@@ -26929,8 +27614,10 @@
             });
 
           // ── Plate discipline ──
+          const _batterAliases =
+            _nameAliases[playerName] || new Set([playerName]);
           const allPitches = sortedGames.flatMap((g) =>
-            (g.pitchLog || []).filter((p) => p.batter === playerName)
+            (g.pitchLog || []).filter((p) => _batterAliases.has(p.batter))
           );
           const swingOutcomes = [
             "strike-swinging",
@@ -27026,7 +27713,17 @@
             ) + "%"
           : "—",
       ],
-      ["P/PA", allABs.length > 0 ? (total / allABs.length).toFixed(2) : "—"],
+      [
+        "P/PA",
+        (() => {
+          if (allABs.length > 0 && total > 0)
+            return (total / allABs.length).toFixed(2);
+          const cs = getPlayerCareerStats(teamName, playerName, sortedGames);
+          const pa = cs.pa || 0,
+            ps = cs.pitchesSeen || 0;
+          return pa > 0 && ps > 0 ? (ps / pa).toFixed(2) : "—";
+        })(),
+      ],
       [
         "Hard Hit%",
         contact > 0
@@ -27041,8 +27738,8 @@
         ([
           l,
           v,
-        ]) => `<div style="background:#fff;border:1px solid var(--border);border-radius:8px;padding:10px;text-align:center">
-      <div style="font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:22px">${v}</div>
+        ]) => `<div style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:10px;text-align:center">
+      <div style="font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:22px;color:var(--text)">${v}</div>
       <div style="font-size:8px;letter-spacing:2px;color:var(--text3);text-transform:uppercase">${l}</div>
     </div>`
       )
@@ -27593,7 +28290,7 @@
               const col = typeColors[t] || "#8a909e";
               return `<div style="display:flex;align-items:center;gap:8px;margin-bottom:5px">
         <div style="font-family:'Share Tech Mono',monospace;font-size:10px;color:${col};width:28px;flex-shrink:0;font-weight:700">${t}</div>
-        <div style="flex:1;min-width:0;max-width:55%;background:#e8eaee;border-radius:3px;height:12px;overflow:hidden">
+        <div style="flex:1;min-width:0;max-width:55%;background:var(--surface3);border-radius:3px;height:12px;overflow:hidden">
           <div style="width:${pct}%;height:100%;background:${col};border-radius:3px;opacity:.85"></div>
         </div>
         <div style="font-family:'Share Tech Mono',monospace;font-size:10px;color:#8a909e;white-space:nowrap;flex-shrink:0;text-align:right">${d.strikes}/${d.total} · ${pct}%</div>
@@ -27606,8 +28303,8 @@
             n,
             col,
             extra = ""
-          ) => `<div style="display:flex;align-items:center;justify-content:space-between;padding:6px 10px;border-radius:6px;margin-bottom:4px;background:#f8f9fb">
-    <span style="font-family:'Barlow Condensed',sans-serif;font-weight:600;font-size:13px;color:#4a5060">${label}</span>
+          ) => `<div style="display:flex;align-items:center;justify-content:space-between;padding:6px 10px;border-radius:6px;margin-bottom:4px;background:var(--surface2)">
+    <span style="font-family:'Barlow Condensed',sans-serif;font-weight:600;font-size:13px;color:var(--text2)">${label}</span>
     <span style="font-family:'Share Tech Mono',monospace;font-size:11px;color:${
       col || "#8a909e"
     }">${n}${extra}</span>
@@ -29517,31 +30214,31 @@
           ).length;
           const swingPct = total > 0 ? Math.round((swings / total) * 100) : 0;
           return `<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px">
-    <div style="background:#fff;border:1px solid #d4d8e0;border-radius:8px;padding:10px 14px;text-align:center">
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:10px 14px;text-align:center">
       <div style="font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:26px;color:#cc1a1a">${avgVel}</div>
-      <div style="font-size:8px;letter-spacing:2px;color:#8a909e;text-transform:uppercase">Avg Velo</div>
+      <div style="font-size:8px;letter-spacing:2px;color:var(--text3);text-transform:uppercase">Avg Velo</div>
     </div>
-    <div style="background:#fff;border:1px solid #d4d8e0;border-radius:8px;padding:10px 14px;text-align:center">
-      <div style="font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:26px">${maxVel}</div>
-      <div style="font-size:8px;letter-spacing:2px;color:#8a909e;text-transform:uppercase">Max Velo</div>
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:10px 14px;text-align:center">
+      <div style="font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:26px;color:var(--text)">${maxVel}</div>
+      <div style="font-size:8px;letter-spacing:2px;color:var(--text3);text-transform:uppercase">Max Velo</div>
     </div>
-    <div style="background:#fff;border:1px solid #d4d8e0;border-radius:8px;padding:10px 14px;text-align:center">
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:10px 14px;text-align:center">
       <div style="font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:26px;color:#cc1a1a">${strPct}%</div>
-      <div style="font-size:8px;letter-spacing:2px;color:#8a909e;text-transform:uppercase">Strike%</div>
+      <div style="font-size:8px;letter-spacing:2px;color:var(--text3);text-transform:uppercase">Strike%</div>
     </div>
-    <div style="background:#fff;border:1px solid #d4d8e0;border-radius:8px;padding:10px 14px;text-align:center">
-      <div style="font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:26px">${
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:10px 14px;text-align:center">
+      <div style="font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:26px;color:var(--text)">${
         fpsPct !== null ? fpsPct + "%" : "—"
       }</div>
-      <div style="font-size:8px;letter-spacing:2px;color:#8a909e;text-transform:uppercase">FPS%</div>
+      <div style="font-size:8px;letter-spacing:2px;color:var(--text3);text-transform:uppercase">FPS%</div>
     </div>
-    <div style="background:#fff;border:1px solid #d4d8e0;border-radius:8px;padding:10px 14px;text-align:center">
-      <div style="font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:26px">${zonePct}%</div>
-      <div style="font-size:8px;letter-spacing:2px;color:#8a909e;text-transform:uppercase">Zone%</div>
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:10px 14px;text-align:center">
+      <div style="font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:26px;color:var(--text)">${zonePct}%</div>
+      <div style="font-size:8px;letter-spacing:2px;color:var(--text3);text-transform:uppercase">Zone%</div>
     </div>
-    <div style="background:#fff;border:1px solid #d4d8e0;border-radius:8px;padding:10px 14px;text-align:center">
-      <div style="font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:26px">${swingPct}%</div>
-      <div style="font-size:8px;letter-spacing:2px;color:#8a909e;text-transform:uppercase">Swing%</div>
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:10px 14px;text-align:center">
+      <div style="font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:26px;color:var(--text)">${swingPct}%</div>
+      <div style="font-size:8px;letter-spacing:2px;color:var(--text3);text-transform:uppercase">Swing%</div>
     </div>
   </div>`;
         }
@@ -30531,10 +31228,106 @@
         // ===================== FIELDER MODAL =====================
         let _fielderCallback = null;
         let _fielderContext = null; // {outcome, logLabel, batter}
+        let _fielderPendingPO = null; // pos picked in step 1 (putout)
+        let _fielderAssists = []; // positions picked in step 2
+        let _fielderInAssistMode = false; // true after putout is selected
 
-        function openFielderModal(outcome, logLabel, batter, callback) {
+        // Error-mode multi-phase state
+        let _errorPhase = "fielder"; // "fielder" | "error-type" | "throw-direction" | "recipient"
+        let _errorFielder = null; // who fielded/threw the ball (always recorded)
+
+        function _errorChooseType(type) {
+          const btnStyle = `padding:14px 10px;border-radius:10px;cursor:pointer;border:1.5px solid var(--border2);background:var(--surface3);color:var(--text);font-family:'Barlow Condensed',sans-serif;text-align:center;transition:all 0.15s;`;
+          if (type === "fielding") {
+            const result = {
+              fielder: _errorFielder,
+              errorPlayer: _errorFielder,
+              errorType: "fielding",
+            };
+            _errorCloseAndCommit(result);
+          } else {
+            _errorPhase = "throw-direction";
+            qs("fielder-title").textContent = "Who committed the error?";
+            qs("fielder-sub").textContent = `${_errorFielder} threw the ball`;
+            document.getElementById("fielder-skip-btn").textContent = "← Back";
+            const div = document.getElementById("fielder-error-choice");
+            div.innerHTML = `<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:4px">
+              <button onclick="_errorChooseThrow('bad-throw')" style="${btnStyle}">
+                <div style="font-size:15px;font-weight:900;letter-spacing:0.5px">Bad Throw</div>
+                <div style="font-size:10px;opacity:0.7;margin-top:3px">${_errorFielder} threw it poorly</div>
+              </button>
+              <button onclick="_errorChooseThrow('dropped')" style="${btnStyle}">
+                <div style="font-size:15px;font-weight:900;letter-spacing:0.5px">Dropped Throw</div>
+                <div style="font-size:10px;opacity:0.7;margin-top:3px">Recipient couldn't handle it</div>
+              </button>
+            </div>`;
+          }
+        }
+
+        function _errorChooseThrow(direction) {
+          if (direction === "bad-throw") {
+            const result = {
+              fielder: _errorFielder,
+              errorPlayer: _errorFielder,
+              errorType: "throwing",
+              throwDir: "bad-throw",
+            };
+            _errorCloseAndCommit(result);
+          } else {
+            // Need to pick the recipient
+            _errorPhase = "recipient";
+            const choiceDiv = document.getElementById("fielder-error-choice");
+            choiceDiv.style.display = "none";
+            const fieldWrap = document.getElementById("fielder-field-wrap");
+            fieldWrap.style.display = "block";
+            qs("fielder-title").textContent = "Who dropped the throw?";
+            qs(
+              "fielder-sub"
+            ).textContent = `${_errorFielder} threw — pick who couldn't handle it`;
+            document.getElementById("fielder-skip-btn").textContent = "← Back";
+            // Reset buttons, mark original fielder as thrower (gold, unselectable)
+            document.querySelectorAll(".fpos-btn").forEach((b) => {
+              b.classList.remove("selected", "fpos-po");
+              if (b.getAttribute("data-pos") === _errorFielder)
+                b.classList.add("fpos-po");
+            });
+          }
+        }
+
+        function _errorCloseAndCommit(result) {
+          qs("fielder-modal").style.display = "none";
+          document.getElementById("fielder-error-choice").style.display =
+            "none";
+          document.getElementById("fielder-field-wrap").style.display = "block";
+          _errorPhase = "fielder";
+          _errorFielder = null;
+          if (_fielderCallback) _fielderCallback(result);
+          _fielderCallback = null;
+        }
+
+        // errorMode: true = multi-phase error capture flow
+        function openFielderModal(
+          outcome,
+          logLabel,
+          batter,
+          callback,
+          errorMode
+        ) {
           _fielderCallback = callback;
-          _fielderContext = { outcome, logLabel, batter };
+          _fielderContext = {
+            outcome,
+            logLabel,
+            batter,
+            errorMode: !!errorMode,
+          };
+          _fielderPendingPO = null;
+          _fielderAssists = [];
+          _fielderInAssistMode = false;
+          _errorPhase = "fielder";
+          _errorFielder = null;
+          document.getElementById("fielder-error-choice").style.display =
+            "none";
+          document.getElementById("fielder-field-wrap").style.display = "block";
 
           // Build a position → player name map from the current defensive lineup
           const isHomeDefending = S.isTop;
@@ -30549,7 +31342,7 @@
 
           // Annotate every position button with the player name
           document.querySelectorAll(".fpos-btn").forEach((btn) => {
-            btn.classList.remove("selected");
+            btn.classList.remove("selected", "fpos-po");
             const pos =
               btn.getAttribute("data-pos") ||
               btn.textContent.trim().toUpperCase();
@@ -30561,29 +31354,209 @@
             }
           });
 
-          qs("fielder-title").textContent = "Who made the play?";
-          qs("fielder-sub").textContent = `${logLabel} — ${batter}`;
+          if (errorMode) {
+            // Error flow phase 1: who fielded the ball (always captured)
+            qs("fielder-title").textContent = "Who fielded the ball?";
+            qs(
+              "fielder-sub"
+            ).textContent = `Error — ${batter} · always recorded`;
+            const skipBtn = document.getElementById("fielder-skip-btn");
+            if (skipBtn) skipBtn.textContent = "Skip";
+          } else {
+            // Normal play: Phase 1 = assist selection (who touched the ball)
+            qs("fielder-title").textContent = "Who fielded the ball?";
+            qs(
+              "fielder-sub"
+            ).textContent = `${logLabel} — ${batter} · tap all who touched it`;
+            const skipBtn = document.getElementById("fielder-skip-btn");
+            if (skipBtn) skipBtn.textContent = "Next →";
+            _fielderInAssistMode = true;
+          }
           qs("fielder-modal").style.display = "flex";
         }
 
         function _fielderSelect(pos) {
-          // Highlight selected
-          document
-            .querySelectorAll(".fpos-btn")
-            .forEach((b) => b.classList.remove("selected"));
-          event.currentTarget.classList.add("selected");
-          // Brief visual feedback then close
-          setTimeout(() => {
-            qs("fielder-modal").style.display = "none";
-            if (_fielderCallback) _fielderCallback(pos);
-            _fielderCallback = null;
-          }, 180);
+          // Error mode: single select, immediate callback with position string
+          if (_fielderContext?.errorMode) {
+            if (_errorPhase === "fielder") {
+              // Highlight selection, then transition to error-type choice
+              document
+                .querySelectorAll(".fpos-btn")
+                .forEach((b) => b.classList.remove("selected"));
+              document
+                .querySelector(`.fpos-btn[data-pos="${pos}"]`)
+                ?.classList.add("selected");
+              _errorFielder = pos;
+              _errorPhase = "error-type";
+              // Switch to choice panel
+              document.getElementById("fielder-field-wrap").style.display =
+                "none";
+              qs("fielder-title").textContent = "Type of error?";
+              qs("fielder-sub").textContent = `${pos} fielded the ball`;
+              document.getElementById("fielder-skip-btn").textContent =
+                "← Back";
+              const btnStyle = `padding:14px 10px;border-radius:10px;cursor:pointer;border:1.5px solid var(--border2);background:var(--surface3);color:var(--text);font-family:'Barlow Condensed',sans-serif;text-align:center;transition:all 0.15s;width:100%;`;
+              const choiceDiv = document.getElementById("fielder-error-choice");
+              choiceDiv.style.display = "block";
+              choiceDiv.innerHTML = `<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:4px">
+                <button onclick="_errorChooseType('fielding')" style="${btnStyle}">
+                  <div style="font-size:15px;font-weight:900;letter-spacing:0.5px">Fielding Error</div>
+                  <div style="font-size:10px;opacity:0.7;margin-top:3px">Bobbled or dropped</div>
+                </button>
+                <button onclick="_errorChooseType('throwing')" style="${btnStyle}">
+                  <div style="font-size:15px;font-weight:900;letter-spacing:0.5px">Throwing Error</div>
+                  <div style="font-size:10px;opacity:0.7;margin-top:3px">Ball was thrown</div>
+                </button>
+              </div>`;
+            } else if (_errorPhase === "recipient") {
+              // Can't pick the original thrower as recipient
+              if (pos === _errorFielder) return;
+              document.querySelectorAll(".fpos-btn").forEach((b) => {
+                if (b.getAttribute("data-pos") !== _errorFielder)
+                  b.classList.remove("selected");
+              });
+              document
+                .querySelector(`.fpos-btn[data-pos="${pos}"]`)
+                ?.classList.add("selected");
+              const result = {
+                fielder: _errorFielder,
+                errorPlayer: pos,
+                errorType: "throwing",
+                throwDir: "dropped",
+              };
+              setTimeout(() => _errorCloseAndCommit(result), 180);
+            }
+            return;
+          }
+
+          if (_fielderInAssistMode) {
+            // Phase 1: toggle who touched the ball (multi-select assist candidates)
+            const btn = document.querySelector(`.fpos-btn[data-pos="${pos}"]`);
+            if (_fielderAssists.includes(pos)) {
+              _fielderAssists = _fielderAssists.filter((p) => p !== pos);
+              btn?.classList.remove("selected");
+            } else {
+              _fielderAssists.push(pos);
+              btn?.classList.add("selected");
+            }
+          } else {
+            // Phase 2: select the single putout fielder (can't be in assist list)
+            if (_fielderAssists.includes(pos)) return;
+            document.querySelectorAll(".fpos-btn").forEach((b) => {
+              if (!_fielderAssists.includes(b.getAttribute("data-pos")))
+                b.classList.remove("selected", "fpos-po");
+            });
+            _fielderPendingPO = pos;
+            const btn = document.querySelector(`.fpos-btn[data-pos="${pos}"]`);
+            btn?.classList.add("fpos-po");
+          }
         }
 
         function _fielderSkip() {
-          qs("fielder-modal").style.display = "none";
-          if (_fielderCallback) _fielderCallback(null);
-          _fielderCallback = null;
+          if (_fielderContext?.errorMode) {
+            if (_errorPhase === "fielder") {
+              // No fielder at all — skip entirely
+              qs("fielder-modal").style.display = "none";
+              document.getElementById("fielder-error-choice").style.display =
+                "none";
+              document.getElementById("fielder-field-wrap").style.display =
+                "block";
+              _errorPhase = "fielder";
+              _errorFielder = null;
+              if (_fielderCallback) _fielderCallback(null);
+              _fielderCallback = null;
+            } else if (_errorPhase === "error-type") {
+              // Back to fielder selection
+              _errorPhase = "fielder";
+              _errorFielder = null;
+              document.getElementById("fielder-error-choice").style.display =
+                "none";
+              document.getElementById("fielder-field-wrap").style.display =
+                "block";
+              qs("fielder-title").textContent = "Who fielded the ball?";
+              qs(
+                "fielder-sub"
+              ).textContent = `Error — ${_fielderContext.batter} · always recorded`;
+              document.getElementById("fielder-skip-btn").textContent = "Skip";
+              document
+                .querySelectorAll(".fpos-btn")
+                .forEach((b) => b.classList.remove("selected", "fpos-po"));
+            } else if (_errorPhase === "throw-direction") {
+              // Back to error-type choice
+              _errorPhase = "error-type";
+              qs("fielder-title").textContent = "Type of error?";
+              qs(
+                "fielder-sub"
+              ).textContent = `${_errorFielder} fielded the ball`;
+              const btnStyle = `padding:14px 10px;border-radius:10px;cursor:pointer;border:1.5px solid var(--border2);background:var(--surface3);color:var(--text);font-family:'Barlow Condensed',sans-serif;text-align:center;transition:all 0.15s;width:100%;`;
+              const choiceDiv = document.getElementById("fielder-error-choice");
+              choiceDiv.innerHTML = `<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:4px">
+                <button onclick="_errorChooseType('fielding')" style="${btnStyle}">
+                  <div style="font-size:15px;font-weight:900;letter-spacing:0.5px">Fielding Error</div>
+                  <div style="font-size:10px;opacity:0.7;margin-top:3px">Bobbled or dropped</div>
+                </button>
+                <button onclick="_errorChooseType('throwing')" style="${btnStyle}">
+                  <div style="font-size:15px;font-weight:900;letter-spacing:0.5px">Throwing Error</div>
+                  <div style="font-size:10px;opacity:0.7;margin-top:3px">Ball was thrown</div>
+                </button>
+              </div>`;
+              choiceDiv.style.display = "block";
+            } else if (_errorPhase === "recipient") {
+              // Back to throw-direction
+              _errorPhase = "throw-direction";
+              document.getElementById("fielder-field-wrap").style.display =
+                "none";
+              qs("fielder-title").textContent = "Who committed the error?";
+              qs("fielder-sub").textContent = `${_errorFielder} threw the ball`;
+              const btnStyle = `padding:14px 10px;border-radius:10px;cursor:pointer;border:1.5px solid var(--border2);background:var(--surface3);color:var(--text);font-family:'Barlow Condensed',sans-serif;text-align:center;transition:all 0.15s;width:100%;`;
+              const div = document.getElementById("fielder-error-choice");
+              div.style.display = "block";
+              div.innerHTML = `<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:4px">
+                <button onclick="_errorChooseThrow('bad-throw')" style="${btnStyle}">
+                  <div style="font-size:15px;font-weight:900;letter-spacing:0.5px">Bad Throw</div>
+                  <div style="font-size:10px;opacity:0.7;margin-top:3px">${_errorFielder} threw it poorly</div>
+                </button>
+                <button onclick="_errorChooseThrow('dropped')" style="${btnStyle}">
+                  <div style="font-size:15px;font-weight:900;letter-spacing:0.5px">Dropped Throw</div>
+                  <div style="font-size:10px;opacity:0.7;margin-top:3px">Recipient couldn't handle it</div>
+                </button>
+              </div>`;
+            }
+            return;
+          }
+          if (_fielderInAssistMode) {
+            // "Next →" — done selecting who fielded; move to putout step
+            _fielderInAssistMode = false;
+            _fielderPendingPO = null;
+            // Mark assist buttons so putout step knows to exclude them
+            // Transition UI to putout selection
+            qs("fielder-title").textContent = "Who recorded the out?";
+            qs("fielder-sub").textContent =
+              "Select the fielder who made the putout";
+            const skipBtn = document.getElementById("fielder-skip-btn");
+            if (skipBtn) skipBtn.textContent = "Done";
+            // Keep selected assists highlighted; dim them slightly to distinguish
+            document.querySelectorAll(".fpos-btn").forEach((b) => {
+              const p = b.getAttribute("data-pos");
+              if (_fielderAssists.includes(p)) {
+                b.classList.add("selected");
+              }
+            });
+          } else {
+            // "Done" — commit everything and return result
+            if (_fielderPendingPO) _trackFielding(_fielderPendingPO, "po");
+            _fielderAssists.forEach((p) => _trackFielding(p, "a"));
+            const result = {
+              putout: _fielderPendingPO,
+              assists: [..._fielderAssists],
+            };
+            qs("fielder-modal").style.display = "none";
+            _fielderInAssistMode = false;
+            _fielderPendingPO = null;
+            _fielderAssists = [];
+            if (_fielderCallback) _fielderCallback(result);
+            _fielderCallback = null;
+          }
         }
 
         // ===================== FULLSCREEN =====================
@@ -31894,7 +32867,7 @@
   <div class="scout-header" style="display:flex;align-items:flex-start;justify-content:space-between;border-bottom:3px solid #cc1a1a;padding-bottom:6px;margin-bottom:8px">
     <div>
       <div style="font-family:'Barlow',sans-serif;font-weight:700;font-size:10px;letter-spacing:1px;text-transform:uppercase;color:#cc1a1a;margin-bottom:2px">Hitter Scouting Report</div>
-      <div style="font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:24px;color:#111318;line-height:1">#${
+      <div style="font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:24px;color:var(--text);line-height:1">#${
         stats.num || "—"
       } ${escHtml(playerName)}</div>
       <div style="font-family:'Barlow',sans-serif;font-size:11px;font-weight:400;color:#8a909e;margin-top:3px">${
@@ -31906,8 +32879,8 @@
     <div style="display:flex;gap:20px;align-items:flex-end;flex-shrink:0">
       ${[
         ["AVG", f(avg), "#cc1a1a"],
-        ["OBP", f(obp), "#111318"],
-        ["SLG", f(slg), "#111318"],
+        ["OBP", f(obp), "var(--text)"],
+        ["SLG", f(slg), "var(--text)"],
         [
           "OPS",
           f(ops),
@@ -32879,7 +33852,7 @@
   <div class="scout-header" style="display:flex;align-items:flex-start;justify-content:space-between;border-bottom:3px solid #1a5acc;padding-bottom:8px;margin-bottom:12px">
     <div>
       <div style="font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:10px;letter-spacing:3px;text-transform:uppercase;color:#1a5acc;margin-bottom:2px">Pitcher Scouting Report</div>
-      <div style="font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:32px;color:#111318;line-height:1">#${
+      <div style="font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:32px;color:var(--text);line-height:1">#${
         career.num || "—"
       } ${escHtml(pitcherName)}</div>
       <div style="font-size:12px;color:#8a909e;margin-top:3px">${
@@ -36414,10 +37387,10 @@
             "*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }",
             'html, body { background: #fff; font-family: "Barlow Condensed", sans-serif; color: #111318;',
             "  -webkit-print-color-adjust: exact; print-color-adjust: exact; }",
-            "@page { size: 8.5in 11in portrait; margin: 0.25in; }",
+            "@page { size: 7in 4in; margin: 0.12in 0.15in; }",
             // No transform here — JS will measure and inject exact scale per page
             ".scout-report-page {",
-            "  width: 8in;", // natural unscaled width — JS scales it to fit
+            "  width: 6.7in;", // natural unscaled width — JS scales it to fit
             "  background: #fff;",
             '  font-family: "Barlow Condensed", sans-serif;',
             "  transform-origin: top left;",
@@ -36429,12 +37402,12 @@
             '.scout-section-title { font-family:"Barlow",sans-serif; font-weight:700; font-size:10px;',
             "  letter-spacing:0.5px; text-transform:uppercase; color:#8a909e;",
             "  border-bottom:2px solid #d4d8e0; padding-bottom:2px; margin-bottom:4px; }",
-            '.scout-table { width:100%; border-collapse:collapse; font-size:9px; font-family:"Barlow",sans-serif; }',
-            '.scout-table th { font-family:"Barlow",sans-serif; font-weight:700; font-size:8px;',
-            "  letter-spacing:0; text-transform:uppercase; color:#8a909e; padding:2px 3px;",
-            "  border-bottom:1.5px solid #d4d8e0; text-align:center; background:#f8f9fb; }",
-            ".scout-table td { padding:2px 3px; border-bottom:1px solid #e8eaee; text-align:center;",
-            '  font-family:"Barlow",sans-serif; font-size:9px; }',
+            '.scout-table { width:100%; border-collapse:collapse; font-size:6.5px; font-family:"Barlow",sans-serif; }',
+            '.scout-table th { font-family:"Barlow",sans-serif; font-weight:700; font-size:6px;',
+            "  letter-spacing:0; text-transform:uppercase; color:#8a909e; padding:1px 2px;",
+            "  border-bottom:1px solid #d4d8e0; text-align:center; background:#f8f9fb; }",
+            ".scout-table td { padding:1px 2px; border-bottom:0.5px solid #e8eaee; text-align:center;",
+            '  font-family:"Barlow",sans-serif; font-size:6.5px; }',
             ".scout-table td:first-child { text-align:left; font-weight:600; color:#4a5060; }",
             ".scout-table tr:last-child td { border-bottom:none; }",
             ".scout-highlight { color:#cc1a1a; font-weight:800; }",
@@ -36470,13 +37443,12 @@
           const autoScaleScript = `
     document.fonts.ready.then(function(){
       var pages = document.querySelectorAll('.scout-report-page');
-      // Printable area at 96dpi: 8in wide x 10.5in tall = 768 x 1008px
-      var printW = 768;
-      var printH = 1008;
+      // Printable area at 96dpi: 6.7in wide x 3.76in tall (7x4in minus margins)
+      var printW = 643;
+      var printH = 340;
       pages.forEach(function(page){
-        // Reset any previous transform so we measure natural size
-        page.style.transform = '';
-        page.style.marginBottom = '';
+        // Reset any previous scale
+        page.style.zoom = '';
         var w = page.scrollWidth;
         var h = page.scrollHeight;
         // Scale to fit both dimensions — use whichever axis is the tighter constraint
@@ -36484,11 +37456,8 @@
         var scaleH = printH / h;
         var scale  = Math.min(scaleX, scaleH, 1); // never scale up, only down
         if(scale < 1){
-          page.style.transform = 'scale(' + scale + ')';
-          page.style.transformOrigin = 'top left';
-          // Collapse the space the scaled element leaves behind
-          // (scaled height = h*scale, but element still occupies h px)
-          page.style.marginBottom = (h * scale - h) + 'px';
+          page.style.zoom = scale;
+          // zoom affects layout flow so page breaks calculate correctly
         }
       });
       window.print();
@@ -36692,6 +37661,956 @@
             }
           });
         })();
+
+        // ════════════════════════════════════════════════════════════════════
+        // SCOUTING OVERVIEW
+        // ════════════════════════════════════════════════════════════════════
+        let _scoutSelectedTeam = null;
+
+        async function scoutOverviewLoad() {
+          // Ensure game data is loaded (may not be if Stats Hub was never opened)
+          if (!allGames.length) {
+            const body = document.getElementById("scout-overview-content");
+            if (body)
+              body.innerHTML = `<div style="color:var(--text2);font-family:'Barlow Condensed',sans-serif;font-size:15px;padding:20px 0;">Loading game data…</div>`;
+            try {
+              await myTeamLoad();
+            } catch (e) {}
+            allGames = await loadAllGames();
+            try {
+              await oppLoad();
+            } catch (e) {}
+          } else if (!(_opponents && _opponents.length)) {
+            try {
+              await oppLoad();
+            } catch (e) {}
+          }
+
+          // Build team list: myTeam + all saved opponents + any misc teams from game history
+          const teams = [];
+          const seen = new Set();
+
+          // My team
+          const myName = window._myTeamNameCache || null;
+          if (myName && !seen.has(myName)) {
+            seen.add(myName);
+            teams.push({ name: myName, label: myName, badge: "MY TEAM" });
+          }
+
+          // Saved opponents
+          (_opponents || []).forEach((o) => {
+            if (!seen.has(o.name)) {
+              seen.add(o.name);
+              teams.push({ name: o.name, label: o.name, badge: null });
+            }
+          });
+
+          // Misc teams from game history
+          allGames.forEach((g) => {
+            [g.awayTeam, g.homeTeam].forEach((t) => {
+              if (t && !seen.has(t)) {
+                seen.add(t);
+                teams.push({ name: t, label: t, badge: "MISC" });
+              }
+            });
+          });
+
+          const btnWrap = document.getElementById("scout-team-btns");
+          if (!btnWrap) return;
+          if (!teams.length) {
+            btnWrap.innerHTML = `<span style="color:var(--text3);font-family:'Barlow Condensed',sans-serif;font-size:13px;">No game history found.</span>`;
+            return;
+          }
+          btnWrap.innerHTML = teams
+            .map(
+              (t) =>
+                `<button class="scout-team-btn${
+                  _scoutSelectedTeam === t.name ? " active" : ""
+                }" data-scout-team="${t.name.replace(
+                  /"/g,
+                  "&quot;"
+                )}" onclick="scoutSelectTeam(this.dataset.scoutTeam)">
+              ${
+                t.badge
+                  ? `<span style="font-size:9px;opacity:0.65;margin-right:4px;">${t.badge}</span>`
+                  : ""
+              }${t.label}
+            </button>`
+            )
+            .join("");
+
+          if (_scoutSelectedTeam && seen.has(_scoutSelectedTeam)) {
+            scoutBuildCards(_scoutSelectedTeam);
+          } else {
+            document.getElementById(
+              "scout-overview-content"
+            ).innerHTML = `<div style="color:var(--text2);font-family:'Barlow Condensed',sans-serif;font-size:15px;padding:20px 0;">Select a team above to generate scouting cards.</div>`;
+          }
+        }
+
+        function scoutSelectTeam(name) {
+          _scoutSelectedTeam = name;
+          document.querySelectorAll(".scout-team-btn").forEach((b) => {
+            b.classList.toggle("active", b.dataset.scoutTeam === name);
+          });
+          scoutBuildCards(name);
+        }
+
+        // Normalize old "FB" pitch type to "4SFB" at display time only — never touches stored data
+        function _normPT(t) {
+          if (!t) return t;
+          return t.toUpperCase() === "FB" ? "4SFB" : t;
+        }
+
+        function _scoutFmt(v, dec) {
+          if (v == null || isNaN(v)) return "—";
+          return dec != null ? v.toFixed(dec) : String(v);
+        }
+        function _scoutPct(n, d) {
+          if (!d) return "—";
+          return ((n / d) * 100).toFixed(0) + "%";
+        }
+        function _scoutAvg(h, ab) {
+          if (!ab) return ".000";
+          return "." + String(Math.round((h / ab) * 1000)).padStart(3, "0");
+        }
+        function _scoutOBP(h, bb, hbp, pa) {
+          if (!pa) return ".000";
+          const n = h + bb + hbp;
+          return "." + String(Math.round((n / pa) * 1000)).padStart(3, "0");
+        }
+        function _scoutSLG(h, d, t, hr, ab) {
+          if (!ab) return ".000";
+          const tb = h - d - t - hr + d * 2 + t * 3 + hr * 4;
+          return "." + String(Math.round((tb / ab) * 1000)).padStart(3, "0");
+        }
+
+        function scoutBuildCards(teamName) {
+          const games = getTeamGames(teamName);
+          if (!games.length) {
+            document.getElementById(
+              "scout-overview-content"
+            ).innerHTML = `<div style="color:var(--text2);font-family:'Barlow Condensed',sans-serif;font-size:15px;">No game data for ${teamName}.</div>`;
+            return;
+          }
+
+          const hitters = getTeamRoster(teamName, games)
+            .filter((p) => p.pa >= 1)
+            .sort((a, b) => (b.ab || 0) - (a.ab || 0));
+          const pitchers = getTeamPitchers(teamName, games).sort(
+            (a, b) => (b.pitches || 0) - (a.pitches || 0)
+          );
+
+          // Build hitter tendency rows
+          const hitterRows = hitters
+            .map((p) => {
+              const pitches = getPlayerPitches(teamName, p.name, games);
+              // Spray direction
+              const inPlay = pitches.filter(
+                (px) => px.spray && px.spray.x != null
+              );
+              let pull = 0,
+                center = 0,
+                oppo = 0;
+              const isLHH = (p.hand || "R").toUpperCase().startsWith("L");
+              inPlay.forEach((px) => {
+                const angle =
+                  (Math.atan2(px.spray.x - 280, -(px.spray.y - 468)) * 180) /
+                  Math.PI;
+                if (isLHH) {
+                  if (angle > 15) pull++;
+                  else if (angle < -15) oppo++;
+                  else center++;
+                } else {
+                  if (angle < -15) pull++;
+                  else if (angle > 15) oppo++;
+                  else center++;
+                }
+              });
+              const ipTotal = pull + center + oppo || 1;
+              // Batted ball type
+              const gb = inPlay.filter(
+                (px) =>
+                  px.spray.btype === "groundball" ||
+                  px.spray.btype === "weakgrounder"
+              ).length;
+              const fb = inPlay.filter(
+                (px) =>
+                  px.spray.btype === "flyball" || px.spray.btype === "popup"
+              ).length;
+              const ld = inPlay.filter(
+                (px) => px.spray.btype === "linedrive"
+              ).length;
+              const bbTotal = gb + fb + ld || 1;
+              // Count tendencies: first pitch swing, 2-strike K rate
+              const fpPitches = pitches.filter((px) => {
+                const c = _ppc(px);
+                return c.balls === 0 && c.strikes === 0;
+              });
+              const fpSwings = fpPitches.filter((px) =>
+                [
+                  "strike-swinging",
+                  "foul",
+                  "single",
+                  "double",
+                  "triple",
+                  "homerun",
+                  "groundout",
+                  "flyout",
+                  "lineout",
+                  "sacbunt",
+                  "sacfly",
+                  "error",
+                ].includes(px.outcome)
+              ).length;
+              const twoStrikePitches = pitches.filter((px) => {
+                const c = _ppc(px);
+                return c.strikes === 2;
+              });
+              const twoStrikeK = twoStrikePitches.filter(
+                (px) =>
+                  px.outcome === "strike-swinging" ||
+                  px.outcome === "strike-looking"
+              ).length;
+              // Hot zone: most hit pitch type
+              const hitPitches = pitches.filter((px) =>
+                ["single", "double", "triple", "homerun"].includes(px.outcome)
+              );
+              const ptHits = {};
+              hitPitches.forEach((px) => {
+                const _pt = _normPT(px.pitchType) || "?";
+                ptHits[_pt] = (ptHits[_pt] || 0) + 1;
+              });
+              const hotPT = Object.entries(ptHits).sort(
+                (a, b) => b[1] - a[1]
+              )[0];
+              // Swing%
+              const swingOutcomes = [
+                "strike-swinging",
+                "foul",
+                "single",
+                "double",
+                "triple",
+                "homerun",
+                "groundout",
+                "flyout",
+                "lineout",
+                "sacbunt",
+                "sacfly",
+                "error",
+              ];
+              const swings = pitches.filter((px) =>
+                swingOutcomes.includes(px.outcome)
+              ).length;
+              const chaseOutcomes = ["strike-swinging", "foul"];
+              const ooz = pitches.filter((px) => {
+                if (!px.pitchX || !px.pitchY) return false;
+                const inZ =
+                  px.pitchX >= 30 &&
+                  px.pitchX <= 70 &&
+                  px.pitchY >= 30 &&
+                  px.pitchY <= 70;
+                return !inZ && chaseOutcomes.includes(px.outcome);
+              }).length;
+              const oozTotal = pitches.filter((px) => {
+                if (!px.pitchX || !px.pitchY) return false;
+                return !(
+                  px.pitchX >= 30 &&
+                  px.pitchX <= 70 &&
+                  px.pitchY >= 30 &&
+                  px.pitchY <= 70
+                );
+              }).length;
+
+              // AVG by pitch family
+              const famStats = {
+                fb: { h: 0, ab: 0 },
+                br: { h: 0, ab: 0 },
+                os: { h: 0, ab: 0 },
+              };
+              const _AB_END = new Set([
+                "single",
+                "double",
+                "triple",
+                "homerun",
+                "groundout",
+                "flyout",
+                "lineout",
+                "strikeout-swinging",
+                "strikeout-looking",
+                "error",
+              ]);
+              const _HIT_END = new Set([
+                "single",
+                "double",
+                "triple",
+                "homerun",
+              ]);
+              pitches.forEach((px) => {
+                const fam = pitchTypeFamily(_normPT(px.pitchType) || "");
+                if (!famStats[fam]) return;
+                if (_AB_END.has(px.outcome)) {
+                  famStats[fam].ab++;
+                  if (_HIT_END.has(px.outcome)) famStats[fam].h++;
+                }
+              });
+              const avgFB = famStats.fb.ab
+                ? _scoutAvg(famStats.fb.h, famStats.fb.ab)
+                : "—";
+              const avgBR = famStats.br.ab
+                ? _scoutAvg(famStats.br.h, famStats.br.ab)
+                : "—";
+              const avgCH = famStats.os.ab
+                ? _scoutAvg(famStats.os.h, famStats.os.ab)
+                : "—";
+
+              // Spray bar HTML
+              const pullW = Math.round((pull / ipTotal) * 100);
+              const centW = Math.round((center / ipTotal) * 100);
+              const oppoW = 100 - pullW - centW;
+              const sprayBar = inPlay.length
+                ? `<div class="scout-spray-bar">
+              <div class="scout-spray-seg" style="width:${pullW}%;background:#e84a4a;"></div>
+              <div class="scout-spray-seg" style="width:${centW}%;background:#aaa;"></div>
+              <div class="scout-spray-seg" style="width:${oppoW}%;background:#2d8a3e;"></div>
+            </div>
+            <div style="font-size:11px;font-weight:700;margin-top:3px;display:flex;gap:6px;">
+              <span style="color:#e84a4a;">${pullW}% Pull</span>
+              <span style="color:#888;">${centW}% Mid</span>
+              <span style="color:#2d8a3e;">${oppoW}% Oppo</span>
+            </div>`
+                : "—";
+
+              // Dominant direction pill
+              const dom =
+                pull > oppo && pull > center
+                  ? "Pull"
+                  : oppo > center
+                  ? "Oppo"
+                  : "Middle";
+              const domPill = inPlay.length
+                ? `<span class="scout-tendency-pill ${
+                    dom === "Pull"
+                      ? "pill-pull"
+                      : dom === "Oppo"
+                      ? "pill-oppo"
+                      : "pill-middle"
+                  }">${dom}</span>`
+                : "";
+
+              // Batted ball type pill
+              const domBB = gb > fb && gb > ld ? "GB" : fb > ld ? "FB" : "LD";
+              const bbPill = inPlay.length
+                ? `<span class="scout-tendency-pill ${
+                    domBB === "GB"
+                      ? "pill-gb"
+                      : domBB === "FB"
+                      ? "pill-fb"
+                      : "pill-ld"
+                  }">${domBB}</span>`
+                : "";
+
+              return `<tr>
+              <td style="font-weight:700;">${p.name}</td>
+              <td class="num">${p.num || "—"}</td>
+              <td class="num">${p.pos || "—"}</td>
+              <td class="num">${p.hand || "—"}</td>
+              <td class="num">${p.ab || 0}</td>
+              <td class="num">${_scoutAvg(p.hits, p.ab)}</td>
+              <td class="num">${_scoutOBP(p.hits, p.bb, p.hbp, p.pa)}</td>
+              <td class="num">${_scoutPct(p.k, p.pa)}</td>
+              <td class="num">${_scoutPct(p.bb, p.pa)}</td>
+              <td>${sprayBar}</td>
+              <td>${domPill} ${bbPill}</td>
+              <td class="num">${
+                fpPitches.length ? _scoutPct(fpSwings, fpPitches.length) : "—"
+              }</td>
+              <td class="num">${
+                twoStrikePitches.length
+                  ? _scoutPct(twoStrikeK, twoStrikePitches.length)
+                  : "—"
+              }</td>
+              <td class="num">${
+                pitches.length ? _scoutPct(swings, pitches.length) : "—"
+              }</td>
+              <td>${
+                hotPT
+                  ? `<span style="font-size:11px;font-weight:700;">${hotPT[0]}</span> <span style="color:var(--text3);font-size:10px;">(${hotPT[1]}H)</span>`
+                  : "—"
+              }</td>
+              <td class="num">${avgFB}</td>
+              <td class="num">${avgBR}</td>
+              <td class="num">${avgCH}</td>
+            </tr>`;
+            })
+            .join("");
+
+          // Build pitcher tendency rows
+          const pitcherRows = pitchers
+            .map((p) => {
+              const pitches = getPitcherPitches(teamName, p.name, games);
+              // Pitch mix
+              const ptCount = {};
+              pitches.forEach((px) => {
+                const _pt = _normPT(px.pitchType) || "?";
+                ptCount[_pt] = (ptCount[_pt] || 0) + 1;
+              });
+              const topPitches = Object.entries(ptCount)
+                .sort((a, b) => b[1] - a[1])
+                .slice(0, 3);
+              const mixStr = topPitches
+                .map(([t, n]) => `${t} ${_scoutPct(n, pitches.length)}`)
+                .join(" · ");
+              // First pitch tendency
+              const fpPitches = pitches.filter((px) => {
+                const c = _ppc(px);
+                return c.balls === 0 && c.strikes === 0;
+              });
+              const fpStrikes = fpPitches.filter((px) =>
+                [
+                  "strike-swinging",
+                  "strike-looking",
+                  "foul",
+                  "single",
+                  "double",
+                  "triple",
+                  "homerun",
+                  "groundout",
+                  "flyout",
+                  "lineout",
+                  "sacbunt",
+                  "sacfly",
+                  "error",
+                ].includes(px.outcome)
+              ).length;
+              // 2-strike put-away
+              const twoK = pitches.filter((px) => {
+                const c = _ppc(px);
+                return c.strikes === 2;
+              });
+              const twoKPtCount = {};
+              twoK.forEach((px) => {
+                const _pt = _normPT(px.pitchType) || "?";
+                twoKPtCount[_pt] = (twoKPtCount[_pt] || 0) + 1;
+              });
+              const putaway = Object.entries(twoKPtCount).sort(
+                (a, b) => b[1] - a[1]
+              )[0];
+              // Strike% by pitch type
+              const ptStr = {};
+              pitches.forEach((px) => {
+                const _pt = _normPT(px.pitchType) || "?";
+                if (!ptStr[_pt]) ptStr[_pt] = { t: 0, s: 0 };
+                ptStr[_pt].t++;
+                if (_isStrike(px.outcome)) ptStr[_pt].s++;
+              });
+              const strByPt = Object.entries(ptStr)
+                .sort((a, b) => b[1].t - a[1].t)
+                .slice(0, 3)
+                .map(([t, s]) => `${t} ${((s.s / s.t) * 100).toFixed(0)}%`)
+                .join(" · ");
+              // Velo range
+              const vels = pitches
+                .map((px) => parseFloat(px.velocity))
+                .filter((v) => !isNaN(v) && v > 0);
+              const avgVel = vels.length
+                ? (vels.reduce((a, b) => a + b, 0) / vels.length).toFixed(1)
+                : "—";
+              const maxVel = vels.length ? Math.max(...vels).toFixed(1) : "—";
+              // Zone%
+              const zoneP = pitches.filter(
+                (px) =>
+                  px.pitchX >= 30 &&
+                  px.pitchX <= 70 &&
+                  px.pitchY >= 30 &&
+                  px.pitchY <= 70
+              ).length;
+
+              return `<tr>
+              <td style="font-weight:700;">${p.name}</td>
+              <td class="num">${p.num || "—"}</td>
+              <td class="num">${p.hand || "R"}</td>
+              <td class="num">${p.games || 0}</td>
+              <td class="num">${p.pitches || 0}</td>
+              <td class="num">${avgVel}</td>
+              <td class="num">${maxVel}</td>
+              <td class="num">${
+                pitches.length ? _scoutPct(p.k, p.bf || 1) : "—"
+              }</td>
+              <td class="num">${
+                pitches.length ? _scoutPct(p.bb, p.bf || 1) : "—"
+              }</td>
+              <td class="num">${
+                pitches.length ? _scoutPct(zoneP, pitches.length) : "—"
+              }</td>
+              <td class="num">${
+                fpPitches.length ? _scoutPct(fpStrikes, fpPitches.length) : "—"
+              }</td>
+              <td>${mixStr || "—"}</td>
+              <td>${strByPt || "—"}</td>
+              <td>${putaway ? `<strong>${putaway[0]}</strong>` : "—"}</td>
+            </tr>`;
+            })
+            .join("");
+
+          const html = `
+            <div class="scout-print-bar">
+              <button class="scout-print-btn" onclick="scoutPrint('hitters')">&#9112; Print Hitter Cards</button>
+              <button class="scout-print-btn" onclick="scoutPrint('pitchers')">&#9112; Print Pitcher Cards</button>
+              <button class="scout-print-btn" onclick="scoutPrint('both')">&#9112; Print Both (Double-Sided)</button>
+            </div>
+            <div class="scout-card-section" id="scout-hitter-section">
+              <div class="scout-card-section-title">Hitter Tendencies — ${teamName}</div>
+              ${
+                hitters.length
+                  ? `<div style="overflow-x:auto;"><table class="scout-card-table">
+                <thead><tr>
+                  <th>Player</th>
+                  <th class="num">#</th>
+                  <th class="num">POS</th>
+                  <th class="num">B</th>
+                  <th class="num">AB</th>
+                  <th class="num">AVG</th>
+                  <th class="num">OBP</th>
+                  <th class="num">K%</th>
+                  <th class="num">BB%</th>
+                  <th>Spray (Pull·Ctr·Oppo)</th>
+                  <th>Profile</th>
+                  <th class="num">FP Sw%</th>
+                  <th class="num">2K K%</th>
+                  <th class="num">Sw%</th>
+                  <th>Hits Off</th>
+                  <th class="num">vs FB</th>
+                  <th class="num">vs BR</th>
+                  <th class="num">vs CH</th>
+                </tr></thead>
+                <tbody>${hitterRows}</tbody>
+              </table></div>`
+                  : `<div style="color:var(--text3);font-family:'Barlow Condensed',sans-serif;font-size:13px;">No hitter data.</div>`
+              }
+            </div>
+            <div class="scout-card-section" id="scout-pitcher-section">
+              <div class="scout-card-section-title">Pitcher Tendencies — ${teamName}</div>
+              ${
+                pitchers.length
+                  ? `<div style="overflow-x:auto;"><table class="scout-card-table">
+                <thead><tr>
+                  <th>Pitcher</th>
+                  <th class="num">#</th>
+                  <th class="num">H</th>
+                  <th class="num">G</th>
+                  <th class="num">P</th>
+                  <th class="num">Avg V</th>
+                  <th class="num">Max V</th>
+                  <th class="num">K%</th>
+                  <th class="num">BB%</th>
+                  <th class="num">Zone%</th>
+                  <th class="num">FPS%</th>
+                  <th>Top Pitches</th>
+                  <th>Str% by Pitch</th>
+                  <th>2K Putaway</th>
+                </tr></thead>
+                <tbody>${pitcherRows}</tbody>
+              </table></div>`
+                  : `<div style="color:var(--text3);font-family:'Barlow Condensed',sans-serif;font-size:13px;">No pitcher data.</div>`
+              }
+            </div>`;
+
+          document.getElementById("scout-overview-content").innerHTML = html;
+        }
+
+        function scoutPrint(which) {
+          const printCSS = `
+            <style>
+              * { box-sizing: border-box; }
+              body { font-family: 'Arial Narrow', 'Barlow Condensed', Arial, sans-serif; font-size: 7px; margin: 0; color: #111; background: #fff; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+              h1 { font-size: 10px; font-weight: 900; letter-spacing: 0.5px; text-transform: uppercase; margin: 0 0 3px; }
+              h2 { font-size: 8px; font-weight: 700; letter-spacing: 0.3px; text-transform: uppercase; margin: 0 0 3px; color: #555; border-bottom: 1px solid #222; padding-bottom: 2px; }
+              .page { padding: 6px 8px; page-break-after: always; overflow: hidden; }
+              .page:last-child { page-break-after: avoid; }
+              table { width: 100%; border-collapse: collapse; font-size: 7px; margin-bottom: 4px; }
+              th { background: #333; color: #fff; font-weight: 700; font-size: 6px; letter-spacing: 0; text-transform: uppercase; padding: 1.5px 2px; text-align: left; }
+              th.num, td.num { text-align: center; }
+              td { padding: 1.5px 2px; border-bottom: 0.5px solid #e0e0e0; vertical-align: middle; font-size: 7px; }
+              tr:nth-child(even) td { background: #f9f9f9; }
+              .spray-bar { display: flex; height: 5px; border-radius: 2px; overflow: hidden; }
+              .pull-seg { background: #e84a4a; height: 100%; }
+              .ctr-seg { background: #aaa; height: 100%; }
+              .oppo-seg { background: #2d8a3e; height: 100%; }
+              .pill { display: inline-block; padding: 0px 2px; border-radius: 4px; font-size: 6px; font-weight: 700; }
+              .pill-pull { background: #fde8e8; color: #c03030; }
+              .pill-oppo { background: #d4f0db; color: #1e6a2a; }
+              .pill-middle { background: #eee; color: #555; }
+              .pill-center { background: #eee; color: #555; }
+              .pill-gb { background: #d4f0db; color: #1e6a2a; }
+              .pill-fb { background: #fde8e8; color: #c03030; }
+              .pill-ld { background: #fff8d4; color: #9a7000; }
+              .legend { font-size: 6px; color: #888; margin-top: 3px; }
+              .legend span { margin-right: 6px; }
+              .dsided-note { font-size: 6px; color: #888; text-align: center; margin: 4px 0 0; border-top: 0.5px dashed #ccc; padding-top: 3px; }
+            </style>`;
+
+          const teamName = _scoutSelectedTeam;
+          if (!teamName) return;
+          const games = getTeamGames(teamName);
+          const hitters = getTeamRoster(teamName, games)
+            .filter((p) => p.pa >= 1)
+            .sort((a, b) => (b.ab || 0) - (a.ab || 0));
+          const pitchers = getTeamPitchers(teamName, games).sort(
+            (a, b) => (b.pitches || 0) - (a.pitches || 0)
+          );
+
+          const buildHitterPrintTable = () => {
+            const rows = hitters
+              .map((p) => {
+                const pitches = getPlayerPitches(teamName, p.name, games);
+                const inPlay = pitches.filter(
+                  (px) => px.spray && px.spray.x != null
+                );
+                let pull = 0,
+                  center = 0,
+                  oppo = 0;
+                const isLHH = (p.hand || "R").toUpperCase().startsWith("L");
+                inPlay.forEach((px) => {
+                  const angle =
+                    (Math.atan2(px.spray.x - 280, -(px.spray.y - 468)) * 180) /
+                    Math.PI;
+                  if (isLHH) {
+                    if (angle > 15) pull++;
+                    else if (angle < -15) oppo++;
+                    else center++;
+                  } else {
+                    if (angle < -15) pull++;
+                    else if (angle > 15) oppo++;
+                    else center++;
+                  }
+                });
+                const ip = pull + center + oppo || 1;
+                const pullW = Math.round((pull / ip) * 100),
+                  centW = Math.round((center / ip) * 100),
+                  oppoW = 100 - pullW - centW;
+                const gb = inPlay.filter((px) =>
+                  ["groundball", "weakgrounder"].includes(px.spray.btype)
+                ).length;
+                const fb = inPlay.filter((px) =>
+                  ["flyball", "popup"].includes(px.spray.btype)
+                ).length;
+                const ld = inPlay.filter(
+                  (px) => px.spray.btype === "linedrive"
+                ).length;
+                const fpP = pitches.filter((px) => {
+                  const c = _ppc(px);
+                  return c.balls === 0 && c.strikes === 0;
+                });
+                const fpSw = fpP.filter((px) =>
+                  [
+                    "strike-swinging",
+                    "foul",
+                    "single",
+                    "double",
+                    "triple",
+                    "homerun",
+                    "groundout",
+                    "flyout",
+                    "lineout",
+                    "sacbunt",
+                    "sacfly",
+                    "error",
+                  ].includes(px.outcome)
+                ).length;
+                const tkP = pitches.filter((px) => {
+                  const c = _ppc(px);
+                  return c.strikes === 2;
+                });
+                const tkK = tkP.filter(
+                  (px) =>
+                    px.outcome === "strike-swinging" ||
+                    px.outcome === "strike-looking"
+                ).length;
+                const swings = pitches.filter((px) =>
+                  [
+                    "strike-swinging",
+                    "foul",
+                    "single",
+                    "double",
+                    "triple",
+                    "homerun",
+                    "groundout",
+                    "flyout",
+                    "lineout",
+                    "sacbunt",
+                    "sacfly",
+                    "error",
+                  ].includes(px.outcome)
+                ).length;
+                const hitP = pitches.filter((px) =>
+                  ["single", "double", "triple", "homerun"].includes(px.outcome)
+                );
+                const ptH = {};
+                hitP.forEach((px) => {
+                  const _pt = _normPT(px.pitchType) || "?";
+                  ptH[_pt] = (ptH[_pt] || 0) + 1;
+                });
+                const hotPT = Object.entries(ptH).sort(
+                  (a, b) => b[1] - a[1]
+                )[0];
+                const dom =
+                  pull > oppo && pull > center
+                    ? "Pull"
+                    : oppo > center
+                    ? "Oppo"
+                    : "Middle";
+                const domBB = gb > fb && gb > ld ? "GB" : fb > ld ? "FB" : "LD";
+                // AVG by pitch family
+                const famStatsPr = {
+                  fb: { h: 0, ab: 0 },
+                  br: { h: 0, ab: 0 },
+                  os: { h: 0, ab: 0 },
+                };
+                const _AB_ENDp = new Set([
+                  "single",
+                  "double",
+                  "triple",
+                  "homerun",
+                  "groundout",
+                  "flyout",
+                  "lineout",
+                  "strikeout-swinging",
+                  "strikeout-looking",
+                  "error",
+                ]);
+                const _HIT_ENDp = new Set([
+                  "single",
+                  "double",
+                  "triple",
+                  "homerun",
+                ]);
+                pitches.forEach((px) => {
+                  const fam = pitchTypeFamily(_normPT(px.pitchType) || "");
+                  if (!famStatsPr[fam]) return;
+                  if (_AB_ENDp.has(px.outcome)) {
+                    famStatsPr[fam].ab++;
+                    if (_HIT_ENDp.has(px.outcome)) famStatsPr[fam].h++;
+                  }
+                });
+                const avgFBp = famStatsPr.fb.ab
+                  ? _scoutAvg(famStatsPr.fb.h, famStatsPr.fb.ab)
+                  : "—";
+                const avgBRp = famStatsPr.br.ab
+                  ? _scoutAvg(famStatsPr.br.h, famStatsPr.br.ab)
+                  : "—";
+                const avgCHp = famStatsPr.os.ab
+                  ? _scoutAvg(famStatsPr.os.h, famStatsPr.os.ab)
+                  : "—";
+                return `<tr>
+                <td style="font-weight:700;">${p.name}</td>
+                <td class="num">${p.num || "—"}</td>
+                <td class="num">${p.pos || "—"}</td>
+                <td class="num">${p.hand || "—"}</td>
+                <td class="num">${p.ab || 0}</td>
+                <td class="num">${_scoutAvg(p.hits, p.ab)}</td>
+                <td class="num">${_scoutOBP(p.hits, p.bb, p.hbp, p.pa)}</td>
+                <td class="num">${_scoutPct(p.k, p.pa)}</td>
+                <td class="num">${_scoutPct(p.bb, p.pa)}</td>
+                <td>${
+                  inPlay.length
+                    ? `<div class="spray-bar"><div class="pull-seg" style="width:${pullW}%"></div><div class="ctr-seg" style="width:${centW}%"></div><div class="oppo-seg" style="width:${oppoW}%"></div></div><div style="font-size:5.5px;margin-top:1px;white-space:nowrap;"><span style="color:#c03030">${pullW}P</span>·<span style="color:#888">${centW}M</span>·<span style="color:#1e6a2a">${oppoW}O</span></div>`
+                    : "—"
+                }</td>
+                <td><span class="pill ${
+                  dom === "Pull"
+                    ? "pill-pull"
+                    : dom === "Oppo"
+                    ? "pill-oppo"
+                    : "pill-middle"
+                }">${dom}</span> <span class="pill ${
+                  domBB === "GB"
+                    ? "pill-gb"
+                    : domBB === "FB"
+                    ? "pill-fb"
+                    : "pill-ld"
+                }">${domBB}</span></td>
+                <td class="num">${
+                  fpP.length ? _scoutPct(fpSw, fpP.length) : "—"
+                }</td>
+                <td class="num">${
+                  tkP.length ? _scoutPct(tkK, tkP.length) : "—"
+                }</td>
+                <td class="num">${
+                  pitches.length ? _scoutPct(swings, pitches.length) : "—"
+                }</td>
+                <td>${hotPT ? `${hotPT[0]} (${hotPT[1]}H)` : "—"}</td>
+                <td class="num">${avgFBp}</td>
+                <td class="num">${avgBRp}</td>
+                <td class="num">${avgCHp}</td>
+              </tr>`;
+              })
+              .join("");
+            return `<table>
+              <thead><tr>
+                <th>Player</th><th class="num">#</th><th class="num">POS</th><th class="num">B</th>
+                <th class="num">AB</th><th class="num">AVG</th><th class="num">OBP</th>
+                <th class="num">K%</th><th class="num">BB%</th>
+                <th>Spray (Pull·Ctr·Oppo)</th><th>Profile</th>
+                <th class="num">FP Sw%</th><th class="num">2K K%</th><th class="num">Sw%</th><th>Hits Off</th>
+                <th class="num">vs FB</th><th class="num">vs BR</th><th class="num">vs CH</th>
+              </tr></thead>
+              <tbody>${rows}</tbody>
+            </table>
+            <div class="legend">
+              <span>&#9632; Pull (Red)</span><span>&#9632; Middle (Gray)</span><span>&#9632; Oppo (Green)</span>
+              <span>FP Sw% = First Pitch Swing%</span><span>2K K% = K rate with 2 strikes</span>
+            </div>`;
+          };
+
+          const buildPitcherPrintTable = () => {
+            const rows = pitchers
+              .map((p) => {
+                const pitches = getPitcherPitches(teamName, p.name, games);
+                const ptCount = {};
+                pitches.forEach((px) => {
+                  const _pt = _normPT(px.pitchType) || "?";
+                  ptCount[_pt] = (ptCount[_pt] || 0) + 1;
+                });
+                const topP = Object.entries(ptCount)
+                  .sort((a, b) => b[1] - a[1])
+                  .slice(0, 3)
+                  .map(([t, n]) => `${t} ${_scoutPct(n, pitches.length)}`)
+                  .join(" · ");
+                const fpP = pitches.filter((px) => {
+                  const c = _ppc(px);
+                  return c.balls === 0 && c.strikes === 0;
+                });
+                const fpStr = fpP.filter((px) =>
+                  [
+                    "strike-swinging",
+                    "strike-looking",
+                    "foul",
+                    "single",
+                    "double",
+                    "triple",
+                    "homerun",
+                    "groundout",
+                    "flyout",
+                    "lineout",
+                    "sacbunt",
+                    "sacfly",
+                    "error",
+                  ].includes(px.outcome)
+                ).length;
+                const tkP = pitches.filter((px) => {
+                  const c = _ppc(px);
+                  return c.strikes === 2;
+                });
+                const tkPtC = {};
+                tkP.forEach((px) => {
+                  const _pt = _normPT(px.pitchType) || "?";
+                  tkPtC[_pt] = (tkPtC[_pt] || 0) + 1;
+                });
+                const putaway = Object.entries(tkPtC).sort(
+                  (a, b) => b[1] - a[1]
+                )[0];
+                const vels = pitches
+                  .map((px) => parseFloat(px.velocity))
+                  .filter((v) => !isNaN(v) && v > 0);
+                const avgV = vels.length
+                  ? (vels.reduce((a, b) => a + b, 0) / vels.length).toFixed(1)
+                  : "—";
+                const maxV = vels.length ? Math.max(...vels).toFixed(1) : "—";
+                const zoneP = pitches.filter(
+                  (px) =>
+                    px.pitchX >= 30 &&
+                    px.pitchX <= 70 &&
+                    px.pitchY >= 30 &&
+                    px.pitchY <= 70
+                ).length;
+                const ptS = {};
+                pitches.forEach((px) => {
+                  const _pt = _normPT(px.pitchType) || "?";
+                  if (!ptS[_pt]) ptS[_pt] = { t: 0, s: 0 };
+                  ptS[_pt].t++;
+                  if (_isStrike(px.outcome)) ptS[_pt].s++;
+                });
+                const sByPt = Object.entries(ptS)
+                  .sort((a, b) => b[1].t - a[1].t)
+                  .slice(0, 3)
+                  .map(([t, s]) => `${t} ${((s.s / s.t) * 100).toFixed(0)}%`)
+                  .join(" · ");
+                return `<tr>
+                <td style="font-weight:700;">${p.name}</td>
+                <td class="num">${p.num || "—"}</td>
+                <td class="num">${p.hand || "R"}</td>
+                <td class="num">${p.games || 0}</td>
+                <td class="num">${p.pitches || 0}</td>
+                <td class="num">${avgV}</td>
+                <td class="num">${maxV}</td>
+                <td class="num">${
+                  pitches.length ? _scoutPct(p.k, p.bf || 1) : "—"
+                }</td>
+                <td class="num">${
+                  pitches.length ? _scoutPct(p.bb, p.bf || 1) : "—"
+                }</td>
+                <td class="num">${
+                  pitches.length ? _scoutPct(zoneP, pitches.length) : "—"
+                }</td>
+                <td class="num">${
+                  fpP.length ? _scoutPct(fpStr, fpP.length) : "—"
+                }</td>
+                <td>${topP || "—"}</td>
+                <td>${sByPt || "—"}</td>
+                <td>${putaway ? `<strong>${putaway[0]}</strong>` : "—"}</td>
+              </tr>`;
+              })
+              .join("");
+            return `<table>
+              <thead><tr>
+                <th>Pitcher</th><th class="num">#</th><th class="num">H</th><th class="num">G</th>
+                <th class="num">P</th><th class="num">Avg V</th><th class="num">Max V</th>
+                <th class="num">K%</th><th class="num">BB%</th><th class="num">Zone%</th>
+                <th class="num">FPS%</th><th>Top Pitches</th><th>Str% by Pitch</th><th>2K Putaway</th>
+              </tr></thead>
+              <tbody>${rows}</tbody>
+            </table>
+            <div class="legend">
+              <span>FPS% = First Pitch Strike%</span><span>Zone% = pitches in strike zone</span><span>Str% = strike rate per pitch type</span><span>2K Putaway = most used pitch with 2 strikes</span>
+            </div>`;
+          };
+
+          let pages = "";
+          if (which === "hitters" || which === "both") {
+            pages += `<div class="page">
+              <h1>Hitter Scouting Card — ${teamName}</h1>
+              ${buildHitterPrintTable()}
+              ${
+                which === "both"
+                  ? '<div class="dsided-note">Side 1 of 2 — print double-sided (flip on long edge)</div>'
+                  : ""
+              }
+            </div>`;
+          }
+          if (which === "pitchers" || which === "both") {
+            pages += `<div class="page">
+              <h1>Pitcher Scouting Card — ${teamName}</h1>
+              ${buildPitcherPrintTable()}
+              ${
+                which === "both"
+                  ? '<div class="dsided-note">Side 2 of 2</div>'
+                  : ""
+              }
+            </div>`;
+          }
+
+          const frame = document.getElementById("print-scout-frame");
+          frame.innerHTML = printCSS + pages;
+          document.body.classList.add("scout-printing");
+          setTimeout(() => {
+            window.print();
+            setTimeout(() => {
+              document.body.classList.remove("scout-printing");
+              frame.innerHTML = "";
+            }, 500);
+          }, 100);
+        }
       </script>
     </div>
     <!-- ── Player Comparison Picker ── -->
