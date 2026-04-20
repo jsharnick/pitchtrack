@@ -6792,6 +6792,34 @@
                         >
                       </button>
                       <button
+                        onclick="commitIntentionalWalk()"
+                        onmouseout="this.style.borderColor='var(--border2)';this.style.color='var(--text3)'"
+                        onmouseover="this.style.borderColor='var(--accent)';this.style.color='var(--accent)'"
+                        style="
+                          display: flex;
+                          align-items: center;
+                          gap: 5px;
+                          padding: 3px 8px 3px 6px;
+                          background: var(--surface2);
+                          border: 1px solid var(--border2);
+                          border-radius: 5px;
+                          cursor: pointer;
+                          transition: all 0.14s;
+                          color: var(--text3);
+                        "
+                        title="Intentional Walk"
+                      >
+                        <span
+                          style="
+                            font-family: 'Barlow Condensed', sans-serif;
+                            font-weight: 700;
+                            font-size: 10px;
+                            letter-spacing: 1px;
+                          "
+                          >IBB</span
+                        >
+                      </button>
+                      <button
                         onclick="openPitchClockModal()"
                         onmouseout="this.style.borderColor='var(--border2)';this.style.color='var(--text3)'"
                         onmouseover="this.style.borderColor='var(--accent)';this.style.color='var(--accent)'"
@@ -29475,7 +29503,7 @@
 
         function aggregateBattersFromGame(batters) {
           return (batters || [])
-            .filter((b) => (b.ab || 0) + (b.bb || 0) + (b.hbp || 0) > 0)
+            .filter((b) => (b.pa || 0) > 0)
             .map((b) => ({ ...b, games: 1 }));
         }
         function aggregatePitchersFromGame(pitchers) {
@@ -30956,6 +30984,26 @@
         }
         function closePickoffModal() {
           qs("pickoff-modal").style.display = "none";
+        }
+
+        function commitIntentionalWalk() {
+          const p = activePitcher();
+          if (p) {
+            p.bb = (p.bb || 0) + 1;
+            p.ibb = (p.ibb || 0) + 1;
+            p.bf = (p.bf || 0) + 1;
+          }
+          toast("Intentional Walk!");
+          logEvent(
+            "🚶",
+            "Intentional Walk (IBB)",
+            `${currentBatter()?.name || "Batter"} takes first · ${
+              p ? p.name : ""
+            }`
+          );
+          recordAtBatResult("BB", "BB");
+          advanceOnWalk();
+          _scheduleAutoSave();
         }
 
         function openRunnersModal() {
