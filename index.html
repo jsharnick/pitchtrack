@@ -85,7 +85,7 @@
         position: relative;
         z-index: 1;
         width: 100%;
-        max-width: 860px;
+        max-width: 1200px;
         padding: 32px;
         display: flex;
         flex-direction: column;
@@ -127,7 +127,7 @@
 
       .hs-cards {
         display: grid;
-        grid-template-columns: 1fr 1fr 1fr 1fr;
+        grid-template-columns: repeat(5, 1fr);
         gap: 18px;
         width: 100%;
       }
@@ -136,12 +136,12 @@
         background: rgba(255, 255, 255, 0.055);
         border: 1.5px solid rgba(255, 255, 255, 0.1);
         border-radius: 18px;
-        padding: 20px 22px 18px;
+        padding: 16px 16px 14px;
         cursor: pointer;
         transition: all 0.22s cubic-bezier(0.22, 1, 0.36, 1);
         display: flex;
         flex-direction: column;
-        gap: 8px;
+        gap: 6px;
         backdrop-filter: blur(16px);
         position: relative;
         overflow: hidden;
@@ -172,20 +172,20 @@
       .hs-card-title {
         font-family: "Barlow Condensed", sans-serif;
         font-weight: 900;
-        font-size: 22px;
+        font-size: 19px;
         color: #fff;
         letter-spacing: 1px;
         text-transform: uppercase;
         text-align: center;
       }
       .hs-card-desc {
-        font-size: 11.5px;
+        font-size: 10.5px;
         color: rgba(255, 255, 255, 0.5);
-        line-height: 1.5;
+        line-height: 1.45;
         text-align: center;
       }
       .hs-tags {
-        display: flex;
+        display: none;
         flex-wrap: wrap;
         gap: 4px;
         margin-top: 1px;
@@ -203,7 +203,7 @@
       }
       .hs-cta {
         margin-top: auto;
-        padding: 8px 0;
+        padding: 7px 0;
         border-radius: 9px;
         background: rgba(255, 255, 255, 0.08);
         border: 1px solid rgba(255, 255, 255, 0.14);
@@ -492,7 +492,8 @@
       body.dark #hub-app,
       body.dark #panel-tracker,
       body.dark #panel-myteam,
-      body.dark #panel-opponents {
+      body.dark #panel-opponents,
+      body.dark #panel-scout-overview {
         background: var(--bg);
       }
       /* Hub misc */
@@ -1921,12 +1922,16 @@
         width: 22px;
         height: 22px;
         border-radius: 50%;
-        border: 2.5px dashed rgba(255, 255, 255, 0.7);
-        background: rgba(255, 255, 255, 0.18);
+        border: 2.5px dashed rgba(0, 0, 0, 0.5);
+        background: rgba(0, 0, 0, 0.12);
         transform: translate(-50%, -50%);
         pointer-events: none;
         z-index: 5;
         animation: placePulse 1s ease-in-out infinite;
+      }
+      body.dark .zone-placeholder {
+        border-color: rgba(255, 255, 255, 0.7);
+        background: rgba(255, 255, 255, 0.18);
       }
       @keyframes placePulse {
         0%,
@@ -4055,26 +4060,41 @@
         }
         .hs-cards {
           grid-template-columns: 1fr;
-          gap: 14px;
+          gap: 10px;
         }
         .hs-card {
-          padding: 24px 20px;
+          padding: 14px 16px 12px;
+          gap: 5px;
+          flex-direction: row;
+          align-items: center;
+          text-align: left;
+        }
+        .hs-card > div[style] {
+          text-align: left;
+          flex: 1;
         }
         .hs-card-title {
-          font-size: 22px;
+          text-align: left;
         }
         .hs-card-desc {
-          font-size: 12px;
-        }
-        .hs-tags {
-          gap: 4px;
-        }
-        .hs-tag {
-          font-size: 7.5px;
+          text-align: left;
         }
         .hs-cta {
-          font-size: 13px;
-          padding: 9px 0;
+          display: none;
+        }
+        .hs-card-title {
+          font-size: 17px;
+        }
+        .hs-card-desc {
+          font-size: 10px;
+          line-height: 1.4;
+        }
+        .hs-tags {
+          display: none;
+        }
+        .hs-cta {
+          font-size: 12px;
+          padding: 7px 0;
         }
 
         /* ── KEEP: hides preview button on real mobile devices ── */
@@ -4960,6 +4980,208 @@
         overflow: hidden;
         background: #f0f2f5;
       }
+      /* ── Scouting Overview panel ── */
+      #panel-scout-overview {
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+        background: var(--bg);
+      }
+      #scout-overview-header {
+        padding: 14px 20px 10px;
+        border-bottom: 1px solid var(--border);
+        flex-shrink: 0;
+      }
+      #scout-overview-header h2 {
+        font-family: "Barlow Condensed", sans-serif;
+        font-weight: 900;
+        font-size: 22px;
+        color: var(--text);
+        margin: 0 0 10px;
+        letter-spacing: 0.5px;
+      }
+      #scout-team-btns {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+      }
+      .scout-team-btn {
+        padding: 6px 14px;
+        border-radius: 20px;
+        border: 1.5px solid var(--border2);
+        background: var(--surface);
+        color: var(--text2);
+        font-family: "Barlow Condensed", sans-serif;
+        font-weight: 700;
+        font-size: 13px;
+        cursor: pointer;
+        transition: all 0.15s;
+        letter-spacing: 0.5px;
+      }
+      .scout-team-btn:hover {
+        border-color: var(--accent);
+        color: var(--accent);
+      }
+      .scout-team-btn.active {
+        background: var(--accent);
+        border-color: var(--accent);
+        color: #fff;
+      }
+      #scout-overview-body {
+        flex: 1;
+        overflow-y: auto;
+        padding: 16px 20px;
+      }
+      /* Scouting card tables */
+      .scout-card-section {
+        margin-bottom: 28px;
+      }
+      .scout-card-section-title {
+        font-family: "Barlow Condensed", sans-serif;
+        font-weight: 900;
+        font-size: 16px;
+        letter-spacing: 1px;
+        text-transform: uppercase;
+        color: var(--text2);
+        margin: 0 0 10px;
+        padding-bottom: 4px;
+        border-bottom: 2px solid var(--border);
+      }
+      .scout-card-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-family: "Barlow Condensed", sans-serif;
+        font-size: 15px;
+      }
+      .scout-card-table th {
+        background: var(--surface2);
+        color: var(--text2);
+        font-weight: 900;
+        font-size: 12px;
+        letter-spacing: 0.8px;
+        text-transform: uppercase;
+        padding: 5px 8px;
+        text-align: left;
+        border-bottom: 2px solid var(--border);
+        white-space: nowrap;
+      }
+      .scout-card-table th.num {
+        text-align: center;
+      }
+      .scout-card-table td {
+        padding: 4px 8px;
+        border-bottom: 2px solid var(--border);
+        color: var(--text);
+        vertical-align: middle;
+        font-weight: 600;
+      }
+      .scout-card-table td.num {
+        text-align: center;
+        color: var(--text2);
+        font-weight: 700;
+      }
+      .scout-card-table tr:last-child td {
+        border-bottom: none;
+      }
+      .scout-card-table tr:hover td {
+        background: var(--surface);
+      }
+      .scout-spray-bar {
+        display: flex;
+        height: 10px;
+        border-radius: 4px;
+        overflow: hidden;
+        min-width: 80px;
+        gap: 1px;
+      }
+      .scout-spray-seg {
+        height: 100%;
+        transition: width 0.3s;
+      }
+      .scout-tendency-pill {
+        display: inline-block;
+        padding: 2px 7px;
+        border-radius: 10px;
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: 0.5px;
+      }
+      .pill-pull {
+        background: rgba(232, 74, 74, 0.12);
+        color: #e84a4a;
+      }
+      .pill-oppo {
+        background: rgba(45, 138, 62, 0.15);
+        color: #2d8a3e;
+      }
+      .pill-middle {
+        background: rgba(150, 150, 150, 0.15);
+        color: #888;
+      }
+      .pill-center {
+        background: rgba(150, 150, 150, 0.15);
+        color: #888;
+      }
+      .pill-gb {
+        background: rgba(45, 138, 62, 0.12);
+        color: #2d8a3e;
+      }
+      .pill-fb {
+        background: rgba(232, 74, 74, 0.1);
+        color: #e84a4a;
+      }
+      .pill-ld {
+        background: rgba(232, 200, 74, 0.18);
+        color: #e8c84a;
+      }
+      .pill-k {
+        background: rgba(204, 26, 26, 0.12);
+        color: var(--accent);
+      }
+      .pill-bb {
+        background: rgba(106, 232, 122, 0.15);
+        color: #4ae88a;
+      }
+      .scout-print-bar {
+        display: flex;
+        gap: 10px;
+        margin-bottom: 16px;
+        align-items: center;
+      }
+      .scout-print-btn {
+        padding: 8px 18px;
+        border-radius: 8px;
+        border: 1.5px solid var(--border2);
+        background: var(--surface2);
+        color: var(--text);
+        font-family: "Barlow Condensed", sans-serif;
+        font-weight: 700;
+        font-size: 13px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        transition: all 0.15s;
+      }
+      .scout-print-btn:hover {
+        border-color: var(--accent);
+        color: var(--accent);
+      }
+      /* ── Print styles ── */
+      @media print {
+        @page {
+          size: 7in 4in;
+          margin: 0.12in 0.15in;
+        }
+        body.scout-printing > *:not(#print-scout-frame) {
+          display: none !important;
+        }
+        body.scout-printing #print-scout-frame {
+          display: block !important;
+          position: static;
+          width: 100%;
+        }
+      }
       /* ── Opponents: list-of-tiles view ── */
       .opp-tiles-grid {
         display: grid;
@@ -5557,6 +5779,18 @@
             </div>
             <div class="hs-cta">Manage Opponents</div>
           </div>
+          <div class="hs-card" onclick="openPanel('scout-overview')">
+            <div class="hs-card-icon"></div>
+            <div style="text-align: center; width: 100%">
+              <div class="hs-card-title">Scouting Cards</div>
+              <div class="hs-card-desc">
+                Printable scouting cards for any team in your game history.
+                Hitter spray tendencies, pitcher arsenals, count splits — one
+                page, ready for the dugout.
+              </div>
+            </div>
+            <div class="hs-cta">View Scouting Cards</div>
+          </div>
         </div>
         <!-- ── KEEP: Mobile Preview button — localhost/Live Server only, hidden everywhere else via CSS+JS ── -->
         <div id="mob-preview-wrap" style="margin-top: 24px; text-align: center">
@@ -5641,6 +5875,13 @@
       </div>
       <div class="sn-tab" id="sntab-opponents" onclick="openPanel('opponents')">
         Opponents
+      </div>
+      <div
+        class="sn-tab"
+        id="sntab-scout-overview"
+        onclick="openPanel('scout-overview')"
+      >
+        Scouting Cards
       </div>
       <div class="sn-spacer"></div>
       <button
@@ -6548,6 +6789,34 @@
                             letter-spacing: 1px;
                           "
                           >RUNNERS</span
+                        >
+                      </button>
+                      <button
+                        onclick="commitIntentionalWalk()"
+                        onmouseout="this.style.borderColor='var(--border2)';this.style.color='var(--text3)'"
+                        onmouseover="this.style.borderColor='var(--accent)';this.style.color='var(--accent)'"
+                        style="
+                          display: flex;
+                          align-items: center;
+                          gap: 5px;
+                          padding: 3px 8px 3px 6px;
+                          background: var(--surface2);
+                          border: 1px solid var(--border2);
+                          border-radius: 5px;
+                          cursor: pointer;
+                          transition: all 0.14s;
+                          color: var(--text3);
+                        "
+                        title="Intentional Walk"
+                      >
+                        <span
+                          style="
+                            font-family: 'Barlow Condensed', sans-serif;
+                            font-weight: 700;
+                            font-size: 10px;
+                            letter-spacing: 1px;
+                          "
+                          >IBB</span
                         >
                       </button>
                       <button
@@ -8001,6 +8270,23 @@
           >
             0 players
           </div>
+          <button
+            onclick="myTeamGenerateLineup()"
+            style="
+              padding: 6px 12px;
+              background: var(--surface2);
+              border: 1px solid var(--border2);
+              border-radius: 6px;
+              font-family: 'Barlow Condensed', sans-serif;
+              font-weight: 700;
+              font-size: 12px;
+              color: var(--text2);
+              cursor: pointer;
+              flex-shrink: 0;
+            "
+          >
+            Generate Best Lineup
+          </button>
           <div
             style="display: flex; gap: 6px; align-items: center; flex-shrink: 0"
           >
@@ -8394,6 +8680,29 @@
         </div>
       </div>
     </div>
+
+    <!-- ══ SCOUTING OVERVIEW PANEL ══════════════════════════════════════════ -->
+    <div class="app-panel" id="panel-scout-overview">
+      <div id="scout-overview-header">
+        <h2>Scouting Overview</h2>
+        <div id="scout-team-btns"></div>
+      </div>
+      <div id="scout-overview-body">
+        <div
+          id="scout-overview-content"
+          style="
+            color: var(--text2);
+            font-family: 'Barlow Condensed', sans-serif;
+            font-size: 15px;
+            padding: 20px 0;
+          "
+        >
+          Select a team above to generate scouting cards.
+        </div>
+      </div>
+    </div>
+    <!-- Hidden print frame -->
+    <div id="print-scout-frame" style="display: none"></div>
 
     <!-- Assign to Saved Opponent modal -->
     <div
@@ -10083,6 +10392,150 @@
       <!-- PITCH CLOCK VIOLATION MODAL -->
 
       <!-- DELETE CONFIRM MODAL — at body level so pointer-events always work -->
+    </div>
+    <!-- MY TEAM PLAYER VIEW MODAL — body level so pointer-events work regardless of panel state -->
+    <div
+      id="mt-player-view"
+      style="
+        display: none;
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.72);
+        z-index: 3000;
+        align-items: flex-start;
+        justify-content: center;
+        padding-top: 36px;
+        overflow-y: auto;
+      "
+    >
+      <div
+        style="
+          background: var(--surface2);
+          border: 1px solid var(--border2);
+          border-radius: 14px;
+          width: 800px;
+          max-width: 96vw;
+          max-height: 88vh;
+          display: flex;
+          flex-direction: column;
+          overflow: hidden;
+          box-shadow: 0 24px 64px rgba(0, 0, 0, 0.55);
+          margin: 0 auto;
+        "
+      >
+        <div
+          id="mt-pv-header"
+          style="
+            padding: 16px 20px 12px;
+            border-bottom: 1px solid var(--border);
+            flex-shrink: 0;
+          "
+        ></div>
+        <div style="display: flex; flex: 1; min-height: 0; overflow: hidden">
+          <div
+            id="mt-pv-picker"
+            style="
+              width: 200px;
+              flex-shrink: 0;
+              border-right: 1px solid var(--border);
+              overflow-y: auto;
+              padding: 4px 0;
+              background: var(--surface);
+            "
+          >
+            <div
+              style="
+                font-family: 'Barlow Condensed', sans-serif;
+                font-weight: 700;
+                font-size: 9px;
+                letter-spacing: 2px;
+                text-transform: uppercase;
+                color: var(--text3);
+                padding: 8px 12px 4px;
+              "
+            >
+              Roster
+            </div>
+          </div>
+          <div
+            id="mt-pv-stats"
+            style="flex: 1; min-width: 0; overflow-y: auto; padding: 18px 20px"
+          ></div>
+        </div>
+      </div>
+    </div>
+    <!-- MY TEAM BEST LINEUP MODAL — body level -->
+    <div
+      id="mt-lineup-modal"
+      style="
+        display: none;
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.72);
+        z-index: 3000;
+        align-items: flex-start;
+        justify-content: center;
+        padding-top: 36px;
+        overflow-y: auto;
+      "
+    >
+      <div
+        style="
+          background: var(--surface2);
+          border: 1px solid var(--border2);
+          border-radius: 14px;
+          width: 680px;
+          max-width: 96vw;
+          max-height: 88vh;
+          display: flex;
+          flex-direction: column;
+          overflow: hidden;
+          box-shadow: 0 24px 64px rgba(0, 0, 0, 0.55);
+          margin: 0 auto;
+        "
+      >
+        <div
+          style="
+            padding: 16px 20px 12px;
+            border-bottom: 1px solid var(--border);
+            flex-shrink: 0;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+          "
+        >
+          <div style="flex: 1">
+            <div
+              style="
+                font-family: 'Barlow Condensed', sans-serif;
+                font-weight: 900;
+                font-size: 20px;
+                color: var(--text);
+              "
+            >
+              Best Lineup
+            </div>
+          </div>
+          <button
+            onclick="document.getElementById('mt-lineup-modal').style.display='none'"
+            style="
+              background: none;
+              border: none;
+              font-size: 20px;
+              color: var(--text3);
+              cursor: pointer;
+              line-height: 1;
+              padding: 2px 6px;
+            "
+          >
+            &times;
+          </button>
+        </div>
+        <div
+          id="mt-lineup-content"
+          style="overflow-y: auto; padding: 16px 20px"
+        ></div>
+      </div>
     </div>
     <div
       id="spray-modal"
@@ -13228,6 +13681,13 @@
               console.warn("opponents", e);
             }
           }
+          if (name === "scout-overview") {
+            try {
+              scoutOverviewLoad();
+            } catch (e) {
+              console.warn("scout-overview", e);
+            }
+          }
         }
 
         // Nav logo → home (with save prompt if in tracker)
@@ -14108,6 +14568,9 @@
           updateScoreBug();
           renderLiveScoutingTab();
           checkPitchCountWarning(p);
+
+          // Auto-save every pitch (debounced 2s — catches crashes mid-inning)
+          _scheduleAutoSave();
 
           // Build blurb for mid-AB pitches immediately; AB-ending ones update after resolution
           const _blurbCount = { balls: S.balls, strikes: S.strikes };
@@ -19343,6 +19806,123 @@
         }
 
         // ===================== SAVE GAME =====================
+        // ── Auto-save helpers ─────────────────────────────────────────────────
+        // Debounced per-pitch save — waits 2s after last pitch before writing.
+        // Prevents hammering storage on rapid pitch entry while still catching crashes.
+        let _autoSaveTimer = null;
+        function _scheduleAutoSave() {
+          clearTimeout(_autoSaveTimer);
+          _autoSaveTimer = setTimeout(() => {
+            if (S.gameId || (S.pitchLog && S.pitchLog.length > 0)) {
+              saveGame(true).catch(() => {});
+            }
+          }, 2000);
+        }
+
+        // Synchronous emergency write to localStorage on page hide/unload.
+        // Cannot await async storage here — write directly so nothing is lost.
+        function _emergencyWrite() {
+          try {
+            if (!S.pitchLog || S.pitchLog.length === 0) return;
+            if (!S.gameId) S.gameId = "ptgame_" + Date.now();
+            const awayTeam =
+              (
+                document.getElementById("away-name-input") || {}
+              ).value?.trim() || "AWAY";
+            const homeTeam =
+              (
+                document.getElementById("home-name-input") || {}
+              ).value?.trim() || "HOME";
+            // Build a minimal game snapshot — same shape as saveGame
+            const snap = {
+              id: S.gameId,
+              date: new Date().toISOString().split("T")[0],
+              awayTeam,
+              homeTeam,
+              awayScore: S.awayScore,
+              homeScore: S.homeScore,
+              innings: S.inning,
+              pitchLog: S.pitchLog,
+              inningRuns: S.inningRuns,
+              gameLog: S.gameLog,
+              awayBatters: [],
+              homeBatters: [],
+              awayPitchers: S.pitchersAway
+                ? S.pitchersAway.map((p) => ({ ...p }))
+                : [],
+              homePitchers: S.pitchersHome
+                ? S.pitchersHome.map((p) => ({ ...p }))
+                : [],
+              fieldingStats: JSON.parse(JSON.stringify(S.fieldingStats || {})),
+              totalPitches: S.pitchLog.length,
+              resumable: {
+                gameId: S.gameId,
+                awayScore: S.awayScore,
+                homeScore: S.homeScore,
+                inning: S.inning,
+                isTop: S.isTop,
+                outs: S.outs,
+                balls: S.balls,
+                strikes: S.strikes,
+                bases: { ...S.bases },
+                awayBatterIdx: S.awayBatterIdx,
+                homeBatterIdx: S.homeBatterIdx,
+                lineupAway: S.lineupAway
+                  ? S.lineupAway.map((p) => ({ ...p }))
+                  : [],
+                lineupHome: S.lineupHome
+                  ? S.lineupHome.map((p) => ({ ...p }))
+                  : [],
+                pitchersAway: S.pitchersAway
+                  ? S.pitchersAway.map((p) => ({ ...p }))
+                  : [],
+                pitchersHome: S.pitchersHome
+                  ? S.pitchersHome.map((p) => ({ ...p }))
+                  : [],
+                pitchLog: S.pitchLog.map((p) => ({ ...p })),
+                inningRuns: [...S.inningRuns],
+                gameLog: [...S.gameLog],
+                batterStats: JSON.parse(JSON.stringify(S.batterStats || {})),
+                lineupResults: JSON.parse(
+                  JSON.stringify(S.lineupResults || {})
+                ),
+                currentAtBatPitches: [...(S.currentAtBatPitches || [])],
+                pitchCount: S.pitchCount,
+              },
+            };
+            window.localStorage.setItem("pt_" + S.gameId, JSON.stringify(snap));
+            // Update team index synchronously
+            try {
+              const teamsRaw = window.localStorage.getItem(
+                "pt_pitchtrack_teams"
+              );
+              const teams = teamsRaw ? JSON.parse(teamsRaw) : [];
+              [awayTeam, homeTeam].forEach((t) => {
+                const lower = t.toLowerCase();
+                if (!teams.find((x) => x.toLowerCase() === lower))
+                  teams.push(t);
+              });
+              window.localStorage.setItem(
+                "pt_pitchtrack_teams",
+                JSON.stringify(teams)
+              );
+            } catch (e) {}
+          } catch (e) {}
+        }
+
+        // Save when tab becomes hidden (user switches apps, closes tab, etc.)
+        document.addEventListener("visibilitychange", () => {
+          if (document.visibilityState === "hidden") {
+            _emergencyWrite();
+          }
+        });
+
+        // Last-resort synchronous write on page unload
+        window.addEventListener("beforeunload", () => {
+          _emergencyWrite();
+        });
+        // ─────────────────────────────────────────────────────────────────────
+
         async function saveGame(silent = false) {
           const awayTeam = qs("away-name-input").value.trim() || "AWAY";
           const homeTeam = qs("home-name-input").value.trim() || "HOME";
@@ -29084,7 +29664,7 @@
 
         function aggregateBattersFromGame(batters) {
           return (batters || [])
-            .filter((b) => (b.ab || 0) + (b.bb || 0) + (b.hbp || 0) > 0)
+            .filter((b) => (b.pa || 0) > 0)
             .map((b) => ({ ...b, games: 1 }));
         }
         function aggregatePitchersFromGame(pitchers) {
@@ -30565,6 +31145,26 @@
         }
         function closePickoffModal() {
           qs("pickoff-modal").style.display = "none";
+        }
+
+        function commitIntentionalWalk() {
+          const p = activePitcher();
+          if (p) {
+            p.bb = (p.bb || 0) + 1;
+            p.ibb = (p.ibb || 0) + 1;
+            p.bf = (p.bf || 0) + 1;
+          }
+          toast("Intentional Walk!");
+          logEvent(
+            "🚶",
+            "Intentional Walk (IBB)",
+            `${currentBatter()?.name || "Batter"} takes first · ${
+              p ? p.name : ""
+            }`
+          );
+          recordAtBatResult("BB", "BB");
+          advanceOnWalk();
+          _scheduleAutoSave();
         }
 
         function openRunnersModal() {
@@ -34651,12 +35251,22 @@
               const numColor = isPitcher
                 ? "color:#1a5acc"
                 : "color:var(--accent)";
-              html += `<div class="myteam-card" 
+              const isEligible = p.lineupEligible !== false;
+              const eligBadgeBg = isEligible
+                ? "rgba(34,197,94,.15)"
+                : "rgba(120,120,120,.13)";
+              const eligBadgeColor = isEligible
+                ? "var(--green,#22c55e)"
+                : "var(--text3)";
+              const eligLabel = isEligible ? "✓ In Lineup" : "– Out";
+              html += `<div class="myteam-card"
         draggable="true"
         data-player-id="${p.id}"
         ondragstart="myTeamDragStart(event, '${p.id}')"
-        onclick="myTeamEditPlayer('${p.id}')"
-        style="background:var(--surface);border:1.5px solid var(--border2);${cardColor}border-radius:10px;padding:10px 12px;cursor:pointer;transition:all .14s;min-width:120px;position:relative;user-select:none"
+        onclick="myTeamOpenPlayerView('${p.id}')"
+        style="background:var(--surface);border:1.5px solid var(--border2);${cardColor}border-radius:10px;padding:10px 12px;cursor:pointer;transition:all .14s;min-width:120px;position:relative;user-select:none;${
+                isEligible ? "" : "opacity:.6"
+              }"
         onmouseover="this.style.borderColor='var(--accent)';this.style.transform='translateY(-1px)'"
         onmouseout="this.style.borderColor='var(--border2)';this.style.transform=''"
       >
@@ -34679,6 +35289,9 @@
                 .join(" · ")}</div>`
             : ""
         }
+        <div onclick="_mtToggleEligible('${
+          p.id
+        }',event)" title="Toggle lineup eligibility" style="margin-top:6px;display:inline-flex;align-items:center;gap:3px;padding:2px 6px;border-radius:4px;font-size:9px;font-family:'Barlow Condensed',sans-serif;font-weight:700;letter-spacing:.5px;cursor:pointer;background:${eligBadgeBg};color:${eligBadgeColor}">${eligLabel}</div>
         <div style="position:absolute;top:6px;right:7px;font-size:9px;color:var(--text3);opacity:.5">⠿</div>
       </div>`;
             }
@@ -34814,6 +35427,769 @@
           myTeamRoster = [];
           myTeamSave();
           myTeamRender();
+        }
+
+        // ══════════════════════════════════════════════════════════════════════
+        //  MY TEAM — PLAYER VIEW
+        // ══════════════════════════════════════════════════════════════════════
+        let _mtViewId = null;
+
+        async function myTeamOpenPlayerView(id) {
+          _mtViewId = id;
+          try {
+            document.getElementById("mt-player-view").style.display = "flex";
+            // Mirror hubRefreshAll() sequence — myTeamLoad() sets _myTeamNameCache correctly
+            try {
+              await myTeamLoad();
+            } catch (e) {}
+            try {
+              allGames = await loadAllGames();
+            } catch (e) {}
+            _mtRenderPlayerView(id);
+          } catch (e) {
+            console.error("mt player view error", e);
+          }
+        }
+
+        function _mtRenderPlayerView(id) {
+          _mtViewId = id;
+          const p = myTeamRoster.find((x) => x.id === id);
+          if (!p) return;
+          const isPitcher = _isPitcherPos(p.pos);
+          const teamName = _getMyTeamName();
+          const games = getTeamGames(teamName);
+
+          // ── Header ────────────────────────────────────────────────────────
+          const hdr = document.getElementById("mt-pv-header");
+          hdr.style.display = "flex";
+          hdr.style.alignItems = "flex-start";
+          hdr.style.gap = "14px";
+          var metaStr =
+            escHtml(p.pos || "—") +
+            " · " +
+            (p.bat || "R") +
+            "HH · Throws " +
+            (p.throw || "R") +
+            (p.ht ? " · " + p.ht : "") +
+            (p.wt ? " · " + p.wt : "");
+          hdr.innerHTML =
+            '<div style="display:flex;align-items:flex-start;gap:14px;flex:1">' +
+            "<div style=\"font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:34px;line-height:1;color:var(--accent)\">#" +
+            escHtml(p.num || "—") +
+            "</div>" +
+            '<div style="flex:1"><div style="font-family:\'Barlow Condensed\',sans-serif;font-weight:900;font-size:22px;color:var(--text);line-height:1.1">' +
+            escHtml(p.name) +
+            "</div>" +
+            '<div style="font-size:11px;color:var(--text3);margin-top:3px">' +
+            metaStr +
+            "</div></div></div>" +
+            '<div style="display:flex;gap:8px;flex-shrink:0;align-items:center">' +
+            "<button onclick=\"document.getElementById('mt-player-view').style.display='none';myTeamEditPlayer('" +
+            escAttr(p.id) +
+            "')\" style=\"padding:6px 14px;background:var(--surface3);border:1px solid var(--border2);border-radius:7px;font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:13px;color:var(--text2);cursor:pointer\">Edit Player</button>" +
+            "<button onclick=\"document.getElementById('mt-player-view').style.display='none'\" style=\"background:none;border:none;font-size:22px;color:var(--text3);cursor:pointer;line-height:1;padding:2px 4px\">&times;</button>" +
+            "</div>";
+
+          // ── Roster picker ──────────────────────────────────────────────────
+          const pickerEl = document.getElementById("mt-pv-picker");
+          let pickerHtml = `<div style="font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--text3);padding:8px 12px 4px">Roster</div>`;
+          const sorted = [...myTeamRoster].sort((a, b) => {
+            const aP = _isPitcherPos(a.pos),
+              bP = _isPitcherPos(b.pos);
+            if (aP !== bP) return aP ? 1 : -1;
+            return (a.name || "").localeCompare(b.name || "");
+          });
+          pickerHtml += sorted
+            .map(function (r) {
+              var rIsP = _isPitcherPos(r.pos);
+              var active = r.id === id;
+              var activeBg = active ? "background:rgba(99,102,241,.12);" : "";
+              var numColor = rIsP ? "color:#1a5acc" : "color:var(--accent)";
+              return (
+                "<div onclick=\"_mtRenderPlayerView('" +
+                escAttr(r.id) +
+                '\')" style="display:flex;align-items:center;gap:8px;padding:8px 12px;cursor:pointer;border-bottom:1px solid var(--border);' +
+                activeBg +
+                '">' +
+                "<div style=\"font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:13px;" +
+                numColor +
+                ';min-width:26px;text-align:center">#' +
+                escHtml(r.num || "—") +
+                "</div>" +
+                '<div style="min-width:0"><div style="font-family:\'Barlow Condensed\',sans-serif;font-weight:700;font-size:13px;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' +
+                escHtml(r.name) +
+                "</div>" +
+                '<div style="font-size:9px;color:var(--text3)">' +
+                escHtml(r.pos || "—") +
+                "</div></div></div>"
+              );
+            })
+            .join("");
+          pickerEl.innerHTML = pickerHtml;
+
+          // ── Stats panel ────────────────────────────────────────────────────
+          const statsEl = document.getElementById("mt-pv-stats");
+          const fmt = (n) => _fmtRate(n);
+
+          // Populate _nameAliases — side effect of _mergeStatMapByPlayer inside these calls.
+          // Without this, getPlayerCareerStats only matches exact name strings from game records.
+          getTeamRoster(teamName, games);
+          getTeamPitchers(teamName, games);
+
+          if (isPitcher) {
+            const allPitches = getPitcherPitches(teamName, p.name, games);
+            let career = {
+              games: 0,
+              pitches: 0,
+              strikes: 0,
+              k: 0,
+              bb: 0,
+              hits: 0,
+              swings: 0,
+              outs: 0,
+              r: 0,
+              bf: 0,
+            };
+            games.forEach((g) => {
+              const pitchers =
+                g.awayTeam === teamName ? g.awayPitchers : g.homePitchers;
+              const _names = _nameAliases[p.name] || new Set([p.name]);
+              const gp = (pitchers || []).find((x) => _names.has(x.name));
+              if (!gp || !gp.pitches) return;
+              career.games++;
+              career.pitches += gp.pitches || 0;
+              career.strikes += gp.strikes || 0;
+              career.k += gp.k || 0;
+              career.bb += gp.bb || 0;
+              career.hits += gp.hits || 0;
+              career.swings += gp.swings || 0;
+              career.outs += gp.outs || 0;
+              career.r += gp.r || 0;
+              career.bf += gp.bf || 0;
+            });
+            if (career.pitches === 0) {
+              statsEl.innerHTML = `<div style="padding:40px 0;text-align:center;color:var(--text3);font-family:'Barlow Condensed',sans-serif;font-size:15px">No pitching data tracked yet for ${escHtml(
+                p.name
+              )}<br><span style="font-size:11px">Use this player in a tracked game to see stats here.</span></div>`;
+            } else {
+              const strPct =
+                career.pitches > 0
+                  ? Math.round((career.strikes / career.pitches) * 100)
+                  : 0;
+              const vels = allPitches
+                .map((x) => parseFloat(x.velocity))
+                .filter((v) => !isNaN(v) && v > 0);
+              const avgVel = vels.length
+                ? (vels.reduce((a, b) => a + b, 0) / vels.length).toFixed(1)
+                : "—";
+              var sh = "";
+              sh +=
+                '<div style="display:flex;gap:20px;margin-bottom:18px;flex-wrap:wrap">';
+              sh +=
+                '<div style="text-align:center"><div style="font-family:\'Barlow Condensed\',sans-serif;font-weight:900;font-size:30px;color:var(--accent)">' +
+                career.k +
+                '</div><div style="font-size:9px;color:var(--text3);letter-spacing:2px;text-transform:uppercase">K</div></div>';
+              sh +=
+                '<div style="text-align:center"><div style="font-family:\'Barlow Condensed\',sans-serif;font-weight:900;font-size:30px">' +
+                career.bb +
+                '</div><div style="font-size:9px;color:var(--text3);letter-spacing:2px;text-transform:uppercase">BB</div></div>';
+              sh +=
+                '<div style="text-align:center"><div style="font-family:\'Barlow Condensed\',sans-serif;font-weight:900;font-size:30px">' +
+                strPct +
+                '%</div><div style="font-size:9px;color:var(--text3);letter-spacing:2px;text-transform:uppercase">Strike%</div></div>';
+              sh +=
+                '<div style="text-align:center"><div style="font-family:\'Barlow Condensed\',sans-serif;font-weight:900;font-size:30px">' +
+                avgVel +
+                '</div><div style="font-size:9px;color:var(--text3);letter-spacing:2px;text-transform:uppercase">Avg Velo</div></div>';
+              sh += '</div><div class="stat-cards" style="margin-bottom:16px">';
+              sh +=
+                '<div class="stat-card"><div class="stat-card-val">' +
+                career.games +
+                '</div><div class="stat-card-lbl">Games</div></div>';
+              sh +=
+                '<div class="stat-card"><div class="stat-card-val">' +
+                career.pitches +
+                '</div><div class="stat-card-lbl">Pitches</div></div>';
+              sh +=
+                '<div class="stat-card"><div class="stat-card-val">' +
+                career.bf +
+                '</div><div class="stat-card-lbl">BF</div></div>';
+              sh +=
+                '<div class="stat-card"><div class="stat-card-val">' +
+                career.hits +
+                '</div><div class="stat-card-lbl">Hits Allowed</div></div>';
+              sh +=
+                '<div class="stat-card accent"><div class="stat-card-val">' +
+                career.r +
+                '</div><div class="stat-card-lbl">Runs</div></div>';
+              sh +=
+                '<div class="stat-card"><div class="stat-card-val">' +
+                career.outs +
+                '</div><div class="stat-card-lbl">Outs</div></div></div>';
+              // Charts
+              var sectionTitle =
+                "style=\"font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--text3);margin-bottom:6px\"";
+              if (allPitches.length > 0) {
+                sh +=
+                  '<div style="margin-top:18px"><div ' +
+                  sectionTitle +
+                  ">Pitch Arsenal</div>" +
+                  buildPitchBreakdown(allPitches) +
+                  "</div>";
+                sh +=
+                  '<div style="margin-top:14px"><div ' +
+                  sectionTitle +
+                  ">Results</div>" +
+                  buildPitcherResultsBreakdown(allPitches) +
+                  "</div>";
+              }
+              sh +=
+                "<div style=\"margin-top:14px\"><a onclick=\"document.getElementById('mt-player-view').style.display='none';openPanel('hub');setTimeout(function(){showView('pitcher',{team:" +
+                JSON.stringify(teamName) +
+                ",name:" +
+                JSON.stringify(p.name) +
+                '})},120)" style="font-family:\'Barlow Condensed\',sans-serif;font-weight:700;font-size:12px;color:var(--accent);cursor:pointer;letter-spacing:.5px">View full scouting report &#8594;</a></div>';
+              statsEl.innerHTML = sh;
+            }
+          } else {
+            const stats = getPlayerCareerStats(teamName, p.name, games);
+            const pa =
+              stats.pa != null
+                ? stats.pa
+                : (stats.ab || 0) + (stats.bb || 0) + (stats.hbp || 0);
+            if (pa === 0) {
+              statsEl.innerHTML =
+                "<div style=\"padding:40px 0;text-align:center;color:var(--text3);font-family:'Barlow Condensed',sans-serif;font-size:15px\">No batting data tracked yet for " +
+                escHtml(p.name) +
+                '<br><span style="font-size:11px">Use this player in a tracked game to see stats here.</span></div>';
+            } else {
+              const avg = stats.ab > 0 ? stats.hits / stats.ab : 0;
+              const obp =
+                pa > 0
+                  ? ((stats.hits || 0) +
+                      (stats.bb || 0) +
+                      (stats.hbp || 0) +
+                      (stats.ci || 0)) /
+                    pa
+                  : 0;
+              const tb =
+                (stats.hits || 0) -
+                (stats.doubles || 0) -
+                (stats.triples || 0) -
+                (stats.hr || 0) +
+                (stats.doubles || 0) * 2 +
+                (stats.triples || 0) * 3 +
+                (stats.hr || 0) * 4;
+              const slg = stats.ab > 0 ? tb / stats.ab : 0;
+              var bh = "";
+              bh +=
+                '<div style="display:flex;gap:20px;margin-bottom:18px;flex-wrap:wrap">';
+              bh +=
+                '<div style="text-align:center"><div style="font-family:\'Barlow Condensed\',sans-serif;font-weight:900;font-size:30px;color:var(--accent)">' +
+                fmt(avg) +
+                '</div><div style="font-size:9px;color:var(--text3);letter-spacing:2px;text-transform:uppercase">AVG</div></div>';
+              bh +=
+                '<div style="text-align:center"><div style="font-family:\'Barlow Condensed\',sans-serif;font-weight:900;font-size:30px">' +
+                fmt(obp) +
+                '</div><div style="font-size:9px;color:var(--text3);letter-spacing:2px;text-transform:uppercase">OBP</div></div>';
+              bh +=
+                '<div style="text-align:center"><div style="font-family:\'Barlow Condensed\',sans-serif;font-weight:900;font-size:30px">' +
+                fmt(slg) +
+                '</div><div style="font-size:9px;color:var(--text3);letter-spacing:2px;text-transform:uppercase">SLG</div></div>';
+              bh +=
+                '<div style="text-align:center"><div style="font-family:\'Barlow Condensed\',sans-serif;font-weight:900;font-size:30px;color:var(--green,#22c55e)">' +
+                fmt(obp + slg) +
+                '</div><div style="font-size:9px;color:var(--text3);letter-spacing:2px;text-transform:uppercase">OPS</div></div>';
+              bh += '</div><div class="stat-cards" style="margin-bottom:16px">';
+              bh +=
+                '<div class="stat-card"><div class="stat-card-val">' +
+                stats.games +
+                '</div><div class="stat-card-lbl">Games</div></div>';
+              bh +=
+                '<div class="stat-card"><div class="stat-card-val">' +
+                pa +
+                '</div><div class="stat-card-lbl">PA</div></div>';
+              bh +=
+                '<div class="stat-card"><div class="stat-card-val">' +
+                stats.hits +
+                '</div><div class="stat-card-lbl">Hits</div></div>';
+              bh +=
+                '<div class="stat-card"><div class="stat-card-val">' +
+                stats.doubles +
+                '</div><div class="stat-card-lbl">2B</div></div>';
+              bh +=
+                '<div class="stat-card"><div class="stat-card-val">' +
+                stats.triples +
+                '</div><div class="stat-card-lbl">3B</div></div>';
+              bh +=
+                '<div class="stat-card accent"><div class="stat-card-val">' +
+                stats.hr +
+                '</div><div class="stat-card-lbl">HR</div></div>';
+              bh +=
+                '<div class="stat-card"><div class="stat-card-val">' +
+                (stats.r || 0) +
+                '</div><div class="stat-card-lbl">R</div></div>';
+              bh +=
+                '<div class="stat-card"><div class="stat-card-val">' +
+                (stats.rbi || 0) +
+                '</div><div class="stat-card-lbl">RBI</div></div>';
+              bh +=
+                '<div class="stat-card"><div class="stat-card-val">' +
+                stats.bb +
+                '</div><div class="stat-card-lbl">BB</div></div>';
+              bh +=
+                '<div class="stat-card"><div class="stat-card-val">' +
+                stats.k +
+                '</div><div class="stat-card-lbl">K</div></div></div>';
+              // Charts
+              var stLbl =
+                "style=\"font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--text3);margin-bottom:6px\"";
+              var allPitches = getPlayerPitches(teamName, p.name, games);
+              var bipPitches = allPitches.filter(function (x) {
+                return x.spray && x.spray.x != null;
+              });
+              if (bipPitches.length > 0) {
+                bh +=
+                  '<div style="margin-top:18px"><div ' +
+                  stLbl +
+                  '>Spray Chart</div><div style="max-width:300px">' +
+                  buildSprayChartSVG(allPitches) +
+                  "</div></div>";
+              }
+              if (allPitches.length > 0) {
+                bh +=
+                  '<div style="margin-top:14px"><div ' +
+                  stLbl +
+                  ">Pitches Faced</div>" +
+                  buildPitchBreakdown(allPitches) +
+                  "</div>";
+              }
+              bh +=
+                "<div style=\"margin-top:14px\"><a onclick=\"document.getElementById('mt-player-view').style.display='none';openPanel('hub');setTimeout(function(){showView('player',{team:" +
+                JSON.stringify(teamName) +
+                ",name:" +
+                JSON.stringify(p.name) +
+                '})},120)" style="font-family:\'Barlow Condensed\',sans-serif;font-weight:700;font-size:12px;color:var(--accent);cursor:pointer;letter-spacing:.5px">View full scouting report &#8594;</a></div>';
+              statsEl.innerHTML = bh;
+            }
+          }
+        }
+
+        // ══════════════════════════════════════════════════════════════════════
+        //  MY TEAM — LINEUP ELIGIBILITY TOGGLE
+        // ══════════════════════════════════════════════════════════════════════
+        function _mtToggleEligible(id, e) {
+          e.stopPropagation();
+          var p = myTeamRoster.find(function (x) {
+            return x.id === id;
+          });
+          if (!p) return;
+          p.lineupEligible = p.lineupEligible === false ? true : false;
+          myTeamSave();
+          myTeamRender();
+        }
+
+        // ══════════════════════════════════════════════════════════════════════
+        //  MY TEAM — BEST LINEUP GENERATOR
+        //  Sources: "The Book" (Tango/Lichtman/Dolphin 2007) +
+        //  sportsbettingdime.com/guides/strategy/batting-order-sabermetrics
+        // ══════════════════════════════════════════════════════════════════════
+        var _mtLineupMode = "saber"; // "saber" | "traditional"
+
+        async function myTeamGenerateLineup() {
+          var modal = document.getElementById("mt-lineup-modal");
+          var content = document.getElementById("mt-lineup-content");
+          modal.style.display = "flex";
+          content.innerHTML =
+            "<div style=\"padding:32px;text-align:center;color:var(--text3);font-family:'Barlow Condensed',sans-serif;font-size:14px\">Loading stats...</div>";
+          // Mirror hubRefreshAll() sequence — myTeamLoad() sets _myTeamNameCache correctly
+          try {
+            await myTeamLoad();
+          } catch (e) {}
+          try {
+            allGames = await loadAllGames();
+          } catch (e) {}
+          try {
+            _mtBuildLineupContent();
+          } catch (e) {
+            content.innerHTML =
+              "<div style=\"padding:32px;text-align:center;color:#cc1a1a;font-family:'Barlow Condensed',sans-serif;font-size:14px\">Error: " +
+              escHtml(String(e.message || e)) +
+              "</div>";
+          }
+        }
+
+        function _mtBuildLineupContent() {
+          var content = document.getElementById("mt-lineup-content");
+          var teamName = _getMyTeamName() || "";
+          var games = getTeamGames(teamName);
+          var eligible = myTeamRoster.filter(function (p) {
+            return !_isPitcherPos(p.pos) && p.lineupEligible !== false;
+          });
+
+          if (!eligible.length) {
+            content.innerHTML =
+              '<div style="padding:40px;text-align:center;color:var(--text3);font-family:\'Barlow Condensed\',sans-serif;font-size:15px">No eligible position players.<br><span style="font-size:12px">Use the In/Out badge on each card to mark who is available.</span></div>';
+            return;
+          }
+
+          // Populate _nameAliases — side effect of _mergeStatMapByPlayer inside these calls.
+          // Without this, getPlayerCareerStats only matches exact name strings from game records.
+          getTeamRoster(teamName, games);
+          getTeamPitchers(teamName, games);
+
+          // Score every eligible player
+          // PA-weighted: need ≥5 PA to count as "has data"; confidence ramps to full at 20 PA
+          var MIN_PA = 5;
+          var scored = eligible.map(function (p) {
+            var stats = getPlayerCareerStats(teamName, p.name, games);
+            var pa =
+              stats.pa != null
+                ? stats.pa
+                : (stats.ab || 0) + (stats.bb || 0) + (stats.hbp || 0);
+            var obp = 0,
+              slg = 0,
+              ops = 0,
+              hr = stats.hr || 0;
+            var hasData = false,
+              score = 0,
+              obpScore = 0;
+            if (pa >= MIN_PA && (stats.ab || 0) > 0) {
+              hasData = true;
+              obp =
+                ((stats.hits || 0) +
+                  (stats.bb || 0) +
+                  (stats.hbp || 0) +
+                  (stats.ci || 0)) /
+                pa;
+              var tb =
+                (stats.hits || 0) -
+                (stats.doubles || 0) -
+                (stats.triples || 0) -
+                (stats.hr || 0) +
+                (stats.doubles || 0) * 2 +
+                (stats.triples || 0) * 3 +
+                (stats.hr || 0) * 4;
+              slg = tb / stats.ab;
+              ops = obp + slg;
+              // Confidence multiplier — prevents tiny-sample players from gaming rankings
+              var conf = Math.min(1, pa / 20);
+              score = ops * conf;
+              obpScore = obp * conf;
+            }
+            return {
+              p: p,
+              pa: pa,
+              obp: obp,
+              slg: slg,
+              ops: ops,
+              hr: hr,
+              hasData: hasData,
+              score: score,
+              obpScore: obpScore,
+            };
+          });
+
+          var used = {};
+          function pickBy(sortFn) {
+            var avail = scored.filter(function (x) {
+              return !used[x.p.id];
+            });
+            if (!avail.length) return null;
+            avail.sort(function (a, b) {
+              return sortFn(b) - sortFn(a);
+            });
+            used[avail[0].p.id] = true;
+            return avail[0];
+          }
+
+          var lineup = [];
+          var i;
+
+          if (_mtLineupMode === "saber") {
+            // Sabermetric order — sort by PA-weighted score, not raw stats
+            lineup[1] = pickBy(function (x) {
+              return x.score;
+            }); // 2: Best score
+            lineup[0] = pickBy(function (x) {
+              return x.obpScore;
+            }); // 1: Best OBP score
+            lineup[3] = pickBy(function (x) {
+              return (
+                x.score * 0.6 +
+                (x.slg + x.hr * 0.04) * Math.min(1, x.pa / 20) * 0.4
+              );
+            }); // 4: Power
+            lineup[2] = pickBy(function (x) {
+              return x.score;
+            }); // 3: 2nd-best
+            lineup[4] = pickBy(function (x) {
+              return x.score;
+            }); // 5: 3rd-best
+            lineup[5] = pickBy(function (x) {
+              return x.score;
+            }); // 6
+            lineup[6] = pickBy(function (x) {
+              return x.score;
+            }); // 7
+            lineup[8] = pickBy(function (x) {
+              return x.obpScore;
+            }); // 9: OBP rover
+            lineup[7] = pickBy(function (x) {
+              return x.score;
+            }); // 8: weakest
+          } else {
+            // Traditional order — PA-weighted
+            lineup[2] = pickBy(function (x) {
+              return x.score;
+            }); // 3: Best hitter
+            lineup[0] = pickBy(function (x) {
+              return x.obpScore;
+            }); // 1: Best OBP
+            lineup[3] = pickBy(function (x) {
+              return (
+                x.score * 0.6 +
+                (x.slg + x.hr * 0.04) * Math.min(1, x.pa / 20) * 0.4
+              );
+            }); // 4: Power
+            lineup[4] = pickBy(function (x) {
+              return x.slg * Math.min(1, x.pa / 20);
+            }); // 5: 2nd power
+            lineup[1] = pickBy(function (x) {
+              return x.obpScore;
+            }); // 2: Contact/OBP
+            lineup[5] = pickBy(function (x) {
+              return x.score;
+            }); // 6
+            lineup[6] = pickBy(function (x) {
+              return x.score;
+            }); // 7
+            lineup[7] = pickBy(function (x) {
+              return x.score;
+            }); // 8
+            lineup[8] = pickBy(function (x) {
+              return x.ops;
+            }); // 9: Weakest
+          }
+
+          // Fill any empty slots from remaining players
+          for (i = 0; i < 9; i++) {
+            if (!lineup[i]) {
+              lineup[i] = pickBy(function (x) {
+                return x.ops;
+              });
+            }
+          }
+
+          var saberReasons = [
+            {
+              role: "Leadoff",
+              why: "Best OBP guy — maximizes scoring chances",
+            },
+            {
+              role: "2nd",
+              why: "Best overall hitter — most plate appearances with runners on base",
+            },
+            {
+              role: "3rd",
+              why: "Second-best hitter — most PA's w/ RISP available",
+            },
+            {
+              role: "Cleanup",
+              why: "Best power (SLG/HR) — bats with 1-2 runners on to clear the bases",
+            },
+            {
+              role: "5th",
+              why: "Third-best bat — protects the cleanup hitter and extends big innings",
+            },
+            {
+              role: "6th",
+              why: "Solid bat keeps pressure on after the top of the order",
+            },
+            {
+              role: "7th",
+              why: "Consistent contact; keeps innings alive for the top of the order",
+            },
+            {
+              role: "8th",
+              why: "Weakest bat placed in lowest-leverage spot to minimize damage",
+            },
+            {
+              role: "9-Hole",
+              why: "Second-best OBP 'rover' — turns the lineup over so the top of order leads off next inning",
+            },
+          ];
+          var tradReasons = [
+            {
+              role: "Leadoff",
+              why: "Best OBP + baserunning — traditional table-setter who can steal bases and score",
+            },
+            {
+              role: "2nd",
+              why: "Best contact/bat control — puts ball in play, moves runners with less power required",
+            },
+            {
+              role: "3rd",
+              why: "Best overall hitter — traditional slot for highest batting average",
+            },
+            {
+              role: "Cleanup",
+              why: "Most powerful bat — drives in runs with the table set by the top of the order",
+            },
+            {
+              role: "5th",
+              why: "Second-best power — protects the cleanup hitter, prevents pitchers walking him",
+            },
+            {
+              role: "6th",
+              why: "Solid hitter who keeps pressure on; often best remaining bat",
+            },
+            {
+              role: "7th",
+              why: "Above-average bat; contributes in a lower-leverage spot",
+            },
+            {
+              role: "8th",
+              why: "Weaker bat; traditionally second-to-last before the pitcher",
+            },
+            {
+              role: "9th",
+              why: "Weakest bat / pitcher's spot — minimal plate appearance impact",
+            },
+          ];
+          var reasons = _mtLineupMode === "saber" ? saberReasons : tradReasons;
+
+          // Build HTML using string concatenation to avoid nested template literal issues
+          var html = "";
+
+          // Toggle buttons
+          html +=
+            '<div style="display:flex;gap:6px;margin-bottom:16px;align-items:center">';
+          html +=
+            "<span style=\"font-size:10px;color:var(--text3);font-family:'Barlow Condensed',sans-serif;letter-spacing:1px;text-transform:uppercase;margin-right:4px\">Method:</span>";
+          html +=
+            '<button onclick="_mtSetLineupMode(\'saber\')" style="padding:5px 13px;border-radius:20px;border:1.5px solid ' +
+            (_mtLineupMode === "saber" ? "var(--accent)" : "var(--border2)") +
+            ";background:" +
+            (_mtLineupMode === "saber" ? "var(--accent)" : "none") +
+            ";color:" +
+            (_mtLineupMode === "saber" ? "#fff" : "var(--text2)") +
+            ";font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:12px;cursor:pointer\">Sabermetric</button>";
+          html +=
+            '<button onclick="_mtSetLineupMode(\'traditional\')" style="padding:5px 13px;border-radius:20px;border:1.5px solid ' +
+            (_mtLineupMode === "traditional"
+              ? "var(--accent)"
+              : "var(--border2)") +
+            ";background:" +
+            (_mtLineupMode === "traditional" ? "var(--accent)" : "none") +
+            ";color:" +
+            (_mtLineupMode === "traditional" ? "#fff" : "var(--text2)") +
+            ";font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:12px;cursor:pointer\">Traditional</button>";
+          html += "</div>";
+
+          // Explain the method
+          if (_mtLineupMode === "saber") {
+            html +=
+              '<div style="background:rgba(99,102,241,.08);border:1px solid rgba(99,102,241,.25);border-radius:8px;padding:10px 14px;margin-bottom:14px;font-size:11px;color:var(--text2);line-height:1.5">';
+            html +=
+              "<strong style=\"font-family:'Barlow Condensed',sans-serif;font-size:12px\">Sabermetric method</strong> — Based on run-expectancy research (<em>The Book</em>, Tango/Lichtman/Dolphin). " +
+              "Best hitter bats 2nd (most PA in run-producing context). OBP trumps speed in the leadoff spot. " +
+              'The 9-hole becomes a "rover" (second-best OBP) to turn the lineup over for the top of the order.</div>';
+          } else {
+            html +=
+              '<div style="background:rgba(251,191,36,.08);border:1px solid rgba(251,191,36,.25);border-radius:8px;padding:10px 14px;margin-bottom:14px;font-size:11px;color:var(--text2);line-height:1.5">';
+            html +=
+              "<strong style=\"font-family:'Barlow Condensed',sans-serif;font-size:12px\">Traditional method</strong> — Classic baseball lineup construction. " +
+              "Best hitter bats 3rd, fastest/best OBP leads off, second-best contact hitter bats 2nd. " +
+              "Power bats at 4 and 5, weakest hitter at 9.</div>";
+          }
+
+          if (eligible.length < 9) {
+            html +=
+              '<div style="background:rgba(251,191,36,.1);border:1px solid rgba(251,191,36,.3);border-radius:8px;padding:8px 14px;margin-bottom:12px;font-size:11px;color:var(--text2)">Only ' +
+              eligible.length +
+              " eligible player" +
+              (eligible.length !== 1 ? "s" : "") +
+              " — need 9 for a full lineup.</div>";
+          }
+
+          html += '<table style="width:100%;border-collapse:collapse">';
+          html += '<thead><tr style="border-bottom:2px solid var(--border)">';
+          html +=
+            "<th style=\"font-family:'Barlow Condensed',sans-serif;font-size:9px;letter-spacing:2px;color:var(--text3);text-align:left;padding:6px 8px 8px 0;width:36px\">#</th>";
+          html +=
+            "<th style=\"font-family:'Barlow Condensed',sans-serif;font-size:9px;letter-spacing:2px;color:var(--text3);text-align:left;padding:6px 8px 8px\">PLAYER</th>";
+          html +=
+            "<th style=\"font-family:'Barlow Condensed',sans-serif;font-size:9px;letter-spacing:2px;color:var(--text3);text-align:center;padding:6px 8px 8px;width:56px\">OPS</th>";
+          html +=
+            "<th style=\"font-family:'Barlow Condensed',sans-serif;font-size:9px;letter-spacing:2px;color:var(--text3);text-align:left;padding:6px 8px 8px\">REASON</th>";
+          html += "</tr></thead><tbody>";
+
+          for (i = 0; i < 9; i++) {
+            var entry = lineup[i] || null;
+            var sr = reasons[i];
+            var playerCell = entry
+              ? '<div style="display:flex;align-items:center;gap:8px"><span style="font-family:\'Barlow Condensed\',sans-serif;font-weight:900;font-size:13px;color:var(--accent)">#' +
+                escHtml(entry.p.num || "—") +
+                "</span><div><div style=\"font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:15px;color:var(--text)\">" +
+                escHtml(entry.p.name) +
+                '</div><div style="font-size:9px;color:var(--text3)">' +
+                escHtml(entry.p.pos || "—") +
+                "</div></div></div>"
+              : '<span style="color:var(--text3);font-style:italic;font-size:13px">— empty —</span>';
+            var opsCell = "";
+            if (entry && entry.hasData) {
+              var paNote =
+                entry.pa < 20
+                  ? '<div style="font-size:8px;color:var(--text3)">' +
+                    entry.pa +
+                    " PA</div>"
+                  : "";
+              opsCell =
+                "<div style=\"font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:14px;color:var(--accent)\">" +
+                _fmtRate(entry.ops) +
+                "</div>" +
+                paNote;
+            } else if (entry && entry.pa > 0 && entry.pa < MIN_PA) {
+              opsCell =
+                '<div style="font-size:9px;color:var(--text3)">' +
+                entry.pa +
+                " PA<br>(low sample)</div>";
+            } else if (entry) {
+              opsCell =
+                '<div style="font-size:10px;color:var(--text3)">No stats</div>';
+            }
+            html += '<tr style="border-bottom:1px solid var(--border)">';
+            html +=
+              '<td style="padding:10px 8px 10px 0;vertical-align:middle"><div style="font-family:\'Barlow Condensed\',sans-serif;font-weight:900;font-size:18px;color:var(--text3)">' +
+              (i + 1) +
+              '</div><div style="font-size:8px;color:var(--text3);letter-spacing:.5px">' +
+              sr.role +
+              "</div></td>";
+            html +=
+              '<td style="padding:10px 8px;vertical-align:middle">' +
+              playerCell +
+              "</td>";
+            html +=
+              '<td style="padding:10px 8px;vertical-align:middle;text-align:center">' +
+              opsCell +
+              "</td>";
+            html +=
+              '<td style="padding:10px 8px;vertical-align:middle;font-size:11px;color:var(--text3);line-height:1.4">' +
+              escHtml(sr.why) +
+              "</td>";
+            html += "</tr>";
+          }
+          html += "</tbody></table>";
+          html +=
+            '<div style="margin-top:12px;padding-top:10px;border-top:1px solid var(--border);font-size:10px;color:var(--text3)">Ranking uses PA-weighted OPS (min 5 PA; full confidence at 20+ PA). Players with fewer than 5 tracked PA are placed by positional profile. Toggle "In Lineup / Out" on each card to control eligibility.</div>';
+
+          document.getElementById("mt-lineup-content").innerHTML = html;
+        }
+
+        function _mtSetLineupMode(mode) {
+          _mtLineupMode = mode;
+          _mtBuildLineupContent();
         }
 
         function myTeamUseAsAway() {
@@ -37116,10 +38492,10 @@
             "*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }",
             'html, body { background: #fff; font-family: "Barlow Condensed", sans-serif; color: #111318;',
             "  -webkit-print-color-adjust: exact; print-color-adjust: exact; }",
-            "@page { size: 8.5in 11in portrait; margin: 0.25in; }",
+            "@page { size: 7in 4in; margin: 0.12in 0.15in; }",
             // No transform here — JS will measure and inject exact scale per page
             ".scout-report-page {",
-            "  width: 8in;", // natural unscaled width — JS scales it to fit
+            "  width: 6.7in;", // natural unscaled width — JS scales it to fit
             "  background: #fff;",
             '  font-family: "Barlow Condensed", sans-serif;',
             "  transform-origin: top left;",
@@ -37131,12 +38507,12 @@
             '.scout-section-title { font-family:"Barlow",sans-serif; font-weight:700; font-size:10px;',
             "  letter-spacing:0.5px; text-transform:uppercase; color:#8a909e;",
             "  border-bottom:2px solid #d4d8e0; padding-bottom:2px; margin-bottom:4px; }",
-            '.scout-table { width:100%; border-collapse:collapse; font-size:9px; font-family:"Barlow",sans-serif; }',
-            '.scout-table th { font-family:"Barlow",sans-serif; font-weight:700; font-size:8px;',
-            "  letter-spacing:0; text-transform:uppercase; color:#8a909e; padding:2px 3px;",
-            "  border-bottom:1.5px solid #d4d8e0; text-align:center; background:#f8f9fb; }",
-            ".scout-table td { padding:2px 3px; border-bottom:1px solid #e8eaee; text-align:center;",
-            '  font-family:"Barlow",sans-serif; font-size:9px; }',
+            '.scout-table { width:100%; border-collapse:collapse; font-size:6.5px; font-family:"Barlow",sans-serif; }',
+            '.scout-table th { font-family:"Barlow",sans-serif; font-weight:700; font-size:6px;',
+            "  letter-spacing:0; text-transform:uppercase; color:#8a909e; padding:1px 2px;",
+            "  border-bottom:1px solid #d4d8e0; text-align:center; background:#f8f9fb; }",
+            ".scout-table td { padding:1px 2px; border-bottom:0.5px solid #e8eaee; text-align:center;",
+            '  font-family:"Barlow",sans-serif; font-size:6.5px; }',
             ".scout-table td:first-child { text-align:left; font-weight:600; color:#4a5060; }",
             ".scout-table tr:last-child td { border-bottom:none; }",
             ".scout-highlight { color:#cc1a1a; font-weight:800; }",
@@ -37172,13 +38548,12 @@
           const autoScaleScript = `
     document.fonts.ready.then(function(){
       var pages = document.querySelectorAll('.scout-report-page');
-      // Printable area at 96dpi: 8in wide x 10.5in tall = 768 x 1008px
-      var printW = 768;
-      var printH = 1008;
+      // Printable area at 96dpi: 6.7in wide x 3.76in tall (7x4in minus margins)
+      var printW = 643;
+      var printH = 340;
       pages.forEach(function(page){
-        // Reset any previous transform so we measure natural size
-        page.style.transform = '';
-        page.style.marginBottom = '';
+        // Reset any previous scale
+        page.style.zoom = '';
         var w = page.scrollWidth;
         var h = page.scrollHeight;
         // Scale to fit both dimensions — use whichever axis is the tighter constraint
@@ -37186,11 +38561,8 @@
         var scaleH = printH / h;
         var scale  = Math.min(scaleX, scaleH, 1); // never scale up, only down
         if(scale < 1){
-          page.style.transform = 'scale(' + scale + ')';
-          page.style.transformOrigin = 'top left';
-          // Collapse the space the scaled element leaves behind
-          // (scaled height = h*scale, but element still occupies h px)
-          page.style.marginBottom = (h * scale - h) + 'px';
+          page.style.zoom = scale;
+          // zoom affects layout flow so page breaks calculate correctly
         }
       });
       window.print();
@@ -37394,6 +38766,956 @@
             }
           });
         })();
+
+        // ════════════════════════════════════════════════════════════════════
+        // SCOUTING OVERVIEW
+        // ════════════════════════════════════════════════════════════════════
+        let _scoutSelectedTeam = null;
+
+        async function scoutOverviewLoad() {
+          // Ensure game data is loaded (may not be if Stats Hub was never opened)
+          if (!allGames.length) {
+            const body = document.getElementById("scout-overview-content");
+            if (body)
+              body.innerHTML = `<div style="color:var(--text2);font-family:'Barlow Condensed',sans-serif;font-size:15px;padding:20px 0;">Loading game data…</div>`;
+            try {
+              await myTeamLoad();
+            } catch (e) {}
+            allGames = await loadAllGames();
+            try {
+              await oppLoad();
+            } catch (e) {}
+          } else if (!(_opponents && _opponents.length)) {
+            try {
+              await oppLoad();
+            } catch (e) {}
+          }
+
+          // Build team list: myTeam + all saved opponents + any misc teams from game history
+          const teams = [];
+          const seen = new Set();
+
+          // My team
+          const myName = window._myTeamNameCache || null;
+          if (myName && !seen.has(myName)) {
+            seen.add(myName);
+            teams.push({ name: myName, label: myName, badge: "MY TEAM" });
+          }
+
+          // Saved opponents
+          (_opponents || []).forEach((o) => {
+            if (!seen.has(o.name)) {
+              seen.add(o.name);
+              teams.push({ name: o.name, label: o.name, badge: null });
+            }
+          });
+
+          // Misc teams from game history
+          allGames.forEach((g) => {
+            [g.awayTeam, g.homeTeam].forEach((t) => {
+              if (t && !seen.has(t)) {
+                seen.add(t);
+                teams.push({ name: t, label: t, badge: "MISC" });
+              }
+            });
+          });
+
+          const btnWrap = document.getElementById("scout-team-btns");
+          if (!btnWrap) return;
+          if (!teams.length) {
+            btnWrap.innerHTML = `<span style="color:var(--text3);font-family:'Barlow Condensed',sans-serif;font-size:13px;">No game history found.</span>`;
+            return;
+          }
+          btnWrap.innerHTML = teams
+            .map(
+              (t) =>
+                `<button class="scout-team-btn${
+                  _scoutSelectedTeam === t.name ? " active" : ""
+                }" data-scout-team="${t.name.replace(
+                  /"/g,
+                  "&quot;"
+                )}" onclick="scoutSelectTeam(this.dataset.scoutTeam)">
+              ${
+                t.badge
+                  ? `<span style="font-size:9px;opacity:0.65;margin-right:4px;">${t.badge}</span>`
+                  : ""
+              }${t.label}
+            </button>`
+            )
+            .join("");
+
+          if (_scoutSelectedTeam && seen.has(_scoutSelectedTeam)) {
+            scoutBuildCards(_scoutSelectedTeam);
+          } else {
+            document.getElementById(
+              "scout-overview-content"
+            ).innerHTML = `<div style="color:var(--text2);font-family:'Barlow Condensed',sans-serif;font-size:15px;padding:20px 0;">Select a team above to generate scouting cards.</div>`;
+          }
+        }
+
+        function scoutSelectTeam(name) {
+          _scoutSelectedTeam = name;
+          document.querySelectorAll(".scout-team-btn").forEach((b) => {
+            b.classList.toggle("active", b.dataset.scoutTeam === name);
+          });
+          scoutBuildCards(name);
+        }
+
+        // Normalize old "FB" pitch type to "4SFB" at display time only — never touches stored data
+        function _normPT(t) {
+          if (!t) return t;
+          return t.toUpperCase() === "FB" ? "4SFB" : t;
+        }
+
+        function _scoutFmt(v, dec) {
+          if (v == null || isNaN(v)) return "—";
+          return dec != null ? v.toFixed(dec) : String(v);
+        }
+        function _scoutPct(n, d) {
+          if (!d) return "—";
+          return ((n / d) * 100).toFixed(0) + "%";
+        }
+        function _scoutAvg(h, ab) {
+          if (!ab) return ".000";
+          return "." + String(Math.round((h / ab) * 1000)).padStart(3, "0");
+        }
+        function _scoutOBP(h, bb, hbp, pa) {
+          if (!pa) return ".000";
+          const n = h + bb + hbp;
+          return "." + String(Math.round((n / pa) * 1000)).padStart(3, "0");
+        }
+        function _scoutSLG(h, d, t, hr, ab) {
+          if (!ab) return ".000";
+          const tb = h - d - t - hr + d * 2 + t * 3 + hr * 4;
+          return "." + String(Math.round((tb / ab) * 1000)).padStart(3, "0");
+        }
+
+        function scoutBuildCards(teamName) {
+          const games = getTeamGames(teamName);
+          if (!games.length) {
+            document.getElementById(
+              "scout-overview-content"
+            ).innerHTML = `<div style="color:var(--text2);font-family:'Barlow Condensed',sans-serif;font-size:15px;">No game data for ${teamName}.</div>`;
+            return;
+          }
+
+          const hitters = getTeamRoster(teamName, games)
+            .filter((p) => p.pa >= 1)
+            .sort((a, b) => (b.ab || 0) - (a.ab || 0));
+          const pitchers = getTeamPitchers(teamName, games).sort(
+            (a, b) => (b.pitches || 0) - (a.pitches || 0)
+          );
+
+          // Build hitter tendency rows
+          const hitterRows = hitters
+            .map((p) => {
+              const pitches = getPlayerPitches(teamName, p.name, games);
+              // Spray direction
+              const inPlay = pitches.filter(
+                (px) => px.spray && px.spray.x != null
+              );
+              let pull = 0,
+                center = 0,
+                oppo = 0;
+              const isLHH = (p.hand || "R").toUpperCase().startsWith("L");
+              inPlay.forEach((px) => {
+                const angle =
+                  (Math.atan2(px.spray.x - 280, -(px.spray.y - 468)) * 180) /
+                  Math.PI;
+                if (isLHH) {
+                  if (angle > 15) pull++;
+                  else if (angle < -15) oppo++;
+                  else center++;
+                } else {
+                  if (angle < -15) pull++;
+                  else if (angle > 15) oppo++;
+                  else center++;
+                }
+              });
+              const ipTotal = pull + center + oppo || 1;
+              // Batted ball type
+              const gb = inPlay.filter(
+                (px) =>
+                  px.spray.btype === "groundball" ||
+                  px.spray.btype === "weakgrounder"
+              ).length;
+              const fb = inPlay.filter(
+                (px) =>
+                  px.spray.btype === "flyball" || px.spray.btype === "popup"
+              ).length;
+              const ld = inPlay.filter(
+                (px) => px.spray.btype === "linedrive"
+              ).length;
+              const bbTotal = gb + fb + ld || 1;
+              // Count tendencies: first pitch swing, 2-strike K rate
+              const fpPitches = pitches.filter((px) => {
+                const c = _ppc(px);
+                return c.balls === 0 && c.strikes === 0;
+              });
+              const fpSwings = fpPitches.filter((px) =>
+                [
+                  "strike-swinging",
+                  "foul",
+                  "single",
+                  "double",
+                  "triple",
+                  "homerun",
+                  "groundout",
+                  "flyout",
+                  "lineout",
+                  "sacbunt",
+                  "sacfly",
+                  "error",
+                ].includes(px.outcome)
+              ).length;
+              const twoStrikePitches = pitches.filter((px) => {
+                const c = _ppc(px);
+                return c.strikes === 2;
+              });
+              const twoStrikeK = twoStrikePitches.filter(
+                (px) =>
+                  px.outcome === "strike-swinging" ||
+                  px.outcome === "strike-looking"
+              ).length;
+              // Hot zone: most hit pitch type
+              const hitPitches = pitches.filter((px) =>
+                ["single", "double", "triple", "homerun"].includes(px.outcome)
+              );
+              const ptHits = {};
+              hitPitches.forEach((px) => {
+                const _pt = _normPT(px.pitchType) || "?";
+                ptHits[_pt] = (ptHits[_pt] || 0) + 1;
+              });
+              const hotPT = Object.entries(ptHits).sort(
+                (a, b) => b[1] - a[1]
+              )[0];
+              // Swing%
+              const swingOutcomes = [
+                "strike-swinging",
+                "foul",
+                "single",
+                "double",
+                "triple",
+                "homerun",
+                "groundout",
+                "flyout",
+                "lineout",
+                "sacbunt",
+                "sacfly",
+                "error",
+              ];
+              const swings = pitches.filter((px) =>
+                swingOutcomes.includes(px.outcome)
+              ).length;
+              const chaseOutcomes = ["strike-swinging", "foul"];
+              const ooz = pitches.filter((px) => {
+                if (!px.pitchX || !px.pitchY) return false;
+                const inZ =
+                  px.pitchX >= 30 &&
+                  px.pitchX <= 70 &&
+                  px.pitchY >= 30 &&
+                  px.pitchY <= 70;
+                return !inZ && chaseOutcomes.includes(px.outcome);
+              }).length;
+              const oozTotal = pitches.filter((px) => {
+                if (!px.pitchX || !px.pitchY) return false;
+                return !(
+                  px.pitchX >= 30 &&
+                  px.pitchX <= 70 &&
+                  px.pitchY >= 30 &&
+                  px.pitchY <= 70
+                );
+              }).length;
+
+              // AVG by pitch family
+              const famStats = {
+                fb: { h: 0, ab: 0 },
+                br: { h: 0, ab: 0 },
+                os: { h: 0, ab: 0 },
+              };
+              const _AB_END = new Set([
+                "single",
+                "double",
+                "triple",
+                "homerun",
+                "groundout",
+                "flyout",
+                "lineout",
+                "strikeout-swinging",
+                "strikeout-looking",
+                "error",
+              ]);
+              const _HIT_END = new Set([
+                "single",
+                "double",
+                "triple",
+                "homerun",
+              ]);
+              pitches.forEach((px) => {
+                const fam = pitchTypeFamily(_normPT(px.pitchType) || "");
+                if (!famStats[fam]) return;
+                if (_AB_END.has(px.outcome)) {
+                  famStats[fam].ab++;
+                  if (_HIT_END.has(px.outcome)) famStats[fam].h++;
+                }
+              });
+              const avgFB = famStats.fb.ab
+                ? _scoutAvg(famStats.fb.h, famStats.fb.ab)
+                : "—";
+              const avgBR = famStats.br.ab
+                ? _scoutAvg(famStats.br.h, famStats.br.ab)
+                : "—";
+              const avgCH = famStats.os.ab
+                ? _scoutAvg(famStats.os.h, famStats.os.ab)
+                : "—";
+
+              // Spray bar HTML
+              const pullW = Math.round((pull / ipTotal) * 100);
+              const centW = Math.round((center / ipTotal) * 100);
+              const oppoW = 100 - pullW - centW;
+              const sprayBar = inPlay.length
+                ? `<div class="scout-spray-bar">
+              <div class="scout-spray-seg" style="width:${pullW}%;background:#e84a4a;"></div>
+              <div class="scout-spray-seg" style="width:${centW}%;background:#aaa;"></div>
+              <div class="scout-spray-seg" style="width:${oppoW}%;background:#2d8a3e;"></div>
+            </div>
+            <div style="font-size:11px;font-weight:700;margin-top:3px;display:flex;gap:6px;">
+              <span style="color:#e84a4a;">${pullW}% Pull</span>
+              <span style="color:#888;">${centW}% Mid</span>
+              <span style="color:#2d8a3e;">${oppoW}% Oppo</span>
+            </div>`
+                : "—";
+
+              // Dominant direction pill
+              const dom =
+                pull > oppo && pull > center
+                  ? "Pull"
+                  : oppo > center
+                  ? "Oppo"
+                  : "Middle";
+              const domPill = inPlay.length
+                ? `<span class="scout-tendency-pill ${
+                    dom === "Pull"
+                      ? "pill-pull"
+                      : dom === "Oppo"
+                      ? "pill-oppo"
+                      : "pill-middle"
+                  }">${dom}</span>`
+                : "";
+
+              // Batted ball type pill
+              const domBB = gb > fb && gb > ld ? "GB" : fb > ld ? "FB" : "LD";
+              const bbPill = inPlay.length
+                ? `<span class="scout-tendency-pill ${
+                    domBB === "GB"
+                      ? "pill-gb"
+                      : domBB === "FB"
+                      ? "pill-fb"
+                      : "pill-ld"
+                  }">${domBB}</span>`
+                : "";
+
+              return `<tr>
+              <td style="font-weight:700;">${p.name}</td>
+              <td class="num">${p.num || "—"}</td>
+              <td class="num">${p.pos || "—"}</td>
+              <td class="num">${p.hand || "—"}</td>
+              <td class="num">${p.ab || 0}</td>
+              <td class="num">${_scoutAvg(p.hits, p.ab)}</td>
+              <td class="num">${_scoutOBP(p.hits, p.bb, p.hbp, p.pa)}</td>
+              <td class="num">${_scoutPct(p.k, p.pa)}</td>
+              <td class="num">${_scoutPct(p.bb, p.pa)}</td>
+              <td>${sprayBar}</td>
+              <td>${domPill} ${bbPill}</td>
+              <td class="num">${
+                fpPitches.length ? _scoutPct(fpSwings, fpPitches.length) : "—"
+              }</td>
+              <td class="num">${
+                twoStrikePitches.length
+                  ? _scoutPct(twoStrikeK, twoStrikePitches.length)
+                  : "—"
+              }</td>
+              <td class="num">${
+                pitches.length ? _scoutPct(swings, pitches.length) : "—"
+              }</td>
+              <td>${
+                hotPT
+                  ? `<span style="font-size:11px;font-weight:700;">${hotPT[0]}</span> <span style="color:var(--text3);font-size:10px;">(${hotPT[1]}H)</span>`
+                  : "—"
+              }</td>
+              <td class="num">${avgFB}</td>
+              <td class="num">${avgBR}</td>
+              <td class="num">${avgCH}</td>
+            </tr>`;
+            })
+            .join("");
+
+          // Build pitcher tendency rows
+          const pitcherRows = pitchers
+            .map((p) => {
+              const pitches = getPitcherPitches(teamName, p.name, games);
+              // Pitch mix
+              const ptCount = {};
+              pitches.forEach((px) => {
+                const _pt = _normPT(px.pitchType) || "?";
+                ptCount[_pt] = (ptCount[_pt] || 0) + 1;
+              });
+              const topPitches = Object.entries(ptCount)
+                .sort((a, b) => b[1] - a[1])
+                .slice(0, 3);
+              const mixStr = topPitches
+                .map(([t, n]) => `${t} ${_scoutPct(n, pitches.length)}`)
+                .join(" · ");
+              // First pitch tendency
+              const fpPitches = pitches.filter((px) => {
+                const c = _ppc(px);
+                return c.balls === 0 && c.strikes === 0;
+              });
+              const fpStrikes = fpPitches.filter((px) =>
+                [
+                  "strike-swinging",
+                  "strike-looking",
+                  "foul",
+                  "single",
+                  "double",
+                  "triple",
+                  "homerun",
+                  "groundout",
+                  "flyout",
+                  "lineout",
+                  "sacbunt",
+                  "sacfly",
+                  "error",
+                ].includes(px.outcome)
+              ).length;
+              // 2-strike put-away
+              const twoK = pitches.filter((px) => {
+                const c = _ppc(px);
+                return c.strikes === 2;
+              });
+              const twoKPtCount = {};
+              twoK.forEach((px) => {
+                const _pt = _normPT(px.pitchType) || "?";
+                twoKPtCount[_pt] = (twoKPtCount[_pt] || 0) + 1;
+              });
+              const putaway = Object.entries(twoKPtCount).sort(
+                (a, b) => b[1] - a[1]
+              )[0];
+              // Strike% by pitch type
+              const ptStr = {};
+              pitches.forEach((px) => {
+                const _pt = _normPT(px.pitchType) || "?";
+                if (!ptStr[_pt]) ptStr[_pt] = { t: 0, s: 0 };
+                ptStr[_pt].t++;
+                if (_isStrike(px.outcome)) ptStr[_pt].s++;
+              });
+              const strByPt = Object.entries(ptStr)
+                .sort((a, b) => b[1].t - a[1].t)
+                .slice(0, 3)
+                .map(([t, s]) => `${t} ${((s.s / s.t) * 100).toFixed(0)}%`)
+                .join(" · ");
+              // Velo range
+              const vels = pitches
+                .map((px) => parseFloat(px.velocity))
+                .filter((v) => !isNaN(v) && v > 0);
+              const avgVel = vels.length
+                ? (vels.reduce((a, b) => a + b, 0) / vels.length).toFixed(1)
+                : "—";
+              const maxVel = vels.length ? Math.max(...vels).toFixed(1) : "—";
+              // Zone%
+              const zoneP = pitches.filter(
+                (px) =>
+                  px.pitchX >= 30 &&
+                  px.pitchX <= 70 &&
+                  px.pitchY >= 30 &&
+                  px.pitchY <= 70
+              ).length;
+
+              return `<tr>
+              <td style="font-weight:700;">${p.name}</td>
+              <td class="num">${p.num || "—"}</td>
+              <td class="num">${p.hand || "R"}</td>
+              <td class="num">${p.games || 0}</td>
+              <td class="num">${p.pitches || 0}</td>
+              <td class="num">${avgVel}</td>
+              <td class="num">${maxVel}</td>
+              <td class="num">${
+                pitches.length ? _scoutPct(p.k, p.bf || 1) : "—"
+              }</td>
+              <td class="num">${
+                pitches.length ? _scoutPct(p.bb, p.bf || 1) : "—"
+              }</td>
+              <td class="num">${
+                pitches.length ? _scoutPct(zoneP, pitches.length) : "—"
+              }</td>
+              <td class="num">${
+                fpPitches.length ? _scoutPct(fpStrikes, fpPitches.length) : "—"
+              }</td>
+              <td>${mixStr || "—"}</td>
+              <td>${strByPt || "—"}</td>
+              <td>${putaway ? `<strong>${putaway[0]}</strong>` : "—"}</td>
+            </tr>`;
+            })
+            .join("");
+
+          const html = `
+            <div class="scout-print-bar">
+              <button class="scout-print-btn" onclick="scoutPrint('hitters')">&#9112; Print Hitter Cards</button>
+              <button class="scout-print-btn" onclick="scoutPrint('pitchers')">&#9112; Print Pitcher Cards</button>
+              <button class="scout-print-btn" onclick="scoutPrint('both')">&#9112; Print Both (Double-Sided)</button>
+            </div>
+            <div class="scout-card-section" id="scout-hitter-section">
+              <div class="scout-card-section-title">Hitter Tendencies — ${teamName}</div>
+              ${
+                hitters.length
+                  ? `<div style="overflow-x:auto;"><table class="scout-card-table">
+                <thead><tr>
+                  <th>Player</th>
+                  <th class="num">#</th>
+                  <th class="num">POS</th>
+                  <th class="num">B</th>
+                  <th class="num">AB</th>
+                  <th class="num">AVG</th>
+                  <th class="num">OBP</th>
+                  <th class="num">K%</th>
+                  <th class="num">BB%</th>
+                  <th>Spray (Pull·Ctr·Oppo)</th>
+                  <th>Profile</th>
+                  <th class="num">FP Sw%</th>
+                  <th class="num">2K K%</th>
+                  <th class="num">Sw%</th>
+                  <th>Hits Off</th>
+                  <th class="num">vs FB</th>
+                  <th class="num">vs BR</th>
+                  <th class="num">vs CH</th>
+                </tr></thead>
+                <tbody>${hitterRows}</tbody>
+              </table></div>`
+                  : `<div style="color:var(--text3);font-family:'Barlow Condensed',sans-serif;font-size:13px;">No hitter data.</div>`
+              }
+            </div>
+            <div class="scout-card-section" id="scout-pitcher-section">
+              <div class="scout-card-section-title">Pitcher Tendencies — ${teamName}</div>
+              ${
+                pitchers.length
+                  ? `<div style="overflow-x:auto;"><table class="scout-card-table">
+                <thead><tr>
+                  <th>Pitcher</th>
+                  <th class="num">#</th>
+                  <th class="num">H</th>
+                  <th class="num">G</th>
+                  <th class="num">P</th>
+                  <th class="num">Avg V</th>
+                  <th class="num">Max V</th>
+                  <th class="num">K%</th>
+                  <th class="num">BB%</th>
+                  <th class="num">Zone%</th>
+                  <th class="num">FPS%</th>
+                  <th>Top Pitches</th>
+                  <th>Str% by Pitch</th>
+                  <th>2K Putaway</th>
+                </tr></thead>
+                <tbody>${pitcherRows}</tbody>
+              </table></div>`
+                  : `<div style="color:var(--text3);font-family:'Barlow Condensed',sans-serif;font-size:13px;">No pitcher data.</div>`
+              }
+            </div>`;
+
+          document.getElementById("scout-overview-content").innerHTML = html;
+        }
+
+        function scoutPrint(which) {
+          const printCSS = `
+            <style>
+              * { box-sizing: border-box; }
+              body { font-family: 'Arial Narrow', 'Barlow Condensed', Arial, sans-serif; font-size: 7px; margin: 0; color: #111; background: #fff; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+              h1 { font-size: 10px; font-weight: 900; letter-spacing: 0.5px; text-transform: uppercase; margin: 0 0 3px; }
+              h2 { font-size: 8px; font-weight: 700; letter-spacing: 0.3px; text-transform: uppercase; margin: 0 0 3px; color: #555; border-bottom: 1px solid #222; padding-bottom: 2px; }
+              .page { padding: 6px 8px; page-break-after: always; overflow: hidden; }
+              .page:last-child { page-break-after: avoid; }
+              table { width: 100%; border-collapse: collapse; font-size: 7px; margin-bottom: 4px; }
+              th { background: #333; color: #fff; font-weight: 700; font-size: 6px; letter-spacing: 0; text-transform: uppercase; padding: 1.5px 2px; text-align: left; }
+              th.num, td.num { text-align: center; }
+              td { padding: 1.5px 2px; border-bottom: 0.5px solid #e0e0e0; vertical-align: middle; font-size: 7px; }
+              tr:nth-child(even) td { background: #f9f9f9; }
+              .spray-bar { display: flex; height: 5px; border-radius: 2px; overflow: hidden; }
+              .pull-seg { background: #e84a4a; height: 100%; }
+              .ctr-seg { background: #aaa; height: 100%; }
+              .oppo-seg { background: #2d8a3e; height: 100%; }
+              .pill { display: inline-block; padding: 0px 2px; border-radius: 4px; font-size: 6px; font-weight: 700; }
+              .pill-pull { background: #fde8e8; color: #c03030; }
+              .pill-oppo { background: #d4f0db; color: #1e6a2a; }
+              .pill-middle { background: #eee; color: #555; }
+              .pill-center { background: #eee; color: #555; }
+              .pill-gb { background: #d4f0db; color: #1e6a2a; }
+              .pill-fb { background: #fde8e8; color: #c03030; }
+              .pill-ld { background: #fff8d4; color: #9a7000; }
+              .legend { font-size: 6px; color: #888; margin-top: 3px; }
+              .legend span { margin-right: 6px; }
+              .dsided-note { font-size: 6px; color: #888; text-align: center; margin: 4px 0 0; border-top: 0.5px dashed #ccc; padding-top: 3px; }
+            </style>`;
+
+          const teamName = _scoutSelectedTeam;
+          if (!teamName) return;
+          const games = getTeamGames(teamName);
+          const hitters = getTeamRoster(teamName, games)
+            .filter((p) => p.pa >= 1)
+            .sort((a, b) => (b.ab || 0) - (a.ab || 0));
+          const pitchers = getTeamPitchers(teamName, games).sort(
+            (a, b) => (b.pitches || 0) - (a.pitches || 0)
+          );
+
+          const buildHitterPrintTable = () => {
+            const rows = hitters
+              .map((p) => {
+                const pitches = getPlayerPitches(teamName, p.name, games);
+                const inPlay = pitches.filter(
+                  (px) => px.spray && px.spray.x != null
+                );
+                let pull = 0,
+                  center = 0,
+                  oppo = 0;
+                const isLHH = (p.hand || "R").toUpperCase().startsWith("L");
+                inPlay.forEach((px) => {
+                  const angle =
+                    (Math.atan2(px.spray.x - 280, -(px.spray.y - 468)) * 180) /
+                    Math.PI;
+                  if (isLHH) {
+                    if (angle > 15) pull++;
+                    else if (angle < -15) oppo++;
+                    else center++;
+                  } else {
+                    if (angle < -15) pull++;
+                    else if (angle > 15) oppo++;
+                    else center++;
+                  }
+                });
+                const ip = pull + center + oppo || 1;
+                const pullW = Math.round((pull / ip) * 100),
+                  centW = Math.round((center / ip) * 100),
+                  oppoW = 100 - pullW - centW;
+                const gb = inPlay.filter((px) =>
+                  ["groundball", "weakgrounder"].includes(px.spray.btype)
+                ).length;
+                const fb = inPlay.filter((px) =>
+                  ["flyball", "popup"].includes(px.spray.btype)
+                ).length;
+                const ld = inPlay.filter(
+                  (px) => px.spray.btype === "linedrive"
+                ).length;
+                const fpP = pitches.filter((px) => {
+                  const c = _ppc(px);
+                  return c.balls === 0 && c.strikes === 0;
+                });
+                const fpSw = fpP.filter((px) =>
+                  [
+                    "strike-swinging",
+                    "foul",
+                    "single",
+                    "double",
+                    "triple",
+                    "homerun",
+                    "groundout",
+                    "flyout",
+                    "lineout",
+                    "sacbunt",
+                    "sacfly",
+                    "error",
+                  ].includes(px.outcome)
+                ).length;
+                const tkP = pitches.filter((px) => {
+                  const c = _ppc(px);
+                  return c.strikes === 2;
+                });
+                const tkK = tkP.filter(
+                  (px) =>
+                    px.outcome === "strike-swinging" ||
+                    px.outcome === "strike-looking"
+                ).length;
+                const swings = pitches.filter((px) =>
+                  [
+                    "strike-swinging",
+                    "foul",
+                    "single",
+                    "double",
+                    "triple",
+                    "homerun",
+                    "groundout",
+                    "flyout",
+                    "lineout",
+                    "sacbunt",
+                    "sacfly",
+                    "error",
+                  ].includes(px.outcome)
+                ).length;
+                const hitP = pitches.filter((px) =>
+                  ["single", "double", "triple", "homerun"].includes(px.outcome)
+                );
+                const ptH = {};
+                hitP.forEach((px) => {
+                  const _pt = _normPT(px.pitchType) || "?";
+                  ptH[_pt] = (ptH[_pt] || 0) + 1;
+                });
+                const hotPT = Object.entries(ptH).sort(
+                  (a, b) => b[1] - a[1]
+                )[0];
+                const dom =
+                  pull > oppo && pull > center
+                    ? "Pull"
+                    : oppo > center
+                    ? "Oppo"
+                    : "Middle";
+                const domBB = gb > fb && gb > ld ? "GB" : fb > ld ? "FB" : "LD";
+                // AVG by pitch family
+                const famStatsPr = {
+                  fb: { h: 0, ab: 0 },
+                  br: { h: 0, ab: 0 },
+                  os: { h: 0, ab: 0 },
+                };
+                const _AB_ENDp = new Set([
+                  "single",
+                  "double",
+                  "triple",
+                  "homerun",
+                  "groundout",
+                  "flyout",
+                  "lineout",
+                  "strikeout-swinging",
+                  "strikeout-looking",
+                  "error",
+                ]);
+                const _HIT_ENDp = new Set([
+                  "single",
+                  "double",
+                  "triple",
+                  "homerun",
+                ]);
+                pitches.forEach((px) => {
+                  const fam = pitchTypeFamily(_normPT(px.pitchType) || "");
+                  if (!famStatsPr[fam]) return;
+                  if (_AB_ENDp.has(px.outcome)) {
+                    famStatsPr[fam].ab++;
+                    if (_HIT_ENDp.has(px.outcome)) famStatsPr[fam].h++;
+                  }
+                });
+                const avgFBp = famStatsPr.fb.ab
+                  ? _scoutAvg(famStatsPr.fb.h, famStatsPr.fb.ab)
+                  : "—";
+                const avgBRp = famStatsPr.br.ab
+                  ? _scoutAvg(famStatsPr.br.h, famStatsPr.br.ab)
+                  : "—";
+                const avgCHp = famStatsPr.os.ab
+                  ? _scoutAvg(famStatsPr.os.h, famStatsPr.os.ab)
+                  : "—";
+                return `<tr>
+                <td style="font-weight:700;">${p.name}</td>
+                <td class="num">${p.num || "—"}</td>
+                <td class="num">${p.pos || "—"}</td>
+                <td class="num">${p.hand || "—"}</td>
+                <td class="num">${p.ab || 0}</td>
+                <td class="num">${_scoutAvg(p.hits, p.ab)}</td>
+                <td class="num">${_scoutOBP(p.hits, p.bb, p.hbp, p.pa)}</td>
+                <td class="num">${_scoutPct(p.k, p.pa)}</td>
+                <td class="num">${_scoutPct(p.bb, p.pa)}</td>
+                <td>${
+                  inPlay.length
+                    ? `<div class="spray-bar"><div class="pull-seg" style="width:${pullW}%"></div><div class="ctr-seg" style="width:${centW}%"></div><div class="oppo-seg" style="width:${oppoW}%"></div></div><div style="font-size:5.5px;margin-top:1px;white-space:nowrap;"><span style="color:#c03030">${pullW}P</span>·<span style="color:#888">${centW}M</span>·<span style="color:#1e6a2a">${oppoW}O</span></div>`
+                    : "—"
+                }</td>
+                <td><span class="pill ${
+                  dom === "Pull"
+                    ? "pill-pull"
+                    : dom === "Oppo"
+                    ? "pill-oppo"
+                    : "pill-middle"
+                }">${dom}</span> <span class="pill ${
+                  domBB === "GB"
+                    ? "pill-gb"
+                    : domBB === "FB"
+                    ? "pill-fb"
+                    : "pill-ld"
+                }">${domBB}</span></td>
+                <td class="num">${
+                  fpP.length ? _scoutPct(fpSw, fpP.length) : "—"
+                }</td>
+                <td class="num">${
+                  tkP.length ? _scoutPct(tkK, tkP.length) : "—"
+                }</td>
+                <td class="num">${
+                  pitches.length ? _scoutPct(swings, pitches.length) : "—"
+                }</td>
+                <td>${hotPT ? `${hotPT[0]} (${hotPT[1]}H)` : "—"}</td>
+                <td class="num">${avgFBp}</td>
+                <td class="num">${avgBRp}</td>
+                <td class="num">${avgCHp}</td>
+              </tr>`;
+              })
+              .join("");
+            return `<table>
+              <thead><tr>
+                <th>Player</th><th class="num">#</th><th class="num">POS</th><th class="num">B</th>
+                <th class="num">AB</th><th class="num">AVG</th><th class="num">OBP</th>
+                <th class="num">K%</th><th class="num">BB%</th>
+                <th>Spray (Pull·Ctr·Oppo)</th><th>Profile</th>
+                <th class="num">FP Sw%</th><th class="num">2K K%</th><th class="num">Sw%</th><th>Hits Off</th>
+                <th class="num">vs FB</th><th class="num">vs BR</th><th class="num">vs CH</th>
+              </tr></thead>
+              <tbody>${rows}</tbody>
+            </table>
+            <div class="legend">
+              <span>&#9632; Pull (Red)</span><span>&#9632; Middle (Gray)</span><span>&#9632; Oppo (Green)</span>
+              <span>FP Sw% = First Pitch Swing%</span><span>2K K% = K rate with 2 strikes</span>
+            </div>`;
+          };
+
+          const buildPitcherPrintTable = () => {
+            const rows = pitchers
+              .map((p) => {
+                const pitches = getPitcherPitches(teamName, p.name, games);
+                const ptCount = {};
+                pitches.forEach((px) => {
+                  const _pt = _normPT(px.pitchType) || "?";
+                  ptCount[_pt] = (ptCount[_pt] || 0) + 1;
+                });
+                const topP = Object.entries(ptCount)
+                  .sort((a, b) => b[1] - a[1])
+                  .slice(0, 3)
+                  .map(([t, n]) => `${t} ${_scoutPct(n, pitches.length)}`)
+                  .join(" · ");
+                const fpP = pitches.filter((px) => {
+                  const c = _ppc(px);
+                  return c.balls === 0 && c.strikes === 0;
+                });
+                const fpStr = fpP.filter((px) =>
+                  [
+                    "strike-swinging",
+                    "strike-looking",
+                    "foul",
+                    "single",
+                    "double",
+                    "triple",
+                    "homerun",
+                    "groundout",
+                    "flyout",
+                    "lineout",
+                    "sacbunt",
+                    "sacfly",
+                    "error",
+                  ].includes(px.outcome)
+                ).length;
+                const tkP = pitches.filter((px) => {
+                  const c = _ppc(px);
+                  return c.strikes === 2;
+                });
+                const tkPtC = {};
+                tkP.forEach((px) => {
+                  const _pt = _normPT(px.pitchType) || "?";
+                  tkPtC[_pt] = (tkPtC[_pt] || 0) + 1;
+                });
+                const putaway = Object.entries(tkPtC).sort(
+                  (a, b) => b[1] - a[1]
+                )[0];
+                const vels = pitches
+                  .map((px) => parseFloat(px.velocity))
+                  .filter((v) => !isNaN(v) && v > 0);
+                const avgV = vels.length
+                  ? (vels.reduce((a, b) => a + b, 0) / vels.length).toFixed(1)
+                  : "—";
+                const maxV = vels.length ? Math.max(...vels).toFixed(1) : "—";
+                const zoneP = pitches.filter(
+                  (px) =>
+                    px.pitchX >= 30 &&
+                    px.pitchX <= 70 &&
+                    px.pitchY >= 30 &&
+                    px.pitchY <= 70
+                ).length;
+                const ptS = {};
+                pitches.forEach((px) => {
+                  const _pt = _normPT(px.pitchType) || "?";
+                  if (!ptS[_pt]) ptS[_pt] = { t: 0, s: 0 };
+                  ptS[_pt].t++;
+                  if (_isStrike(px.outcome)) ptS[_pt].s++;
+                });
+                const sByPt = Object.entries(ptS)
+                  .sort((a, b) => b[1].t - a[1].t)
+                  .slice(0, 3)
+                  .map(([t, s]) => `${t} ${((s.s / s.t) * 100).toFixed(0)}%`)
+                  .join(" · ");
+                return `<tr>
+                <td style="font-weight:700;">${p.name}</td>
+                <td class="num">${p.num || "—"}</td>
+                <td class="num">${p.hand || "R"}</td>
+                <td class="num">${p.games || 0}</td>
+                <td class="num">${p.pitches || 0}</td>
+                <td class="num">${avgV}</td>
+                <td class="num">${maxV}</td>
+                <td class="num">${
+                  pitches.length ? _scoutPct(p.k, p.bf || 1) : "—"
+                }</td>
+                <td class="num">${
+                  pitches.length ? _scoutPct(p.bb, p.bf || 1) : "—"
+                }</td>
+                <td class="num">${
+                  pitches.length ? _scoutPct(zoneP, pitches.length) : "—"
+                }</td>
+                <td class="num">${
+                  fpP.length ? _scoutPct(fpStr, fpP.length) : "—"
+                }</td>
+                <td>${topP || "—"}</td>
+                <td>${sByPt || "—"}</td>
+                <td>${putaway ? `<strong>${putaway[0]}</strong>` : "—"}</td>
+              </tr>`;
+              })
+              .join("");
+            return `<table>
+              <thead><tr>
+                <th>Pitcher</th><th class="num">#</th><th class="num">H</th><th class="num">G</th>
+                <th class="num">P</th><th class="num">Avg V</th><th class="num">Max V</th>
+                <th class="num">K%</th><th class="num">BB%</th><th class="num">Zone%</th>
+                <th class="num">FPS%</th><th>Top Pitches</th><th>Str% by Pitch</th><th>2K Putaway</th>
+              </tr></thead>
+              <tbody>${rows}</tbody>
+            </table>
+            <div class="legend">
+              <span>FPS% = First Pitch Strike%</span><span>Zone% = pitches in strike zone</span><span>Str% = strike rate per pitch type</span><span>2K Putaway = most used pitch with 2 strikes</span>
+            </div>`;
+          };
+
+          let pages = "";
+          if (which === "hitters" || which === "both") {
+            pages += `<div class="page">
+              <h1>Hitter Scouting Card — ${teamName}</h1>
+              ${buildHitterPrintTable()}
+              ${
+                which === "both"
+                  ? '<div class="dsided-note">Side 1 of 2 — print double-sided (flip on long edge)</div>'
+                  : ""
+              }
+            </div>`;
+          }
+          if (which === "pitchers" || which === "both") {
+            pages += `<div class="page">
+              <h1>Pitcher Scouting Card — ${teamName}</h1>
+              ${buildPitcherPrintTable()}
+              ${
+                which === "both"
+                  ? '<div class="dsided-note">Side 2 of 2</div>'
+                  : ""
+              }
+            </div>`;
+          }
+
+          const frame = document.getElementById("print-scout-frame");
+          frame.innerHTML = printCSS + pages;
+          document.body.classList.add("scout-printing");
+          setTimeout(() => {
+            window.print();
+            setTimeout(() => {
+              document.body.classList.remove("scout-printing");
+              frame.innerHTML = "";
+            }, 500);
+          }, 100);
+        }
       </script>
     </div>
     <!-- ── Player Comparison Picker ── -->
