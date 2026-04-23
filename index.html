@@ -27300,7 +27300,9 @@
           const pitches = [];
           games.forEach((g) => {
             (g.pitchLog || []).forEach((p) => {
-              if (names.has(p.pitcher) && p.pitcherTeam === teamName)
+              const pTeam =
+                p.pitcherTeam || (p.isTop ? g.homeTeam : g.awayTeam);
+              if (names.has(p.pitcher) && pTeam === teamName)
                 pitches.push({ ...p, gameDate: g.date, gameId: g.id });
             });
           });
