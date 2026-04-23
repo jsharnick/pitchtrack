@@ -14590,6 +14590,17 @@
             });
             if (result.error) throw result.error;
             if (!result.data.session) {
+              // Store pending profile so it survives the email confirmation redirect
+              try {
+                localStorage.setItem(
+                  "pt_pending_profile",
+                  JSON.stringify({
+                    username: username,
+                    phone: phone || null,
+                    account_type: accountType,
+                  })
+                );
+              } catch (e) {}
               errEl.style.color = "#86efac";
               errEl.textContent =
                 "Check your email to confirm your account, then sign in.";
@@ -14628,6 +14639,27 @@
               .select("username, account_type")
               .eq("id", user.id)
               .maybeSingle();
+            if (!profile) {
+              // Check for pending profile saved before email confirmation redirect
+              try {
+                var pending = JSON.parse(
+                  localStorage.getItem("pt_pending_profile") || "null"
+                );
+                if (pending) {
+                  await window._supabase.from("profiles").upsert(
+                    {
+                      id: user.id,
+                      username: pending.username,
+                      phone: pending.phone,
+                      account_type: pending.account_type,
+                    },
+                    { onConflict: "id" }
+                  );
+                  profile = pending;
+                  localStorage.removeItem("pt_pending_profile");
+                }
+              } catch (e) {}
+            }
             window._ptAccountType = profile?.account_type || "coach";
             window._ptUsername = profile?.username || user.email.split("@")[0];
           } catch (e) {
@@ -14750,13 +14782,11 @@
             errEl.style.display = "block";
             return;
           }
-          await window._supabase
-            .from("team_members")
-            .insert({
-              team_id: team.id,
-              user_id: user.id,
-              role: window._ptAccountType || "org_host",
-            });
+          await window._supabase.from("team_members").insert({
+            team_id: team.id,
+            user_id: user.id,
+            role: window._ptAccountType || "org_host",
+          });
           window._ptPendingTeamId = team.id;
           window._ptPendingTeamName = team.name;
           var pinDisplay = document.getElementById("pt-pin-display");
