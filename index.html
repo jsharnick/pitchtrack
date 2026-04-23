@@ -5728,6 +5728,8 @@
         align-items: center;
         justify-content: center;
         font-family: 'Barlow Condensed', sans-serif;
+        overflow-y: auto;
+        padding: 24px 0;
       "
     >
       <div
@@ -5735,13 +5737,14 @@
           background: #1a1d27;
           border: 1px solid #2e3248;
           border-radius: 14px;
-          padding: 40px 36px;
-          width: 380px;
-          max-width: 92vw;
+          padding: 36px;
+          width: 420px;
+          max-width: 94vw;
           box-shadow: 0 8px 48px rgba(0, 0, 0, 0.6);
         "
       >
-        <div style="text-align: center; margin-bottom: 30px">
+        <!-- Logo -->
+        <div style="text-align: center; margin-bottom: 26px">
           <div
             style="
               font-weight: 900;
@@ -5757,16 +5760,18 @@
             id="pt-auth-subtitle"
             style="
               font-family: 'Barlow', sans-serif;
-              font-size: 13px;
+              font-size: 12px;
               color: #5c6280;
               margin-top: 5px;
-              letter-spacing: 1px;
+              letter-spacing: 2px;
               text-transform: uppercase;
             "
           >
             Sign in to continue
           </div>
         </div>
+
+        <!-- ── STEP 1: Sign In ── -->
         <div id="pt-auth-form">
           <input
             id="pt-auth-email"
@@ -5801,7 +5806,7 @@
               color: #e8eaf0;
               font-family: 'Barlow Condensed', sans-serif;
               font-size: 15px;
-              margin-bottom: 16px;
+              margin-bottom: 14px;
               outline: none;
             "
             onkeydown="if(event.key==='Enter')_ptAuthSubmit()"
@@ -5828,15 +5833,13 @@
           </button>
           <div
             style="
-              text-align: center;
-              margin-top: 14px;
               display: flex;
               justify-content: space-between;
               align-items: center;
+              margin-top: 12px;
             "
           >
             <span
-              id="pt-auth-toggle-link"
               onclick="_ptAuthToggle()"
               style="
                 font-family: 'Barlow', sans-serif;
@@ -5848,7 +5851,6 @@
               <span style="color: #cc1a1a">Sign up</span></span
             >
             <span
-              id="pt-forgot-link"
               onclick="_ptForgotPassword()"
               style="
                 font-family: 'Barlow', sans-serif;
@@ -5870,54 +5872,277 @@
             "
           ></div>
         </div>
-        <div id="pt-team-picker" style="display: none">
-          <div
-            style="
-              font-family: 'Barlow', sans-serif;
-              font-size: 12px;
-              color: #5c6280;
-              margin-bottom: 12px;
-              text-transform: uppercase;
-              letter-spacing: 1px;
-            "
-          >
-            Select workspace
-          </div>
-          <div id="pt-team-list" style="margin-bottom: 14px"></div>
+
+        <!-- ── STEP 2: Sign Up ── -->
+        <div id="pt-signup-form" style="display: none">
           <div
             style="
               font-family: 'Barlow', sans-serif;
               font-size: 11px;
               color: #5c6280;
-              margin-bottom: 8px;
               text-transform: uppercase;
               letter-spacing: 1px;
+              margin-bottom: 4px;
             "
           >
-            or create new
+            Username
           </div>
-          <div style="display: flex; gap: 8px">
+          <input
+            id="pt-signup-username"
+            type="text"
+            placeholder="e.g. coach_smith"
+            style="
+              width: 100%;
+              box-sizing: border-box;
+              padding: 10px 14px;
+              background: #0f1117;
+              border: 1px solid #2e3248;
+              border-radius: 7px;
+              color: #e8eaf0;
+              font-family: 'Barlow Condensed', sans-serif;
+              font-size: 15px;
+              margin-bottom: 10px;
+              outline: none;
+            "
+          />
+          <div
+            style="
+              font-family: 'Barlow', sans-serif;
+              font-size: 11px;
+              color: #5c6280;
+              text-transform: uppercase;
+              letter-spacing: 1px;
+              margin-bottom: 4px;
+            "
+          >
+            Email
+          </div>
+          <input
+            id="pt-signup-email"
+            type="email"
+            placeholder="Email address"
+            style="
+              width: 100%;
+              box-sizing: border-box;
+              padding: 10px 14px;
+              background: #0f1117;
+              border: 1px solid #2e3248;
+              border-radius: 7px;
+              color: #e8eaf0;
+              font-family: 'Barlow Condensed', sans-serif;
+              font-size: 15px;
+              margin-bottom: 10px;
+              outline: none;
+            "
+          />
+          <div
+            style="
+              font-family: 'Barlow', sans-serif;
+              font-size: 11px;
+              color: #5c6280;
+              text-transform: uppercase;
+              letter-spacing: 1px;
+              margin-bottom: 4px;
+            "
+          >
+            Phone
+          </div>
+          <input
+            id="pt-signup-phone"
+            type="tel"
+            placeholder="Phone number"
+            style="
+              width: 100%;
+              box-sizing: border-box;
+              padding: 10px 14px;
+              background: #0f1117;
+              border: 1px solid #2e3248;
+              border-radius: 7px;
+              color: #e8eaf0;
+              font-family: 'Barlow Condensed', sans-serif;
+              font-size: 15px;
+              margin-bottom: 10px;
+              outline: none;
+            "
+          />
+          <div
+            style="
+              font-family: 'Barlow', sans-serif;
+              font-size: 11px;
+              color: #5c6280;
+              text-transform: uppercase;
+              letter-spacing: 1px;
+              margin-bottom: 4px;
+            "
+          >
+            Password
+          </div>
+          <input
+            id="pt-signup-password"
+            type="password"
+            placeholder="Min. 6 characters"
+            style="
+              width: 100%;
+              box-sizing: border-box;
+              padding: 10px 14px;
+              background: #0f1117;
+              border: 1px solid #2e3248;
+              border-radius: 7px;
+              color: #e8eaf0;
+              font-family: 'Barlow Condensed', sans-serif;
+              font-size: 15px;
+              margin-bottom: 10px;
+              outline: none;
+            "
+          />
+          <div
+            style="
+              font-family: 'Barlow', sans-serif;
+              font-size: 11px;
+              color: #5c6280;
+              text-transform: uppercase;
+              letter-spacing: 1px;
+              margin-bottom: 4px;
+            "
+          >
+            Account Type
+          </div>
+          <select
+            id="pt-signup-type"
+            style="
+              width: 100%;
+              box-sizing: border-box;
+              padding: 10px 14px;
+              background: #0f1117;
+              border: 1px solid #2e3248;
+              border-radius: 7px;
+              color: #e8eaf0;
+              font-family: 'Barlow Condensed', sans-serif;
+              font-size: 15px;
+              margin-bottom: 16px;
+              outline: none;
+              appearance: none;
+            "
+          >
+            <option value="head_coach">Head Coach</option>
+            <option value="assistant_coach">Assistant Coach</option>
+            <option value="player">Player</option>
+            <option value="viewer">Viewer</option>
+          </select>
+          <button
+            id="pt-signup-submit"
+            onclick="_ptSignupSubmit()"
+            style="
+              width: 100%;
+              padding: 12px;
+              background: #cc1a1a;
+              border: none;
+              border-radius: 7px;
+              color: #fff;
+              font-family: 'Barlow Condensed', sans-serif;
+              font-weight: 900;
+              font-size: 16px;
+              letter-spacing: 1px;
+              text-transform: uppercase;
+              cursor: pointer;
+            "
+          >
+            Create Account
+          </button>
+          <div style="text-align: center; margin-top: 12px">
+            <span
+              onclick="_ptAuthToggle()"
+              style="
+                font-family: 'Barlow', sans-serif;
+                font-size: 13px;
+                color: #9da3b8;
+                cursor: pointer;
+              "
+              >Already have an account?
+              <span style="color: #cc1a1a">Sign in</span></span
+            >
+          </div>
+          <div
+            id="pt-signup-error"
+            style="
+              font-family: 'Barlow', sans-serif;
+              font-size: 13px;
+              text-align: center;
+              margin-top: 10px;
+              display: none;
+            "
+          ></div>
+        </div>
+
+        <!-- ── STEP 3: Org Picker ── -->
+        <div id="pt-org-picker" style="display: none">
+          <!-- Existing orgs list -->
+          <div id="pt-org-list-section">
+            <div
+              style="
+                font-family: 'Barlow', sans-serif;
+                font-size: 11px;
+                color: #5c6280;
+                text-transform: uppercase;
+                letter-spacing: 1px;
+                margin-bottom: 8px;
+              "
+            >
+              Your Organizations
+            </div>
+            <div id="pt-org-list" style="margin-bottom: 14px">
+              <div
+                style="
+                  font-size: 13px;
+                  color: #5c6280;
+                  font-family: 'Barlow', sans-serif;
+                "
+              >
+                No organizations yet.
+              </div>
+            </div>
+          </div>
+
+          <div style="border-top: 1px solid #2e3248; margin: 16px 0 14px"></div>
+
+          <!-- Join via PIN -->
+          <div
+            style="
+              font-family: 'Barlow', sans-serif;
+              font-size: 11px;
+              color: #5c6280;
+              text-transform: uppercase;
+              letter-spacing: 1px;
+              margin-bottom: 8px;
+            "
+          >
+            Join an Organization
+          </div>
+          <div style="display: flex; gap: 8px; margin-bottom: 6px">
             <input
-              id="pt-new-team-name"
+              id="pt-join-pin"
               type="text"
-              placeholder="Workspace name..."
+              maxlength="6"
+              placeholder="6-digit PIN"
               style="
                 flex: 1;
-                padding: 10px 12px;
+                padding: 11px 14px;
                 background: #0f1117;
                 border: 1px solid #2e3248;
                 border-radius: 7px;
                 color: #e8eaf0;
                 font-family: 'Barlow Condensed', sans-serif;
-                font-size: 14px;
+                font-size: 20px;
+                letter-spacing: 6px;
+                text-align: center;
                 outline: none;
               "
-              onkeydown="if(event.key==='Enter')_ptCreateTeam()"
+              onkeydown="if(event.key==='Enter')_ptJoinOrg()"
             />
             <button
-              onclick="_ptCreateTeam()"
+              onclick="_ptJoinOrg()"
               style="
-                padding: 10px 16px;
+                padding: 10px 18px;
                 background: #cc1a1a;
                 border: none;
                 border-radius: 7px;
@@ -5928,20 +6153,142 @@
                 cursor: pointer;
               "
             >
-              Create
+              Join
             </button>
           </div>
           <div
-            id="pt-team-error"
+            id="pt-join-error"
             style="
               font-family: 'Barlow', sans-serif;
               color: #f87171;
               font-size: 12px;
-              margin-top: 8px;
+              margin-bottom: 10px;
               display: none;
             "
           ></div>
+
+          <!-- Create org (head coaches only) -->
+          <div id="pt-create-org-section" style="display: none">
+            <div
+              style="border-top: 1px solid #2e3248; margin: 14px 0 12px"
+            ></div>
+            <div
+              style="
+                font-family: 'Barlow', sans-serif;
+                font-size: 11px;
+                color: #5c6280;
+                text-transform: uppercase;
+                letter-spacing: 1px;
+                margin-bottom: 8px;
+              "
+            >
+              Create an Organization
+            </div>
+            <div style="display: flex; gap: 8px">
+              <input
+                id="pt-new-org-name"
+                type="text"
+                placeholder="Organization name..."
+                style="
+                  flex: 1;
+                  padding: 10px 12px;
+                  background: #0f1117;
+                  border: 1px solid #2e3248;
+                  border-radius: 7px;
+                  color: #e8eaf0;
+                  font-family: 'Barlow Condensed', sans-serif;
+                  font-size: 14px;
+                  outline: none;
+                "
+                onkeydown="if(event.key==='Enter')_ptCreateOrg()"
+              />
+              <button
+                onclick="_ptCreateOrg()"
+                style="
+                  padding: 10px 16px;
+                  background: #cc1a1a;
+                  border: none;
+                  border-radius: 7px;
+                  color: #fff;
+                  font-family: 'Barlow Condensed', sans-serif;
+                  font-weight: 900;
+                  font-size: 14px;
+                  cursor: pointer;
+                "
+              >
+                Create
+              </button>
+            </div>
+            <div
+              id="pt-create-org-error"
+              style="
+                font-family: 'Barlow', sans-serif;
+                color: #f87171;
+                font-size: 12px;
+                margin-top: 6px;
+                display: none;
+              "
+            ></div>
+            <!-- PIN reveal after creation -->
+            <div
+              id="pt-pin-reveal"
+              style="
+                display: none;
+                margin-top: 14px;
+                background: #0f1117;
+                border: 1px solid #2e3248;
+                border-radius: 8px;
+                padding: 14px;
+                text-align: center;
+              "
+            >
+              <div
+                style="
+                  font-family: 'Barlow', sans-serif;
+                  font-size: 11px;
+                  color: #5c6280;
+                  text-transform: uppercase;
+                  letter-spacing: 1px;
+                  margin-bottom: 6px;
+                "
+              >
+                Your Organization PIN — share with your team
+              </div>
+              <div
+                id="pt-pin-display"
+                style="
+                  font-family: 'Barlow Condensed', sans-serif;
+                  font-weight: 900;
+                  font-size: 36px;
+                  color: #cc1a1a;
+                  letter-spacing: 8px;
+                "
+              ></div>
+              <button
+                onclick="_ptEnterPendingOrg()"
+                style="
+                  margin-top: 12px;
+                  width: 100%;
+                  padding: 10px;
+                  background: #cc1a1a;
+                  border: none;
+                  border-radius: 7px;
+                  color: #fff;
+                  font-family: 'Barlow Condensed', sans-serif;
+                  font-weight: 900;
+                  font-size: 14px;
+                  letter-spacing: 1px;
+                  text-transform: uppercase;
+                  cursor: pointer;
+                "
+              >
+                Enter Organization
+              </button>
+            </div>
+          </div>
         </div>
+
+        <!-- Footer: signed-in user + sign out -->
         <div
           id="pt-auth-footer"
           style="
@@ -6062,10 +6409,20 @@
             border-bottom: 1px solid #2e3248;
           "
         >
-          Workspace:
+          Organization:
           <span
             id="pt-account-workspace"
             style="color: #9da3b8; font-weight: 600"
+          ></span>
+          <span
+            id="pt-account-org-pin"
+            style="
+              display: none;
+              margin-left: 10px;
+              color: #cc1a1a;
+              font-weight: 700;
+              letter-spacing: 2px;
+            "
           ></span>
         </div>
         <div
@@ -14124,19 +14481,21 @@
         }
 
         function _ptAuthToggle() {
-          window._ptAuthMode =
-            window._ptAuthMode === "signin" ? "signup" : "signin";
-          var isSignup = window._ptAuthMode === "signup";
-          document.getElementById("pt-auth-submit").textContent = isSignup
-            ? "Create Account"
-            : "Sign In";
-          document.getElementById("pt-auth-toggle-link").textContent = isSignup
-            ? "Already have an account? Sign in"
-            : "Don't have an account? Sign up";
-          document.getElementById("pt-auth-subtitle").textContent = isSignup
-            ? "Create your account"
-            : "Sign in to continue";
-          document.getElementById("pt-auth-error").style.display = "none";
+          var showSignup =
+            document.getElementById("pt-signup-form").style.display === "none";
+          document.getElementById("pt-auth-form").style.display = showSignup
+            ? "none"
+            : "block";
+          document.getElementById("pt-signup-form").style.display = showSignup
+            ? "block"
+            : "none";
+          document.getElementById("pt-auth-subtitle").textContent = showSignup
+            ? "CREATE YOUR ACCOUNT"
+            : "SIGN IN TO CONTINUE";
+          var authErr = document.getElementById("pt-auth-error");
+          var signupErr = document.getElementById("pt-signup-error");
+          if (authErr) authErr.style.display = "none";
+          if (signupErr) signupErr.style.display = "none";
         }
 
         async function _ptAuthSubmit() {
@@ -14148,21 +14507,60 @@
           btn.textContent = "…";
           btn.disabled = true;
           try {
-            var result;
-            if (window._ptAuthMode === "signup") {
-              result = await window._supabase.auth.signUp({
-                email: email,
-                password: password,
-              });
-            } else {
-              result = await window._supabase.auth.signInWithPassword({
-                email: email,
-                password: password,
-              });
-            }
+            var result = await window._supabase.auth.signInWithPassword({
+              email: email,
+              password: password,
+            });
             if (result.error) throw result.error;
-            if (window._ptAuthMode === "signup" && !result.data.session) {
-              // Email confirmation required
+            await _ptOnSignedIn(result.data.user);
+          } catch (e) {
+            errEl.style.color = "#f87171";
+            errEl.textContent = e.message || "Authentication failed";
+            errEl.style.display = "block";
+          }
+          btn.textContent = "Sign In";
+          btn.disabled = false;
+        }
+
+        async function _ptSignupSubmit() {
+          var username = document
+            .getElementById("pt-signup-username")
+            .value.trim();
+          var email = document.getElementById("pt-signup-email").value.trim();
+          var phone = document.getElementById("pt-signup-phone").value.trim();
+          var password = document.getElementById("pt-signup-password").value;
+          var accountType = document.getElementById("pt-signup-type").value;
+          var errEl = document.getElementById("pt-signup-error");
+          var btn = document.getElementById("pt-signup-submit");
+          errEl.style.display = "none";
+          if (!username || !email || !password) {
+            errEl.style.color = "#f87171";
+            errEl.textContent = "Username, email, and password are required.";
+            errEl.style.display = "block";
+            return;
+          }
+          if (!/^[a-zA-Z0-9_]+$/.test(username)) {
+            errEl.style.color = "#f87171";
+            errEl.textContent =
+              "Username may only contain letters, numbers, and underscores.";
+            errEl.style.display = "block";
+            return;
+          }
+          if (password.length < 6) {
+            errEl.style.color = "#f87171";
+            errEl.textContent = "Password must be at least 6 characters.";
+            errEl.style.display = "block";
+            return;
+          }
+          btn.textContent = "…";
+          btn.disabled = true;
+          try {
+            var result = await window._supabase.auth.signUp({
+              email: email,
+              password: password,
+            });
+            if (result.error) throw result.error;
+            if (!result.data.session) {
               errEl.style.color = "#86efac";
               errEl.textContent =
                 "Check your email to confirm your account, then sign in.";
@@ -14171,42 +14569,75 @@
               btn.disabled = false;
               return;
             }
+            var userId = result.data.user.id;
+            await window._supabase.from("profiles").upsert(
+              {
+                id: userId,
+                username: username,
+                phone: phone || null,
+                account_type: accountType,
+              },
+              { onConflict: "id" }
+            );
+            window._ptAccountType = accountType;
+            window._ptUsername = username;
             await _ptOnSignedIn(result.data.user);
           } catch (e) {
             errEl.style.color = "#f87171";
-            errEl.textContent = e.message || "Authentication failed";
+            errEl.textContent = e.message || "Signup failed";
             errEl.style.display = "block";
           }
-          btn.textContent =
-            window._ptAuthMode === "signup" ? "Create Account" : "Sign In";
+          btn.textContent = "Create Account";
           btn.disabled = false;
         }
 
         async function _ptOnSignedIn(user) {
+          // Load profile to get account_type and username
+          try {
+            var { data: profile } = await window._supabase
+              .from("profiles")
+              .select("username, account_type")
+              .eq("id", user.id)
+              .maybeSingle();
+            window._ptAccountType = profile?.account_type || "coach";
+            window._ptUsername = profile?.username || user.email.split("@")[0];
+          } catch (e) {
+            window._ptAccountType = "coach";
+            window._ptUsername = user.email.split("@")[0];
+          }
+          // Hide sign-in/sign-up, show org picker
           document.getElementById("pt-auth-form").style.display = "none";
+          document.getElementById("pt-signup-form").style.display = "none";
+          document.getElementById("pt-org-picker").style.display = "block";
           document.getElementById("pt-auth-footer").style.display = "block";
           document.getElementById("pt-auth-user-label").textContent =
-            user.email;
+            window._ptUsername || user.email;
           document.getElementById("pt-auth-subtitle").textContent =
-            "Select your workspace";
-          await _ptLoadTeams();
+            "SELECT YOUR ORGANIZATION";
+          // Show create org section only for head coaches
+          var createSection = document.getElementById("pt-create-org-section");
+          if (createSection)
+            createSection.style.display =
+              window._ptAccountType === "head_coach" ? "block" : "none";
+          await _ptLoadOrgs();
         }
 
-        async function _ptLoadTeams() {
+        async function _ptLoadOrgs() {
           var { data: memberships } = await window._supabase
             .from("team_members")
-            .select("team_id, role, teams(id, name)");
-          var listEl = document.getElementById("pt-team-list");
-          document.getElementById("pt-team-picker").style.display = "block";
+            .select("team_id, role, teams(id, name, pin)");
+          var listEl = document.getElementById("pt-org-list");
+          if (!listEl) return;
           if (!memberships || memberships.length === 0) {
             listEl.innerHTML =
-              '<div style="font-size:13px;color:#8b8fa8;margin-bottom:8px">No workspaces yet. Create one below.</div>';
+              '<div style="font-size:13px;color:#5c6280;margin-bottom:8px">No organizations yet.</div>';
             return;
           }
           if (memberships.length === 1) {
             await _ptSelectTeam(
               memberships[0].teams.id,
-              memberships[0].teams.name
+              memberships[0].teams.name,
+              memberships[0].role
             );
             return;
           }
@@ -14217,6 +14648,8 @@
                 m.teams.id +
                 "','" +
                 _ptEsc(m.teams.name) +
+                "','" +
+                _ptEsc(m.role) +
                 "')\" style=\"padding:11px 14px;background:#0f1117;border:1px solid #2e3248;border-radius:7px;cursor:pointer;margin-bottom:8px;font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:700;color:#e8eaf0;display:flex;align-items:center;justify-content:space-between\">" +
                 "<span>" +
                 _ptEsc(m.teams.name) +
@@ -14229,16 +14662,59 @@
             .join("");
         }
 
-        async function _ptCreateTeam() {
-          var name = document.getElementById("pt-new-team-name").value.trim();
-          var errEl = document.getElementById("pt-team-error");
+        async function _ptJoinOrg() {
+          var pin = document.getElementById("pt-join-pin").value.trim();
+          var errEl = document.getElementById("pt-join-error");
+          errEl.style.display = "none";
+          if (pin.length !== 6 || !/^\d{6}$/.test(pin)) {
+            errEl.textContent = "PIN must be 6 digits.";
+            errEl.style.display = "block";
+            return;
+          }
+          var { data: org } = await window._supabase
+            .from("teams")
+            .select("id, name")
+            .eq("pin", pin)
+            .eq("pin_enabled", true)
+            .maybeSingle();
+          if (!org) {
+            errEl.textContent = "Organization not found. Check your PIN.";
+            errEl.style.display = "block";
+            return;
+          }
+          var acct = window._ptAccountType || "viewer";
+          var role =
+            acct === "head_coach" || acct === "assistant_coach"
+              ? "editor"
+              : "viewer";
+          var { data: userData } = await window._supabase.auth.getUser();
+          var { error } = await window._supabase
+            .from("team_members")
+            .insert({ team_id: org.id, user_id: userData.user.id, role: role });
+          if (error && error.code !== "23505") {
+            errEl.textContent = error.message;
+            errEl.style.display = "block";
+            return;
+          }
+          await _ptSelectTeam(org.id, org.name, role);
+        }
+
+        async function _ptCreateOrg() {
+          var name = document.getElementById("pt-new-org-name").value.trim();
+          var errEl = document.getElementById("pt-create-org-error");
           if (!name) return;
           errEl.style.display = "none";
+          var pin = String(Math.floor(100000 + Math.random() * 900000));
           var { data: userData } = await window._supabase.auth.getUser();
           var user = userData.user;
           var { data: team, error } = await window._supabase
             .from("teams")
-            .insert({ name: name, created_by: user.id })
+            .insert({
+              name: name,
+              created_by: user.id,
+              pin: pin,
+              pin_enabled: true,
+            })
             .select()
             .single();
           if (error) {
@@ -14249,23 +14725,42 @@
           await window._supabase
             .from("team_members")
             .insert({ team_id: team.id, user_id: user.id, role: "owner" });
-          await _ptSelectTeam(team.id, team.name);
+          window._ptPendingTeamId = team.id;
+          window._ptPendingTeamName = team.name;
+          var pinDisplay = document.getElementById("pt-pin-display");
+          if (pinDisplay) pinDisplay.textContent = pin;
+          var pinReveal = document.getElementById("pt-pin-reveal");
+          if (pinReveal) pinReveal.style.display = "block";
+          var orgPicker = document.getElementById("pt-org-picker");
+          if (orgPicker) orgPicker.style.display = "none";
         }
 
-        async function _ptSelectTeam(teamId, teamName) {
+        async function _ptEnterPendingOrg() {
+          if (window._ptPendingTeamId) {
+            await _ptSelectTeam(
+              window._ptPendingTeamId,
+              window._ptPendingTeamName,
+              "owner"
+            );
+          }
+        }
+
+        async function _ptSelectTeam(teamId, teamName, role) {
+          window._ptUserRole = role || "viewer";
           _ptMountStorage(teamId);
           window._ptWorkspaceName = teamName || "";
-          // Remember this workspace so next session auto-connects
           try {
             localStorage.setItem("pt_last_team_id", teamId);
           } catch (e) {}
           _ptHideOverlay();
-          // Show account button in nav — get current user email
           try {
             var {
               data: { user },
             } = await window._supabase.auth.getUser();
-            _ptShowAccountBtn(user ? user.email : "", teamName);
+            _ptShowAccountBtn(
+              window._ptUsername || (user ? user.email : ""),
+              teamName
+            );
           } catch (e) {}
         }
 
@@ -14303,12 +14798,30 @@
           }
         }
 
-        function _ptOpenAccountModal() {
+        async function _ptOpenAccountModal() {
           var modal = document.getElementById("pt-account-modal");
           document.getElementById("pt-acct-pw1").value = "";
           document.getElementById("pt-acct-pw2").value = "";
           document.getElementById("pt-acct-msg").style.display = "none";
           modal.style.display = "flex";
+          // Show org PIN to owners
+          var orgPinEl = document.getElementById("pt-account-org-pin");
+          if (orgPinEl) {
+            orgPinEl.style.display = "none";
+            if (window._ptUserRole === "owner" && window._ptTeamId) {
+              try {
+                var { data: org } = await window._supabase
+                  .from("teams")
+                  .select("pin")
+                  .eq("id", window._ptTeamId)
+                  .single();
+                if (org && org.pin) {
+                  orgPinEl.textContent = "PIN: " + org.pin;
+                  orgPinEl.style.display = "inline";
+                }
+              } catch (e) {}
+            }
+          }
         }
 
         async function _ptChangePassword() {
@@ -14343,18 +14856,17 @@
           msgEl.style.display = "block";
         }
 
-        function _ptShowAccountBtn(email, workspaceName) {
+        function _ptShowAccountBtn(displayName, workspaceName) {
           var btn = document.getElementById("sn-account-btn");
           if (!btn) return;
           var label = document.getElementById("sn-account-label");
-          if (label)
-            label.textContent = email ? email.split("@")[0] : "Account";
+          if (label) label.textContent = displayName || "Account";
           btn.style.display = "inline-flex";
           btn.style.alignItems = "center";
           btn.style.gap = "5px";
           // Populate modal fields
           var emailEl = document.getElementById("pt-account-email");
-          if (emailEl) emailEl.textContent = email || "";
+          if (emailEl) emailEl.textContent = displayName || "";
           var wsEl = document.getElementById("pt-account-workspace");
           if (wsEl) wsEl.textContent = workspaceName || "—";
         }
@@ -14440,25 +14952,40 @@
               data: { session },
             } = await window._supabase.auth.getSession();
             if (session) {
-              // Returning user: try to auto-connect to their last workspace
+              // Load profile first so username/accountType are available
+              try {
+                var { data: prof } = await window._supabase
+                  .from("profiles")
+                  .select("username, account_type")
+                  .eq("id", session.user.id)
+                  .maybeSingle();
+                window._ptAccountType = prof?.account_type || "coach";
+                window._ptUsername =
+                  prof?.username || session.user.email.split("@")[0];
+              } catch (e) {}
+              // Returning user: try to auto-connect to their last org
               var lastTeamId = null;
               try {
                 lastTeamId = localStorage.getItem("pt_last_team_id");
               } catch (e) {}
               if (lastTeamId) {
-                // Verify they still have access to it
+                // Verify access and fetch role
                 var { data: mem } = await window._supabase
                   .from("team_members")
-                  .select("team_id")
+                  .select("team_id, role, teams(name)")
                   .eq("team_id", lastTeamId)
                   .eq("user_id", session.user.id)
                   .maybeSingle();
                 if (mem) {
-                  await _ptSelectTeam(lastTeamId, "");
+                  await _ptSelectTeam(
+                    lastTeamId,
+                    mem.teams?.name || "",
+                    mem.role || "viewer"
+                  );
                   return;
                 }
               }
-              // No saved workspace or access lost — show workspace picker
+              // No saved org or access lost — show org picker
               await _ptOnSignedIn(session.user);
             }
           } catch (e) {
