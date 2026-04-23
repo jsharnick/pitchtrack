@@ -20944,7 +20944,9 @@
           }
           // Ask who made the play in the field — blurb is built AFTER so it has fielder info
           // result is {putout, assists[]} or null if skipped
+          _fielderSkipAssists = outcome === "flyout" || outcome === "lineout" || outcome === "sacfly";
           openFielderModal(outcome, logLabel, batter, (result) => {
+            _fielderSkipAssists = false;
             const posNum = {
               P: 1,
               C: 2,
@@ -33295,6 +33297,7 @@
         let _fielderPendingPO = null; // pos picked in step 1 (putout)
         let _fielderAssists = []; // positions picked in step 2
         let _fielderInAssistMode = false; // true after putout is selected
+        let _fielderSkipAssists = false; // true for flyout/lineout/sacfly (no assists)
 
         // Error-mode multi-phase state
         let _errorPhase = "fielder"; // "fielder" | "error-type" | "throw-direction" | "recipient"
@@ -33426,6 +33429,13 @@
             ).textContent = `Error — ${batter} · always recorded`;
             const skipBtn = document.getElementById("fielder-skip-btn");
             if (skipBtn) skipBtn.textContent = "Skip";
+          } else if (_fielderSkipAssists) {
+            // Flyout/lineout/sacfly: no assists possible, go straight to putout
+            _fielderInAssistMode = false;
+            qs("fielder-title").textContent = "Who recorded the out?";
+            qs("fielder-sub").textContent = "Select the fielder who made the putout";
+            const skipBtn = document.getElementById("fielder-skip-btn");
+            if (skipBtn) skipBtn.textContent = "Done";
           } else {
             // Normal play: Phase 1 = assist selection (who touched the ball)
             qs("fielder-title").textContent = "Who fielded the ball?";
