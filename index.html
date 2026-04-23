@@ -13554,7 +13554,7 @@
                 return { key, value };
               } catch (e) {
                 console.error("storage.set failed", e);
-                return null;
+                throw e; // re-throw so saveGame knows the write failed
               }
             },
             get: async (key, _shared) => {
@@ -20012,6 +20012,25 @@
           };
 
           try {
+            // Before writing, strip 'resumable' from all OTHER saved games to reclaim space.
+            // 'resumable' duplicates the full pitchLog and is only needed for the current game.
+            try {
+              const existingKeys = await window.storage.list("ptgame_", true);
+              for (const k of existingKeys?.keys || []) {
+                if (k === gameId) continue; // skip current game
+                try {
+                  const raw = await window.storage.get(k, true);
+                  if (raw?.value) {
+                    const g = JSON.parse(raw.value);
+                    if (g.resumable) {
+                      delete g.resumable;
+                      window.storage._ls.setItem("pt_" + k, JSON.stringify(g));
+                    }
+                  }
+                } catch (e) {}
+              }
+            } catch (e) {}
+
             await window.storage.set(gameId, JSON.stringify(game), true);
 
             // Update team index (shared list of all team names for the hub)
@@ -20048,7 +20067,12 @@
               } catch (e) {}
             }
           } catch (err) {
-            toast("Save failed — " + (err?.message || "storage unavailable"));
+            const isQuota =
+              err?.name === "QuotaExceededError" || err?.code === 22;
+            const msg = isQuota
+              ? "Storage full — open Stats Hub → Game History and delete old games to free space"
+              : "Save failed — " + (err?.message || "storage unavailable");
+            toast(msg);
             console.error("saveGame error:", err);
           }
         }
