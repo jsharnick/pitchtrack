@@ -27300,8 +27300,15 @@
           const pitches = [];
           games.forEach((g) => {
             (g.pitchLog || []).forEach((p) => {
+              // Use isTop to infer pitching team structurally — this is reliable
+              // even after import normalizes g.awayTeam/g.homeTeam casing, since
+              // p.pitcherTeam in pitchLog entries is not updated during import.
               const pTeam =
-                p.pitcherTeam || (p.isTop ? g.homeTeam : g.awayTeam);
+                p.isTop !== undefined
+                  ? p.isTop
+                    ? g.homeTeam
+                    : g.awayTeam
+                  : p.pitcherTeam;
               if (names.has(p.pitcher) && pTeam === teamName)
                 pitches.push({ ...p, gameDate: g.date, gameId: g.id });
             });
@@ -31407,10 +31414,15 @@
                   return [..._allTeamGames]
                     .sort((a, b) => b.date.localeCompare(a.date))
                     .filter((g) =>
-                      (g.pitchLog || []).some(
-                        (p) =>
-                          p.pitcherTeam === teamName && names.has(p.pitcher)
-                      )
+                      (g.pitchLog || []).some((p) => {
+                        const pt =
+                          p.isTop !== undefined
+                            ? p.isTop
+                              ? g.homeTeam
+                              : g.awayTeam
+                            : p.pitcherTeam;
+                        return pt === teamName && names.has(p.pitcher);
+                      })
                     )
                     .slice(0, 3);
                 })()
