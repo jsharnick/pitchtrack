@@ -6024,10 +6024,12 @@
               appearance: none;
             "
           >
+            <option value="org_host">Organization Host</option>
             <option value="head_coach">Head Coach</option>
             <option value="assistant_coach">Assistant Coach</option>
+            <option value="support_staff">Support Staff</option>
             <option value="player">Player</option>
-            <option value="viewer">Viewer</option>
+            <option value="explorer">Explorer</option>
           </select>
           <button
             id="pt-signup-submit"
@@ -6424,6 +6426,33 @@
               letter-spacing: 2px;
             "
           ></span>
+        </div>
+        <div
+          id="pt-account-members-section"
+          style="
+            display: none;
+            margin-top: 4px;
+            margin-bottom: 16px;
+            padding-bottom: 16px;
+            border-bottom: 1px solid #2e3248;
+          "
+        >
+          <div
+            style="
+              font-family: 'Barlow', sans-serif;
+              font-size: 11px;
+              color: #5c6280;
+              text-transform: uppercase;
+              letter-spacing: 1px;
+              margin-bottom: 8px;
+            "
+          >
+            Members
+          </div>
+          <div
+            id="pt-account-members-list"
+            style="max-height: 220px; overflow-y: auto"
+          ></div>
         </div>
         <div
           style="
@@ -14618,7 +14647,10 @@
           var createSection = document.getElementById("pt-create-org-section");
           if (createSection)
             createSection.style.display =
-              window._ptAccountType === "head_coach" ? "block" : "none";
+              window._ptAccountType === "org_host" ||
+              window._ptAccountType === "head_coach"
+                ? "block"
+                : "none";
           await _ptLoadOrgs();
         }
 
@@ -14682,11 +14714,7 @@
             errEl.style.display = "block";
             return;
           }
-          var acct = window._ptAccountType || "viewer";
-          var role =
-            acct === "head_coach" || acct === "assistant_coach"
-              ? "editor"
-              : "viewer";
+          var role = window._ptAccountType || "player";
           var { data: userData } = await window._supabase.auth.getUser();
           var { error } = await window._supabase
             .from("team_members")
@@ -14724,7 +14752,11 @@
           }
           await window._supabase
             .from("team_members")
-            .insert({ team_id: team.id, user_id: user.id, role: "owner" });
+            .insert({
+              team_id: team.id,
+              user_id: user.id,
+              role: window._ptAccountType || "org_host",
+            });
           window._ptPendingTeamId = team.id;
           window._ptPendingTeamName = team.name;
           var pinDisplay = document.getElementById("pt-pin-display");
@@ -14740,14 +14772,23 @@
             await _ptSelectTeam(
               window._ptPendingTeamId,
               window._ptPendingTeamName,
-              "owner"
+              window._ptAccountType || "org_host"
             );
           }
         }
 
         async function _ptSelectTeam(teamId, teamName, role) {
-          window._ptUserRole = role || "viewer";
+          window._ptUserRole = role || "player";
           _ptMountStorage(teamId);
+          // Explorer: override storage writes to be silent no-ops so nothing persists
+          if (window._ptUserRole === "explorer") {
+            window.storage.set = async function () {
+              return null;
+            };
+            window.storage.delete = async function () {
+              return null;
+            };
+          }
           window._ptWorkspaceName = teamName || "";
           try {
             localStorage.setItem("pt_last_team_id", teamId);
@@ -14761,6 +14802,67 @@
               window._ptUsername || (user ? user.email : ""),
               teamName
             );
+          } catch (e) {}
+          _ptApplyRoleUI();
+        }
+
+        function _ptApplyRoleUI() {
+          var role = window._ptUserRole || "player";
+          var panels = [
+            "tracker",
+            "hub",
+            "myteam",
+            "opponents",
+            "scout-overview",
+          ];
+          var access = {
+            org_host: [
+              "tracker",
+              "hub",
+              "myteam",
+              "opponents",
+              "scout-overview",
+            ],
+            head_coach: [
+              "tracker",
+              "hub",
+              "myteam",
+              "opponents",
+              "scout-overview",
+            ],
+            assistant_coach: [
+              "tracker",
+              "hub",
+              "myteam",
+              "opponents",
+              "scout-overview",
+            ],
+            explorer: [
+              "tracker",
+              "hub",
+              "myteam",
+              "opponents",
+              "scout-overview",
+            ],
+            support_staff: ["tracker"],
+            player: ["myteam"],
+          };
+          var allowed = access[role] || ["myteam"];
+          panels.forEach(function (p) {
+            var tab = document.getElementById("sntab-" + p);
+            if (tab)
+              tab.style.display = allowed.indexOf(p) !== -1 ? "" : "none";
+          });
+          // Explorer: hide save button since nothing writes
+          var saveBtn = document.getElementById("sn-save-btn");
+          if (saveBtn)
+            saveBtn.style.setProperty(
+              "display",
+              role === "explorer" ? "none" : "",
+              "important"
+            );
+          try {
+            openPanel(allowed[0], true);
           } catch (e) {}
         }
 
@@ -14804,11 +14906,14 @@
           document.getElementById("pt-acct-pw2").value = "";
           document.getElementById("pt-acct-msg").style.display = "none";
           modal.style.display = "flex";
-          // Show org PIN to owners
+          var canManage =
+            window._ptUserRole === "org_host" ||
+            window._ptUserRole === "head_coach";
+          // Show org PIN to managing roles
           var orgPinEl = document.getElementById("pt-account-org-pin");
           if (orgPinEl) {
             orgPinEl.style.display = "none";
-            if (window._ptUserRole === "owner" && window._ptTeamId) {
+            if (canManage && window._ptTeamId) {
               try {
                 var { data: org } = await window._supabase
                   .from("teams")
@@ -14821,6 +14926,68 @@
                 }
               } catch (e) {}
             }
+          }
+          // Show member management for org_host and head_coach
+          var membersSection = document.getElementById(
+            "pt-account-members-section"
+          );
+          if (membersSection)
+            membersSection.style.display = canManage ? "block" : "none";
+          if (canManage && window._ptTeamId) {
+            try {
+              var { data: members } = await window._supabase
+                .from("team_members")
+                .select("user_id, role, profiles(username)")
+                .eq("team_id", window._ptTeamId);
+              var listEl = document.getElementById("pt-account-members-list");
+              var roleOptions = [
+                "org_host",
+                "head_coach",
+                "assistant_coach",
+                "support_staff",
+                "player",
+                "explorer",
+              ];
+              listEl.innerHTML =
+                (members || [])
+                  .map(function (m) {
+                    var uid = m.user_id;
+                    var uname =
+                      m.profiles && m.profiles.username
+                        ? m.profiles.username
+                        : uid.slice(0, 8);
+                    var opts = roleOptions
+                      .map(function (r) {
+                        return (
+                          '<option value="' +
+                          r +
+                          '"' +
+                          (m.role === r ? " selected" : "") +
+                          ">" +
+                          r.replace(/_/g, " ") +
+                          "</option>"
+                        );
+                      })
+                      .join("");
+                    return (
+                      '<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">' +
+                      "<span style=\"flex:1;font-family:'Barlow Condensed',sans-serif;font-size:14px;color:#e8eaf0\">" +
+                      _ptEsc(uname) +
+                      "</span>" +
+                      "<select onchange=\"_ptUpdateMemberRole('" +
+                      uid +
+                      "',this.value)\" style=\"background:#0f1117;border:1px solid #2e3248;border-radius:5px;color:#e8eaf0;padding:4px 6px;font-size:12px;font-family:'Barlow',sans-serif\">" +
+                      opts +
+                      "</select>" +
+                      "<button onclick=\"_ptRemoveMember('" +
+                      uid +
+                      '\')" style="background:none;border:none;color:#cc1a1a;cursor:pointer;font-size:15px;padding:0 4px;line-height:1">✕</button>' +
+                      "</div>"
+                    );
+                  })
+                  .join("") ||
+                "<div style=\"font-size:12px;color:#5c6280;font-family:'Barlow',sans-serif\">No members yet.</div>";
+            } catch (e) {}
           }
         }
 
@@ -14854,6 +15021,26 @@
             document.getElementById("pt-acct-pw2").value = "";
           }
           msgEl.style.display = "block";
+        }
+
+        async function _ptUpdateMemberRole(userId, newRole) {
+          if (!window._ptTeamId) return;
+          await window._supabase
+            .from("team_members")
+            .update({ role: newRole })
+            .eq("team_id", window._ptTeamId)
+            .eq("user_id", userId);
+        }
+
+        async function _ptRemoveMember(userId) {
+          if (!window._ptTeamId) return;
+          if (!confirm("Remove this member from the organization?")) return;
+          await window._supabase
+            .from("team_members")
+            .delete()
+            .eq("team_id", window._ptTeamId)
+            .eq("user_id", userId);
+          _ptOpenAccountModal();
         }
 
         function _ptShowAccountBtn(displayName, workspaceName) {
@@ -14935,7 +15122,19 @@
                 try {
                   lastTeamId2 = localStorage.getItem("pt_last_team_id");
                 } catch (e) {}
-                if (lastTeamId2) await _ptSelectTeam(lastTeamId2, "");
+                if (lastTeamId2) {
+                  var { data: recMem } = await window._supabase
+                    .from("team_members")
+                    .select("role, teams(name)")
+                    .eq("team_id", lastTeamId2)
+                    .eq("user_id", recoverSession.user.id)
+                    .maybeSingle();
+                  await _ptSelectTeam(
+                    lastTeamId2,
+                    recMem?.teams?.name || "",
+                    recMem?.role || "player"
+                  );
+                }
                 _ptShowAccountBtn(recoverSession.user.email, "");
                 _ptOpenAccountModal();
                 var msgEl = document.getElementById("pt-acct-msg");
@@ -15066,6 +15265,12 @@
         }
 
         function openPanel(name, skipPrompt) {
+          // Role-based access guard
+          if (window._ptUserRole) {
+            var _rmap = { support_staff: ["tracker"], player: ["myteam"] };
+            var _restrict = _rmap[window._ptUserRole];
+            if (_restrict && _restrict.indexOf(name) === -1) return;
+          }
           if (
             !skipPrompt &&
             currentPanel === "tracker" &&
@@ -21263,6 +21468,7 @@
         // Prevents hammering storage on rapid pitch entry while still catching crashes.
         let _autoSaveTimer = null;
         function _scheduleAutoSave() {
+          if (window._ptUserRole === "explorer") return; // Explorer mode: no auto-save
           clearTimeout(_autoSaveTimer);
           _autoSaveTimer = setTimeout(() => {
             if (S.gameId || (S.pitchLog && S.pitchLog.length > 0)) {
@@ -21376,6 +21582,7 @@
         // ─────────────────────────────────────────────────────────────────────
 
         async function saveGame(silent = false) {
+          if (window._ptUserRole === "explorer") return; // Explorer mode: no saves
           const awayTeam = qs("away-name-input").value.trim() || "AWAY";
           const homeTeam = qs("home-name-input").value.trim() || "HOME";
           const date = new Date().toISOString().split("T")[0];
@@ -40044,6 +40251,10 @@
 
         // Print the currently visible scouting report (from team scouting tab)
         function printCurrentScoutReport() {
+          if (window._ptUserRole === "explorer") {
+            toast("Explorer mode — printing disabled");
+            return;
+          }
           const el = document.getElementById("scout-report-content");
           if (!el || !el.innerHTML.trim()) {
             alert("No scouting report loaded.");
@@ -40059,6 +40270,10 @@
 
         // Print from the player detail scouting tab
         function printPlayerScoutReport(teamName, playerName, type) {
+          if (window._ptUserRole === "explorer") {
+            toast("Explorer mode — printing disabled");
+            return;
+          }
           // Re-build the report fresh so we always have the latest data
           const games = getTeamGames(teamName);
           const html =
@@ -40074,6 +40289,10 @@
 
         // Print ALL hitter + pitcher scouting reports for a team, one per page
         function printAllScoutReports() {
+          if (window._ptUserRole === "explorer") {
+            toast("Explorer mode — printing disabled");
+            return;
+          }
           // Determine which team is currently being viewed
           const teamName = currentView?.data;
           if (!teamName || typeof teamName !== "string") {
