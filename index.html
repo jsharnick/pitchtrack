@@ -6186,7 +6186,7 @@
             >
               Create an Organization
             </div>
-            <div style="display: flex; gap: 8px">
+            <div style="display: flex; gap: 8px; margin-bottom: 8px">
               <input
                 id="pt-new-org-name"
                 type="text"
@@ -6203,6 +6203,29 @@
                   outline: none;
                 "
                 onkeydown="if(event.key==='Enter')_ptCreateOrg()"
+              />
+            </div>
+            <div style="display: flex; gap: 8px">
+              <input
+                id="pt-new-org-pin"
+                type="text"
+                placeholder="6-digit PIN..."
+                maxlength="6"
+                inputmode="numeric"
+                style="
+                  flex: 1;
+                  padding: 10px 12px;
+                  background: #0f1117;
+                  border: 1px solid #2e3248;
+                  border-radius: 7px;
+                  color: #e8eaf0;
+                  font-family: 'Barlow Condensed', sans-serif;
+                  font-size: 14px;
+                  outline: none;
+                  letter-spacing: 4px;
+                "
+                onkeydown="if(event.key==='Enter')_ptCreateOrg()"
+                oninput="this.value=this.value.replace(/[^0-9]/g,'')"
               />
               <button
                 onclick="_ptCreateOrg()"
@@ -14761,10 +14784,19 @@
 
         async function _ptCreateOrg() {
           var name = document.getElementById("pt-new-org-name").value.trim();
+          var pin = document.getElementById("pt-new-org-pin").value.trim();
           var errEl = document.getElementById("pt-create-org-error");
-          if (!name) return;
+          if (!name) {
+            errEl.textContent = "Enter an organization name.";
+            errEl.style.display = "block";
+            return;
+          }
+          if (!/^\d{6}$/.test(pin)) {
+            errEl.textContent = "PIN must be exactly 6 digits.";
+            errEl.style.display = "block";
+            return;
+          }
           errEl.style.display = "none";
-          var pin = String(Math.floor(100000 + Math.random() * 900000));
           var { data: userData } = await window._supabase.auth.getUser();
           var user = userData.user;
           var { data: team, error } = await window._supabase
