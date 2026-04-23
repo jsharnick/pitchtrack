@@ -14063,17 +14063,15 @@
           window._ptTeamId = teamId;
           window.storage = {
             set: async function (key, value) {
-              var { error } = await window._supabase
-                .from("app_data")
-                .upsert(
-                  {
-                    team_id: teamId,
-                    key: key,
-                    value: value,
-                    updated_at: new Date().toISOString(),
-                  },
-                  { onConflict: "team_id,key" }
-                );
+              var { error } = await window._supabase.from("app_data").upsert(
+                {
+                  team_id: teamId,
+                  key: key,
+                  value: value,
+                  updated_at: new Date().toISOString(),
+                },
+                { onConflict: "team_id,key" }
+              );
               if (error) throw error;
               try {
                 localStorage.setItem("pt_" + key, value);
