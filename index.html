@@ -8,6 +8,7 @@
       name="viewport"
     />
     <title>PitchTrack Pro</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
     <style>
       @import url("https://fonts.googleapis.com/css2?family=Barlow+Condensed:ital,wght@0,300;0,400;0,600;0,700;0,800;0,900;1,700&family=Barlow:wght@300;400;500;600&family=Share+Tech+Mono&display=swap");
 
@@ -5710,6 +5711,462 @@
     </style>
   </head>
   <body>
+    <!-- ── PitchTrack Auth Overlay ───────────────────────────────────────── -->
+    <div
+      id="pt-auth-overlay"
+      style="
+        position: fixed;
+        inset: 0;
+        z-index: 9999;
+        background: linear-gradient(
+          150deg,
+          #0a0d12 0%,
+          #180808 45%,
+          #8a1010 100%
+        );
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-family: 'Barlow Condensed', sans-serif;
+      "
+    >
+      <div
+        style="
+          background: #1a1d27;
+          border: 1px solid #2e3248;
+          border-radius: 14px;
+          padding: 40px 36px;
+          width: 380px;
+          max-width: 92vw;
+          box-shadow: 0 8px 48px rgba(0, 0, 0, 0.6);
+        "
+      >
+        <div style="text-align: center; margin-bottom: 30px">
+          <div
+            style="
+              font-weight: 900;
+              font-size: 32px;
+              color: #e8eaf0;
+              letter-spacing: 3px;
+              text-transform: uppercase;
+            "
+          >
+            PITCH<span style="color: #cc1a1a">TRACK</span>
+          </div>
+          <div
+            id="pt-auth-subtitle"
+            style="
+              font-family: 'Barlow', sans-serif;
+              font-size: 13px;
+              color: #5c6280;
+              margin-top: 5px;
+              letter-spacing: 1px;
+              text-transform: uppercase;
+            "
+          >
+            Sign in to continue
+          </div>
+        </div>
+        <div id="pt-auth-form">
+          <input
+            id="pt-auth-email"
+            type="email"
+            placeholder="Email address"
+            style="
+              width: 100%;
+              box-sizing: border-box;
+              padding: 11px 14px;
+              background: #0f1117;
+              border: 1px solid #2e3248;
+              border-radius: 7px;
+              color: #e8eaf0;
+              font-family: 'Barlow Condensed', sans-serif;
+              font-size: 15px;
+              margin-bottom: 10px;
+              outline: none;
+            "
+            onkeydown="if(event.key==='Enter')_ptAuthSubmit()"
+          />
+          <input
+            id="pt-auth-password"
+            type="password"
+            placeholder="Password"
+            style="
+              width: 100%;
+              box-sizing: border-box;
+              padding: 11px 14px;
+              background: #0f1117;
+              border: 1px solid #2e3248;
+              border-radius: 7px;
+              color: #e8eaf0;
+              font-family: 'Barlow Condensed', sans-serif;
+              font-size: 15px;
+              margin-bottom: 16px;
+              outline: none;
+            "
+            onkeydown="if(event.key==='Enter')_ptAuthSubmit()"
+          />
+          <button
+            id="pt-auth-submit"
+            onclick="_ptAuthSubmit()"
+            style="
+              width: 100%;
+              padding: 12px;
+              background: #cc1a1a;
+              border: none;
+              border-radius: 7px;
+              color: #fff;
+              font-family: 'Barlow Condensed', sans-serif;
+              font-weight: 900;
+              font-size: 16px;
+              letter-spacing: 1px;
+              text-transform: uppercase;
+              cursor: pointer;
+            "
+          >
+            Sign In
+          </button>
+          <div
+            style="
+              text-align: center;
+              margin-top: 14px;
+              display: flex;
+              justify-content: space-between;
+              align-items: center;
+            "
+          >
+            <span
+              id="pt-auth-toggle-link"
+              onclick="_ptAuthToggle()"
+              style="
+                font-family: 'Barlow', sans-serif;
+                font-size: 13px;
+                color: #9da3b8;
+                cursor: pointer;
+              "
+              >Don't have an account?
+              <span style="color: #cc1a1a">Sign up</span></span
+            >
+            <span
+              id="pt-forgot-link"
+              onclick="_ptForgotPassword()"
+              style="
+                font-family: 'Barlow', sans-serif;
+                font-size: 13px;
+                color: #5c6280;
+                cursor: pointer;
+              "
+              >Forgot password?</span
+            >
+          </div>
+          <div
+            id="pt-auth-error"
+            style="
+              font-family: 'Barlow', sans-serif;
+              font-size: 13px;
+              text-align: center;
+              margin-top: 10px;
+              display: none;
+            "
+          ></div>
+        </div>
+        <div id="pt-team-picker" style="display: none">
+          <div
+            style="
+              font-family: 'Barlow', sans-serif;
+              font-size: 12px;
+              color: #5c6280;
+              margin-bottom: 12px;
+              text-transform: uppercase;
+              letter-spacing: 1px;
+            "
+          >
+            Select workspace
+          </div>
+          <div id="pt-team-list" style="margin-bottom: 14px"></div>
+          <div
+            style="
+              font-family: 'Barlow', sans-serif;
+              font-size: 11px;
+              color: #5c6280;
+              margin-bottom: 8px;
+              text-transform: uppercase;
+              letter-spacing: 1px;
+            "
+          >
+            or create new
+          </div>
+          <div style="display: flex; gap: 8px">
+            <input
+              id="pt-new-team-name"
+              type="text"
+              placeholder="Workspace name..."
+              style="
+                flex: 1;
+                padding: 10px 12px;
+                background: #0f1117;
+                border: 1px solid #2e3248;
+                border-radius: 7px;
+                color: #e8eaf0;
+                font-family: 'Barlow Condensed', sans-serif;
+                font-size: 14px;
+                outline: none;
+              "
+              onkeydown="if(event.key==='Enter')_ptCreateTeam()"
+            />
+            <button
+              onclick="_ptCreateTeam()"
+              style="
+                padding: 10px 16px;
+                background: #cc1a1a;
+                border: none;
+                border-radius: 7px;
+                color: #fff;
+                font-family: 'Barlow Condensed', sans-serif;
+                font-weight: 900;
+                font-size: 14px;
+                cursor: pointer;
+              "
+            >
+              Create
+            </button>
+          </div>
+          <div
+            id="pt-team-error"
+            style="
+              font-family: 'Barlow', sans-serif;
+              color: #f87171;
+              font-size: 12px;
+              margin-top: 8px;
+              display: none;
+            "
+          ></div>
+        </div>
+        <div
+          id="pt-auth-footer"
+          style="
+            display: none;
+            text-align: center;
+            margin-top: 18px;
+            border-top: 1px solid #2e3248;
+            padding-top: 14px;
+          "
+        >
+          <span
+            id="pt-auth-user-label"
+            style="
+              font-family: 'Barlow', sans-serif;
+              font-size: 12px;
+              color: #5c6280;
+            "
+          ></span>
+          <span
+            onclick="_ptSignOut()"
+            style="
+              font-family: 'Barlow', sans-serif;
+              font-size: 12px;
+              color: #cc1a1a;
+              cursor: pointer;
+              margin-left: 10px;
+            "
+            >Sign out</span
+          >
+        </div>
+      </div>
+    </div>
+    <!-- ── End Auth Overlay ──────────────────────────────────────────────── -->
+
+    <!-- ── Account Modal ────────────────────────────────────────────────── -->
+    <div
+      id="pt-account-modal"
+      style="
+        position: fixed;
+        inset: 0;
+        z-index: 9998;
+        background: rgba(0, 0, 0, 0.7);
+        display: none;
+        align-items: center;
+        justify-content: center;
+        font-family: 'Barlow Condensed', sans-serif;
+      "
+    >
+      <div
+        style="
+          background: #1a1d27;
+          border: 1px solid #2e3248;
+          border-radius: 14px;
+          padding: 36px;
+          width: 360px;
+          max-width: 92vw;
+          box-shadow: 0 8px 48px rgba(0, 0, 0, 0.6);
+        "
+      >
+        <div
+          style="
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 24px;
+          "
+        >
+          <div
+            style="
+              font-weight: 900;
+              font-size: 20px;
+              color: #e8eaf0;
+              letter-spacing: 1px;
+              text-transform: uppercase;
+            "
+          >
+            Account
+          </div>
+          <button
+            onclick="document.getElementById('pt-account-modal').style.display='none'"
+            style="
+              background: none;
+              border: none;
+              font-size: 22px;
+              color: #5c6280;
+              cursor: pointer;
+              line-height: 1;
+            "
+          >
+            &times;
+          </button>
+        </div>
+        <div
+          id="pt-account-email-row"
+          style="
+            font-family: 'Barlow', sans-serif;
+            font-size: 13px;
+            color: #5c6280;
+            margin-bottom: 20px;
+            padding-bottom: 16px;
+            border-bottom: 1px solid #2e3248;
+          "
+        >
+          Signed in as
+          <span
+            id="pt-account-email"
+            style="color: #9da3b8; font-weight: 600"
+          ></span>
+        </div>
+        <div
+          id="pt-account-workspace-row"
+          style="
+            font-family: 'Barlow', sans-serif;
+            font-size: 13px;
+            color: #5c6280;
+            margin-bottom: 20px;
+            padding-bottom: 16px;
+            border-bottom: 1px solid #2e3248;
+          "
+        >
+          Workspace:
+          <span
+            id="pt-account-workspace"
+            style="color: #9da3b8; font-weight: 600"
+          ></span>
+        </div>
+        <div
+          style="
+            font-family: 'Barlow', sans-serif;
+            font-size: 11px;
+            color: #5c6280;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 10px;
+          "
+        >
+          Change Password
+        </div>
+        <input
+          id="pt-acct-pw1"
+          type="password"
+          placeholder="New password"
+          style="
+            width: 100%;
+            box-sizing: border-box;
+            padding: 10px 12px;
+            background: #0f1117;
+            border: 1px solid #2e3248;
+            border-radius: 7px;
+            color: #e8eaf0;
+            font-family: 'Barlow Condensed', sans-serif;
+            font-size: 14px;
+            margin-bottom: 8px;
+            outline: none;
+          "
+        />
+        <input
+          id="pt-acct-pw2"
+          type="password"
+          placeholder="Confirm new password"
+          style="
+            width: 100%;
+            box-sizing: border-box;
+            padding: 10px 12px;
+            background: #0f1117;
+            border: 1px solid #2e3248;
+            border-radius: 7px;
+            color: #e8eaf0;
+            font-family: 'Barlow Condensed', sans-serif;
+            font-size: 14px;
+            margin-bottom: 12px;
+            outline: none;
+          "
+        />
+        <button
+          onclick="_ptChangePassword()"
+          style="
+            width: 100%;
+            padding: 11px;
+            background: #cc1a1a;
+            border: none;
+            border-radius: 7px;
+            color: #fff;
+            font-family: 'Barlow Condensed', sans-serif;
+            font-weight: 900;
+            font-size: 15px;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            cursor: pointer;
+          "
+        >
+          Update Password
+        </button>
+        <div
+          id="pt-acct-msg"
+          style="
+            font-family: 'Barlow', sans-serif;
+            font-size: 13px;
+            text-align: center;
+            margin-top: 10px;
+            display: none;
+          "
+        ></div>
+        <button
+          onclick="_ptSignOut()"
+          style="
+            width: 100%;
+            margin-top: 16px;
+            padding: 10px;
+            background: transparent;
+            border: 1px solid #2e3248;
+            border-radius: 7px;
+            color: #5c6280;
+            font-family: 'Barlow Condensed', sans-serif;
+            font-weight: 700;
+            font-size: 14px;
+            cursor: pointer;
+          "
+        >
+          Sign Out
+        </button>
+      </div>
+    </div>
+    <!-- ── End Account Modal ─────────────────────────────────────────────── -->
+
     <div id="home-screen">
       <div class="hs-bg-glow"></div>
       <div class="hs-content">
@@ -5884,6 +6341,30 @@
         Scouting Cards
       </div>
       <div class="sn-spacer"></div>
+      <button
+        id="sn-account-btn"
+        onclick="_ptOpenAccountModal()"
+        title="Account settings"
+        style="
+          display: none;
+          padding: 5px 12px;
+          background: transparent;
+          border: 1px solid #2e3248;
+          border-radius: 6px;
+          font-family: 'Barlow Condensed', sans-serif;
+          font-weight: 700;
+          font-size: 12px;
+          color: #9da3b8;
+          cursor: pointer;
+          margin-right: 6px;
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          max-width: 160px;
+        "
+      >
+        &#9679; <span id="sn-account-label">Account</span>
+      </button>
       <button
         class="theme-toggle-btn"
         id="sn-theme-btn"
@@ -8286,6 +8767,24 @@
             "
           >
             Generate Best Lineup
+          </button>
+          <button
+            onclick="_ptMigrateLocalData()"
+            title="Upload locally-saved games and roster to the cloud workspace"
+            style="
+              padding: 6px 12px;
+              background: var(--surface2);
+              border: 1px solid #cc1a1a;
+              border-radius: 6px;
+              font-family: 'Barlow Condensed', sans-serif;
+              font-weight: 700;
+              font-size: 12px;
+              color: #cc1a1a;
+              cursor: pointer;
+              flex-shrink: 0;
+            "
+          >
+            &#x2601; Upload Local Data
           </button>
           <div
             style="display: flex; gap: 6px; align-items: center; flex-shrink: 0"
@@ -13541,6 +14040,432 @@
             }
           } catch (e) {}
         })();
+
+        // ── Supabase Auth + Cloud Storage ────────────────────────────────────────────
+        (function () {
+          var _SUPA_URL = "https://xcchcalqoviemlpyjnuk.supabase.co";
+          var _SUPA_KEY =
+            "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhjY2hjYWxxb3ZpZW1scHlqbnVrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY4Mjk2MDcsImV4cCI6MjA5MjQwNTYwN30.-HS-pKi2SpXCvbei6Mzn41e46uxaLIQvn2gM6PH0kvQ";
+          window._supabase = supabase.createClient(_SUPA_URL, _SUPA_KEY);
+        })();
+        window._ptTeamId = null;
+        window._ptAuthMode = "signin";
+
+        function _ptEsc(s) {
+          return String(s || "")
+            .replace(/&/g, "&amp;")
+            .replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;")
+            .replace(/"/g, "&quot;");
+        }
+
+        function _ptMountStorage(teamId) {
+          window._ptTeamId = teamId;
+          window.storage = {
+            set: async function (key, value) {
+              var { error } = await window._supabase.from("app_data").upsert(
+                {
+                  team_id: teamId,
+                  key: key,
+                  value: value,
+                  updated_at: new Date().toISOString(),
+                },
+                { onConflict: "team_id,key" }
+              );
+              if (error) throw error;
+              try {
+                localStorage.setItem("pt_" + key, value);
+              } catch (e) {}
+              return { key: key, value: value };
+            },
+            get: async function (key) {
+              var { data } = await window._supabase
+                .from("app_data")
+                .select("value")
+                .eq("team_id", teamId)
+                .eq("key", key)
+                .maybeSingle();
+              if (!data) throw new Error("Key not found: " + key);
+              return { key: key, value: data.value };
+            },
+            delete: async function (key) {
+              await window._supabase
+                .from("app_data")
+                .delete()
+                .eq("team_id", teamId)
+                .eq("key", key);
+              try {
+                localStorage.removeItem("pt_" + key);
+              } catch (e) {}
+              return { key: key, deleted: true };
+            },
+            list: async function (prefix) {
+              var { data } = await window._supabase
+                .from("app_data")
+                .select("key")
+                .eq("team_id", teamId)
+                .like("key", prefix + "%");
+              return {
+                keys: (data || []).map(function (r) {
+                  return r.key;
+                }),
+              };
+            },
+          };
+        }
+
+        function _ptShowOverlay() {
+          var o = document.getElementById("pt-auth-overlay");
+          if (o) o.style.display = "flex";
+        }
+        function _ptHideOverlay() {
+          var o = document.getElementById("pt-auth-overlay");
+          if (o) o.style.display = "none";
+        }
+
+        function _ptAuthToggle() {
+          window._ptAuthMode =
+            window._ptAuthMode === "signin" ? "signup" : "signin";
+          var isSignup = window._ptAuthMode === "signup";
+          document.getElementById("pt-auth-submit").textContent = isSignup
+            ? "Create Account"
+            : "Sign In";
+          document.getElementById("pt-auth-toggle-link").textContent = isSignup
+            ? "Already have an account? Sign in"
+            : "Don't have an account? Sign up";
+          document.getElementById("pt-auth-subtitle").textContent = isSignup
+            ? "Create your account"
+            : "Sign in to continue";
+          document.getElementById("pt-auth-error").style.display = "none";
+        }
+
+        async function _ptAuthSubmit() {
+          var email = document.getElementById("pt-auth-email").value.trim();
+          var password = document.getElementById("pt-auth-password").value;
+          var errEl = document.getElementById("pt-auth-error");
+          var btn = document.getElementById("pt-auth-submit");
+          errEl.style.display = "none";
+          btn.textContent = "…";
+          btn.disabled = true;
+          try {
+            var result;
+            if (window._ptAuthMode === "signup") {
+              result = await window._supabase.auth.signUp({
+                email: email,
+                password: password,
+              });
+            } else {
+              result = await window._supabase.auth.signInWithPassword({
+                email: email,
+                password: password,
+              });
+            }
+            if (result.error) throw result.error;
+            if (window._ptAuthMode === "signup" && !result.data.session) {
+              // Email confirmation required
+              errEl.style.color = "#86efac";
+              errEl.textContent =
+                "Check your email to confirm your account, then sign in.";
+              errEl.style.display = "block";
+              btn.textContent = "Create Account";
+              btn.disabled = false;
+              return;
+            }
+            await _ptOnSignedIn(result.data.user);
+          } catch (e) {
+            errEl.style.color = "#f87171";
+            errEl.textContent = e.message || "Authentication failed";
+            errEl.style.display = "block";
+          }
+          btn.textContent =
+            window._ptAuthMode === "signup" ? "Create Account" : "Sign In";
+          btn.disabled = false;
+        }
+
+        async function _ptOnSignedIn(user) {
+          document.getElementById("pt-auth-form").style.display = "none";
+          document.getElementById("pt-auth-footer").style.display = "block";
+          document.getElementById("pt-auth-user-label").textContent =
+            user.email;
+          document.getElementById("pt-auth-subtitle").textContent =
+            "Select your workspace";
+          await _ptLoadTeams();
+        }
+
+        async function _ptLoadTeams() {
+          var { data: memberships } = await window._supabase
+            .from("team_members")
+            .select("team_id, role, teams(id, name)");
+          var listEl = document.getElementById("pt-team-list");
+          document.getElementById("pt-team-picker").style.display = "block";
+          if (!memberships || memberships.length === 0) {
+            listEl.innerHTML =
+              '<div style="font-size:13px;color:#8b8fa8;margin-bottom:8px">No workspaces yet. Create one below.</div>';
+            return;
+          }
+          if (memberships.length === 1) {
+            await _ptSelectTeam(
+              memberships[0].teams.id,
+              memberships[0].teams.name
+            );
+            return;
+          }
+          listEl.innerHTML = memberships
+            .map(function (m) {
+              return (
+                "<div onclick=\"_ptSelectTeam('" +
+                m.teams.id +
+                "','" +
+                _ptEsc(m.teams.name) +
+                "')\" style=\"padding:11px 14px;background:#0f1117;border:1px solid #2e3248;border-radius:7px;cursor:pointer;margin-bottom:8px;font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:700;color:#e8eaf0;display:flex;align-items:center;justify-content:space-between\">" +
+                "<span>" +
+                _ptEsc(m.teams.name) +
+                "</span>" +
+                "<span style=\"font-family:'Barlow',sans-serif;font-size:11px;color:#cc1a1a;font-weight:400;letter-spacing:1px;text-transform:uppercase\">" +
+                _ptEsc(m.role) +
+                "</span></div>"
+              );
+            })
+            .join("");
+        }
+
+        async function _ptCreateTeam() {
+          var name = document.getElementById("pt-new-team-name").value.trim();
+          var errEl = document.getElementById("pt-team-error");
+          if (!name) return;
+          errEl.style.display = "none";
+          var { data: userData } = await window._supabase.auth.getUser();
+          var user = userData.user;
+          var { data: team, error } = await window._supabase
+            .from("teams")
+            .insert({ name: name, created_by: user.id })
+            .select()
+            .single();
+          if (error) {
+            errEl.textContent = error.message;
+            errEl.style.display = "block";
+            return;
+          }
+          await window._supabase
+            .from("team_members")
+            .insert({ team_id: team.id, user_id: user.id, role: "owner" });
+          await _ptSelectTeam(team.id, team.name);
+        }
+
+        async function _ptSelectTeam(teamId, teamName) {
+          _ptMountStorage(teamId);
+          window._ptWorkspaceName = teamName || "";
+          // Remember this workspace so next session auto-connects
+          try {
+            localStorage.setItem("pt_last_team_id", teamId);
+          } catch (e) {}
+          _ptHideOverlay();
+          // Show account button in nav — get current user email
+          try {
+            var {
+              data: { user },
+            } = await window._supabase.auth.getUser();
+            _ptShowAccountBtn(user ? user.email : "", teamName);
+          } catch (e) {}
+        }
+
+        async function _ptSignOut() {
+          try {
+            localStorage.removeItem("pt_last_team_id");
+          } catch (e) {}
+          await window._supabase.auth.signOut();
+          window.location.reload();
+        }
+
+        async function _ptForgotPassword() {
+          var email = document.getElementById("pt-auth-email").value.trim();
+          var errEl = document.getElementById("pt-auth-error");
+          if (!email) {
+            errEl.style.color = "#f87171";
+            errEl.textContent = "Enter your email address above first.";
+            errEl.style.display = "block";
+            return;
+          }
+          errEl.style.color = "#86efac";
+          errEl.textContent = "Sending reset link…";
+          errEl.style.display = "block";
+          var { error } = await window._supabase.auth.resetPasswordForEmail(
+            email,
+            {
+              redirectTo: window.location.origin + window.location.pathname,
+            }
+          );
+          if (error) {
+            errEl.style.color = "#f87171";
+            errEl.textContent = error.message;
+          } else {
+            errEl.textContent = "Reset link sent — check your email.";
+          }
+        }
+
+        function _ptOpenAccountModal() {
+          var modal = document.getElementById("pt-account-modal");
+          document.getElementById("pt-acct-pw1").value = "";
+          document.getElementById("pt-acct-pw2").value = "";
+          document.getElementById("pt-acct-msg").style.display = "none";
+          modal.style.display = "flex";
+        }
+
+        async function _ptChangePassword() {
+          var pw1 = document.getElementById("pt-acct-pw1").value;
+          var pw2 = document.getElementById("pt-acct-pw2").value;
+          var msgEl = document.getElementById("pt-acct-msg");
+          msgEl.style.display = "none";
+          if (!pw1 || pw1.length < 6) {
+            msgEl.style.color = "#f87171";
+            msgEl.textContent = "Password must be at least 6 characters.";
+            msgEl.style.display = "block";
+            return;
+          }
+          if (pw1 !== pw2) {
+            msgEl.style.color = "#f87171";
+            msgEl.textContent = "Passwords don't match.";
+            msgEl.style.display = "block";
+            return;
+          }
+          var { error } = await window._supabase.auth.updateUser({
+            password: pw1,
+          });
+          if (error) {
+            msgEl.style.color = "#f87171";
+            msgEl.textContent = error.message;
+          } else {
+            msgEl.style.color = "#86efac";
+            msgEl.textContent = "Password updated successfully.";
+            document.getElementById("pt-acct-pw1").value = "";
+            document.getElementById("pt-acct-pw2").value = "";
+          }
+          msgEl.style.display = "block";
+        }
+
+        function _ptShowAccountBtn(email, workspaceName) {
+          var btn = document.getElementById("sn-account-btn");
+          if (!btn) return;
+          var label = document.getElementById("sn-account-label");
+          if (label)
+            label.textContent = email ? email.split("@")[0] : "Account";
+          btn.style.display = "inline-flex";
+          btn.style.alignItems = "center";
+          btn.style.gap = "5px";
+          // Populate modal fields
+          var emailEl = document.getElementById("pt-account-email");
+          if (emailEl) emailEl.textContent = email || "";
+          var wsEl = document.getElementById("pt-account-workspace");
+          if (wsEl) wsEl.textContent = workspaceName || "—";
+        }
+
+        async function _ptMigrateLocalData() {
+          if (!window._ptTeamId) {
+            alert("Not connected to a workspace");
+            return;
+          }
+          var count = 0;
+          var keys = [];
+          for (var i = 0; i < localStorage.length; i++) {
+            var k = localStorage.key(i);
+            if (k && k.startsWith("pt_")) keys.push(k);
+          }
+          if (keys.length === 0) {
+            alert("No local data found to migrate.");
+            return;
+          }
+          if (
+            !confirm(
+              "Upload " + keys.length + " local records to the cloud workspace?"
+            )
+          )
+            return;
+          for (var j = 0; j < keys.length; j++) {
+            var k2 = keys[j];
+            var key = k2.slice(3);
+            var value = localStorage.getItem(k2);
+            try {
+              await window.storage.set(key, value);
+              count++;
+            } catch (e) {}
+          }
+          alert("Done! Migrated " + count + " of " + keys.length + " records.");
+        }
+
+        // On page load: skip auth entirely on localhost (dev mode), otherwise check session
+        (async function _ptInit() {
+          var host = window.location.hostname;
+          var isLocal =
+            host === "localhost" || host === "127.0.0.1" || host === "";
+          if (isLocal) {
+            // Dev mode: use localStorage directly, no auth required
+            console.log("[PitchTrack] localhost detected — skipping auth");
+            _ptHideOverlay();
+            return;
+          }
+          _ptShowOverlay();
+          try {
+            // Handle password reset redirect (Supabase puts #access_token in URL)
+            var hash = window.location.hash;
+            if (hash && hash.includes("type=recovery")) {
+              // Session is set automatically by Supabase from the hash
+              var {
+                data: { session: recoverSession },
+              } = await window._supabase.auth.getSession();
+              if (recoverSession) {
+                // Clear the hash so it doesn't persist on reload
+                window.history.replaceState(null, "", window.location.pathname);
+                // Show account modal for them to set a new password immediately
+                _ptHideOverlay();
+                await _ptSelectTeam(null, null); // mount storage-less shell so modal works
+                // Show account modal open to password section
+                var lastTeamId2 = null;
+                try {
+                  lastTeamId2 = localStorage.getItem("pt_last_team_id");
+                } catch (e) {}
+                if (lastTeamId2) await _ptSelectTeam(lastTeamId2, "");
+                _ptShowAccountBtn(recoverSession.user.email, "");
+                _ptOpenAccountModal();
+                var msgEl = document.getElementById("pt-acct-msg");
+                if (msgEl) {
+                  msgEl.style.color = "#86efac";
+                  msgEl.textContent = "Enter your new password below.";
+                  msgEl.style.display = "block";
+                }
+                return;
+              }
+            }
+
+            var {
+              data: { session },
+            } = await window._supabase.auth.getSession();
+            if (session) {
+              // Returning user: try to auto-connect to their last workspace
+              var lastTeamId = null;
+              try {
+                lastTeamId = localStorage.getItem("pt_last_team_id");
+              } catch (e) {}
+              if (lastTeamId) {
+                // Verify they still have access to it
+                var { data: mem } = await window._supabase
+                  .from("team_members")
+                  .select("team_id")
+                  .eq("team_id", lastTeamId)
+                  .eq("user_id", session.user.id)
+                  .maybeSingle();
+                if (mem) {
+                  await _ptSelectTeam(lastTeamId, "");
+                  return;
+                }
+              }
+              // No saved workspace or access lost — show workspace picker
+              await _ptOnSignedIn(session.user);
+            }
+          } catch (e) {
+            console.warn("Supabase init error", e);
+          }
+        })();
+        // ─────────────────────────────────────────────────────────────────────
 
         // ── Storage polyfill ──────────────────────────────────────────────────────────
         // Uses Claude's native window.storage when inside Claude.ai,
