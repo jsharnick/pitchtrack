@@ -31403,7 +31403,7 @@
         function aggregatePitchersFromGame(pitchers) {
           return (pitchers || [])
             .filter((p) => p.pitches > 0)
-            .map((p) => ({ ...p, games: 1, outs: 0 }));
+            .map((p) => ({ ...p, games: 1 }));
         }
 
         // ===== PITCHER DETAIL VIEW =====
