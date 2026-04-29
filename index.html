@@ -20126,34 +20126,62 @@
           // OR always show so exhibition games can expand beyond 9
           const addBtn = document.createElement("button");
           addBtn.textContent = "+ Add Extra Hitter";
-          addBtn.style.cssText = "margin-top:10px;width:100%;padding:7px;background:none;border:1px dashed var(--border);border-radius:6px;color:var(--text3);font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:12px;letter-spacing:.5px;cursor:pointer;transition:all .14s";
-          addBtn.onmouseover = function() { this.style.borderColor = "var(--accent)"; this.style.color = "var(--accent)"; };
-          addBtn.onmouseout = function() { this.style.borderColor = "var(--border)"; this.style.color = "var(--text3)"; };
-          addBtn.onclick = function() { lmAddExtraHitter(); };
+          addBtn.style.cssText =
+            "margin-top:10px;width:100%;padding:7px;background:none;border:1px dashed var(--border);border-radius:6px;color:var(--text3);font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:12px;letter-spacing:.5px;cursor:pointer;transition:all .14s";
+          addBtn.onmouseover = function () {
+            this.style.borderColor = "var(--accent)";
+            this.style.color = "var(--accent)";
+          };
+          addBtn.onmouseout = function () {
+            this.style.borderColor = "var(--border)";
+            this.style.color = "var(--text3)";
+          };
+          addBtn.onclick = function () {
+            lmAddExtraHitter();
+          };
           rows.appendChild(addBtn);
 
           // Show remove-last button if lineup > 9
           if (lineup.length > 9) {
             const removeBtn = document.createElement("button");
             removeBtn.textContent = "− Remove Last Slot";
-            removeBtn.style.cssText = "margin-top:4px;width:100%;padding:5px;background:none;border:1px dashed var(--border);border-radius:6px;color:var(--text3);font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:11px;letter-spacing:.5px;cursor:pointer;transition:all .14s";
-            removeBtn.onmouseover = function() { this.style.borderColor = "#f87171"; this.style.color = "#f87171"; };
-            removeBtn.onmouseout = function() { this.style.borderColor = "var(--border)"; this.style.color = "var(--text3)"; };
-            removeBtn.onclick = function() { lmRemoveLastSlot(); };
+            removeBtn.style.cssText =
+              "margin-top:4px;width:100%;padding:5px;background:none;border:1px dashed var(--border);border-radius:6px;color:var(--text3);font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:11px;letter-spacing:.5px;cursor:pointer;transition:all .14s";
+            removeBtn.onmouseover = function () {
+              this.style.borderColor = "#f87171";
+              this.style.color = "#f87171";
+            };
+            removeBtn.onmouseout = function () {
+              this.style.borderColor = "var(--border)";
+              this.style.color = "var(--text3)";
+            };
+            removeBtn.onclick = function () {
+              lmRemoveLastSlot();
+            };
             rows.appendChild(removeBtn);
           }
         }
 
         function lmAddExtraHitter() {
           saveLineupModalInputs();
-          const lineup = lineupModalSide === "away" ? S.lineupAway : S.lineupHome;
-          lineup.push({ name: "", num: "", pos: "EH", hand: "R", isPH: false, isPR: false, isDEF: false });
+          const lineup =
+            lineupModalSide === "away" ? S.lineupAway : S.lineupHome;
+          lineup.push({
+            name: "",
+            num: "",
+            pos: "EH",
+            hand: "R",
+            isPH: false,
+            isPR: false,
+            isDEF: false,
+          });
           renderLineupModal();
           renderLineup();
         }
 
         function lmRemoveLastSlot() {
-          const lineup = lineupModalSide === "away" ? S.lineupAway : S.lineupHome;
+          const lineup =
+            lineupModalSide === "away" ? S.lineupAway : S.lineupHome;
           if (lineup.length <= 9) return;
           saveLineupModalInputs();
           lineup.pop();
