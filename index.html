@@ -6365,12 +6365,15 @@
           background: #1a1d27;
           border: 1px solid #2e3248;
           border-radius: 14px;
-          padding: 36px;
-          width: 360px;
-          max-width: 92vw;
+          padding: 32px;
+          width: 440px;
+          max-width: 95vw;
+          max-height: 90vh;
+          overflow-y: auto;
           box-shadow: 0 8px 48px rgba(0, 0, 0, 0.6);
         "
       >
+        <!-- Header -->
         <div
           style="
             display: flex;
@@ -6388,7 +6391,7 @@
               text-transform: uppercase;
             "
           >
-            Account
+            My Profile
           </div>
           <button
             onclick="document.getElementById('pt-account-modal').style.display='none'"
@@ -6404,11 +6407,13 @@
             &times;
           </button>
         </div>
+
+        <!-- Signed-in identity row -->
         <div
           id="pt-account-email-row"
           style="
             font-family: 'Barlow', sans-serif;
-            font-size: 13px;
+            font-size: 12px;
             color: #5c6280;
             margin-bottom: 20px;
             padding-bottom: 16px;
@@ -6421,38 +6426,225 @@
             style="color: #9da3b8; font-weight: 600"
           ></span>
         </div>
+
+        <!-- Profile Info section -->
         <div
-          id="pt-account-workspace-row"
           style="
             font-family: 'Barlow', sans-serif;
-            font-size: 13px;
+            font-size: 11px;
             color: #5c6280;
-            margin-bottom: 20px;
-            padding-bottom: 16px;
-            border-bottom: 1px solid #2e3248;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 10px;
           "
         >
-          Organization:
-          <span
-            id="pt-account-workspace"
-            style="color: #9da3b8; font-weight: 600"
-          ></span>
-          <span
-            id="pt-account-org-pin"
-            style="
-              display: none;
-              margin-left: 10px;
-              color: #cc1a1a;
-              font-weight: 700;
-              letter-spacing: 2px;
-            "
-          ></span>
+          Profile Information
         </div>
+
+        <!-- Account Type badge -->
+        <div
+          style="
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 14px;
+          "
+        >
+          <div
+            style="
+              font-family: 'Barlow', sans-serif;
+              font-size: 12px;
+              color: #5c6280;
+              width: 80px;
+              flex-shrink: 0;
+            "
+          >
+            Account Type
+          </div>
+          <div
+            id="pt-acct-type-badge"
+            style="
+              display: inline-block;
+              padding: 3px 10px;
+              border-radius: 20px;
+              background: rgba(204, 26, 26, 0.12);
+              border: 1px solid rgba(204, 26, 26, 0.3);
+              color: #cc1a1a;
+              font-family: 'Barlow Condensed', sans-serif;
+              font-weight: 700;
+              font-size: 12px;
+              letter-spacing: 0.5px;
+              text-transform: uppercase;
+            "
+          >
+            —
+          </div>
+        </div>
+
+        <!-- Username -->
+        <div
+          style="
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 10px;
+          "
+        >
+          <label
+            style="
+              font-family: 'Barlow', sans-serif;
+              font-size: 12px;
+              color: #5c6280;
+              width: 80px;
+              flex-shrink: 0;
+            "
+            for="pt-acct-username"
+            >Username</label
+          >
+          <input
+            id="pt-acct-username"
+            type="text"
+            placeholder="Display name..."
+            style="
+              flex: 1;
+              padding: 9px 12px;
+              background: #0f1117;
+              border: 1px solid #2e3248;
+              border-radius: 7px;
+              color: #e8eaf0;
+              font-family: 'Barlow Condensed', sans-serif;
+              font-size: 14px;
+              outline: none;
+              box-sizing: border-box;
+            "
+          />
+        </div>
+
+        <!-- Phone -->
+        <div
+          style="
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 14px;
+          "
+        >
+          <label
+            style="
+              font-family: 'Barlow', sans-serif;
+              font-size: 12px;
+              color: #5c6280;
+              width: 80px;
+              flex-shrink: 0;
+            "
+            for="pt-acct-phone"
+            >Phone</label
+          >
+          <input
+            id="pt-acct-phone"
+            type="tel"
+            placeholder="Phone number (optional)..."
+            style="
+              flex: 1;
+              padding: 9px 12px;
+              background: #0f1117;
+              border: 1px solid #2e3248;
+              border-radius: 7px;
+              color: #e8eaf0;
+              font-family: 'Barlow Condensed', sans-serif;
+              font-size: 14px;
+              outline: none;
+              box-sizing: border-box;
+            "
+          />
+        </div>
+
+        <button
+          onclick="_ptSaveProfile()"
+          style="
+            width: 100%;
+            padding: 10px;
+            background: #cc1a1a;
+            border: none;
+            border-radius: 7px;
+            color: #fff;
+            font-family: 'Barlow Condensed', sans-serif;
+            font-weight: 900;
+            font-size: 14px;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            cursor: pointer;
+            margin-bottom: 6px;
+          "
+        >
+          Save Profile
+        </button>
+        <div
+          id="pt-acct-profile-msg"
+          style="
+            font-family: 'Barlow', sans-serif;
+            font-size: 12px;
+            text-align: center;
+            margin-bottom: 16px;
+            display: none;
+          "
+        ></div>
+
+        <!-- Organization section -->
+        <div
+          style="
+            border-top: 1px solid #2e3248;
+            padding-top: 16px;
+            margin-bottom: 16px;
+          "
+        >
+          <div
+            id="pt-account-workspace-row"
+            style="
+              font-family: 'Barlow', sans-serif;
+              font-size: 13px;
+              color: #5c6280;
+              margin-bottom: 4px;
+            "
+          >
+            Organization:
+            <span
+              id="pt-account-workspace"
+              style="color: #9da3b8; font-weight: 600"
+            ></span>
+            <span
+              id="pt-account-org-pin"
+              style="
+                display: none;
+                margin-left: 10px;
+                color: #cc1a1a;
+                font-weight: 700;
+                letter-spacing: 2px;
+              "
+            ></span>
+          </div>
+          <div
+            id="pt-acct-role-row"
+            style="
+              font-family: 'Barlow', sans-serif;
+              font-size: 12px;
+              color: #5c6280;
+              display: none;
+            "
+          >
+            Role:
+            <span
+              id="pt-acct-role-label"
+              style="color: #9da3b8; font-weight: 600"
+            ></span>
+          </div>
+        </div>
+
+        <!-- Members section (org_host / head_coach only) -->
         <div
           id="pt-account-members-section"
           style="
             display: none;
-            margin-top: 4px;
             margin-bottom: 16px;
             padding-bottom: 16px;
             border-bottom: 1px solid #2e3248;
@@ -6472,86 +6664,90 @@
           </div>
           <div
             id="pt-account-members-list"
-            style="max-height: 220px; overflow-y: auto"
+            style="max-height: 200px; overflow-y: auto"
           ></div>
         </div>
-        <div
-          style="
-            font-family: 'Barlow', sans-serif;
-            font-size: 11px;
-            color: #5c6280;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            margin-bottom: 10px;
-          "
-        >
-          Change Password
+
+        <!-- Change Password section -->
+        <div style="border-top: 1px solid #2e3248; padding-top: 16px">
+          <div
+            style="
+              font-family: 'Barlow', sans-serif;
+              font-size: 11px;
+              color: #5c6280;
+              text-transform: uppercase;
+              letter-spacing: 1px;
+              margin-bottom: 10px;
+            "
+          >
+            Change Password
+          </div>
+          <input
+            id="pt-acct-pw1"
+            type="password"
+            placeholder="New password"
+            style="
+              width: 100%;
+              box-sizing: border-box;
+              padding: 9px 12px;
+              background: #0f1117;
+              border: 1px solid #2e3248;
+              border-radius: 7px;
+              color: #e8eaf0;
+              font-family: 'Barlow Condensed', sans-serif;
+              font-size: 14px;
+              margin-bottom: 8px;
+              outline: none;
+            "
+          />
+          <input
+            id="pt-acct-pw2"
+            type="password"
+            placeholder="Confirm new password"
+            style="
+              width: 100%;
+              box-sizing: border-box;
+              padding: 9px 12px;
+              background: #0f1117;
+              border: 1px solid #2e3248;
+              border-radius: 7px;
+              color: #e8eaf0;
+              font-family: 'Barlow Condensed', sans-serif;
+              font-size: 14px;
+              margin-bottom: 10px;
+              outline: none;
+            "
+          />
+          <button
+            onclick="_ptChangePassword()"
+            style="
+              width: 100%;
+              padding: 10px;
+              background: transparent;
+              border: 1.5px solid #2e3248;
+              border-radius: 7px;
+              color: #9da3b8;
+              font-family: 'Barlow Condensed', sans-serif;
+              font-weight: 700;
+              font-size: 14px;
+              cursor: pointer;
+            "
+          >
+            Update Password
+          </button>
+          <div
+            id="pt-acct-msg"
+            style="
+              font-family: 'Barlow', sans-serif;
+              font-size: 12px;
+              text-align: center;
+              margin-top: 8px;
+              display: none;
+            "
+          ></div>
         </div>
-        <input
-          id="pt-acct-pw1"
-          type="password"
-          placeholder="New password"
-          style="
-            width: 100%;
-            box-sizing: border-box;
-            padding: 10px 12px;
-            background: #0f1117;
-            border: 1px solid #2e3248;
-            border-radius: 7px;
-            color: #e8eaf0;
-            font-family: 'Barlow Condensed', sans-serif;
-            font-size: 14px;
-            margin-bottom: 8px;
-            outline: none;
-          "
-        />
-        <input
-          id="pt-acct-pw2"
-          type="password"
-          placeholder="Confirm new password"
-          style="
-            width: 100%;
-            box-sizing: border-box;
-            padding: 10px 12px;
-            background: #0f1117;
-            border: 1px solid #2e3248;
-            border-radius: 7px;
-            color: #e8eaf0;
-            font-family: 'Barlow Condensed', sans-serif;
-            font-size: 14px;
-            margin-bottom: 12px;
-            outline: none;
-          "
-        />
-        <button
-          onclick="_ptChangePassword()"
-          style="
-            width: 100%;
-            padding: 11px;
-            background: #cc1a1a;
-            border: none;
-            border-radius: 7px;
-            color: #fff;
-            font-family: 'Barlow Condensed', sans-serif;
-            font-weight: 900;
-            font-size: 15px;
-            letter-spacing: 1px;
-            text-transform: uppercase;
-            cursor: pointer;
-          "
-        >
-          Update Password
-        </button>
-        <div
-          id="pt-acct-msg"
-          style="
-            font-family: 'Barlow', sans-serif;
-            font-size: 13px;
-            text-align: center;
-            margin-top: 10px;
-            display: none;
-          "
-        ></div>
+
+        <!-- Sign Out -->
         <button
           onclick="_ptSignOut()"
           style="
@@ -14966,7 +15162,42 @@
           document.getElementById("pt-acct-pw1").value = "";
           document.getElementById("pt-acct-pw2").value = "";
           document.getElementById("pt-acct-msg").style.display = "none";
+          document.getElementById("pt-acct-profile-msg").style.display = "none";
           modal.style.display = "flex";
+
+          // Populate profile fields from live DB
+          try {
+            var {
+              data: { user },
+            } = await window._supabase.auth.getUser();
+            if (user) {
+              var { data: profile } = await window._supabase
+                .from("profiles")
+                .select("username, phone, account_type")
+                .eq("id", user.id)
+                .maybeSingle();
+              var un = profile?.username || window._ptUsername || "";
+              var ph = profile?.phone || "";
+              var at = profile?.account_type || window._ptAccountType || "—";
+              document.getElementById("pt-acct-username").value = un;
+              document.getElementById("pt-acct-phone").value = ph;
+              // Account type badge
+              var badge = document.getElementById("pt-acct-type-badge");
+              if (badge) badge.textContent = at.replace(/_/g, " ");
+            }
+          } catch (e) {}
+
+          // Role in current org
+          var roleRow = document.getElementById("pt-acct-role-row");
+          var roleLabel = document.getElementById("pt-acct-role-label");
+          if (window._ptUserRole && window._ptTeamId) {
+            if (roleRow) roleRow.style.display = "block";
+            if (roleLabel)
+              roleLabel.textContent = window._ptUserRole.replace(/_/g, " ");
+          } else {
+            if (roleRow) roleRow.style.display = "none";
+          }
+
           var canManage =
             window._ptUserRole === "org_host" ||
             window._ptUserRole === "head_coach";
@@ -15050,6 +15281,50 @@
                 "<div style=\"font-size:12px;color:#5c6280;font-family:'Barlow',sans-serif\">No members yet.</div>";
             } catch (e) {}
           }
+        }
+
+        async function _ptSaveProfile() {
+          var msgEl = document.getElementById("pt-acct-profile-msg");
+          var username = document
+            .getElementById("pt-acct-username")
+            .value.trim();
+          var phone = document.getElementById("pt-acct-phone").value.trim();
+          if (!username) {
+            msgEl.style.color = "#f87171";
+            msgEl.textContent = "Username is required.";
+            msgEl.style.display = "block";
+            return;
+          }
+          try {
+            var {
+              data: { user },
+            } = await window._supabase.auth.getUser();
+            var { error } = await window._supabase.from("profiles").upsert(
+              {
+                id: user.id,
+                username: username,
+                phone: phone || null,
+                account_type: window._ptAccountType || "coach",
+              },
+              { onConflict: "id" }
+            );
+            if (error) throw error;
+            // Update in-memory state and nav button label
+            window._ptUsername = username;
+            var label = document.getElementById("sn-account-label");
+            if (label) label.textContent = username;
+            var emailEl = document.getElementById("pt-account-email");
+            if (emailEl) emailEl.textContent = username;
+            msgEl.style.color = "#86efac";
+            msgEl.textContent = "Profile saved.";
+          } catch (e) {
+            msgEl.style.color = "#f87171";
+            msgEl.textContent = e.message || "Save failed.";
+          }
+          msgEl.style.display = "block";
+          setTimeout(function () {
+            msgEl.style.display = "none";
+          }, 3000);
         }
 
         async function _ptChangePassword() {
@@ -41615,3 +41890,6 @@
     </div>
   </body>
 </html>
+
+//Coaching profiles and organization admins need to be able to send invites to
+//others emails and I need to be able to ask
