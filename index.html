@@ -8,6 +8,7 @@
       name="viewport"
     />
     <title>PitchTrack Pro</title>
+    <link rel="icon" type="image/x-icon" href="favicon.ico" />
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
     <style>
       @import url("https://fonts.googleapis.com/css2?family=Barlow+Condensed:ital,wght@0,300;0,400;0,600;0,700;0,800;0,900;1,700&family=Barlow:wght@300;400;500;600&family=Share+Tech+Mono&display=swap");
@@ -20944,7 +20945,10 @@
           }
           // Ask who made the play in the field — blurb is built AFTER so it has fielder info
           // result is {putout, assists[]} or null if skipped
-          _fielderSkipAssists = outcome === "flyout" || outcome === "lineout" || outcome === "sacfly";
+          _fielderSkipAssists =
+            outcome === "flyout" ||
+            outcome === "lineout" ||
+            outcome === "sacfly";
           openFielderModal(outcome, logLabel, batter, (result) => {
             _fielderSkipAssists = false;
             const posNum = {
@@ -33433,7 +33437,8 @@
             // Flyout/lineout/sacfly: no assists possible, go straight to putout
             _fielderInAssistMode = false;
             qs("fielder-title").textContent = "Who recorded the out?";
-            qs("fielder-sub").textContent = "Select the fielder who made the putout";
+            qs("fielder-sub").textContent =
+              "Select the fielder who made the putout";
             const skipBtn = document.getElementById("fielder-skip-btn");
             if (skipBtn) skipBtn.textContent = "Done";
           } else {
