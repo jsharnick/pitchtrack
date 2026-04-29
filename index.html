@@ -14908,10 +14908,11 @@
             player: ["myteam"],
           };
           var allowed = access[role] || ["myteam"];
+          // Always show all nav tabs — access is enforced inside openPanel().
+          // Hiding tabs makes the nav bar look broken for restricted roles.
           panels.forEach(function (p) {
             var tab = document.getElementById("sntab-" + p);
-            if (tab)
-              tab.style.display = allowed.indexOf(p) !== -1 ? "" : "none";
+            if (tab) tab.style.display = "";
           });
           // Explorer: hide save button since nothing writes
           var saveBtn = document.getElementById("sn-save-btn");
@@ -15329,7 +15330,10 @@
           if (window._ptUserRole) {
             var _rmap = { support_staff: ["tracker"], player: ["myteam"] };
             var _restrict = _rmap[window._ptUserRole];
-            if (_restrict && _restrict.indexOf(name) === -1) return;
+            if (_restrict && _restrict.indexOf(name) === -1) {
+              toast("Your role doesn't have access to that section.");
+              return;
+            }
           }
           if (
             !skipPrompt &&
