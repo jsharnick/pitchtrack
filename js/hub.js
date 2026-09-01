@@ -666,6 +666,13 @@ async function hubRefreshAll() {
   allGames = await loadAllGames();
   allTeams = await loadTeams();
 
+  // Rebuild available seasons from game dates
+  _availableSeasons = [...new Set(allGames.map((g) => g.date && g.date.slice(0, 4)).filter(Boolean))]
+    .sort()
+    .reverse();
+  // Reset season filter when hub re-loads (fresh entry)
+  _seasonFilter = null;
+
   // Capture team name NOW from freshly-loaded data — don't re-evaluate later
   const _loadedTeamName = _getMyTeamName();
   const _hasMyTeam = !!(_loadedTeamName && myTeamRoster && myTeamRoster.length);
@@ -898,7 +905,10 @@ function renderSidebar() {
       return;
     }
   }
-  const myTeamGames = hasMyTeam ? getTeamGames(myTeamName) : [];
+  const _myTeamAllGames = hasMyTeam ? getTeamGames(myTeamName) : [];
+  const myTeamGames = _seasonFilter
+    ? _myTeamAllGames.filter((g) => g.date && g.date.slice(0, 4) === _seasonFilter)
+    : _myTeamAllGames;
   const myTeamRecord =
     myTeamGames.length > 0 ? getTeamRecord(myTeamName, myTeamGames) : null;
   const myTeamIsActive =
@@ -956,7 +966,10 @@ function renderSidebar() {
 
   const teamRows = otherTeams
     .map((t) => {
-      const games = getTeamGames(t);
+      const _tGamesAll = getTeamGames(t);
+      const games = _seasonFilter
+        ? _tGamesAll.filter((g) => g.date && g.date.slice(0, 4) === _seasonFilter)
+        : _tGamesAll;
       const record = getTeamRecord(t, games);
       const isSel = _tsSelected.has(t);
       const isActive = currentView?.type === "team" && currentView?.data === t;
@@ -2669,6 +2682,25 @@ function toggleRecentFilter() {
   }
 }
 
+function setSeasonFilter(year) {
+  _seasonFilter = year || null;
+  const v = currentView;
+  if (v) showView(v.type, v.data, true);
+  else renderSidebar();
+}
+
+function buildSeasonFilterBar() {
+  if (!_availableSeasons.length) return "";
+  const pills = [
+    `<button class="sfb-pill${!_seasonFilter ? " sfb-active" : ""}" onclick="setSeasonFilter(null)">All</button>`,
+    ..._availableSeasons.map(
+      (y) =>
+        `<button class="sfb-pill${_seasonFilter === y ? " sfb-active" : ""}" onclick="setSeasonFilter('${y}')">${y}</button>`
+    ),
+  ].join("");
+  return `<div class="season-filter-bar"><span class="sfb-label">Season</span>${pills}</div>`;
+}
+
 function reRenderScoutingReport(type, teamName, playerName) {
   _scoutRecentFilter = !_scoutRecentFilter;
   const allGames = getTeamGames(teamName);
@@ -2979,6 +3011,8 @@ let _lastPlayerTab = "spray";
 let _lastPitcherTab = "zone";
 let _recentFilter = false; // toggles last-3-games (pitcher) / last-5-games (hitter) filter
 let _scoutRecentFilter = false; // toggles last-N-games filter on scouting reports specifically
+let _seasonFilter = null;   // null = all time, "2025" = just that calendar year
+let _availableSeasons = []; // populated from allGames dates in hubRefreshAll
 let _cmpSlot1 = null; // {team, name, isPitcher} or null
 let _cmpSlot2 = null;
 let _cmpSlot3 = null;
@@ -3798,7 +3832,10 @@ function sendModalOpenMail() {
 
 // ===== TEAM VIEW =====
 function renderTeam(teamName) {
-  const games = getTeamGames(teamName);
+  const _allTeamGames = getTeamGames(teamName);
+  const games = _seasonFilter
+    ? _allTeamGames.filter((g) => g.date && g.date.slice(0, 4) === _seasonFilter)
+    : _allTeamGames;
   const record = getTeamRecord(teamName, games);
   const players = getTeamRoster(teamName, games);
   const pitchers = getTeamPitchers(teamName, games);
@@ -3812,6 +3849,7 @@ function renderTeam(teamName) {
   const c = document.getElementById("hub-content");
   c.innerHTML = `
     ${backBtn}
+    ${buildSeasonFilterBar()}
     <div class="page-header">
       <div>
 <div class="page-title">${escHtml(teamName)}</div>
@@ -6940,15 +6978,18 @@ function buildPlayerSplitsTab(teamName, playerName, games) {
 function renderPlayer(teamName, playerName) {
   try {
     const _allTeamGames = getTeamGames(teamName);
+    const _seasonGames = _seasonFilter
+      ? _allTeamGames.filter((g) => g.date && g.date.slice(0, 4) === _seasonFilter)
+      : _allTeamGames;
     const games = _recentFilter
       ? (() => {
           const names = _nameAliases[playerName] || new Set([playerName]);
-          return [..._allTeamGames]
+          return [..._seasonGames]
             .sort((a, b) => b.date.localeCompare(a.date))
             .filter((g) => (g.pitchLog || []).some((p) => names.has(p.batter)))
             .slice(0, 5);
         })()
-      : _allTeamGames;
+      : _seasonGames;
     const stats = getPlayerCareerStats(teamName, playerName, games);
     const allPitches = getPlayerPitches(teamName, playerName, games);
 
@@ -6979,6 +7020,7 @@ function renderPlayer(teamName, playerName) {
       "batter"
     );
     c.innerHTML = `<div style="display:flex;gap:0;align-items:flex-start;min-height:100%"><div style="flex:1;min-width:0">
+    ${buildSeasonFilterBar()}
     <div class="breadcrumb">
       <a onclick="showView('team',this.getAttribute('data-team'))" data-team="${escAttr(
         teamName

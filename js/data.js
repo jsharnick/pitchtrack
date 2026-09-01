@@ -483,11 +483,15 @@ function aggregatePitchersFromGame(pitchers) {
 function renderPitcher(teamName, pitcherName) {
   try {
     const _allTeamGames = getTeamGames(teamName);
+    const _seasonGames =
+      typeof _seasonFilter !== "undefined" && _seasonFilter
+        ? _allTeamGames.filter((g) => g.date && g.date.slice(0, 4) === _seasonFilter)
+        : _allTeamGames;
     const games = _recentFilter
       ? (() => {
           const names =
             _nameAliases[pitcherName] || new Set([pitcherName]);
-          return [..._allTeamGames]
+          return [..._seasonGames]
             .sort((a, b) => b.date.localeCompare(a.date))
             .filter((g) =>
               (g.pitchLog || []).some((p) => {
@@ -502,7 +506,7 @@ function renderPitcher(teamName, pitcherName) {
             )
             .slice(0, 3);
         })()
-      : _allTeamGames;
+      : _seasonGames;
     const allPitches = getPitcherPitches(teamName, pitcherName, games);
 
     let career = {
@@ -606,6 +610,7 @@ function renderPitcher(teamName, pitcherName) {
       "pitcher"
     );
     c.innerHTML = `<div style="display:flex;gap:0;align-items:flex-start;min-height:100%"><div style="flex:1;min-width:0">
+    ${typeof buildSeasonFilterBar === "function" ? buildSeasonFilterBar() : ""}
     <div class="breadcrumb">
       <a data-team="${escAttr(
 teamName

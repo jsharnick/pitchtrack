@@ -5353,6 +5353,58 @@ html.mp-active #mob-preview-wrap {
   }
 }
 
+/* ══ Season Filter Bar ══════════════════════════════════════════ */
+.season-filter-bar {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-bottom: 12px;
+  padding: 8px 0 4px;
+}
+.sfb-label {
+  font-family: "Barlow Condensed", sans-serif;
+  font-weight: 700;
+  font-size: 10px;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: var(--text3);
+  margin-right: 2px;
+  flex-shrink: 0;
+}
+.sfb-pill {
+  font-family: "Barlow Condensed", sans-serif;
+  font-weight: 700;
+  font-size: 11px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  padding: 4px 12px;
+  border-radius: 20px;
+  border: 1.5px solid var(--border2);
+  background: none;
+  color: var(--text3);
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.14s;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+.sfb-pill:hover {
+  color: var(--text2);
+  border-color: var(--text3);
+}
+.sfb-pill.sfb-active {
+  background: var(--accent);
+  color: #fff !important;
+  border-color: var(--accent) !important;
+}
+@media (max-width: 768px) {
+  .sfb-pill {
+    font-size: 10px;
+    padding: 3px 9px;
+  }
+}
+
 /* ══ Player Comparison ══════════════════════════════════════════ */
 .cmp-slots {
   display: flex;
