@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html>
+<script>
+  // GitHub Pages SPA routing trick.
+  // When a user navigates directly to yakfactory.xyz/stats_hub (or any sub-path),
+  // GitHub Pages serves this 404.html. We redirect back to index.html with the
+  // original path encoded as a ?p= query param, which router.js then restores.
+  var path = window.location.pathname;
+  var search = window.location.search.slice(1); // strip leading '?'
+  var hash = window.location.hash;
+  var redirect = '/?p=' + encodeURIComponent(path);
+  if (search) redirect += '&' + search;
+  if (hash) redirect += hash;
+  window.location.replace(redirect);
+</script>
+</html>
