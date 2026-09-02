@@ -177,7 +177,8 @@ function oppRenderAll() {
         <div class="opp-tile-meta">${opp.roster.length} player${
         opp.roster.length !== 1 ? "s" : ""
       }</div>
-        ${_oppSelectMode ? "" : `<div class="opp-tile-arrow">›</div>`}
+        ${_oppSelectMode ? "" : `<div class="opp-tile-arrow">›</div>
+        <button class="opp-tile-season-btn" onclick="event.stopPropagation();_showSeasonPicker('${escAttr(opp.name)}')" title="Add to season archive">+ Season</button>`}
       </div>`;
     })
     .join("")}
