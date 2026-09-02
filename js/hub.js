@@ -666,6 +666,13 @@ async function hubRefreshAll() {
   allGames = await loadAllGames();
   allTeams = await loadTeams();
 
+  // Rebuild available seasons from game dates
+  _availableSeasons = [...new Set(allGames.map((g) => g.date && g.date.slice(0, 4)).filter(Boolean))]
+    .sort()
+    .reverse();
+  // Reset season filter when hub re-loads (fresh entry)
+  _seasonFilter = null;
+
   // Capture team name NOW from freshly-loaded data — don't re-evaluate later
   const _loadedTeamName = _getMyTeamName();
   const _hasMyTeam = !!(_loadedTeamName && myTeamRoster && myTeamRoster.length);
@@ -675,7 +682,7 @@ async function hubRefreshAll() {
   }
 
   // Set tab highlights directly (no re-evaluation of team name inside hubSetTab)
-  ["myteam", "opponents", "history", "compare"].forEach(function (t) {
+  ["myteam", "opponents", "history", "compare", "seasons"].forEach(function (t) {
     const el = document.getElementById("htab-" + t);
     if (el) el.classList.toggle("active", t === _hubTab);
   });
@@ -711,6 +718,8 @@ async function hubRefreshAll() {
     renderOpponentsWelcome();
   } else if (_hubTab === "compare") {
     showView("compare");
+  } else if (_hubTab === "seasons") {
+    renderSeasonHistory();
   }
 }
 
@@ -898,7 +907,10 @@ function renderSidebar() {
       return;
     }
   }
-  const myTeamGames = hasMyTeam ? getTeamGames(myTeamName) : [];
+  const _myTeamAllGames = hasMyTeam ? getTeamGames(myTeamName) : [];
+  const myTeamGames = _seasonFilter
+    ? _myTeamAllGames.filter((g) => g.date && g.date.slice(0, 4) === _seasonFilter)
+    : _myTeamAllGames;
   const myTeamRecord =
     myTeamGames.length > 0 ? getTeamRecord(myTeamName, myTeamGames) : null;
   const myTeamIsActive =
@@ -956,7 +968,10 @@ function renderSidebar() {
 
   const teamRows = otherTeams
     .map((t) => {
-      const games = getTeamGames(t);
+      const _tGamesAll = getTeamGames(t);
+      const games = _seasonFilter
+        ? _tGamesAll.filter((g) => g.date && g.date.slice(0, 4) === _seasonFilter)
+        : _tGamesAll;
       const record = getTeamRecord(t, games);
       const isSel = _tsSelected.has(t);
       const isActive = currentView?.type === "team" && currentView?.data === t;
@@ -2669,6 +2684,25 @@ function toggleRecentFilter() {
   }
 }
 
+function setSeasonFilter(year) {
+  _seasonFilter = year || null;
+  const v = currentView;
+  if (v) showView(v.type, v.data, true);
+  else renderSidebar();
+}
+
+function buildSeasonFilterBar() {
+  if (!_availableSeasons.length) return "";
+  const pills = [
+    `<button class="sfb-pill${!_seasonFilter ? " sfb-active" : ""}" onclick="setSeasonFilter(null)">All</button>`,
+    ..._availableSeasons.map(
+      (y) =>
+        `<button class="sfb-pill${_seasonFilter === y ? " sfb-active" : ""}" onclick="setSeasonFilter('${y}')">${y}</button>`
+    ),
+  ].join("");
+  return `<div class="season-filter-bar"><span class="sfb-label">Season</span>${pills}</div>`;
+}
+
 function reRenderScoutingReport(type, teamName, playerName) {
   _scoutRecentFilter = !_scoutRecentFilter;
   const allGames = getTeamGames(teamName);
@@ -2979,6 +3013,10 @@ let _lastPlayerTab = "spray";
 let _lastPitcherTab = "zone";
 let _recentFilter = false; // toggles last-3-games (pitcher) / last-5-games (hitter) filter
 let _scoutRecentFilter = false; // toggles last-N-games filter on scouting reports specifically
+let _seasonFilter = null;   // null = all time, "2025" = just that calendar year
+let _availableSeasons = []; // populated from allGames dates in hubRefreshAll
+let _expandedSeasonEdit = null; // id of season whose edit panel is open, or null
+let _newSeasonPanel = null;    // id of season whose "start new season" panel is open, or null
 let _cmpSlot1 = null; // {team, name, isPitcher} or null
 let _cmpSlot2 = null;
 let _cmpSlot3 = null;
@@ -3056,7 +3094,7 @@ function hubSetTab(tab) {
   _hubTab = tab;
   const app = document.getElementById("hub-app");
   if (app) app.dataset.hubtab = tab;
-  ["myteam", "opponents", "history", "compare"].forEach(function (t) {
+  ["myteam", "opponents", "history", "compare", "seasons"].forEach(function (t) {
     const el = document.getElementById("htab-" + t);
     if (el) el.classList.toggle("active", t === tab);
   });
@@ -3084,6 +3122,8 @@ function hubSetTab(tab) {
     showView("games");
   } else if (tab === "compare") {
     showView("compare");
+  } else if (tab === "seasons") {
+    renderSeasonHistory();
   }
 }
 
@@ -3094,10 +3134,26 @@ function renderOpponentsWelcome() {
   c.style.display = "block";
   renderSidebar();
   const myName = _getMyTeamName();
-  const opponents = allTeams.filter((t) => t !== myName);
+
+  // When a season filter is active, restrict to teams played that year
+  let seasonTeams = null;
+  if (_seasonFilter) {
+    seasonTeams = new Set(
+      allGames
+        .filter((g) => g.date && g.date.slice(0, 4) === _seasonFilter)
+        .flatMap((g) => [g.awayTeam, g.homeTeam].filter(Boolean))
+    );
+  }
+
+  const opponents = allTeams.filter(
+    (t) => t !== myName && (!seasonTeams || seasonTeams.has(t))
+  );
   if (!opponents.length) {
-    c.innerHTML = `<div class="page-header"><div><div class="page-title">Opponents</div></div></div>
-      <div class="empty-state"><div class="empty-icon"></div>No opponent data yet.<br>Games you track will appear here.</div>`;
+    const emptyMsg = _seasonFilter
+      ? `No opponents found for ${_seasonFilter}.`
+      : "No opponent data yet.<br>Games you track will appear here.";
+    c.innerHTML = `<div class="page-header"><div><div class="page-title">Opponents</div>${_seasonFilter ? `<div class="page-sub">${_seasonFilter}</div>` : ""}</div></div>
+      <div class="empty-state"><div class="empty-icon"></div>${emptyMsg}</div>`;
     return;
   }
   const f = (v, type) => {
@@ -3272,6 +3328,398 @@ function renderOpponentsWelcome() {
 // ===== ALL GAMES VIEW =====
 let _ghSelectMode = false;
 let _ghSelected = new Set();
+
+// ===== SEASON HISTORY =====
+// ===== SEASON STORAGE HELPERS =====
+async function _loadSeasons() {
+  try {
+    const raw = await window.storage.get("pitchtrack_seasons", true);
+    if (raw?.value) return JSON.parse(raw.value) || [];
+  } catch (e) {}
+  return [];
+}
+async function _saveSeasons(arr) {
+  await window.storage.set("pitchtrack_seasons", JSON.stringify(arr), true);
+}
+
+// ===== SEASON HISTORY =====
+async function renderSeasonHistory() {
+  currentView = null;
+  const hw = document.getElementById("hub-welcome");
+  const c = document.getElementById("hub-content");
+  if (hw) hw.style.display = "none";
+  if (c) c.style.display = "block";
+  renderSidebar();
+
+  const seasons = await _loadSeasons();
+
+  // Ensure every entry has an id (migrate legacy entries)
+  let needsSave = false;
+  seasons.forEach((s) => {
+    if (!s.id) { s.id = "s_" + Date.now() + "_" + Math.random().toString(36).slice(2, 7); needsSave = true; }
+  });
+  if (needsSave) await _saveSeasons(seasons);
+
+  const currentOpponents = (typeof _opponents !== "undefined" ? _opponents : []) || [];
+
+  const headerHtml = `<div class="page-header">
+    <div><div class="page-title">Seasons</div><div class="page-sub">${seasons.length} season${seasons.length !== 1 ? "s" : ""}</div></div>
+    <button class="sep-new-season-btn" onclick="createNewSeason()">+ New Season</button>
+  </div>`;
+
+  if (!seasons.length) {
+    c.innerHTML = headerHtml + `<div class="empty-state"><div class="empty-icon"></div>No seasons yet.<br>Click "+ New Season" to create one, or use "Archive Season" in My Team.</div>`;
+    return;
+  }
+
+  // Most recent first (by year, then createdAt)
+  const sorted = [...seasons].sort((a, b) => {
+    const yDiff = (b.year || "0").localeCompare(a.year || "0");
+    if (yDiff !== 0) return yDiff;
+    return (b.createdAt || "").localeCompare(a.createdAt || "");
+  });
+
+  const cards = sorted.map((s) => {
+    const sid = escAttr(s.id);
+    const rosterCount = (s.roster || []).length;
+    const oppList = s.opponents || [];
+    const oppCount = oppList.length;
+    const archivedDate = s.archivedAt || s.updatedAt
+      ? new Date(s.updatedAt || s.archivedAt).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })
+      : "";
+    const isEditing = _expandedSeasonEdit === s.id;
+
+    // Summary rows for collapsed view
+    const rosterRows = (s.roster || []).slice(0, 6)
+      .map((p) => `<div class="sh-player-row">${escHtml(p.name || p.playerName || "Unknown")} <span class="sh-pos">${escHtml(p.position || p.pos || "")}</span></div>`)
+      .join("");
+    const rosterMore = rosterCount > 6 ? `<div class="sh-more">+${rosterCount - 6} more</div>` : "";
+    // Collapsed view: opponents as clickable links → sets year filter + opens their stats/scouting
+    const oppRows = oppList.slice(0, 5)
+      .map((o) => {
+        const rCount = (o.roster || []).length;
+        const viewCmd = s.year
+          ? `setSeasonFilter('${escAttr(s.year)}');showView('team','${escAttr(o.name || "")}');`
+          : `showView('team','${escAttr(o.name || "")}');`;
+        const scoutCmd = `openPanel('scout-overview');setTimeout(()=>{scoutOverviewLoad().then(()=>scoutSelectTeam('${escAttr(o.name || "")}'))},200);`;
+        return `<div class="sh-opp-row">
+          <button class="sep-opp-link" onclick="${viewCmd}" title="View stats">${escHtml(o.name || "Unknown")}</button>
+          ${rCount ? `<span class="sh-pos">${rCount}p</span>` : ""}
+          <button class="sep-action-btn" onclick="${scoutCmd}" title="Open scouting cards" style="font-size:10px;padding:2px 7px;margin-left:auto">Scout</button>
+        </div>`;
+      })
+      .join("");
+    const oppMore = oppCount > 5 ? `<div class="sh-more">+${oppCount - 5} more</div>` : "";
+
+    // Edit panel (inline, always rendered server-side so no async needed after initial load)
+    let editPanel = "";
+    if (isEditing) {
+      const inArchive = oppList.map((o) => {
+        const rCount = (o.roster || []).length;
+        const viewCmd = s.year
+          ? `setSeasonFilter('${escAttr(s.year)}');showView('team','${escAttr(o.name || "")}');`
+          : `showView('team','${escAttr(o.name || "")}');`;
+        const scoutCmd = `openPanel('scout-overview');setTimeout(()=>{scoutOverviewLoad().then(()=>scoutSelectTeam('${escAttr(o.name || "")}'))},200);`;
+        return `<div class="sep-opp-row">
+          <span style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis">${escHtml(o.name || "Unknown")}</span>
+          ${rCount ? `<span class="sh-pos">${rCount} players</span>` : ""}
+          <button class="sep-action-btn" onclick="${viewCmd}" style="color:var(--text3);border-color:var(--border2)" onmouseover="this.style.color='var(--accent)';this.style.borderColor='var(--accent)'" onmouseout="this.style.color='var(--text3)';this.style.borderColor='var(--border2)'">Stats</button>
+          <button class="sep-action-btn" onclick="${scoutCmd}" style="color:var(--text3);border-color:var(--border2)" onmouseover="this.style.color='var(--accent)';this.style.borderColor='var(--accent)'" onmouseout="this.style.color='var(--text3)';this.style.borderColor='var(--border2)'">Scout</button>
+          <button class="sep-action-btn sep-remove-btn" onclick="seasonRemoveOpp('${sid}','${escAttr(o.id || o.name || "")}')">Remove</button>
+        </div>`;
+      }).join("") || '<div class="sh-note-row">No opponents in this archive yet.</div>';
+
+      // Build "not in archive" list from ALL allTeams (game history), not just saved opponents
+      const archiveNames = new Set(oppList.map((o) => o.name));
+      const savedOppByName = {};
+      currentOpponents.forEach((o) => { if (o.name) savedOppByName[o.name] = o; });
+
+      const allAddable = (typeof allTeams !== "undefined" ? allTeams : []).filter((name) => !archiveNames.has(name));
+      const notInArchive = allAddable.map((name) => {
+        const saved = savedOppByName[name];
+        const rCount = saved ? (saved.roster || []).length : 0;
+        return `<div class="sep-opp-row">
+          <span style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis">${escHtml(name)}</span>
+          ${rCount ? `<span class="sh-pos">${rCount}p</span>` : '<span class="sh-pos" style="font-style:italic">game history</span>'}
+          <button class="sep-action-btn sep-add-btn" onclick="seasonAddTeam('${sid}','${escAttr(name)}')">Add</button>
+        </div>`;
+      }).join("");
+
+      const totalTracked = (typeof allTeams !== "undefined" ? allTeams : []).length;
+
+      editPanel = `<div class="season-edit-panel">
+        <div class="sep-field-row">
+          <label class="sep-label">Season Name</label>
+          <input class="sep-input" id="sep-name-${sid}" value="${escAttr(s.label || s.year || "")}" placeholder="e.g. 2026 Spring League">
+          <label class="sep-label" style="margin-left:10px">Year</label>
+          <input class="sep-input" id="sep-year-${sid}" value="${escAttr(s.year || "")}" placeholder="2026" style="max-width:70px">
+          <button class="sep-sync-btn" onclick="seasonSaveMeta('${sid}')">Save</button>
+        </div>
+        <div class="sep-section">
+          <div class="sep-section-title">My Team Roster${rosterCount ? ` — ${rosterCount} players` : " — none synced"}</div>
+          <button class="sep-sync-btn" onclick="seasonSyncRoster('${sid}')">Sync Current Roster (${(typeof myTeamRoster !== "undefined" ? myTeamRoster : []).length} players)</button>
+        </div>
+        <div class="sep-section">
+          <div class="sep-section-title">Tracked Teams — ${oppCount} in archive</div>
+          ${inArchive}
+          ${notInArchive ? `<div class="sep-divider">— Not in archive (${allAddable.length} teams) —</div>${notInArchive}` : '<div class="sh-note-row" style="margin-top:6px">All tracked teams are in this archive.</div>'}
+          ${totalTracked ? `<button class="sep-sync-btn" style="margin-top:10px" onclick="seasonSyncAllTeams('${sid}')">Sync All Tracked Teams (${totalTracked})</button>` : ""}
+        </div>
+        <div class="sep-section" style="display:flex;gap:10px;flex-wrap:wrap;padding-top:4px">
+          <button class="sep-sync-btn" onclick="seasonToggleEdit('${sid}')">Done</button>
+          <button class="sep-delete-btn" onclick="seasonDelete('${sid}')">Delete Season</button>
+        </div>
+      </div>`;
+    }
+
+    const isNewPanel = _newSeasonPanel === s.id;
+    const newPanel = isNewPanel ? _renderNewSeasonPanel(s) : "";
+
+    return `<div class="season-card" id="sc-${sid}">
+      <div class="season-card-header">
+        <div class="season-card-year">${escHtml(s.year || "")}</div>
+        <div class="season-card-meta">
+          <div class="season-card-team">${escHtml(s.label || s.teamName || "")}</div>
+          <div class="season-card-counts">${rosterCount} player${rosterCount !== 1 ? "s" : ""} · ${oppCount} opponent${oppCount !== 1 ? "s" : ""}${archivedDate ? ` · Updated ${archivedDate}` : ""}</div>
+        </div>
+        <div style="display:flex;gap:8px;flex-shrink:0;flex-wrap:wrap;justify-content:flex-end">
+          ${s.year ? `<button class="season-view-btn" onclick="setSeasonFilter('${escAttr(s.year)}');hubSetTab('myteam')">View ${escHtml(s.year)} Stats</button>` : ""}
+          <button class="season-new-btn" onclick="seasonToggleNewPanel('${sid}')">${isNewPanel ? "Cancel" : "Start New Season"}</button>
+          <button class="season-edit-btn" onclick="seasonToggleEdit('${sid}')">${isEditing ? "Done" : "Edit"}</button>
+        </div>
+      </div>
+      ${!isEditing && !isNewPanel ? `<div class="season-card-body">
+        <div class="season-section">
+          <div class="season-section-title">My Team Roster</div>
+          ${rosterRows || '<div class="sh-note-row">No roster synced.</div>'}${rosterMore}
+        </div>
+        <div class="season-section">
+          <div class="season-section-title">Opponents</div>
+          ${oppRows || '<div class="sh-note-row">No opponents added yet.</div>'}${oppMore}
+        </div>
+      </div>` : ""}
+      ${editPanel}
+      ${newPanel}
+    </div>`;
+  }).join("");
+
+  c.innerHTML = headerHtml + `<div class="season-history-list">${cards}</div>`;
+}
+
+// ===== SEASON MANAGEMENT ACTIONS =====
+
+async function createNewSeason() {
+  const seasons = await _loadSeasons();
+  const year = new Date().getFullYear().toString();
+  const id = "s_" + Date.now();
+  seasons.push({
+    id,
+    label: year + " Season",
+    year,
+    teamName: (typeof _getMyTeamName === "function" ? _getMyTeamName() : "") || "",
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+    roster: [],
+    opponents: [],
+  });
+  await _saveSeasons(seasons);
+  _expandedSeasonEdit = id;
+  renderSeasonHistory();
+}
+
+async function seasonToggleEdit(id) {
+  _expandedSeasonEdit = (_expandedSeasonEdit === id) ? null : id;
+  renderSeasonHistory();
+}
+
+async function seasonSaveMeta(id) {
+  const seasons = await _loadSeasons();
+  const s = seasons.find((x) => x.id === id);
+  if (!s) return;
+  const nameEl = document.getElementById("sep-name-" + id);
+  const yearEl = document.getElementById("sep-year-" + id);
+  if (nameEl) s.label = nameEl.value.trim() || s.label;
+  if (yearEl) s.year = yearEl.value.trim() || s.year;
+  s.updatedAt = new Date().toISOString();
+  await _saveSeasons(seasons);
+  renderSeasonHistory();
+}
+
+async function seasonSyncRoster(id) {
+  const seasons = await _loadSeasons();
+  const s = seasons.find((x) => x.id === id);
+  if (!s) return;
+  const roster = typeof myTeamRoster !== "undefined" ? myTeamRoster : [];
+  s.roster = JSON.parse(JSON.stringify(roster));
+  s.teamName = (typeof _getMyTeamName === "function" ? _getMyTeamName() : "") || s.teamName;
+  s.updatedAt = new Date().toISOString();
+  await _saveSeasons(seasons);
+  renderSeasonHistory();
+}
+
+// Add a team to a season archive by name — works for both saved opponents (with roster)
+// and game-history-only teams (name only, no roster)
+async function seasonAddTeam(seasonId, teamName) {
+  const seasons = await _loadSeasons();
+  const s = seasons.find((x) => x.id === seasonId);
+  if (!s) return;
+  if (!s.opponents) s.opponents = [];
+  if (s.opponents.find((o) => o.name === teamName)) return; // already in archive
+  const currentOpps = typeof _opponents !== "undefined" ? _opponents : [];
+  const saved = currentOpps.find((o) => o.name === teamName);
+  s.opponents.push(saved
+    ? JSON.parse(JSON.stringify(saved))
+    : { id: null, name: teamName, roster: [] }
+  );
+  s.updatedAt = new Date().toISOString();
+  await _saveSeasons(seasons);
+  renderSeasonHistory();
+}
+
+// Keep legacy name for backward compat (called from old inline handlers in existing archives)
+async function seasonAddOpp(seasonId, oppId) {
+  const currentOpps = typeof _opponents !== "undefined" ? _opponents : [];
+  const opp = currentOpps.find((o) => o.id === oppId);
+  if (opp) await seasonAddTeam(seasonId, opp.name);
+}
+
+async function seasonRemoveOpp(id, oppIdOrName) {
+  const seasons = await _loadSeasons();
+  const s = seasons.find((x) => x.id === id);
+  if (!s) return;
+  // Match by name first (covers game-history teams with id=null), then by id
+  s.opponents = (s.opponents || []).filter((o) => o.name !== oppIdOrName && (o.id || o.name) !== oppIdOrName);
+  s.updatedAt = new Date().toISOString();
+  await _saveSeasons(seasons);
+  renderSeasonHistory();
+}
+
+// Sync ALL tracked teams (allTeams from game history) into the season archive
+async function seasonSyncAllTeams(seasonId) {
+  const seasons = await _loadSeasons();
+  const s = seasons.find((x) => x.id === seasonId);
+  if (!s) return;
+  const teams = typeof allTeams !== "undefined" ? allTeams : [];
+  const currentOpps = typeof _opponents !== "undefined" ? _opponents : [];
+  const savedByName = {};
+  currentOpps.forEach((o) => { if (o.name) savedByName[o.name] = o; });
+  // Build merged list: prefer saved opponent data (has roster), fall back to name-only
+  const merged = teams.map((name) => {
+    const saved = savedByName[name];
+    return saved ? JSON.parse(JSON.stringify(saved)) : { id: null, name, roster: [] };
+  });
+  // Deduplicate by name
+  const seen = new Set();
+  s.opponents = merged.filter((o) => { if (seen.has(o.name)) return false; seen.add(o.name); return true; });
+  s.updatedAt = new Date().toISOString();
+  await _saveSeasons(seasons);
+  renderSeasonHistory();
+}
+
+// ===== START NEW SEASON FLOW =====
+
+function _renderNewSeasonPanel(s) {
+  const sid = escAttr(s.id);
+  const rosterCount = (s.roster || []).length;
+  const oppCount = (s.opponents || []).length;
+  const liveRosterCount = (typeof myTeamRoster !== "undefined" ? myTeamRoster : []).length;
+  const liveOppCount = (typeof _opponents !== "undefined" ? _opponents : []).length;
+  const gamesInYear = s.year
+    ? (typeof allGames !== "undefined" ? allGames : []).filter((g) => g.date && g.date.slice(0, 4) === s.year).length
+    : (typeof allGames !== "undefined" ? allGames : []).length;
+
+  return `<div class="season-new-panel">
+    <div class="sns-archive-confirm">
+      <span style="font-size:18px">✓</span>
+      <span>Archived: <strong>${rosterCount} player${rosterCount !== 1 ? "s" : ""}</strong> · <strong>${oppCount} opponent${oppCount !== 1 ? "s" : ""}</strong> — safely stored in this season</span>
+    </div>
+    <div class="sns-game-warning">
+      <span style="font-size:16px;flex-shrink:0">⚠</span>
+      <span><strong>Game records are not part of this archive.</strong> Your ${gamesInYear > 0 ? gamesInYear + " " : ""}game${gamesInYear !== 1 ? "s" : ""} must stay — they're how all stats and scouting data stay accessible. They will never be deleted here.</span>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:8px">
+      <div class="sns-section-title">Choose what to reset for the new season:</div>
+      <label class="sns-check-row">
+        <input type="checkbox" id="sns-clear-roster-${sid}" ${liveRosterCount > 0 ? "checked" : "disabled"}>
+        <span>Clear My Team roster${liveRosterCount > 0 ? ` (${liveRosterCount} players)` : " — roster already empty"} <span class="sh-pos">safe — snapshot is archived</span></span>
+      </label>
+      <label class="sns-check-row">
+        <input type="checkbox" id="sns-clear-opps-${sid}" ${liveOppCount === 0 ? "disabled" : ""}>
+        <span>Clear saved opponents${liveOppCount > 0 ? ` (${liveOppCount} teams)` : " — none saved"} <span class="sh-pos">safe — snapshots are archived</span></span>
+      </label>
+    </div>
+    <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+      <button class="sns-start-btn" onclick="executeNewSeason('${sid}')">Start Fresh →</button>
+      <button class="sep-sync-btn" onclick="seasonToggleNewPanel('${sid}')">Cancel</button>
+    </div>
+  </div>`;
+}
+
+function seasonToggleNewPanel(id) {
+  _newSeasonPanel = (_newSeasonPanel === id) ? null : id;
+  renderSeasonHistory();
+}
+
+async function executeNewSeason(seasonId) {
+  const clearRoster = document.getElementById("sns-clear-roster-" + seasonId)?.checked;
+  const clearOpps = document.getElementById("sns-clear-opps-" + seasonId)?.checked;
+  if (clearRoster && typeof myTeamClearRoster === "function") {
+    myTeamClearRoster(true); // silent = true, skip confirm dialog
+  }
+  if (clearOpps) {
+    const opps = typeof _opponents !== "undefined" ? [..._opponents] : [];
+    for (const opp of opps) {
+      try { await window.storage.delete("pitchtrack_opp_" + opp.id, true); } catch (e) {}
+    }
+    await window.storage.set("pitchtrack_opponents", JSON.stringify([]), true);
+    if (typeof oppLoad === "function") await oppLoad();
+  }
+  _newSeasonPanel = null;
+  if (typeof toast === "function") toast("New season started. Game history is preserved.");
+  renderSeasonHistory();
+}
+
+// ===== SEASON PICKER — add a team to a season from any panel =====
+async function _showSeasonPicker(teamName) {
+  document.getElementById("season-picker-modal")?.remove();
+  const seasons = await _loadSeasons();
+  if (!seasons.length) {
+    if (typeof toast === "function") toast("No seasons yet — create one in Stats Hub → Seasons");
+    return;
+  }
+  const rows = seasons
+    .sort((a, b) => (b.year || "").localeCompare(a.year || ""))
+    .map((s) => `<button class="season-picker-row" onclick="seasonPickerAdd('${escAttr(s.id)}','${escAttr(teamName)}')">
+      <span class="season-picker-year">${escHtml(s.year || "")}</span>
+      <span class="season-picker-label">${escHtml(s.label || s.year || "Season")}</span>
+    </button>`).join("");
+  const modal = document.createElement("div");
+  modal.id = "season-picker-modal";
+  modal.innerHTML = `<div class="season-picker-backdrop" onclick="document.getElementById('season-picker-modal').remove()"></div>
+    <div class="season-picker-box">
+      <div class="season-picker-title">Add "${escHtml(teamName)}" to a season:</div>
+      ${rows}
+      <button class="season-picker-close" onclick="document.getElementById('season-picker-modal').remove()">Cancel</button>
+    </div>`;
+  document.body.appendChild(modal);
+}
+
+async function seasonPickerAdd(seasonId, teamName) {
+  document.getElementById("season-picker-modal")?.remove();
+  await seasonAddTeam(seasonId, teamName);
+  if (typeof toast === "function") toast(`Added ${teamName} to season`);
+}
+
+async function seasonDelete(id) {
+  const seasons = await _loadSeasons();
+  const s = seasons.find((x) => x.id === id);
+  const label = s ? (s.label || s.year || "this season") : "this season";
+  if (!confirm(`Delete "${label}"? This cannot be undone.`)) return;
+  const updated = seasons.filter((x) => x.id !== id);
+  if (_expandedSeasonEdit === id) _expandedSeasonEdit = null;
+  await _saveSeasons(updated);
+  renderSeasonHistory();
+}
 
 // ===== HUB OPPONENTS SELECT MODE =====
 let _hubOppSelectMode = false;
@@ -3798,7 +4246,10 @@ function sendModalOpenMail() {
 
 // ===== TEAM VIEW =====
 function renderTeam(teamName) {
-  const games = getTeamGames(teamName);
+  const _allTeamGames = getTeamGames(teamName);
+  const games = _seasonFilter
+    ? _allTeamGames.filter((g) => g.date && g.date.slice(0, 4) === _seasonFilter)
+    : _allTeamGames;
   const record = getTeamRecord(teamName, games);
   const players = getTeamRoster(teamName, games);
   const pitchers = getTeamPitchers(teamName, games);
@@ -3812,6 +4263,7 @@ function renderTeam(teamName) {
   const c = document.getElementById("hub-content");
   c.innerHTML = `
     ${backBtn}
+    ${buildSeasonFilterBar()}
     <div class="page-header">
       <div>
 <div class="page-title">${escHtml(teamName)}</div>
@@ -6940,15 +7392,18 @@ function buildPlayerSplitsTab(teamName, playerName, games) {
 function renderPlayer(teamName, playerName) {
   try {
     const _allTeamGames = getTeamGames(teamName);
+    const _seasonGames = _seasonFilter
+      ? _allTeamGames.filter((g) => g.date && g.date.slice(0, 4) === _seasonFilter)
+      : _allTeamGames;
     const games = _recentFilter
       ? (() => {
           const names = _nameAliases[playerName] || new Set([playerName]);
-          return [..._allTeamGames]
+          return [..._seasonGames]
             .sort((a, b) => b.date.localeCompare(a.date))
             .filter((g) => (g.pitchLog || []).some((p) => names.has(p.batter)))
             .slice(0, 5);
         })()
-      : _allTeamGames;
+      : _seasonGames;
     const stats = getPlayerCareerStats(teamName, playerName, games);
     const allPitches = getPlayerPitches(teamName, playerName, games);
 
@@ -6979,6 +7434,7 @@ function renderPlayer(teamName, playerName) {
       "batter"
     );
     c.innerHTML = `<div style="display:flex;gap:0;align-items:flex-start;min-height:100%"><div style="flex:1;min-width:0">
+    ${buildSeasonFilterBar()}
     <div class="breadcrumb">
       <a onclick="showView('team',this.getAttribute('data-team'))" data-team="${escAttr(
         teamName

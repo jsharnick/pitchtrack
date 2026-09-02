@@ -97,9 +97,7 @@ function openPanel(name, skipPrompt) {
     .querySelectorAll(".app-panel")
     .forEach((p) => p.classList.remove("on"));
   document.getElementById("panel-" + name).classList.add("on");
-  document
-    .querySelectorAll(".sn-tab")
-    .forEach((t) => t.classList.remove("on"));
+  document.querySelectorAll(".sn-tab").forEach((t) => t.classList.remove("on"));
   const tab = document.getElementById("sntab-" + name);
   if (tab) tab.classList.add("on");
   document.getElementById("sn-save-btn").style.display =
@@ -220,9 +218,7 @@ function markUnsaved() {
   updateDot();
 }
 function updateDot() {
-  document
-    .getElementById("unsaved-dot")
-    .classList.toggle("show", unsavedGame);
+  document.getElementById("unsaved-dot").classList.toggle("show", unsavedGame);
 }
 
 // ═══ BOOT ═══

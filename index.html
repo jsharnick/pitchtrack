@@ -3209,6 +3209,13 @@
           >
             Opponents
           </div>
+          <div
+            class="hub-top-tab"
+            id="htab-seasons"
+            onclick="hubSetTab('seasons')"
+          >
+            Seasons
+          </div>
         </div>
         <div id="hub-app" data-hubtab="history">
           <!-- Mobile team nav bar (hidden on desktop via CSS) -->
@@ -3693,6 +3700,24 @@
           >
             &#x2601; Upload Local Data
           </button>
+          <button
+            onclick="archiveSeason()"
+            title="Save this season's roster as a snapshot and start fresh for next season"
+            style="
+              padding: 6px 12px;
+              background: var(--surface2);
+              border: 1px solid var(--accent);
+              border-radius: 6px;
+              font-family: 'Barlow Condensed', sans-serif;
+              font-weight: 700;
+              font-size: 12px;
+              color: var(--accent);
+              cursor: pointer;
+              flex-shrink: 0;
+            "
+          >
+            &#x1F4BE; Archive Season
+          </button>
           <div
             style="display: flex; gap: 6px; align-items: center; flex-shrink: 0"
           >
@@ -3777,6 +3802,7 @@
           id="myteam-roster"
           style="flex: 1; overflow-y: auto; padding: 14px 16px"
         ></div>
+        <div id="myteam-past-seasons" style="flex-shrink:0;border-top:1px solid var(--border);padding:0 16px"></div>
       </div>
 
       <!-- ══ OPPONENTS PANEL ══════════════════════════════════════════════════ -->

@@ -108,6 +108,7 @@ ${
     });
   });
   wrap.innerHTML = html;
+  _renderArchivedSeasons();
 }
 
 function myTeamAddPlayer() {
@@ -204,17 +205,98 @@ function myTeamDeletePlayer() {
   myTeamRender();
 }
 
-function myTeamClearRoster() {
+function myTeamClearRoster(silent = false) {
   if (!myTeamRoster.length) return;
-  if (
-    !confirm(
-      "Clear all " + myTeamRoster.length + " players from the roster?"
-    )
-  )
-    return;
+  if (!silent && !confirm("Clear all " + myTeamRoster.length + " players from the roster?")) return;
   myTeamRoster = [];
   myTeamSave();
   myTeamRender();
+}
+
+// ══════════════════════════════════════════════════════════════════════
+//  SEASON ARCHIVE
+// ══════════════════════════════════════════════════════════════════════
+
+async function archiveSeason() {
+  if (!myTeamRoster.length) {
+    toast("No players to archive — add players to your roster first.");
+    return;
+  }
+  const teamName = (
+    document.getElementById("myteam-name-input")?.value || "My Team"
+  ).trim();
+  const year = new Date().getFullYear().toString();
+
+  // Ensure opponents are loaded before snapshotting
+  try { await oppLoad(); } catch (e) {}
+
+  // Load existing season archives
+  let seasons = [];
+  try {
+    const raw = await window.storage.get("pitchtrack_seasons", true);
+    if (raw?.value) seasons = JSON.parse(raw.value) || [];
+  } catch (e) {}
+
+  const oppCount = (_opponents || []).length;
+
+  const now = new Date().toISOString();
+  // Save snapshot — includes full opponent data with their rosters
+  seasons.push({
+    id: "s_" + Date.now(),
+    year,
+    label: year + " Season",
+    teamName,
+    archivedAt: now,
+    updatedAt: now,
+    roster: JSON.parse(JSON.stringify(myTeamRoster)),
+    opponents: JSON.parse(JSON.stringify(_opponents || [])),
+  });
+  await window.storage.set(
+    "pitchtrack_seasons",
+    JSON.stringify(seasons),
+    true
+  );
+
+  // Show confirmation inline in the past-seasons container
+  const wrap = document.getElementById("myteam-past-seasons");
+  if (wrap) {
+    wrap.innerHTML = `<div style="padding:14px 0;font-family:'Barlow Condensed',sans-serif">
+      <div style="font-weight:700;font-size:15px;color:var(--green,#22c55e);margin-bottom:4px">&#x2713; ${year} season archived — ${myTeamRoster.length} players &amp; ${oppCount} opponents saved</div>
+      <div style="font-size:12px;color:var(--text3);margin-bottom:10px">Your game history and opponent scouting cards are preserved. View any past season from the Stats Hub "Seasons" tab.</div>
+      <button onclick="myTeamClearRoster()" style="padding:6px 14px;background:var(--surface2);border:1.5px solid var(--accent);border-radius:6px;font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:12px;color:var(--accent);cursor:pointer;margin-right:8px">Clear Roster for New Season</button>
+      <button onclick="_renderArchivedSeasons()" style="padding:6px 14px;background:none;border:1px solid var(--border2);border-radius:6px;font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:12px;color:var(--text3);cursor:pointer">Keep Roster &amp; Continue</button>
+    </div>`;
+  }
+}
+
+async function _renderArchivedSeasons() {
+  const wrap = document.getElementById("myteam-past-seasons");
+  if (!wrap) return;
+  let seasons = [];
+  try {
+    const raw = await window.storage.get("pitchtrack_seasons", true);
+    if (raw?.value) seasons = JSON.parse(raw.value) || [];
+  } catch (e) {}
+  if (!seasons.length) {
+    wrap.innerHTML = "";
+    return;
+  }
+  const rows = [...seasons]
+    .reverse()
+    .map(
+      (s) => `<div style="display:flex;align-items:center;gap:12px;padding:8px 0;border-bottom:1px solid var(--border)">
+      <div style="font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:18px;color:var(--accent);width:44px;flex-shrink:0">${escHtml(s.year)}</div>
+      <div style="flex:1;min-width:0">
+        <div style="font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:13px">${escHtml(s.teamName)}</div>
+        <div style="font-size:11px;color:var(--text3)">${s.roster ? s.roster.length : "?"} players · archived ${new Date(s.archivedAt).toLocaleDateString()}</div>
+      </div>
+    </div>`
+    )
+    .join("");
+  wrap.innerHTML = `<div style="padding:12px 0">
+    <div style="font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:13px;letter-spacing:1.5px;text-transform:uppercase;color:var(--text3);margin-bottom:8px">Past Seasons</div>
+    ${rows}
+  </div>`;
 }
 
 // ══════════════════════════════════════════════════════════════════════
