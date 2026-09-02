@@ -205,14 +205,9 @@ function myTeamDeletePlayer() {
   myTeamRender();
 }
 
-function myTeamClearRoster() {
+function myTeamClearRoster(silent = false) {
   if (!myTeamRoster.length) return;
-  if (
-    !confirm(
-      "Clear all " + myTeamRoster.length + " players from the roster?"
-    )
-  )
-    return;
+  if (!silent && !confirm("Clear all " + myTeamRoster.length + " players from the roster?")) return;
   myTeamRoster = [];
   myTeamSave();
   myTeamRender();
@@ -232,6 +227,9 @@ async function archiveSeason() {
   ).trim();
   const year = new Date().getFullYear().toString();
 
+  // Ensure opponents are loaded before snapshotting
+  try { await oppLoad(); } catch (e) {}
+
   // Load existing season archives
   let seasons = [];
   try {
@@ -239,13 +237,19 @@ async function archiveSeason() {
     if (raw?.value) seasons = JSON.parse(raw.value) || [];
   } catch (e) {}
 
-  // Save snapshot
+  const oppCount = (_opponents || []).length;
+
+  const now = new Date().toISOString();
+  // Save snapshot — includes full opponent data with their rosters
   seasons.push({
+    id: "s_" + Date.now(),
     year,
     label: year + " Season",
     teamName,
-    archivedAt: new Date().toISOString(),
+    archivedAt: now,
+    updatedAt: now,
     roster: JSON.parse(JSON.stringify(myTeamRoster)),
+    opponents: JSON.parse(JSON.stringify(_opponents || [])),
   });
   await window.storage.set(
     "pitchtrack_seasons",
@@ -257,8 +261,8 @@ async function archiveSeason() {
   const wrap = document.getElementById("myteam-past-seasons");
   if (wrap) {
     wrap.innerHTML = `<div style="padding:14px 0;font-family:'Barlow Condensed',sans-serif">
-      <div style="font-weight:700;font-size:15px;color:var(--green,#22c55e);margin-bottom:4px">&#x2713; ${year} season archived — ${myTeamRoster.length} players saved</div>
-      <div style="font-size:12px;color:var(--text3);margin-bottom:10px">Your game history is preserved. Clear the roster to start fresh, or keep returning players and update numbers/positions.</div>
+      <div style="font-weight:700;font-size:15px;color:var(--green,#22c55e);margin-bottom:4px">&#x2713; ${year} season archived — ${myTeamRoster.length} players &amp; ${oppCount} opponents saved</div>
+      <div style="font-size:12px;color:var(--text3);margin-bottom:10px">Your game history and opponent scouting cards are preserved. View any past season from the Stats Hub "Seasons" tab.</div>
       <button onclick="myTeamClearRoster()" style="padding:6px 14px;background:var(--surface2);border:1.5px solid var(--accent);border-radius:6px;font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:12px;color:var(--accent);cursor:pointer;margin-right:8px">Clear Roster for New Season</button>
       <button onclick="_renderArchivedSeasons()" style="padding:6px 14px;background:none;border:1px solid var(--border2);border-radius:6px;font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:12px;color:var(--text3);cursor:pointer">Keep Roster &amp; Continue</button>
     </div>`;

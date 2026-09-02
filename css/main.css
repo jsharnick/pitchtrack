@@ -5405,6 +5405,479 @@ html.mp-active #mob-preview-wrap {
   }
 }
 
+/* ══ Season History ═════════════════════════════════════════════ */
+.season-history-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 0 0 32px;
+}
+.season-card {
+  background: var(--surface2);
+  border: 1.5px solid var(--border2);
+  border-radius: 12px;
+  overflow: hidden;
+}
+.season-card-header {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--border2);
+  flex-wrap: wrap;
+}
+.season-card-year {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 36px;
+  font-weight: 800;
+  color: var(--accent);
+  line-height: 1;
+  flex-shrink: 0;
+  min-width: 72px;
+}
+.season-card-meta {
+  flex: 1;
+  min-width: 0;
+}
+.season-card-team {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 17px;
+  font-weight: 700;
+  color: var(--text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.season-card-counts {
+  font-size: 12px;
+  color: var(--text3);
+  margin-top: 2px;
+}
+.season-view-btn {
+  padding: 7px 16px;
+  background: var(--accent);
+  border: none;
+  border-radius: 7px;
+  font-family: 'Barlow Condensed', sans-serif;
+  font-weight: 700;
+  font-size: 13px;
+  color: #fff;
+  cursor: pointer;
+  white-space: nowrap;
+  flex-shrink: 0;
+  transition: opacity .13s;
+}
+.season-view-btn:hover { opacity: .85; }
+.season-edit-btn {
+  padding: 7px 16px;
+  background: none;
+  border: 1.5px solid var(--border2);
+  border-radius: 7px;
+  font-family: 'Barlow Condensed', sans-serif;
+  font-weight: 700;
+  font-size: 13px;
+  color: var(--text2);
+  cursor: pointer;
+  white-space: nowrap;
+  flex-shrink: 0;
+  transition: border-color .13s, color .13s;
+}
+.season-edit-btn:hover { border-color: var(--accent); color: var(--accent); }
+.sep-new-season-btn {
+  padding: 7px 18px;
+  background: var(--accent);
+  border: none;
+  border-radius: 7px;
+  font-family: 'Barlow Condensed', sans-serif;
+  font-weight: 700;
+  font-size: 13px;
+  color: #fff;
+  cursor: pointer;
+  white-space: nowrap;
+  flex-shrink: 0;
+  transition: opacity .13s;
+}
+.sep-new-season-btn:hover { opacity: .85; }
+.season-edit-panel {
+  border-top: 1px solid var(--border2);
+  padding: 16px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+.sep-section {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.sep-section-title {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  color: var(--text3);
+  margin-bottom: 4px;
+}
+.sep-field-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+.sep-label {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .08em;
+  color: var(--text3);
+  white-space: nowrap;
+}
+.sep-input {
+  padding: 5px 10px;
+  background: var(--surface);
+  border: 1.5px solid var(--border2);
+  border-radius: 6px;
+  font-size: 14px;
+  color: var(--text);
+  font-family: 'Barlow Condensed', sans-serif;
+  flex: 1;
+  min-width: 120px;
+}
+.sep-input:focus { outline: none; border-color: var(--accent); }
+.sep-opp-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: var(--text2);
+  padding: 3px 0;
+}
+.sep-action-btn {
+  padding: 3px 10px;
+  border-radius: 5px;
+  font-family: 'Barlow Condensed', sans-serif;
+  font-weight: 700;
+  font-size: 11px;
+  cursor: pointer;
+  border: 1px solid var(--border2);
+  background: none;
+  color: var(--text3);
+  margin-left: auto;
+  flex-shrink: 0;
+  transition: border-color .1s, color .1s;
+}
+.sep-remove-btn:hover { border-color: #e55; color: #e55; }
+.sep-add-btn:hover { border-color: var(--accent); color: var(--accent); }
+.sep-sync-btn {
+  padding: 6px 14px;
+  background: var(--surface2);
+  border: 1.5px solid var(--border2);
+  border-radius: 7px;
+  font-family: 'Barlow Condensed', sans-serif;
+  font-weight: 700;
+  font-size: 12px;
+  color: var(--text2);
+  cursor: pointer;
+  white-space: nowrap;
+  align-self: flex-start;
+  transition: border-color .13s, color .13s;
+}
+.sep-sync-btn:hover { border-color: var(--accent); color: var(--accent); }
+.sep-delete-btn {
+  padding: 6px 14px;
+  background: none;
+  border: 1.5px solid var(--border2);
+  border-radius: 7px;
+  font-family: 'Barlow Condensed', sans-serif;
+  font-weight: 700;
+  font-size: 12px;
+  color: var(--text3);
+  cursor: pointer;
+  white-space: nowrap;
+  transition: border-color .13s, color .13s;
+}
+.sep-delete-btn:hover { border-color: #e55; color: #e55; }
+.sep-divider {
+  font-size: 11px;
+  color: var(--text3);
+  margin: 6px 0 2px;
+  font-style: italic;
+}
+.sep-opp-link {
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  color: var(--text2);
+  font-family: inherit;
+  font-size: 13px;
+  text-align: left;
+  text-decoration: underline;
+  text-decoration-color: transparent;
+  transition: color .1s, text-decoration-color .1s;
+}
+.sep-opp-link:hover { color: var(--accent); text-decoration-color: var(--accent); }
+
+/* Start New Season flow */
+.season-new-btn {
+  padding: 7px 16px;
+  background: none;
+  border: 1.5px solid var(--border2);
+  border-radius: 7px;
+  font-family: 'Barlow Condensed', sans-serif;
+  font-weight: 700;
+  font-size: 13px;
+  color: var(--text2);
+  cursor: pointer;
+  white-space: nowrap;
+  flex-shrink: 0;
+  transition: border-color .13s, color .13s;
+}
+.season-new-btn:hover { border-color: #e8a030; color: #e8a030; }
+.season-new-panel {
+  border-top: 1px solid var(--border2);
+  padding: 16px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.sns-section-title {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  color: var(--text3);
+}
+.sns-archive-confirm {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  background: color-mix(in srgb, var(--accent) 8%, transparent);
+  border: 1px solid color-mix(in srgb, var(--accent) 25%, transparent);
+  border-radius: 8px;
+  font-size: 13px;
+  color: var(--text2);
+}
+.sns-game-warning {
+  display: flex;
+  gap: 10px;
+  padding: 10px 14px;
+  background: color-mix(in srgb, #e8a030 8%, transparent);
+  border: 1px solid color-mix(in srgb, #e8a030 30%, transparent);
+  border-radius: 8px;
+  font-size: 12px;
+  color: var(--text2);
+  line-height: 1.5;
+}
+.sns-check-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 13px;
+  color: var(--text2);
+  cursor: pointer;
+}
+.sns-check-row input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  accent-color: var(--accent);
+  flex-shrink: 0;
+  cursor: pointer;
+}
+.sns-start-btn {
+  padding: 8px 20px;
+  background: var(--accent);
+  border: none;
+  border-radius: 7px;
+  font-family: 'Barlow Condensed', sans-serif;
+  font-weight: 700;
+  font-size: 13px;
+  color: #fff;
+  cursor: pointer;
+  transition: opacity .13s;
+}
+.sns-start-btn:hover { opacity: .85; }
+
+/* Opp tile — "+ Season" shortcut button */
+.opp-tile-season-btn {
+  position: absolute;
+  bottom: 6px;
+  right: 6px;
+  padding: 2px 7px;
+  background: none;
+  border: 1px solid var(--border2);
+  border-radius: 5px;
+  font-size: 10px;
+  font-family: 'Barlow Condensed', sans-serif;
+  font-weight: 700;
+  color: var(--text3);
+  cursor: pointer;
+  line-height: 1.4;
+  transition: border-color .1s, color .1s;
+}
+.opp-tile-season-btn:hover { border-color: var(--accent); color: var(--accent); }
+
+/* Scout panel — team button group with "+" season shortcut */
+.scout-team-btn-group {
+  display: inline-flex;
+  align-items: center;
+  gap: 1px;
+  margin: 0 2px 4px 0;
+}
+.scout-team-add-btn {
+  padding: 3px 6px;
+  background: none;
+  border: 1px solid transparent;
+  border-radius: 4px;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text3);
+  cursor: pointer;
+  line-height: 1;
+  transition: border-color .1s, color .1s;
+}
+.scout-team-add-btn:hover { border-color: var(--accent); color: var(--accent); }
+
+/* Season picker modal */
+.season-picker-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, .55);
+  z-index: 1000;
+}
+.season-picker-box {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: var(--surface);
+  border: 1.5px solid var(--border2);
+  border-radius: 12px;
+  padding: 20px;
+  min-width: 260px;
+  max-width: 340px;
+  z-index: 1001;
+  box-shadow: 0 8px 32px rgba(0,0,0,.3);
+}
+.season-picker-title {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-weight: 700;
+  font-size: 14px;
+  color: var(--text);
+  margin-bottom: 12px;
+}
+.season-picker-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 8px 12px;
+  background: none;
+  border: 1px solid var(--border2);
+  border-radius: 8px;
+  margin-bottom: 6px;
+  cursor: pointer;
+  text-align: left;
+  transition: border-color .1s;
+}
+.season-picker-row:hover { border-color: var(--accent); }
+.season-picker-year {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-weight: 900;
+  font-size: 22px;
+  color: var(--accent);
+  line-height: 1;
+  flex-shrink: 0;
+}
+.season-picker-label {
+  font-size: 13px;
+  color: var(--text2);
+  font-family: 'Barlow Condensed', sans-serif;
+  font-weight: 600;
+}
+.season-picker-close {
+  width: 100%;
+  padding: 7px;
+  margin-top: 4px;
+  background: none;
+  border: 1px solid var(--border2);
+  border-radius: 7px;
+  font-size: 12px;
+  font-family: 'Barlow Condensed', sans-serif;
+  font-weight: 700;
+  color: var(--text3);
+  cursor: pointer;
+}
+.season-picker-close:hover { border-color: var(--accent); color: var(--accent); }
+
+.season-card-body {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0;
+}
+.season-section {
+  padding: 14px 20px;
+}
+.season-section + .season-section {
+  border-left: 1px solid var(--border2);
+}
+.season-section-title {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  color: var(--text3);
+  margin-bottom: 8px;
+}
+.sh-player-row,
+.sh-opp-row {
+  font-size: 13px;
+  color: var(--text2);
+  padding: 2px 0;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.sh-pos {
+  font-size: 11px;
+  color: var(--text3);
+}
+.sh-more {
+  font-size: 11px;
+  color: var(--text3);
+  margin-top: 4px;
+}
+.sh-note {
+  font-weight: 400;
+  font-size: 10px;
+  color: var(--text3);
+  text-transform: none;
+  letter-spacing: 0;
+}
+.sh-note-row {
+  font-size: 12px;
+  color: var(--text3);
+  font-style: italic;
+}
+@media (max-width: 600px) {
+  .season-card-body {
+    grid-template-columns: 1fr;
+  }
+  .season-section + .season-section {
+    border-left: none;
+    border-top: 1px solid var(--border2);
+  }
+  .season-card-year {
+    font-size: 28px;
+    min-width: 56px;
+  }
+}
+
 /* ══ Player Comparison ══════════════════════════════════════════ */
 .cmp-slots {
   display: flex;

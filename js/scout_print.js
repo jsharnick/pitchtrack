@@ -354,19 +354,15 @@ async function scoutOverviewLoad() {
   }
   btnWrap.innerHTML = teams
     .map(
-      (t) =>
-        `<button class="scout-team-btn${
-          _scoutSelectedTeam === t.name ? " active" : ""
-        }" data-scout-team="${t.name.replace(
-          /"/g,
-          "&quot;"
-        )}" onclick="scoutSelectTeam(this.dataset.scoutTeam)">
-      ${
-        t.badge
-          ? `<span style="font-size:9px;opacity:0.65;margin-right:4px;">${t.badge}</span>`
-          : ""
-      }${t.label}
-    </button>`
+      (t) => {
+        const safeName = t.name.replace(/"/g, "&quot;");
+        const active = _scoutSelectedTeam === t.name ? " active" : "";
+        const badge = t.badge ? `<span style="font-size:9px;opacity:0.65;margin-right:4px;">${t.badge}</span>` : "";
+        return `<div class="scout-team-btn-group">
+          <button class="scout-team-btn${active}" data-scout-team="${safeName}" onclick="scoutSelectTeam(this.dataset.scoutTeam)">${badge}${t.label}</button>
+          <button class="scout-team-add-btn" onclick="if(typeof _showSeasonPicker==='function')_showSeasonPicker('${safeName}')" title="Add to season">+</button>
+        </div>`;
+      }
     )
     .join("");
 
