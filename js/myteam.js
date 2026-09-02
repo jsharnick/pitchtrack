@@ -9,7 +9,7 @@ function myTeamRender() {
     </div>`;
     return;
   }
-
+  // note
   // Group by position
   let html = "";
   let remaining = [...myTeamRoster];
@@ -25,20 +25,11 @@ function myTeamRender() {
     for (const p of players.sort(
       (a, b) => parseInt(a.num || 999) - parseInt(b.num || 999)
     )) {
-      const isPitcher = [
-        "RHP",
-        "LHP",
-        "P",
-        "UTL/RHP",
-        "C/RHP",
-        "3B/RHP",
-      ].some((x) => p.pos === x);
-      const cardColor = isPitcher
-        ? "border-color:rgba(26,90,204,.35);"
-        : "";
-      const numColor = isPitcher
-        ? "color:#1a5acc"
-        : "color:var(--accent)";
+      const isPitcher = ["RHP", "LHP", "P", "UTL/RHP", "C/RHP", "3B/RHP"].some(
+        (x) => p.pos === x
+      );
+      const cardColor = isPitcher ? "border-color:rgba(26,90,204,.35);" : "";
+      const numColor = isPitcher ? "color:#1a5acc" : "color:var(--accent)";
       const isEligible = p.lineupEligible !== false;
       const eligBadgeBg = isEligible
         ? "rgba(34,197,94,.15)"
@@ -62,11 +53,11 @@ onmouseout="this.style.borderColor='var(--border2)';this.style.transform=''"
         p.num || "—"
       }</div>
 <div style="font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:14px;color:var(--text);margin-top:2px;white-space:nowrap">${
-  p.name
-}</div>
+        p.name
+      }</div>
 <div style="font-family:'Barlow',sans-serif;font-size:10px;color:var(--text3);margin-top:2px">${
-  p.pos || "—"
-} · ${p.bat || "R"}/${p.throw || "R"}</div>
+        p.pos || "—"
+      } · ${p.bat || "R"}/${p.throw || "R"}</div>
 ${
   p.ht || p.wt
     ? `<div style="font-size:9px;color:var(--text3);margin-top:1px">${[
@@ -78,8 +69,8 @@ ${
     : ""
 }
 <div onclick="_mtToggleEligible('${
-  p.id
-}',event)" title="Toggle lineup eligibility" style="margin-top:6px;display:inline-flex;align-items:center;gap:3px;padding:2px 6px;border-radius:4px;font-size:9px;font-family:'Barlow Condensed',sans-serif;font-weight:700;letter-spacing:.5px;cursor:pointer;background:${eligBadgeBg};color:${eligBadgeColor}">${eligLabel}</div>
+        p.id
+      }',event)" title="Toggle lineup eligibility" style="margin-top:6px;display:inline-flex;align-items:center;gap:3px;padding:2px 6px;border-radius:4px;font-size:9px;font-family:'Barlow Condensed',sans-serif;font-weight:700;letter-spacing:.5px;cursor:pointer;background:${eligBadgeBg};color:${eligBadgeColor}">${eligLabel}</div>
 <div style="position:absolute;top:6px;right:7px;font-size:9px;color:var(--text3);opacity:.5">⠿</div>
       </div>`;
     }
@@ -97,15 +88,14 @@ ${
     : "No players yet";
   // Show "Use My Team" buttons in the tracker whenever there are players
   ["away", "home"].forEach((side) => {
-    [
-      "use-myteam-" + side + "-btn",
-      "mob-use-myteam-" + side + "-btn",
-    ].forEach(function (id) {
-      const btn = document.getElementById(id);
-      if (btn) btn.style.display = total > 0 ? "block" : "none";
-      if (btn && total > 0)
-        btn.textContent = "USE " + teamName.toUpperCase() + " ▸";
-    });
+    ["use-myteam-" + side + "-btn", "mob-use-myteam-" + side + "-btn"].forEach(
+      function (id) {
+        const btn = document.getElementById(id);
+        if (btn) btn.style.display = total > 0 ? "block" : "none";
+        if (btn && total > 0)
+          btn.textContent = "USE " + teamName.toUpperCase() + " ▸";
+      }
+    );
   });
   wrap.innerHTML = html;
   _renderArchivedSeasons();
@@ -113,8 +103,7 @@ ${
 
 function myTeamAddPlayer() {
   myTeamEditingId = null;
-  document.getElementById("myteam-modal-title").textContent =
-    "Add Player";
+  document.getElementById("myteam-modal-title").textContent = "Add Player";
   document.getElementById("myteam-modal-delete").style.display = "none";
   ["name", "num", "ht", "wt"].forEach(
     (f) => (document.getElementById("mtp-" + f).value = "")
@@ -133,10 +122,8 @@ function myTeamEditPlayer(id) {
   const p = myTeamRoster.find((x) => x.id === id);
   if (!p) return;
   myTeamEditingId = id;
-  document.getElementById("myteam-modal-title").textContent =
-    "Edit Player";
-  document.getElementById("myteam-modal-delete").style.display =
-    "inline-flex";
+  document.getElementById("myteam-modal-title").textContent = "Edit Player";
+  document.getElementById("myteam-modal-delete").style.display = "inline-flex";
   document.getElementById("mtp-name").value = p.name || "";
   document.getElementById("mtp-num").value = p.num || "";
   document.getElementById("mtp-pos").value = p.pos || "C";
@@ -164,9 +151,7 @@ function myTeamSavePlayer() {
   }
   const pos = document.getElementById("mtp-pos").value;
   // Preserve existing pitchTypes if not editing a pitcher (editor wasn't shown)
-  const existingPlayer = myTeamRoster.find(
-    (x) => x.id === myTeamEditingId
-  );
+  const existingPlayer = myTeamRoster.find((x) => x.id === myTeamEditingId);
   const player = {
     id:
       myTeamEditingId ||
@@ -207,7 +192,11 @@ function myTeamDeletePlayer() {
 
 function myTeamClearRoster(silent = false) {
   if (!myTeamRoster.length) return;
-  if (!silent && !confirm("Clear all " + myTeamRoster.length + " players from the roster?")) return;
+  if (
+    !silent &&
+    !confirm("Clear all " + myTeamRoster.length + " players from the roster?")
+  )
+    return;
   myTeamRoster = [];
   myTeamSave();
   myTeamRender();
@@ -228,7 +217,9 @@ async function archiveSeason() {
   const year = new Date().getFullYear().toString();
 
   // Ensure opponents are loaded before snapshotting
-  try { await oppLoad(); } catch (e) {}
+  try {
+    await oppLoad();
+  } catch (e) {}
 
   // Load existing season archives
   let seasons = [];
@@ -251,11 +242,17 @@ async function archiveSeason() {
     roster: JSON.parse(JSON.stringify(myTeamRoster)),
     opponents: JSON.parse(JSON.stringify(_opponents || [])),
   });
-  await window.storage.set(
-    "pitchtrack_seasons",
-    JSON.stringify(seasons),
-    true
-  );
+  try {
+    await window.storage.set(
+      "pitchtrack_seasons",
+      JSON.stringify(seasons),
+      true
+    );
+  } catch (e) {
+    console.error("archiveSeason save error:", e);
+    toast("Failed to archive season: " + (e.message || e));
+    return;
+  }
 
   // Show confirmation inline in the past-seasons container
   const wrap = document.getElementById("myteam-past-seasons");
@@ -284,11 +281,21 @@ async function _renderArchivedSeasons() {
   const rows = [...seasons]
     .reverse()
     .map(
-      (s) => `<div style="display:flex;align-items:center;gap:12px;padding:8px 0;border-bottom:1px solid var(--border)">
-      <div style="font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:18px;color:var(--accent);width:44px;flex-shrink:0">${escHtml(s.year)}</div>
+      (
+        s
+      ) => `<div style="display:flex;align-items:center;gap:12px;padding:8px 0;border-bottom:1px solid var(--border)">
+      <div style="font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:18px;color:var(--accent);width:44px;flex-shrink:0">${escHtml(
+        s.year
+      )}</div>
       <div style="flex:1;min-width:0">
-        <div style="font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:13px">${escHtml(s.teamName)}</div>
-        <div style="font-size:11px;color:var(--text3)">${s.roster ? s.roster.length : "?"} players · archived ${new Date(s.archivedAt).toLocaleDateString()}</div>
+        <div style="font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:13px">${escHtml(
+          s.teamName
+        )}</div>
+        <div style="font-size:11px;color:var(--text3)">${
+          s.roster ? s.roster.length : "?"
+        } players · archived ${new Date(
+        s.archivedAt
+      ).toLocaleDateString()}</div>
       </div>
     </div>`
     )
@@ -786,8 +793,7 @@ function _mtBuildLineupContent() {
     }); // 1: Best OBP score
     lineup[3] = pickBy(function (x) {
       return (
-        x.score * 0.6 +
-        (x.slg + x.hr * 0.04) * Math.min(1, x.pa / 20) * 0.4
+        x.score * 0.6 + (x.slg + x.hr * 0.04) * Math.min(1, x.pa / 20) * 0.4
       );
     }); // 4: Power
     lineup[2] = pickBy(function (x) {
@@ -818,8 +824,7 @@ function _mtBuildLineupContent() {
     }); // 1: Best OBP
     lineup[3] = pickBy(function (x) {
       return (
-        x.score * 0.6 +
-        (x.slg + x.hr * 0.04) * Math.min(1, x.pa / 20) * 0.4
+        x.score * 0.6 + (x.slg + x.hr * 0.04) * Math.min(1, x.pa / 20) * 0.4
       );
     }); // 4: Power
     lineup[4] = pickBy(function (x) {
@@ -947,9 +952,7 @@ function _mtBuildLineupContent() {
     ";font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:12px;cursor:pointer\">Sabermetric</button>";
   html +=
     '<button onclick="_mtSetLineupMode(\'traditional\')" style="padding:5px 13px;border-radius:20px;border:1.5px solid ' +
-    (_mtLineupMode === "traditional"
-      ? "var(--accent)"
-      : "var(--border2)") +
+    (_mtLineupMode === "traditional" ? "var(--accent)" : "var(--border2)") +
     ";background:" +
     (_mtLineupMode === "traditional" ? "var(--accent)" : "none") +
     ";color:" +
@@ -1026,8 +1029,7 @@ function _mtBuildLineupContent() {
         entry.pa +
         " PA<br>(low sample)</div>";
     } else if (entry) {
-      opsCell =
-        '<div style="font-size:10px;color:var(--text3)">No stats</div>';
+      opsCell = '<div style="font-size:10px;color:var(--text3)">No stats</div>';
     }
     html += '<tr style="border-bottom:1px solid var(--border)">';
     html +=
@@ -1194,8 +1196,7 @@ function lmShowSubMenu(p, anchorEl) {
   });
   slotBtn.addEventListener("click", function (e) {
     e.stopPropagation();
-    var lineup =
-      lineupModalSide === "away" ? S.lineupAway : S.lineupHome;
+    var lineup = lineupModalSide === "away" ? S.lineupAway : S.lineupHome;
     var emptyIdx = lineup.findIndex(function (b) {
       return !b.name || /^Player \d/.test(b.name);
     });
@@ -1377,9 +1378,7 @@ function lmShowRosterPanel(isAway) {
     "UTL/RHP",
   ];
   const isPitch = function (p) {
-    return ["RHP", "LHP", "P", "UTL/RHP", "C/RHP", "3B/RHP"].includes(
-      p.pos
-    );
+    return ["RHP", "LHP", "P", "UTL/RHP", "C/RHP", "3B/RHP"].includes(p.pos);
   };
   const sorted = myTeamRoster.slice().sort(function (a, b) {
     var ai = POS_ORDER.indexOf(a.pos),
@@ -1473,9 +1472,7 @@ function lmShowRosterPanel(isAway) {
         e.dataTransfer.effectAllowed = "copy";
       });
       card.addEventListener("click", function () {
-        var isPitcherPos = ["RHP", "LHP", "P", "UTL/RHP"].includes(
-          p.pos
-        );
+        var isPitcherPos = ["RHP", "LHP", "P", "UTL/RHP"].includes(p.pos);
         if (isPitcherPos) {
           lmDropPitcherFromRoster(p.id);
         } else {
@@ -1532,9 +1529,7 @@ function openMyTeamDrawer(isAway) {
   if (label) label.textContent = teamName + " · drag or click to add";
   const sideKey = isAway ? "away" : "home";
   const isPitch = function (p) {
-    return ["RHP", "LHP", "P", "UTL/RHP", "C/RHP", "3B/RHP"].includes(
-      p.pos
-    );
+    return ["RHP", "LHP", "P", "UTL/RHP", "C/RHP", "3B/RHP"].includes(p.pos);
   };
   const sorted = myTeamRoster.slice().sort(function (a, b) {
     if (isPitch(a) !== isPitch(b)) return isPitch(a) ? 1 : -1;
@@ -1615,9 +1610,7 @@ var _rosterSrcHome = null;
 
 function oppPickerOpen(side) {
   if (!_opponents || !_opponents.length) {
-    toast(
-      "No opponents loaded — add teams in the Opponents panel first"
-    );
+    toast("No opponents loaded — add teams in the Opponents panel first");
     return;
   }
   _oppPickerSide = side;
@@ -1692,9 +1685,7 @@ function lmShowOpponentRosterPanel(opp, isAway) {
   const title = document.getElementById("lm-roster-title");
   if (!panel || !cards) return;
   if (!opp.roster.length) {
-    toast(
-      opp.name + " has no players — add some in the Opponents panel"
-    );
+    toast(opp.name + " has no players — add some in the Opponents panel");
     panel.style.display = "none";
     return;
   }
@@ -1729,9 +1720,7 @@ function lmShowOpponentRosterPanel(opp, isAway) {
     "UTL/RHP",
   ];
   const isPitch = function (p) {
-    return ["RHP", "LHP", "P", "UTL/RHP", "C/RHP", "3B/RHP"].includes(
-      p.pos
-    );
+    return ["RHP", "LHP", "P", "UTL/RHP", "C/RHP", "3B/RHP"].includes(p.pos);
   };
   const sorted = opp.roster.slice().sort(function (a, b) {
     var ai = POS_ORDER.indexOf(a.pos),
@@ -1842,8 +1831,7 @@ function lmShowOpponentRosterPanel(opp, isAway) {
         if (pitch) {
           lmDropOppPitcherFromRoster(p, opp);
         } else {
-          var lineup =
-            lineupModalSide === "away" ? S.lineupAway : S.lineupHome;
+          var lineup = lineupModalSide === "away" ? S.lineupAway : S.lineupHome;
           var emptyIdx = lineup.findIndex(function (b) {
             return !b.name || /^Player \d/.test(b.name);
           });
@@ -1873,8 +1861,7 @@ function lmShowOpponentRosterPanel(opp, isAway) {
 }
 
 function lmDropOppPlayerIntoSlot(p, slotIdx) {
-  const lineup =
-    lineupModalSide === "away" ? S.lineupAway : S.lineupHome;
+  const lineup = lineupModalSide === "away" ? S.lineupAway : S.lineupHome;
   lineup[slotIdx] = {
     name: p.name,
     num: p.num || String(slotIdx + 1),
@@ -2050,8 +2037,7 @@ function lineupSlotDrop(e, slotIdx, isAway) {
   e.preventDefault();
   e.currentTarget.style.background = "";
   e.currentTarget.style.borderColor = "";
-  const playerId =
-    e.dataTransfer.getData("text/plain") || _dragPlayerId;
+  const playerId = e.dataTransfer.getData("text/plain") || _dragPlayerId;
   const p = myTeamRoster.find(function (x) {
     return x.id === playerId;
   });
@@ -2116,8 +2102,7 @@ function myTeamImport(input) {
     try {
       if (ext === "trx") players = myTeamParseTRX(e.target.result);
       else if (ext === "csv") players = myTeamParseCSV(e.target.result);
-      else if (ext === "xlsx")
-        players = myTeamParseXLSX(e.target.result);
+      else if (ext === "xlsx") players = myTeamParseXLSX(e.target.result);
     } catch (err) {
       alert("Import failed: " + err.message);
       return;
@@ -2144,11 +2129,7 @@ function _myTeamFinishImport(players, input) {
       Object.assign(existing, p, { id: existing.id });
       updated++;
     } else {
-      p.id =
-        "p_" +
-        Date.now() +
-        "_" +
-        Math.random().toString(36).slice(2, 6);
+      p.id = "p_" + Date.now() + "_" + Math.random().toString(36).slice(2, 6);
       myTeamRoster.push(p);
       added++;
     }
@@ -2174,8 +2155,7 @@ function myTeamParseTRX(text) {
     // Derive bat/throw from position name (RHP/LHP/LHH etc.)
     let bat = "R",
       thr = "R";
-    if (pos.startsWith("LHP") || pos.startsWith("LH"))
-      (bat = "L"), (thr = "L");
+    if (pos.startsWith("LHP") || pos.startsWith("LH")) (bat = "L"), (thr = "L");
     else if (pos.startsWith("RHP") || pos.startsWith("RH"))
       (bat = "R"), (thr = "R");
     players.push({
@@ -2399,10 +2379,7 @@ function _smartParseRosterTable(rows) {
     {
       field: "hometown",
       match: (k) =>
-        k === "hometown" ||
-        k === "city" ||
-        k === "town" ||
-        k === "residence",
+        k === "hometown" || k === "city" || k === "town" || k === "residence",
     },
     {
       field: "school",
@@ -2539,9 +2516,7 @@ function _smartParseRosterTable(rows) {
           thr = hand(parts[1]);
         } else if (/^\d+-\d+$/.test(c)) ht = c;
         else if (/^\d{3}$/.test(c)) wt = c;
-        else if (
-          /^(C|1B|2B|3B|SS|OF|LF|CF|RF|INF|DH|RHP|LHP|P|UTL)/i.test(c)
-        )
+        else if (/^(C|1B|2B|3B|SS|OF|LF|CF|RF|INF|DH|RHP|LHP|P|UTL)/i.test(c))
           pos = c;
       }
       bat = bat || "R";
@@ -2592,17 +2567,14 @@ function myTeamParseCSV(text) {
 function myTeamParseXLSX(buffer) {
   try {
     const XLSX = window.XLSX;
-    if (!XLSX)
-      throw new Error("XLSX not loaded yet — try again in 1 second");
+    if (!XLSX) throw new Error("XLSX not loaded yet — try again in 1 second");
     const wb = XLSX.read(buffer, { type: "arraybuffer" });
     const ws = wb.Sheets[wb.SheetNames[0]];
     const rows = XLSX.utils.sheet_to_json(ws, {
       header: 1,
       defval: "",
     });
-    const strRows = rows.map((r) =>
-      r.map((c) => String(c || "").trim())
-    );
+    const strRows = rows.map((r) => r.map((c) => String(c || "").trim()));
     return _smartParseRosterTable(strRows);
   } catch (err) {
     console.warn("XLSX parse error:", err.message);
@@ -2810,11 +2782,7 @@ function _parsePDFRosterItems(items) {
         var nameEnd = colX.pos >= 0 ? colX.pos - COL_SNAP : Infinity;
         if (colX.yr >= 0 && colX.yr - COL_SNAP < nameEnd)
           nameEnd = colX.yr - COL_SNAP;
-        if (
-          colX.name >= 0 &&
-          c.x >= colX.name - COL_SNAP &&
-          c.x < nameEnd
-        ) {
+        if (colX.name >= 0 && c.x >= colX.name - COL_SNAP && c.x < nameEnd) {
           name = (name ? name + " " : "") + c.str;
           return;
         }
@@ -3138,10 +3106,7 @@ function downloadRosterTemplate() {
         "Pos  (Position)",
         "C · 1B · 2B · 3B · SS · INF · OF · LF · CF · RF · DH · RHP · LHP · P · UTL",
       ],
-      [
-        "Bat  (Batting Hand)",
-        "R  =  Right      L  =  Left      S  =  Switch",
-      ],
+      ["Bat  (Batting Hand)", "R  =  Right      L  =  Left      S  =  Switch"],
       ["Throw  (Throwing Hand)", "R  =  Right      L  =  Left"],
       ["", ""],
       ["OPTIONAL COLUMNS", ""],
@@ -3149,19 +3114,10 @@ function downloadRosterTemplate() {
       ["Wt  (Weight)", "Pounds — e.g.  185"],
       ["", ""],
       ["TIPS", ""],
-      [
-        "Column order",
-        "Any order is fine — the importer reads headers",
-      ],
-      [
-        "Extra columns",
-        "Extra columns (stats, class year, etc.) are ignored",
-      ],
+      ["Column order", "Any order is fine — the importer reads headers"],
+      ["Extra columns", "Extra columns (stats, class year, etc.) are ignored"],
       ["Sample row", "Row 2 is an example — overwrite or delete it"],
-      [
-        "B/T shorthand",
-        "You may use a single  B/T  column (e.g.  R/R)",
-      ],
+      ["B/T shorthand", "You may use a single  B/T  column (e.g.  R/R)"],
     ];
 
     const aoa = [];
@@ -3238,11 +3194,9 @@ function downloadRosterTemplate() {
 
     // Rows 3–22 — 20 blank data rows, alternating stripe
     for (let i = 0; i < 20; i++) {
-      const stripe =
-        i % 2 === 1 ? { fgColor: { rgb: "F7F8FA" } } : null;
+      const stripe = i % 2 === 1 ? { fgColor: { rgb: "F7F8FA" } } : null;
       const guideIdx = i + 1; // GUIDE rows 1..20
-      const [gl, gv] =
-        guideIdx < GUIDE.length ? GUIDE[guideIdx] : ["", ""];
+      const [gl, gv] = guideIdx < GUIDE.length ? GUIDE[guideIdx] : ["", ""];
 
       // Style guide label cells
       let glFont = guideVal;
@@ -3340,8 +3294,7 @@ function downloadRosterTemplate() {
   }
   if (!window.pdfjsLib) {
     var p = document.createElement("script");
-    p.src =
-      "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js";
+    p.src = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js";
     document.head.appendChild(p);
   }
 })();
@@ -3349,8 +3302,6 @@ function downloadRosterTemplate() {
 (function loadSheetJS() {
   if (window.XLSX) return;
   const s = document.createElement("script");
-  s.src =
-    "https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js";
+  s.src = "https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js";
   document.head.appendChild(s);
 })();
-

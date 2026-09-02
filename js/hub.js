@@ -3335,11 +3335,20 @@ async function _loadSeasons() {
   try {
     const raw = await window.storage.get("pitchtrack_seasons", true);
     if (raw?.value) return JSON.parse(raw.value) || [];
-  } catch (e) {}
+  } catch (e) {
+    console.error("_loadSeasons error:", e);
+  }
   return [];
 }
 async function _saveSeasons(arr) {
-  await window.storage.set("pitchtrack_seasons", JSON.stringify(arr), true);
+  try {
+    await window.storage.set("pitchtrack_seasons", JSON.stringify(arr), true);
+  } catch (e) {
+    console.error("_saveSeasons error:", e);
+    if (typeof toast === "function") {
+      toast("Failed to save season data: " + (e.message || e));
+    }
+  }
 }
 
 // ===== SEASON HISTORY =====
