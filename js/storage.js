@@ -128,12 +128,13 @@ function openPanel(name, skipPrompt) {
   if (name === "myteam") {
     try {
       myTeamRender();
-      myTeamLoad();
-      // Absorbed-player links drive both the stats fold-in and the
-      // "Absorbed Players" list in this panel.
-      Promise.resolve(absorbLoad())
+      // absorbLoad() resolves its links against myTeamRoster, so the roster
+      // has to finish loading first — otherwise the one-time migration runs
+      // against an empty roster and locks in the wrong targets.
+      Promise.resolve(myTeamLoad())
+        .then(() => absorbLoad())
         .then(() => myTeamRender())
-        .catch(() => {});
+        .catch((e) => console.warn("myteam load", e));
     } catch (e) {
       console.warn("myteam", e);
     }

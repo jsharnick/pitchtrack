@@ -2,18 +2,21 @@
 
 // ── Absorbed player links ─────────────────────────────────────────────
 // A link says "this player, as logged under sourceTeam, counts toward
-// targetTeam." Nothing in the stored game records is ever modified — the
-// link is applied at read time in getTeamGames(), so the source team's own
-// roster and stats stay exactly as they were logged.
-// Players are matched by jersey number, the same stable key
-// _mergeStatMapByPlayer()/_canonicalName() already rely on.
-let _absorbedLinks = []; // [{id, sourceTeam, playerName, playerNum, targetTeam, linkedAt}]
+// targetTeam as targetName/targetNum." Nothing in the stored game records is
+// ever modified — the link is applied at read time in getTeamGames(), so the
+// source team's own roster and stats stay exactly as they were logged.
+//
+// The source player is found in the game records by jersey number (stable
+// within a team), but their rows are relabelled to targetName/targetNum so
+// _mergeStatMapByPlayer() folds them into the existing My Team player's row.
+let _absorbedLinks = []; // [{id, sourceTeam, playerName, playerNum, targetTeam, targetName, targetNum, linkedAt}]
 
 async function absorbLoad() {
   try {
     const raw = await window.storage.get("pitchtrack_absorbed", true);
     if (raw?.value) {
       _absorbedLinks = JSON.parse(raw.value) || [];
+      await _absorbMigrateLinks();
       return _absorbedLinks;
     }
   } catch (e) {
@@ -21,6 +24,61 @@ async function absorbLoad() {
   }
   _absorbedLinks = [];
   return _absorbedLinks;
+}
+
+// A roster entry this feature auto-created: nothing on it but a name/number.
+function _absorbIsPlaceholderCard(p) {
+  return !!p && !p.pos && !p.bat && !p.throw && !p.ht && !p.wt;
+}
+
+// One-time upgrade of links written before targets existed (they matched by
+// jersey number, which created a duplicate card whenever the player was
+// already on the roster under a different number).
+async function _absorbMigrateLinks() {
+  const legacy = _absorbedLinks.filter((l) => !l.targetName);
+  if (!legacy.length) return;
+  // Targets are resolved against the roster, so bail if it hasn't loaded yet —
+  // migrating now would permanently record the wrong target. We'll run on the
+  // next load, once myTeamLoad() has populated it.
+  if (!(myTeamRoster || []).length) return;
+  let rosterChanged = false;
+
+  legacy.forEach((l) => {
+    // The placeholder the old code created for this link, if any.
+    const placeholder = (myTeamRoster || []).find(
+      (p) =>
+        String(p.num) === String(l.playerNum) &&
+        _lastName(p.name) === _lastName(l.playerName) &&
+        _absorbIsPlaceholderCard(p)
+    );
+    const real = _absorbMatchRosterPlayer(
+      { name: l.playerName, num: l.playerNum },
+      placeholder ? placeholder.id : undefined
+    );
+
+    if (real) {
+      // Fold the placeholder away and point the link at the real card.
+      l.targetName = real.name;
+      l.targetNum = real.num;
+      if (placeholder) {
+        myTeamRoster = myTeamRoster.filter((p) => p.id !== placeholder.id);
+        rosterChanged = true;
+      }
+    } else {
+      // Ambiguous, conflicting or genuinely new — keep both cards as they are.
+      l.targetName = placeholder ? placeholder.name : l.playerName;
+      l.targetNum = placeholder ? placeholder.num : l.playerNum;
+    }
+  });
+
+  await absorbSave();
+  if (rosterChanged && typeof myTeamSave === "function") {
+    try {
+      await myTeamSave();
+    } catch (e) {
+      console.error("absorb migration roster save error:", e);
+    }
+  }
 }
 
 async function absorbSave() {
@@ -40,8 +98,9 @@ async function absorbSave() {
   }
 }
 
-// players: [{name, num}] — entries without a jersey number are skipped,
-// since there'd be no reliable way to match them in the game records.
+// players: [{name, num, targetName, targetNum}] — entries without a jersey
+// number are skipped, since there'd be no reliable way to find them in the
+// game records. targetName/targetNum say which My Team card the stats land on.
 async function absorbAddLinks(sourceTeam, players, targetTeam) {
   let added = 0;
   (players || []).forEach((p) => {
@@ -59,6 +118,8 @@ async function absorbAddLinks(sourceTeam, players, targetTeam) {
       playerName: p.name || "",
       playerNum: p.num,
       targetTeam,
+      targetName: p.targetName || p.name || "",
+      targetNum: p.targetNum !== undefined ? p.targetNum : p.num,
       linkedAt: new Date().toISOString(),
     });
     added++;
@@ -76,6 +137,65 @@ async function absorbRemoveLink(id) {
 
 function absorbLinksFor(targetTeam) {
   return (_absorbedLinks || []).filter((l) => l.targetTeam === targetTeam);
+}
+
+// ── Matching an absorbed player to an existing My Team card ───────────
+// The roster contains different players who share a last name AND a first
+// initial, so that pairing is only ever a candidate — never proof. A wrong
+// merge silently fuses two kids' stats together, which is much worse than an
+// extra card, so this is deliberately biased toward NOT merging: anything
+// ambiguous or conflicting returns null and the player gets their own card.
+
+function _absorbFirstName(name) {
+  const parts = String(name || "").trim().split(/\s+/);
+  return parts.length > 1 ? parts[0] : "";
+}
+
+function _absorbIsPitcherPos(pos) {
+  return ["RHP", "LHP", "P", "UTL/RHP", "C/RHP", "3B/RHP"].indexOf(
+    String(pos || "").toUpperCase()
+  ) !== -1;
+}
+
+// True only when both sides know the field and they disagree. A value missing
+// on either side is unknown, not a conflict.
+function _absorbConflicts(a, b) {
+  const differs = (x, y) =>
+    x && y && String(x).trim().toLowerCase() !== String(y).trim().toLowerCase();
+
+  // Same initial but a different full first name => different player
+  // (e.g. Tyler Shaw vs Trevor Shaw).
+  const fa = _absorbFirstName(a.name),
+    fb = _absorbFirstName(b.name);
+  if (fa && fb && fa.length > 1 && fb.length > 1 && differs(fa, fb)) return true;
+
+  if (differs(a.bat, b.bat)) return true;
+  if (differs(a.throw, b.throw)) return true;
+  if (differs(a.ht, b.ht)) return true;
+  if (differs(a.wt, b.wt)) return true;
+  // Position only counts as a conflict across the pitcher/non-pitcher line —
+  // an SS listed elsewhere as 2B is still the same kid.
+  if (a.pos && b.pos && _absorbIsPitcherPos(a.pos) !== _absorbIsPitcherPos(b.pos))
+    return true;
+  return false;
+}
+
+// Returns a myTeamRoster entry only on high confidence, else null.
+// excludeId lets the migration skip the placeholder card it is replacing.
+function _absorbMatchRosterPlayer(srcPlayer, excludeId) {
+  if (!srcPlayer || !srcPlayer.name) return null;
+  const last = _lastName(srcPlayer.name);
+  if (!last) return null;
+  const initial = String(srcPlayer.name).trim().charAt(0).toLowerCase();
+
+  const candidates = (myTeamRoster || []).filter(
+    (r) =>
+      r.id !== excludeId &&
+      _lastName(r.name) === last &&
+      String(r.name).trim().charAt(0).toLowerCase() === initial
+  );
+  if (candidates.length !== 1) return null; // none, or ambiguous — never guess
+  return _absorbConflicts(srcPlayer, candidates[0]) ? null : candidates[0];
 }
 // ─────────────────────────────────────────────────────────────────────
 
@@ -95,11 +215,24 @@ function getTeamGames(teamName) {
 
   const extra = [];
   Object.entries(bySource).forEach(([sourceTeam, srcLinks]) => {
-    const keep = (row) =>
-      row &&
-      row.num !== undefined &&
-      row.num !== "" &&
-      srcLinks.some((l) => String(l.playerNum) === String(row.num));
+    const linkFor = (row) =>
+      row && row.num !== undefined && row.num !== ""
+        ? srcLinks.find((l) => String(l.playerNum) === String(row.num))
+        : null;
+
+    // Keep only absorbed players' rows, and relabel each to the My Team
+    // identity it belongs to, so _mergeStatMapByPlayer() folds it into that
+    // player's existing row instead of creating a second one.
+    const takeRows = (rows, renamed) =>
+      (rows || []).reduce((out, row) => {
+        const l = linkFor(row);
+        if (!l) return out;
+        const toName = l.targetName || row.name;
+        const toNum = l.targetNum !== undefined ? l.targetNum : row.num;
+        if (row.name !== toName) renamed[row.name] = toName;
+        out.push({ ...row, name: toName, num: toNum });
+        return out;
+      }, []);
 
     allGames.forEach((g) => {
       // Already counted for this team under its own name — never double-count.
@@ -111,30 +244,43 @@ function getTeamGames(teamName) {
       // stat rows to the absorbed players. Every field we change is replaced
       // with a fresh object/array, so the stored game is never mutated.
       const clone = { ...g, _absorbed: true, _absorbedFrom: sourceTeam };
+      const renamed = {}; // source name -> My Team name, for the pitch log
       let pitchers;
       if (isHome) {
         clone.homeTeam = teamName;
-        clone.homeBatters = (g.homeBatters || []).filter(keep);
-        clone.homePitchers = pitchers = (g.homePitchers || []).filter(keep);
+        clone.homeBatters = takeRows(g.homeBatters, renamed);
+        clone.homePitchers = pitchers = takeRows(g.homePitchers, renamed);
         if (!clone.homeBatters.length && !pitchers.length) return;
       } else {
         clone.awayTeam = teamName;
-        clone.awayBatters = (g.awayBatters || []).filter(keep);
-        clone.awayPitchers = pitchers = (g.awayPitchers || []).filter(keep);
+        clone.awayBatters = takeRows(g.awayBatters, renamed);
+        clone.awayPitchers = pitchers = takeRows(g.awayPitchers, renamed);
         if (!clone.awayBatters.length && !pitchers.length) return;
       }
 
       // Some views filter pitches by the raw pitchLog pitcherTeam snapshot
       // rather than deriving the side structurally, so relabel those entries
       // too — otherwise an absorbed pitcher's batting-allowed tables come up
-      // empty. Only the matching entries are copied; the rest are shared.
-      if (pitchers.length && (g.pitchLog || []).length) {
-        const pNames = new Set(pitchers.map((p) => p.name));
-        clone.pitchLog = g.pitchLog.map((p) =>
-          p.pitcherTeam === sourceTeam && pNames.has(p.pitcher)
-            ? { ...p, pitcherTeam: teamName }
-            : p
-        );
+      // empty. Pitcher/batter names are remapped alongside it so pitch-level
+      // lookups resolve to the same player. Only matching entries are copied.
+      const srcPitcherNames = new Set(
+        (isHome ? g.homePitchers : g.awayPitchers || [])
+          .filter((p) => linkFor(p))
+          .map((p) => p.name)
+      );
+      if ((srcPitcherNames.size || Object.keys(renamed).length) && (g.pitchLog || []).length) {
+        clone.pitchLog = g.pitchLog.map((p) => {
+          const hitPitcher =
+            p.pitcherTeam === sourceTeam && srcPitcherNames.has(p.pitcher);
+          const newPitcher = renamed[p.pitcher];
+          const newBatter = renamed[p.batter];
+          if (!hitPitcher && !newPitcher && !newBatter) return p;
+          const q = { ...p };
+          if (hitPitcher) q.pitcherTeam = teamName;
+          if (newPitcher) q.pitcher = newPitcher;
+          if (newBatter) q.batter = newBatter;
+          return q;
+        });
       }
 
       extra.push(clone);

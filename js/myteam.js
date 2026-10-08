@@ -99,7 +99,6 @@ ${
   });
   wrap.innerHTML = html;
   _renderArchivedSeasons();
-  _renderAbsorbedLinks();
 }
 
 function myTeamAddPlayer() {
@@ -403,6 +402,20 @@ function absorbPlayersPickTeam(sourceTeam) {
   list.innerHTML = players
     .map((p) => {
       const has = already.has(String(p.num));
+      // Show where this player's stats will land before anything is committed,
+      // so a same-last-name case is obvious up front rather than discovered
+      // later in the numbers.
+      let dest = "";
+      if (!has) {
+        const match = _absorbMatchRosterPlayer(
+          _absorbResolvePlayerMeta(sourceTeam, p.num, p.name)
+        );
+        dest = match
+          ? `merges into #${escHtml(String(match.num || "—"))} ${escHtml(
+              match.name
+            )}`
+          : "new player card";
+      }
       return `<label style="display:flex;align-items:center;gap:10px;padding:8px 10px;border:1px solid var(--border);border-radius:6px;cursor:${
         has ? "default" : "pointer"
       };background:var(--surface2);opacity:${has ? "0.55" : "1"}">
@@ -414,9 +427,16 @@ function absorbPlayersPickTeam(sourceTeam) {
         <span style="font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:14px;color:var(--accent);width:30px">#${escHtml(
           String(p.num)
         )}</span>
-        <span style="font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:14px;color:var(--text);flex:1">${escHtml(
-          p.name
-        )}</span>
+        <div style="flex:1;min-width:0">
+          <div style="font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:14px;color:var(--text)">${escHtml(
+            p.name
+          )}</div>
+          ${
+            dest
+              ? `<div style="font-size:10px;color:var(--text3)">&rarr; ${dest}</div>`
+              : ""
+          }
+        </div>
         <span style="font-size:11px;color:var(--text3)">${
           has ? "already absorbed" : p.games + " G"
         }</span>
@@ -450,21 +470,33 @@ async function confirmAbsorbPlayers() {
     name: cb.getAttribute("data-name") || "",
   }));
 
-  const added = await absorbAddLinks(source, picked, target);
-
-  // Second, separate effect: put these players on the roster too, so they
-  // show up in lineup/roster UI and not only in retroactive stat tables.
+  // Resolve each player to the My Team card their stats should land on:
+  // an existing card when we're confident it's the same person, otherwise a
+  // new card. Never merges on a guess — see _absorbMatchRosterPlayer().
   let rosterAdds = 0;
   picked.forEach((p) => {
-    if (_absorbAddToRoster(_absorbResolvePlayerMeta(source, p.num, p.name)))
+    const meta = _absorbResolvePlayerMeta(source, p.num, p.name);
+    const match = _absorbMatchRosterPlayer(meta);
+    if (match) {
+      p.targetName = match.name;
+      p.targetNum = match.num;
+    } else {
+      _absorbAddToRoster(meta);
       rosterAdds++;
+      p.targetName = meta.name;
+      p.targetNum = meta.num;
+    }
   });
   if (rosterAdds) await myTeamSave();
+
+  const added = await absorbAddLinks(source, picked, target);
+  const mergedInto = picked.length - rosterAdds;
 
   closeAbsorbPlayersModal();
   toast(
     `Absorbed ${added} player${added !== 1 ? "s" : ""} from "${source}"` +
-      (rosterAdds ? ` · ${rosterAdds} added to roster` : "")
+      (mergedInto ? ` · ${mergedInto} merged into existing players` : "") +
+      (rosterAdds ? ` · ${rosterAdds} new card${rosterAdds !== 1 ? "s" : ""}` : "")
   );
   if (typeof hubRefreshAll === "function") {
     try {
@@ -504,38 +536,16 @@ function _absorbAddToRoster(meta) {
   return true;
 }
 
-async function _renderAbsorbedLinks() {
-  const wrap = document.getElementById("myteam-absorbed-links");
-  if (!wrap) return;
+// Links whose stats land on a given My Team player card.
+function _absorbLinksForPlayer(player) {
+  if (!player) return [];
   const target = _getMyTeamName();
-  const links = (_absorbedLinks || []).filter((l) => l.targetTeam === target);
-  if (!links.length) {
-    wrap.innerHTML = "";
-    return;
-  }
-  const known = new Set(allTeams || []);
-  const rows = links
-    .map(
-      (l) => `<div style="display:flex;align-items:center;gap:10px;padding:7px 0;border-bottom:1px solid var(--border)">
-      <span style="font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:15px;color:var(--accent);width:30px">#${escHtml(
-        String(l.playerNum)
-      )}</span>
-      <div style="flex:1;min-width:0">
-        <div style="font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:13px">${escHtml(
-          l.playerName || "(unnamed)"
-        )}</div>
-        <div style="font-size:11px;color:var(--text3)">from "${escHtml(
-          l.sourceTeam
-        )}"${known.has(l.sourceTeam) ? "" : " · team no longer present"}</div>
-      </div>
-      <button onclick="removeAbsorbedLink('${l.id}')" title="Stop counting this player's games toward this team" style="padding:4px 10px;background:none;border:1px solid var(--border2);border-radius:6px;font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:11px;color:var(--text3);cursor:pointer">Remove</button>
-    </div>`
-    )
-    .join("");
-  wrap.innerHTML = `<div style="padding:12px 0">
-    <div style="font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:13px;letter-spacing:1.5px;text-transform:uppercase;color:var(--text3);margin-bottom:8px">Absorbed Players</div>
-    ${rows}
-  </div>`;
+  return (_absorbedLinks || []).filter(
+    (l) =>
+      l.targetTeam === target &&
+      String(l.targetNum) === String(player.num) &&
+      _lastName(l.targetName || "") === _lastName(player.name || "")
+  );
 }
 
 async function removeAbsorbedLink(id) {
@@ -547,6 +557,12 @@ async function removeAbsorbedLink(id) {
     } catch (e) {}
   }
   myTeamRender();
+  // Keep the player detail view in sync if it's the one we removed from.
+  if (_mtViewId && document.getElementById("mt-player-view")?.style.display !== "none") {
+    try {
+      _mtRenderPlayerView(_mtViewId);
+    } catch (e) {}
+  }
 }
 
 // ══════════════════════════════════════════════════════════════════════
@@ -605,7 +621,22 @@ function _mtRenderPlayerView(id) {
     "</div>" +
     '<div style="font-size:11px;color:var(--text3);margin-top:3px">' +
     metaStr +
-    "</div></div></div>" +
+    "</div>" +
+    _absorbLinksForPlayer(p)
+      .map(
+        (l) =>
+          '<div style="display:flex;align-items:center;gap:7px;margin-top:5px">' +
+          '<span style="font-size:10px;font-family:\'Barlow Condensed\',sans-serif;font-weight:700;letter-spacing:.5px;padding:2px 7px;border-radius:4px;background:rgba(26,90,204,.13);color:#1a5acc">' +
+          "stats absorbed from &ldquo;" +
+          escHtml(l.sourceTeam) +
+          "&rdquo;</span>" +
+          "<button onclick=\"removeAbsorbedLink('" +
+          escAttr(l.id) +
+          '\')" title="Stop counting those games toward this player" style="padding:1px 8px;background:none;border:1px solid var(--border2);border-radius:5px;font-family:\'Barlow Condensed\',sans-serif;font-weight:700;font-size:10px;color:var(--text3);cursor:pointer">Remove</button>' +
+          "</div>"
+      )
+      .join("") +
+    "</div></div>" +
     '<div style="display:flex;gap:8px;flex-shrink:0;align-items:center">' +
     "<button onclick=\"document.getElementById('mt-player-view').style.display='none';myTeamEditPlayer('" +
     escAttr(p.id) +
