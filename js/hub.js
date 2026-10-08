@@ -207,6 +207,20 @@ async function _mergeTeamNameInGames(fromName, toName) {
     if (!teams.includes(toName)) teams.push(toName);
     await window.storage.set("pitchtrack_teams", JSON.stringify(teams), true);
   } catch (e) {}
+  // Keep absorbed-player links pointing at the renamed team, otherwise they'd
+  // silently stop matching any games.
+  try {
+    let moved = 0;
+    (_absorbedLinks || []).forEach((l) => {
+      if (l.sourceTeam === fromName) {
+        l.sourceTeam = toName;
+        moved++;
+      }
+    });
+    if (moved) await absorbSave();
+  } catch (e) {
+    console.warn("absorb link migration error:", e);
+  }
   return count;
 }
 
@@ -665,6 +679,11 @@ async function hubRefreshAll() {
   } catch (e) {}
   allGames = await loadAllGames();
   allTeams = await loadTeams();
+  // Absorbed-player links are applied at read time inside getTeamGames(),
+  // so they must be loaded before any stats are aggregated.
+  try {
+    await absorbLoad();
+  } catch (e) {}
 
   // Rebuild available seasons from game dates
   _availableSeasons = [...new Set(allGames.map((g) => g.date && g.date.slice(0, 4)).filter(Boolean))]
@@ -4886,6 +4905,22 @@ function buildTeamGamesList(games, teamName) {
             : result === "L"
             ? "badge-loss"
             : "badge-tie";
+        // Absorbed rows are another team's game, folded in for one or more
+        // players' stats. The result isn't this team's, and the delete button
+        // would destroy the source team's real record — so neither is shown.
+        if (g._absorbed) {
+          return `<div class="game-row" onclick="showView('game','${g.id}')">
+<div class="game-date">${g.date}</div>
+<span class="badge badge-tie" title="Stats folded in from ${escHtml(
+            g._absorbedFrom || ""
+          )}">ABS</span>
+<div class="game-teams">${escHtml(g._absorbedFrom || "")} ${
+            isHome ? "vs" : "@"
+          } ${escHtml(opp)}</div>
+<div class="game-score">${tf}–${ta}</div>
+<div class="game-pitches">${g.totalPitches || 0}P</div>
+      </div>`;
+        }
         return `<div class="game-row" onclick="showView('game','${g.id}')">
 <div class="game-date">${g.date}</div>
 <span class="badge ${cls}">${result}</span>
