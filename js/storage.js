@@ -129,6 +129,11 @@ function openPanel(name, skipPrompt) {
     try {
       myTeamRender();
       myTeamLoad();
+      // Absorbed-player links drive both the stats fold-in and the
+      // "Absorbed Players" list in this panel.
+      Promise.resolve(absorbLoad())
+        .then(() => myTeamRender())
+        .catch(() => {});
     } catch (e) {
       console.warn("myteam", e);
     }

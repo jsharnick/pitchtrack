@@ -1,8 +1,147 @@
 // ===== DATA HELPERS =====
+
+// ── Absorbed player links ─────────────────────────────────────────────
+// A link says "this player, as logged under sourceTeam, counts toward
+// targetTeam." Nothing in the stored game records is ever modified — the
+// link is applied at read time in getTeamGames(), so the source team's own
+// roster and stats stay exactly as they were logged.
+// Players are matched by jersey number, the same stable key
+// _mergeStatMapByPlayer()/_canonicalName() already rely on.
+let _absorbedLinks = []; // [{id, sourceTeam, playerName, playerNum, targetTeam, linkedAt}]
+
+async function absorbLoad() {
+  try {
+    const raw = await window.storage.get("pitchtrack_absorbed", true);
+    if (raw?.value) {
+      _absorbedLinks = JSON.parse(raw.value) || [];
+      return _absorbedLinks;
+    }
+  } catch (e) {
+    console.error("absorbLoad error:", e);
+  }
+  _absorbedLinks = [];
+  return _absorbedLinks;
+}
+
+async function absorbSave() {
+  try {
+    await window.storage.set(
+      "pitchtrack_absorbed",
+      JSON.stringify(_absorbedLinks),
+      true
+    );
+    return true;
+  } catch (e) {
+    console.error("absorbSave error:", e);
+    if (typeof toast === "function") {
+      toast("Failed to save absorbed players: " + (e.message || e));
+    }
+    return false;
+  }
+}
+
+// players: [{name, num}] — entries without a jersey number are skipped,
+// since there'd be no reliable way to match them in the game records.
+async function absorbAddLinks(sourceTeam, players, targetTeam) {
+  let added = 0;
+  (players || []).forEach((p) => {
+    if (!p || p.num === undefined || p.num === "") return;
+    const dup = _absorbedLinks.find(
+      (l) =>
+        l.sourceTeam === sourceTeam &&
+        l.targetTeam === targetTeam &&
+        String(l.playerNum) === String(p.num)
+    );
+    if (dup) return;
+    _absorbedLinks.push({
+      id: "al_" + Date.now() + "_" + Math.random().toString(36).slice(2, 6),
+      sourceTeam,
+      playerName: p.name || "",
+      playerNum: p.num,
+      targetTeam,
+      linkedAt: new Date().toISOString(),
+    });
+    added++;
+  });
+  if (added) await absorbSave();
+  return added;
+}
+
+async function absorbRemoveLink(id) {
+  const before = _absorbedLinks.length;
+  _absorbedLinks = _absorbedLinks.filter((l) => l.id !== id);
+  if (_absorbedLinks.length !== before) await absorbSave();
+  return before - _absorbedLinks.length;
+}
+
+function absorbLinksFor(targetTeam) {
+  return (_absorbedLinks || []).filter((l) => l.targetTeam === targetTeam);
+}
+// ─────────────────────────────────────────────────────────────────────
+
 function getTeamGames(teamName) {
-  return allGames.filter(
+  const own = allGames.filter(
     (g) => g.awayTeam === teamName || g.homeTeam === teamName
   );
+  const links = absorbLinksFor(teamName);
+  if (!links.length) return own;
+
+  // Group links by the team name their stats were logged under.
+  const bySource = {};
+  links.forEach((l) => {
+    if (!bySource[l.sourceTeam]) bySource[l.sourceTeam] = [];
+    bySource[l.sourceTeam].push(l);
+  });
+
+  const extra = [];
+  Object.entries(bySource).forEach(([sourceTeam, srcLinks]) => {
+    const keep = (row) =>
+      row &&
+      row.num !== undefined &&
+      row.num !== "" &&
+      srcLinks.some((l) => String(l.playerNum) === String(row.num));
+
+    allGames.forEach((g) => {
+      // Already counted for this team under its own name — never double-count.
+      if (g.homeTeam === teamName || g.awayTeam === teamName) return;
+      const isHome = g.homeTeam === sourceTeam;
+      if (!isHome && g.awayTeam !== sourceTeam) return;
+
+      // Shallow clone, relabel only the source side, and narrow that side's
+      // stat rows to the absorbed players. Every field we change is replaced
+      // with a fresh object/array, so the stored game is never mutated.
+      const clone = { ...g, _absorbed: true, _absorbedFrom: sourceTeam };
+      let pitchers;
+      if (isHome) {
+        clone.homeTeam = teamName;
+        clone.homeBatters = (g.homeBatters || []).filter(keep);
+        clone.homePitchers = pitchers = (g.homePitchers || []).filter(keep);
+        if (!clone.homeBatters.length && !pitchers.length) return;
+      } else {
+        clone.awayTeam = teamName;
+        clone.awayBatters = (g.awayBatters || []).filter(keep);
+        clone.awayPitchers = pitchers = (g.awayPitchers || []).filter(keep);
+        if (!clone.awayBatters.length && !pitchers.length) return;
+      }
+
+      // Some views filter pitches by the raw pitchLog pitcherTeam snapshot
+      // rather than deriving the side structurally, so relabel those entries
+      // too — otherwise an absorbed pitcher's batting-allowed tables come up
+      // empty. Only the matching entries are copied; the rest are shared.
+      if (pitchers.length && (g.pitchLog || []).length) {
+        const pNames = new Set(pitchers.map((p) => p.name));
+        clone.pitchLog = g.pitchLog.map((p) =>
+          p.pitcherTeam === sourceTeam && pNames.has(p.pitcher)
+            ? { ...p, pitcherTeam: teamName }
+            : p
+        );
+      }
+
+      extra.push(clone);
+    });
+  });
+
+  return own.concat(extra);
 }
 
 function getTeamRecord(teamName, games) {
@@ -14,6 +153,9 @@ function getTeamRecord(teamName, games) {
     h = 0,
     hr = 0;
   games.forEach((g) => {
+    // Games pulled in only via an absorbed-player link were played by another
+    // team — the player's stats count, but the result isn't this team's W/L.
+    if (g._absorbed) return;
     const isHome = g.homeTeam === teamName;
     const tf = isHome ? g.homeScore : g.awayScore;
     const ta = isHome ? g.awayScore : g.homeScore;

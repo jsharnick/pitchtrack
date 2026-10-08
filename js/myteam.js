@@ -99,6 +99,7 @@ ${
   });
   wrap.innerHTML = html;
   _renderArchivedSeasons();
+  _renderAbsorbedLinks();
 }
 
 function myTeamAddPlayer() {
@@ -307,6 +308,248 @@ async function _renderArchivedSeasons() {
 }
 
 // ══════════════════════════════════════════════════════════════════════
+//  ABSORB INDIVIDUAL PLAYERS FROM ANOTHER TEAM NAME
+// ══════════════════════════════════════════════════════════════════════
+// Folds specific players' already-logged stats into this team without
+// touching the source team — see getTeamGames()/_absorbedLinks in data.js.
+// Players are matched by jersey number, so a player with no number in the
+// game logs can't be absorbed.
+
+let _absorbPlayersTarget = null;
+let _absorbPlayersSource = null;
+
+async function showAbsorbPlayersModal(targetName) {
+  if (!targetName) {
+    toast("Set a team name first.");
+    return;
+  }
+  _absorbPlayersTarget = targetName;
+  _absorbPlayersSource = null;
+
+  // Make sure games, team names and existing links are current.
+  try {
+    allGames = await loadAllGames();
+    allTeams = await loadTeams();
+    await absorbLoad();
+  } catch (e) {
+    console.error("showAbsorbPlayersModal load error:", e);
+  }
+
+  const available = (allTeams || []).filter((n) => n && n !== targetName);
+  document.getElementById(
+    "absorb-players-title"
+  ).textContent = `Absorb Players Into "${targetName}"`;
+  document.getElementById("absorb-players-desc").textContent =
+    available.length === 0
+      ? "No other team names have been logged yet."
+      : "Pick the team those games were logged under, then choose which players to fold into this team. The other team keeps its own roster and stats — nothing is deleted.";
+
+  const sel = document.getElementById("absorb-players-team");
+  sel.innerHTML =
+    `<option value="">— Select a team —</option>` +
+    available
+      .map((n) => `<option value="${escHtml(n)}">${escHtml(n)}</option>`)
+      .join("");
+  document.getElementById("absorb-players-list").innerHTML = "";
+  const btn = document.getElementById("absorb-players-confirm-btn");
+  btn.textContent = "Absorb Selected";
+  btn.disabled = false;
+  btn.style.display = available.length === 0 ? "none" : "";
+  document.getElementById("absorb-players-modal").style.display = "flex";
+}
+
+function closeAbsorbPlayersModal() {
+  document.getElementById("absorb-players-modal").style.display = "none";
+}
+
+// Build the player checklist for the chosen source team. Uses the normal
+// aggregators — the source team has no links pointing at itself, so this
+// is its own unmodified roster.
+function absorbPlayersPickTeam(sourceTeam) {
+  _absorbPlayersSource = sourceTeam || null;
+  const list = document.getElementById("absorb-players-list");
+  if (!sourceTeam) {
+    list.innerHTML = "";
+    return;
+  }
+  const games = getTeamGames(sourceTeam);
+  const byNum = {};
+  const add = (p) => {
+    if (!p || !p.name) return;
+    if (p.num === undefined || p.num === "") return; // unmatchable
+    const k = String(p.num);
+    if (!byNum[k]) byNum[k] = { name: p.name, num: p.num, games: 0 };
+    byNum[k].games = Math.max(byNum[k].games, p.games || 0);
+  };
+  getTeamRoster(sourceTeam, games).forEach(add);
+  getTeamPitchers(sourceTeam, games).forEach(add);
+
+  const already = new Set(
+    (_absorbedLinks || [])
+      .filter(
+        (l) =>
+          l.sourceTeam === sourceTeam && l.targetTeam === _absorbPlayersTarget
+      )
+      .map((l) => String(l.playerNum))
+  );
+
+  const players = Object.values(byNum).sort(
+    (a, b) => Number(a.num) - Number(b.num)
+  );
+  if (!players.length) {
+    list.innerHTML = `<div style="font-size:12px;color:var(--text3);padding:8px 0">No players with jersey numbers found in this team's games.</div>`;
+    return;
+  }
+  list.innerHTML = players
+    .map((p) => {
+      const has = already.has(String(p.num));
+      return `<label style="display:flex;align-items:center;gap:10px;padding:8px 10px;border:1px solid var(--border);border-radius:6px;cursor:${
+        has ? "default" : "pointer"
+      };background:var(--surface2);opacity:${has ? "0.55" : "1"}">
+        <input type="checkbox" value="${escHtml(String(p.num))}" data-name="${escHtml(
+        p.name
+      )}" ${
+        has ? "disabled" : ""
+      } style="width:16px;height:16px;accent-color:var(--accent)">
+        <span style="font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:14px;color:var(--accent);width:30px">#${escHtml(
+          String(p.num)
+        )}</span>
+        <span style="font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:14px;color:var(--text);flex:1">${escHtml(
+          p.name
+        )}</span>
+        <span style="font-size:11px;color:var(--text3)">${
+          has ? "already absorbed" : p.games + " G"
+        }</span>
+      </label>`;
+    })
+    .join("");
+}
+
+async function confirmAbsorbPlayers() {
+  const source = _absorbPlayersSource;
+  const target = _absorbPlayersTarget;
+  if (!source) {
+    toast("Pick a team first.");
+    return;
+  }
+  const checked = [
+    ...document.querySelectorAll(
+      "#absorb-players-list input[type=checkbox]:checked"
+    ),
+  ];
+  if (!checked.length) {
+    closeAbsorbPlayersModal();
+    return;
+  }
+  const btn = document.getElementById("absorb-players-confirm-btn");
+  btn.textContent = "Working…";
+  btn.disabled = true;
+
+  const picked = checked.map((cb) => ({
+    num: cb.value,
+    name: cb.getAttribute("data-name") || "",
+  }));
+
+  const added = await absorbAddLinks(source, picked, target);
+
+  // Second, separate effect: put these players on the roster too, so they
+  // show up in lineup/roster UI and not only in retroactive stat tables.
+  let rosterAdds = 0;
+  picked.forEach((p) => {
+    if (_absorbAddToRoster(_absorbResolvePlayerMeta(source, p.num, p.name)))
+      rosterAdds++;
+  });
+  if (rosterAdds) await myTeamSave();
+
+  closeAbsorbPlayersModal();
+  toast(
+    `Absorbed ${added} player${added !== 1 ? "s" : ""} from "${source}"` +
+      (rosterAdds ? ` · ${rosterAdds} added to roster` : "")
+  );
+  if (typeof hubRefreshAll === "function") {
+    try {
+      await hubRefreshAll();
+    } catch (e) {}
+  }
+  myTeamRender();
+}
+
+// Pull the fullest player metadata available: the source team's own saved
+// roster if it's a tracked opponent, otherwise just what the box scores know.
+function _absorbResolvePlayerMeta(sourceTeam, num, name) {
+  const opp = (_opponents || []).find((o) => o.name === sourceTeam);
+  if (opp) {
+    const m = (opp.roster || []).find((r) => String(r.num) === String(num));
+    if (m) {
+      const copy = { ...m };
+      delete copy.id; // _absorbAddToRoster mints its own
+      return copy;
+    }
+  }
+  return { name: name, num: num };
+}
+
+// Same dedupe-by-jersey-number pattern as _myTeamFinishImport().
+// Returns true if a new roster entry was created.
+function _absorbAddToRoster(meta) {
+  if (!meta || !meta.name) return false;
+  const existing = myTeamRoster.find((x) => x.num === meta.num && meta.num);
+  if (existing) {
+    Object.assign(existing, meta, { id: existing.id });
+    return false;
+  }
+  meta.id =
+    "p_" + Date.now() + "_" + Math.random().toString(36).slice(2, 6);
+  myTeamRoster.push(meta);
+  return true;
+}
+
+async function _renderAbsorbedLinks() {
+  const wrap = document.getElementById("myteam-absorbed-links");
+  if (!wrap) return;
+  const target = _getMyTeamName();
+  const links = (_absorbedLinks || []).filter((l) => l.targetTeam === target);
+  if (!links.length) {
+    wrap.innerHTML = "";
+    return;
+  }
+  const known = new Set(allTeams || []);
+  const rows = links
+    .map(
+      (l) => `<div style="display:flex;align-items:center;gap:10px;padding:7px 0;border-bottom:1px solid var(--border)">
+      <span style="font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:15px;color:var(--accent);width:30px">#${escHtml(
+        String(l.playerNum)
+      )}</span>
+      <div style="flex:1;min-width:0">
+        <div style="font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:13px">${escHtml(
+          l.playerName || "(unnamed)"
+        )}</div>
+        <div style="font-size:11px;color:var(--text3)">from "${escHtml(
+          l.sourceTeam
+        )}"${known.has(l.sourceTeam) ? "" : " · team no longer present"}</div>
+      </div>
+      <button onclick="removeAbsorbedLink('${l.id}')" title="Stop counting this player's games toward this team" style="padding:4px 10px;background:none;border:1px solid var(--border2);border-radius:6px;font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:11px;color:var(--text3);cursor:pointer">Remove</button>
+    </div>`
+    )
+    .join("");
+  wrap.innerHTML = `<div style="padding:12px 0">
+    <div style="font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:13px;letter-spacing:1.5px;text-transform:uppercase;color:var(--text3);margin-bottom:8px">Absorbed Players</div>
+    ${rows}
+  </div>`;
+}
+
+async function removeAbsorbedLink(id) {
+  await absorbRemoveLink(id);
+  toast("Removed — that player's games no longer count toward this team.");
+  if (typeof hubRefreshAll === "function") {
+    try {
+      await hubRefreshAll();
+    } catch (e) {}
+  }
+  myTeamRender();
+}
+
+// ══════════════════════════════════════════════════════════════════════
 //  MY TEAM — PLAYER VIEW
 // ══════════════════════════════════════════════════════════════════════
 let _mtViewId = null;
@@ -321,6 +564,9 @@ async function myTeamOpenPlayerView(id) {
     } catch (e) {}
     try {
       allGames = await loadAllGames();
+    } catch (e) {}
+    try {
+      await absorbLoad();
     } catch (e) {}
     _mtRenderPlayerView(id);
   } catch (e) {
@@ -685,6 +931,9 @@ async function myTeamGenerateLineup() {
   } catch (e) {}
   try {
     allGames = await loadAllGames();
+  } catch (e) {}
+  try {
+    await absorbLoad();
   } catch (e) {}
   try {
     _mtBuildLineupContent();
@@ -2086,6 +2335,46 @@ function lineupSlotDrop(e, slotIdx, isAway) {
 
 // ── ROSTER IMPORT ───────────────────────────────────────────────────
 
+// ── Save roster to a file ─────────────────────────────────────────────
+// Exports as JSON rather than CSV so nothing is lost on the round trip —
+// the spreadsheet columns can't carry pitchTypes. Re-import with
+// "Import Roster"; .json is handled alongside the spreadsheet formats.
+function saveRosterFile() {
+  if (!myTeamRoster.length) {
+    toast("No players to save — add or import a roster first.");
+    return;
+  }
+  const teamName = _getMyTeamName() || "My Team";
+  _downloadJSON(
+    {
+      pitchtrack: "roster",
+      version: 1,
+      exportedAt: new Date().toISOString(),
+      teamName: teamName,
+      roster: myTeamRoster,
+    },
+    "pitchtrack_roster_" + _sanitizeFilename(teamName) + ".json"
+  );
+  toast("⬇ Saved " + myTeamRoster.length + " players");
+}
+
+// Pull the player array out of a roster or opponents export file.
+function _rosterFromJSON(text) {
+  const d = JSON.parse(text);
+  if (Array.isArray(d)) return { roster: d };
+  if (Array.isArray(d.roster)) return { roster: d.roster, teamName: d.teamName };
+  if (d.myteam && Array.isArray(d.myteam.roster))
+    return { roster: d.myteam.roster, teamName: d.myteam.teamName };
+  // An opponents file dropped into the roster importer — take the first team
+  // rather than failing outright.
+  if (Array.isArray(d.opponents) && d.opponents[0])
+    return {
+      roster: d.opponents[0].roster || [],
+      teamName: d.opponents[0].name,
+    };
+  return { roster: [] };
+}
+
 function myTeamImport(input) {
   const file = input.files[0];
   if (!file) return;
@@ -2103,6 +2392,21 @@ function myTeamImport(input) {
       if (ext === "trx") players = myTeamParseTRX(e.target.result);
       else if (ext === "csv") players = myTeamParseCSV(e.target.result);
       else if (ext === "xlsx") players = myTeamParseXLSX(e.target.result);
+      else if (ext === "json") {
+        const parsed = _rosterFromJSON(e.target.result);
+        players = parsed.roster || [];
+        // Offer the saved team name too, but never change it silently.
+        const nameEl = document.getElementById("myteam-name-input");
+        if (
+          players.length &&
+          parsed.teamName &&
+          nameEl &&
+          parsed.teamName !== nameEl.value.trim() &&
+          confirm('Also set this team\'s name to "' + parsed.teamName + '"?')
+        ) {
+          nameEl.value = parsed.teamName;
+        }
+      }
     } catch (err) {
       alert("Import failed: " + err.message);
       return;

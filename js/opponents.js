@@ -431,6 +431,137 @@ function oppDeletePlayer() {
 }
 
 // ── Import (reuse myTeam parsers) ─────────────────────────────────────
+// ── Save / load all opponents as a file ──────────────────────────────
+// JSON keeps every field (including each player's pitchTypes), so this is a
+// faithful copy rather than a spreadsheet approximation.
+function saveOpponentsFile() {
+  if (!_opponents.length) {
+    toast("No opponents to save yet.");
+    return;
+  }
+  const players = _opponents.reduce(
+    (n, o) => n + (o.roster ? o.roster.length : 0),
+    0
+  );
+  _downloadJSON(
+    {
+      pitchtrack: "opponents",
+      version: 1,
+      exportedAt: new Date().toISOString(),
+      opponents: _opponents.map((o) => ({
+        name: o.name,
+        roster: o.roster || [],
+      })),
+    },
+    "pitchtrack_opponents.json"
+  );
+  toast(
+    "⬇ Saved " + _opponents.length + " teams · " + players + " players"
+  );
+}
+
+// Single opponent — same envelope shape, so it imports through either the
+// per-opponent importer or the bulk one.
+function saveOneOpponentFile(oppId) {
+  const opp = _opponents.find((o) => o.id === oppId);
+  if (!opp) return;
+  if (!(opp.roster || []).length) {
+    toast("No players to save for " + opp.name + ".");
+    return;
+  }
+  _downloadJSON(
+    {
+      pitchtrack: "opponents",
+      version: 1,
+      exportedAt: new Date().toISOString(),
+      opponents: [{ name: opp.name, roster: opp.roster }],
+    },
+    "pitchtrack_opponent_" + _sanitizeFilename(opp.name) + ".json"
+  );
+  toast("⬇ Saved " + opp.roster.length + " players");
+}
+
+function triggerOpponentsImport() {
+  const input = document.getElementById("opp-bulk-import-input");
+  if (input) input.click();
+}
+
+// Bulk import: creates missing opponent teams, merges rosters into existing
+// ones (matched by team name, then player jersey number). Never deletes.
+async function oppImportAll(input) {
+  const file = input.files[0];
+  if (!file) return;
+  input.value = "";
+  let teams = [];
+  try {
+    const d = JSON.parse(await file.text());
+    teams = Array.isArray(d) ? d : d.opponents || [];
+    if (!teams.length && Array.isArray(d.roster) && d.teamName)
+      teams = [{ name: d.teamName, roster: d.roster }]; // a single-team file
+  } catch (err) {
+    alert("Import failed: " + err.message);
+    return;
+  }
+  if (!teams.length) {
+    alert("No opponent teams found in file.");
+    return;
+  }
+
+  let newTeams = 0,
+    addedPlayers = 0,
+    updatedPlayers = 0;
+  for (const t of teams) {
+    if (!t || !t.name) continue;
+    let opp = _opponents.find(
+      (o) => o.name.toLowerCase() === String(t.name).toLowerCase()
+    );
+    if (!opp) {
+      opp = {
+        id: "o_" + Date.now() + "_" + Math.random().toString(36).slice(2, 6),
+        name: t.name,
+        roster: [],
+      };
+      _opponents.push(opp);
+      newTeams++;
+    }
+    if (!opp.roster) opp.roster = [];
+    for (const p of t.roster || []) {
+      if (!p || !p.name) continue;
+      const existing = opp.roster.find((x) => x.num === p.num && p.num);
+      if (existing) {
+        Object.assign(existing, p, { id: existing.id });
+        updatedPlayers++;
+      } else {
+        opp.roster.push({
+          ...p,
+          id:
+            "p_" + Date.now() + "_" + Math.random().toString(36).slice(2, 6),
+        });
+        addedPlayers++;
+      }
+    }
+    try {
+      await oppSaveOne(opp);
+    } catch (e) {
+      console.error("oppImportAll save error:", e);
+      toast("Failed to save " + opp.name + ": " + (e.message || e));
+      return;
+    }
+  }
+  oppRenderAll();
+  toast(
+    "Imported " +
+      newTeams +
+      " new team" +
+      (newTeams !== 1 ? "s" : "") +
+      " · " +
+      addedPlayers +
+      " players added, " +
+      updatedPlayers +
+      " updated"
+  );
+}
+
 function oppImport(oppId, input) {
   const file = input.files[0];
   if (!file) return;
@@ -449,6 +580,8 @@ function oppImport(oppId, input) {
       else if (ext === "csv") players = myTeamParseCSV(e.target.result);
       else if (ext === "xlsx")
         players = myTeamParseXLSX(e.target.result);
+      else if (ext === "json")
+        players = _rosterFromJSON(e.target.result).roster || [];
     } catch (err) {
       alert("Import failed: " + err.message);
       return;
