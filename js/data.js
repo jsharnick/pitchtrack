@@ -57,9 +57,18 @@ async function _absorbMigrateLinks() {
     );
 
     if (real) {
-      // Fold the placeholder away and point the link at the real card.
+      // Fold the placeholder away and point the link at the real card, first
+      // carrying over any metadata only the source team knew (pitch arsenal,
+      // bats/throws, etc.) so scouting reports render in full.
       l.targetName = real.name;
       l.targetNum = real.num;
+      const meta =
+        typeof _absorbResolvePlayerMeta === "function"
+          ? _absorbResolvePlayerMeta(l.sourceTeam, l.playerNum, l.playerName)
+          : null;
+      if (meta && typeof _absorbFillMissing === "function") {
+        if (_absorbFillMissing(real, meta)) rosterChanged = true;
+      }
       if (placeholder) {
         myTeamRoster = myTeamRoster.filter((p) => p.id !== placeholder.id);
         rosterChanged = true;
@@ -235,10 +244,15 @@ function getTeamGames(teamName) {
       }, []);
 
     allGames.forEach((g) => {
-      // Already counted for this team under its own name — never double-count.
-      if (g.homeTeam === teamName || g.awayTeam === teamName) return;
       const isHome = g.homeTeam === sourceTeam;
       if (!isHome && g.awayTeam !== sourceTeam) return;
+
+      // Head-to-head: My Team played the source team directly. The raw game is
+      // already in `own` for My Team's own side, so the clone must contribute
+      // ONLY the absorbed players from the other side. The side we're not
+      // taking gets relabelled away from teamName and emptied, so the existing
+      // `isHome` checks downstream can't read My Team's own rows a second time.
+      const headToHead = g.homeTeam === teamName || g.awayTeam === teamName;
 
       // Shallow clone, relabel only the source side, and narrow that side's
       // stat rows to the absorbed players. Every field we change is replaced
@@ -251,11 +265,21 @@ function getTeamGames(teamName) {
         clone.homeBatters = takeRows(g.homeBatters, renamed);
         clone.homePitchers = pitchers = takeRows(g.homePitchers, renamed);
         if (!clone.homeBatters.length && !pitchers.length) return;
+        if (headToHead) {
+          clone.awayTeam = sourceTeam + " (vs)";
+          clone.awayBatters = [];
+          clone.awayPitchers = [];
+        }
       } else {
         clone.awayTeam = teamName;
         clone.awayBatters = takeRows(g.awayBatters, renamed);
         clone.awayPitchers = pitchers = takeRows(g.awayPitchers, renamed);
         if (!clone.awayBatters.length && !pitchers.length) return;
+        if (headToHead) {
+          clone.homeTeam = sourceTeam + " (vs)";
+          clone.homeBatters = [];
+          clone.homePitchers = [];
+        }
       }
 
       // Some views filter pitches by the raw pitchLog pitcherTeam snapshot

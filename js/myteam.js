@@ -474,10 +474,16 @@ async function confirmAbsorbPlayers() {
   // an existing card when we're confident it's the same person, otherwise a
   // new card. Never merges on a guess — see _absorbMatchRosterPlayer().
   let rosterAdds = 0;
+  let enriched = 0;
   picked.forEach((p) => {
     const meta = _absorbResolvePlayerMeta(source, p.num, p.name);
     const match = _absorbMatchRosterPlayer(meta);
     if (match) {
+      // Carry over anything the source knows that this card doesn't — pitch
+      // arsenal, bats/throws, height/weight — so scouting reports render in
+      // full. Existing values always win; absorbing never overwrites data the
+      // user entered themselves.
+      if (_absorbFillMissing(match, meta)) enriched++;
       p.targetName = match.name;
       p.targetNum = match.num;
     } else {
@@ -487,7 +493,7 @@ async function confirmAbsorbPlayers() {
       p.targetNum = meta.num;
     }
   });
-  if (rosterAdds) await myTeamSave();
+  if (rosterAdds || enriched) await myTeamSave();
 
   const added = await absorbAddLinks(source, picked, target);
   const mergedInto = picked.length - rosterAdds;
@@ -519,6 +525,34 @@ function _absorbResolvePlayerMeta(sourceTeam, num, name) {
     }
   }
   return { name: name, num: num };
+}
+
+// Fill gaps on an existing roster card from an absorbed player's source
+// record, without ever clobbering what's already there. pitchTypes are unioned
+// so a pitcher's full arsenal shows up in scouting reports.
+// Returns true if anything changed.
+function _absorbFillMissing(target, meta) {
+  if (!target || !meta) return false;
+  let changed = false;
+  ["pos", "bat", "throw", "ht", "wt"].forEach((f) => {
+    if (!target[f] && meta[f]) {
+      target[f] = meta[f];
+      changed = true;
+    }
+  });
+  if (Array.isArray(meta.pitchTypes) && meta.pitchTypes.length) {
+    const have = Array.isArray(target.pitchTypes) ? target.pitchTypes : [];
+    const merged = [...have];
+    meta.pitchTypes.forEach((pt) => {
+      if (!merged.some((x) => String(x).toLowerCase() === String(pt).toLowerCase()))
+        merged.push(pt);
+    });
+    if (merged.length !== have.length) {
+      target.pitchTypes = merged;
+      changed = true;
+    }
+  }
+  return changed;
 }
 
 // Same dedupe-by-jersey-number pattern as _myTeamFinishImport().
