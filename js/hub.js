@@ -8413,6 +8413,11 @@ function renderGame(gameId) {
 <div style="font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:40px;color:var(--accent)">${
     g.awayScore
   }–${g.homeScore}</div>
+<button onclick="abfixOpen('${g.id}')"
+  title="Reassign at-bats if a lineup slot was renamed mid-game instead of substituting"
+  style="padding:7px 14px;background:transparent;border:1.5px solid var(--border2);border-radius:8px;color:var(--text2);font-family:Barlow Condensed,sans-serif;font-weight:700;font-size:13px;cursor:pointer;transition:all .14s;white-space:nowrap"
+  onmouseover="this.style.borderColor='var(--accent)';this.style.color='var(--accent)'"
+  onmouseout="this.style.borderColor='var(--border2)';this.style.color='var(--text2)'">Fix At-Bats</button>
 <button onclick="promptDeleteGame('${g.id}','${escHtml(
     g.awayTeam
   )} vs ${escHtml(g.homeTeam)} (${g.date})')"
