@@ -57,10 +57,12 @@ function _abfixPitchPAs(g, isAway) {
         hand: e.batterHand,
         inning: e.inning,
         pitches: 0,
+        entries: [], // live references into g.pitchLog
       };
       pas.push(cur);
     }
     cur.pitches++;
+    cur.entries.push(e);
   });
   return pas;
 }
@@ -85,6 +87,7 @@ function _abfixBuildSide(g, isAway) {
         label: label,
         inning: pa ? pa.inning : null,
         pitches: pa ? pa.pitches : 0,
+        entries: pa ? pa.entries : [],
         creditedTo: row.name, // what the box score says now
         actual: pa ? pa.name : null, // what the pitch log recorded
         hand: pa ? pa.hand : row.hand,
@@ -439,6 +442,20 @@ async function abfixApply() {
   btn.disabled = true;
 
   try {
+    // Keep the pitch log in step with the box score. Normally it's already
+    // right — it's what we read the truth from — but if an at-bat was pointed
+    // at someone other than the recorded batter, those pitches have to follow,
+    // or pitch-by-pitch views, spray charts and pitches-seen disagree with the
+    // corrected totals.
+    let pitchesMoved = 0;
+    _abfixModel.away.concat(_abfixModel.home).forEach((pa) => {
+      if (!pa.assignedTo || pa.assignedTo === pa.actual) return;
+      (pa.entries || []).forEach((e) => {
+        e.batter = pa.assignedTo;
+        pitchesMoved++;
+      });
+    });
+
     g.awayBatters = _abfixRebuildSide(
       g,
       true,
@@ -451,6 +468,10 @@ async function abfixApply() {
       _abfixModel.home,
       _abfixManualVals.h
     );
+    // Flag the resumable snapshot: it's slot-keyed, so it still holds the
+    // pre-correction attribution and resuming would quietly undo this fix.
+    if (g.resumable) g.resumable._abfixedAt = new Date().toISOString();
+
     await window.storage.set(g.id, JSON.stringify(g), true);
   } catch (e) {
     console.error("abfixApply error:", e);
@@ -463,12 +484,40 @@ async function abfixApply() {
   _abfixManualVals = { a: {}, h: {} };
   const id = g.id;
   closeAbfixModal();
-  toast("At-bats reassigned — box score updated.");
+
+  // Every stats surface recomputes from allGames via getTeamGames(), so the
+  // one thing that matters is reloading it — but re-render the panels that
+  // keep their own view state so nothing is left showing pre-fix numbers.
+  try {
+    allGames = await loadAllGames();
+  } catch (e) {
+    console.error("abfix reload error:", e);
+  }
   if (typeof hubRefreshAll === "function") {
     try {
-      await hubRefreshAll();
+      await hubRefreshAll(); // Stats Hub: team tables, player pages, leaderboards
     } catch (e) {}
   }
+  if (typeof myTeamRender === "function") {
+    try {
+      myTeamRender(); // My Team roster panel
+    } catch (e) {}
+  }
+  if (
+    typeof scoutOverviewLoad === "function" &&
+    document.getElementById("panel-scout-overview")?.classList.contains("on")
+  ) {
+    try {
+      await scoutOverviewLoad(); // scouting cards / reports, if open
+    } catch (e) {}
+  }
+  if (typeof renderLiveScoutingTab === "function") {
+    try {
+      renderLiveScoutingTab();
+    } catch (e) {}
+  }
+
+  toast("At-bats reassigned — box score and all stats updated.");
   // Drop back into the game so the corrected box score is visible immediately.
   if (typeof showView === "function") {
     try {

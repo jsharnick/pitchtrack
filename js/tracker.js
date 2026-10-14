@@ -5788,6 +5788,21 @@ async function resumeGame(gameId) {
     const r = g.resumable;
     if (!r) throw new Error("No resumable data");
 
+    // The resumable snapshot is keyed by lineup slot, so it can't represent a
+    // slot that was split back into two players by the At-Bat fixer. Resuming
+    // restores the pre-correction attribution, and the next save would undo
+    // the fix — so make that explicit rather than silently reverting it.
+    if (
+      r._abfixedAt &&
+      !confirm(
+        "This game's at-bats were corrected after it was saved.\n\n" +
+          "Resuming restores the lineup as it was BEFORE that correction, and " +
+          "saving again will undo it.\n\nResume anyway?"
+      )
+    ) {
+      return;
+    }
+
     // Restore full state
     S.gameId = r.gameId || g.id; // critical — ensures saves overwrite same record
     S.awayScore = r.awayScore;

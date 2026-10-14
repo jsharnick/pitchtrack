@@ -113,14 +113,35 @@ async function confirmAssignOpp() {
 }
 
 let _renameTeamOldName = null;
+let _renameTeamGameId = null; // set when invoked from a single game row
 
-function showRenameTeam(oldName) {
+// gameId is optional — when present the dialog offers to rename the team in
+// just that game, which is what you want when one game was logged against the
+// wrong opponent (as opposed to fixing a name everywhere).
+function showRenameTeam(oldName, gameId) {
   _renameTeamOldName = oldName;
+  _renameTeamGameId = gameId || null;
   document.getElementById(
     "rename-team-from"
   ).textContent = `Current name: "${oldName}"`;
   const input = document.getElementById("rename-team-input");
   input.value = oldName;
+
+  // Scope picker — only meaningful when we came from one specific game and
+  // that name is actually used by more than one.
+  const scopeWrap = document.getElementById("rename-team-scope");
+  const total = (allGames || []).filter(
+    (g) => g.awayTeam === oldName || g.homeTeam === oldName
+  ).length;
+  if (gameId && total > 1) {
+    scopeWrap.style.display = "block";
+    document.getElementById("rename-scope-all-label").textContent =
+      `All ${total} games against "${oldName}"`;
+    document.getElementById("rename-scope-one").checked = true;
+  } else {
+    scopeWrap.style.display = "none";
+  }
+
   const btn = document.getElementById("rename-team-confirm-btn");
   btn.textContent = "Rename";
   btn.disabled = false;
@@ -129,6 +150,58 @@ function showRenameTeam(oldName) {
     input.focus();
     input.select();
   }, 80);
+}
+
+// Rename a team in ONE game only. Other games keep the old name, so the name
+// stays in the team index if anything else still uses it.
+async function _renameTeamInOneGame(gameId, fromName, toName) {
+  let g = null;
+  try {
+    const raw = await window.storage.get(gameId, true);
+    if (raw?.value) g = JSON.parse(raw.value);
+  } catch (e) {
+    console.error("_renameTeamInOneGame load error:", e);
+  }
+  if (!g) return 0;
+
+  let changed = false;
+  if (g.awayTeam === fromName) {
+    g.awayTeam = toName;
+    changed = true;
+  }
+  if (g.homeTeam === fromName) {
+    g.homeTeam = toName;
+    changed = true;
+  }
+  if (!changed) return 0;
+
+  // pitchLog entries carry their own snapshot of the pitching team's name;
+  // leave them stale and pitcher scouting views stop matching this game.
+  (g.pitchLog || []).forEach((p) => {
+    if (p.pitcherTeam === fromName) p.pitcherTeam = toName;
+  });
+
+  await window.storage.set(gameId, JSON.stringify(g), true);
+
+  // Keep the team index in step: add the new name, and drop the old one only
+  // if no remaining game uses it.
+  try {
+    const stillUsed = (allGames || []).some(
+      (x) =>
+        x.id !== gameId && (x.awayTeam === fromName || x.homeTeam === fromName)
+    );
+    const raw = await window.storage.get("pitchtrack_teams", true);
+    const teams = raw ? JSON.parse(raw.value) : [];
+    if (!teams.includes(toName)) teams.push(toName);
+    if (!stillUsed) {
+      const i = teams.indexOf(fromName);
+      if (i !== -1) teams.splice(i, 1);
+    }
+    await window.storage.set("pitchtrack_teams", JSON.stringify(teams), true);
+  } catch (e) {
+    console.warn("team index update failed:", e);
+  }
+  return 1;
 }
 
 function closeRenameTeamModal() {
@@ -144,6 +217,28 @@ async function confirmRenameTeam() {
   const btn = document.getElementById("rename-team-confirm-btn");
   btn.textContent = "Saving…";
   btn.disabled = true;
+
+  const oneOnly =
+    _renameTeamGameId &&
+    document.getElementById("rename-scope-one")?.checked &&
+    document.getElementById("rename-team-scope")?.style.display !== "none";
+
+  if (oneOnly) {
+    const n = await _renameTeamInOneGame(
+      _renameTeamGameId,
+      _renameTeamOldName,
+      newName
+    );
+    closeRenameTeamModal();
+    toast(
+      n
+        ? `This game is now against "${newName}". Other games keep "${_renameTeamOldName}".`
+        : "Nothing to change in that game."
+    );
+    await hubRefreshAll();
+    return;
+  }
+
   // Rename in game records
   const count = await _mergeTeamNameInGames(_renameTeamOldName, newName);
   // If old name matches a loaded opponent, rename it there too
@@ -190,6 +285,13 @@ async function _mergeTeamNameInGames(fromName, toName) {
       if (g.homeTeam === fromName) {
         g.homeTeam = toName;
         changed = true;
+      }
+      if (changed) {
+        // pitchLog keeps its own snapshot of the pitching team's name — leave
+        // it stale and pitcher scouting views stop matching these games.
+        (g.pitchLog || []).forEach((p) => {
+          if (p.pitcherTeam === fromName) p.pitcherTeam = toName;
+        });
       }
       if (changed) {
         await window.storage.set(key, JSON.stringify(g), true);
@@ -3905,9 +4007,9 @@ function _renderGameRows() {
     g.awayTeam
   )}<button onclick="event.stopPropagation();showRenameTeam('${escAttr(
       g.awayTeam
-    )}')" title="Rename ${escHtml(
+    )}','${escAttr(g.id)}')" title="Change ${escHtml(
       g.awayTeam
-    )}" class="game-team-rename-btn">✏</button>
+    )} — this game or everywhere" class="game-team-rename-btn">✏</button>
 </span>
 <span style="color:var(--text3);font-weight:400"> vs </span>
 <span class="game-team-name-wrap">
@@ -3915,9 +4017,9 @@ function _renderGameRows() {
     g.homeTeam
   )}<button onclick="event.stopPropagation();showRenameTeam('${escAttr(
       g.homeTeam
-    )}')" title="Rename ${escHtml(
+    )}','${escAttr(g.id)}')" title="Change ${escHtml(
       g.homeTeam
-    )}" class="game-team-rename-btn">✏</button>
+    )} — this game or everywhere" class="game-team-rename-btn">✏</button>
 </span>
       </div>
       <div class="game-meta" style="flex:1;font-size:11px;color:var(--text3)">${
