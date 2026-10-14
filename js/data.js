@@ -323,19 +323,26 @@ function getTeamRecord(teamName, games) {
     h = 0,
     hr = 0;
   games.forEach((g) => {
-    // Games pulled in only via an absorbed-player link were played by another
-    // team — the player's stats count, but the result isn't this team's W/L.
-    if (g._absorbed) return;
     const isHome = g.homeTeam === teamName;
-    const tf = isHome ? g.homeScore : g.awayScore;
-    const ta = isHome ? g.awayScore : g.homeScore;
-    if (tf > ta) w++;
-    else if (tf < ta) l++;
-    else t++;
-    runs += tf;
-    ra += ta;
+    // A game pulled in only via an absorbed-player link was played by another
+    // team, so its RESULT isn't this team's — no W/L, no runs for/against.
+    // The absorbed players' batting still counts though: those totals have to
+    // agree with the per-player rows shown underneath, or the team line reads
+    // fewer hits/HR than the players it's summing.
+    if (!g._absorbed) {
+      const tf = isHome ? g.homeScore : g.awayScore;
+      const ta = isHome ? g.awayScore : g.homeScore;
+      if (tf > ta) w++;
+      else if (tf < ta) l++;
+      else t++;
+      runs += tf;
+      ra += ta;
+    }
     const batters = isHome ? g.homeBatters : g.awayBatters;
     (batters || []).forEach((b) => {
+      // Skip nameless rows (empty lineup slots) exactly as getTeamRoster does,
+      // so this line always equals the sum of the player rows rendered below it.
+      if (!b.name) return;
       h += b.hits || 0;
       hr += b.hr || 0;
     });

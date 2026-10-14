@@ -36,14 +36,20 @@ function _abfixType(label) {
 // Split one side's pitch log into plate appearances, chronologically.
 // pitchLog is stored newest-first (unshift), so it gets reversed here.
 // A new PA starts whenever the lineup slot, inning or half changes.
+// Returns PAs carrying the INDEX of each pitch within g.pitchLog. Indices are
+// used rather than object references or re-derived groupings so a saved
+// assignment still points at exactly the same pitches when reopened.
 function _abfixPitchPAs(g, isAway) {
-  const chron = (g.pitchLog || [])
-    .filter((e) => e.isTop === isAway)
-    .slice()
-    .reverse();
+  const log = g.pitchLog || [];
+  const chron = [];
+  log.forEach((e, i) => {
+    if (e.isTop === isAway) chron.push({ e: e, i: i });
+  });
+  chron.reverse(); // pitchLog is stored newest-first
   const pas = [];
   let cur = null;
-  chron.forEach((e) => {
+  chron.forEach((rec) => {
+    const e = rec.e;
     const slot = e.batterIdx;
     if (
       !cur ||
@@ -57,12 +63,12 @@ function _abfixPitchPAs(g, isAway) {
         hand: e.batterHand,
         inning: e.inning,
         pitches: 0,
-        entries: [], // live references into g.pitchLog
+        idxs: [], // positions within g.pitchLog
       };
       pas.push(cur);
     }
     cur.pitches++;
-    cur.entries.push(e);
+    cur.idxs.push(rec.i);
   });
   return pas;
 }
@@ -70,10 +76,21 @@ function _abfixPitchPAs(g, isAway) {
 // Build the editable model: every PA with its outcome label, the name the box
 // score currently credits, and the name the pitch log says actually batted.
 function _abfixBuildSide(g, isAway) {
+  // Once a game has been corrected, its at-bat ownership is stored on the
+  // record. Re-deriving it would be wrong: the rebuilt rows are no longer in
+  // lineup-slot order, so row index stops matching pitchLog.batterIdx and the
+  // mapping drifts a little further every time the dialog is opened.
+  const saved = (g.abfixPAs || []).filter((p) => p.isAway === isAway);
+  if (saved.length) {
+    return saved.map((p) => ({ ...p, entries: (p.idxs || []).map((i) => (g.pitchLog || [])[i]).filter(Boolean) }));
+  }
+
   const rows = (isAway ? g.awayBatters : g.homeBatters) || [];
   const pitchPAs = _abfixPitchPAs(g, isAway);
   const out = [];
 
+  // First pass over an untouched game: rows came straight from the lineup, so
+  // here (and only here) the row index IS the lineup slot.
   rows.forEach((row, slot) => {
     const labels = row.results || [];
     const mine = pitchPAs.filter((p) => p.slot === slot);
@@ -87,8 +104,11 @@ function _abfixBuildSide(g, isAway) {
         label: label,
         inning: pa ? pa.inning : null,
         pitches: pa ? pa.pitches : 0,
-        entries: pa ? pa.entries : [],
-        creditedTo: row.name, // what the box score says now
+        idxs: pa ? pa.idxs : [],
+        entries: pa
+          ? pa.idxs.map((i) => (g.pitchLog || [])[i]).filter(Boolean)
+          : [],
+        creditedTo: row.name, // what the box score said before any correction
         actual: pa ? pa.name : null, // what the pitch log recorded
         hand: pa ? pa.hand : row.hand,
         // Default to the recorded name when we have one, else leave as credited
@@ -101,6 +121,24 @@ function _abfixBuildSide(g, isAway) {
 
 function _abfixBuildModel(g) {
   return { away: _abfixBuildSide(g, true), home: _abfixBuildSide(g, false) };
+}
+
+// The at-bat list, stripped of live pitch references, for storing on the game.
+function _abfixSerializePAs(model) {
+  return model.away.concat(model.home).map((p) => ({
+    key: p.key,
+    isAway: p.isAway,
+    slot: p.slot,
+    idx: p.idx,
+    label: p.label,
+    inning: p.inning,
+    pitches: p.pitches,
+    idxs: p.idxs || [],
+    creditedTo: p.creditedTo,
+    actual: p.actual,
+    hand: p.hand,
+    assignedTo: p.assignedTo,
+  }));
 }
 
 // Does this side have any PA whose recorded batter differs from the box score?
@@ -447,12 +485,14 @@ async function abfixApply() {
     // at someone other than the recorded batter, those pitches have to follow,
     // or pitch-by-pitch views, spray charts and pitches-seen disagree with the
     // corrected totals.
-    let pitchesMoved = 0;
+    // Written unconditionally rather than only when it differs from the
+    // recorded batter: if an at-bat was overridden, applied, then set back,
+    // a conditional write would leave the earlier override in the pitch log.
     _abfixModel.away.concat(_abfixModel.home).forEach((pa) => {
-      if (!pa.assignedTo || pa.assignedTo === pa.actual) return;
-      (pa.entries || []).forEach((e) => {
-        e.batter = pa.assignedTo;
-        pitchesMoved++;
+      if (!pa.assignedTo) return;
+      (pa.idxs || []).forEach((i) => {
+        const e = (g.pitchLog || [])[i];
+        if (e) e.batter = pa.assignedTo;
       });
     });
 
@@ -468,6 +508,11 @@ async function abfixApply() {
       _abfixModel.home,
       _abfixManualVals.h
     );
+    // Persist the at-bat ownership itself. This is what makes reopening and
+    // re-applying stable: the next open reads these assignments instead of
+    // re-deriving them from rows whose order this rebuild just changed.
+    g.abfixPAs = _abfixSerializePAs(_abfixModel);
+
     // Flag the resumable snapshot: it's slot-keyed, so it still holds the
     // pre-correction attribution and resuming would quietly undo this fix.
     if (g.resumable) g.resumable._abfixedAt = new Date().toISOString();
