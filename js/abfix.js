@@ -51,12 +51,23 @@ function _abfixPitchPAs(g, isAway) {
   chron.forEach((rec) => {
     const e = rec.e;
     const slot = e.batterIdx;
-    if (
-      !cur ||
-      cur.slot !== slot ||
-      cur.inning !== e.inning ||
-      cur.name !== e.batter
-    ) {
+
+    // balls/strikes are the count BEFORE the pitch, so every plate appearance
+    // opens at 0-0. That's the only dependable boundary:
+    //   - slot+inning+name alone merges a player who bats twice in one inning
+    //     (batting around) into a single at-bat
+    //   - splitting on a name change breaks one at-bat in two when the lineup
+    //     was renamed mid-at-bat, which is how this mess started
+    const hasCount = e.balls !== undefined && e.strikes !== undefined;
+    const freshCount = hasCount && e.balls === 0 && e.strikes === 0;
+    const contextChanged =
+      !cur || cur.slot !== slot || cur.inning !== e.inning;
+    // Without a recorded count, fall back to the old heuristic.
+    const startNew = hasCount
+      ? freshCount || contextChanged
+      : contextChanged || cur.name !== e.batter;
+
+    if (startNew) {
       cur = {
         slot: slot,
         name: e.batter,
@@ -69,12 +80,81 @@ function _abfixPitchPAs(g, isAway) {
     }
     cur.pitches++;
     cur.idxs.push(rec.i);
+    // If the lineup was renamed partway through an at-bat, the later pitches
+    // carry the new name. The at-bat belongs to whoever started it.
   });
   return pas;
 }
 
 // Build the editable model: every PA with its outcome label, the name the box
 // score currently credits, and the name the pitch log says actually batted.
+// ── Reading ownership out of the game log ────────────────────────────
+// The box score's `results` array is the authoritative sequence of OUTCOMES
+// for a lineup slot; what it gets wrong is only the name attached to them.
+// The game log records each outcome as it happened, with the name as it was at
+// the time, so it supplies the missing names in order.
+//
+// Pairing the outcomes against pitch groups instead does not work on real
+// games: a plate appearance can have no pitches (an intentional walk), and
+// pitches can have no outcome (the half ended with the batter still up), so
+// the two sequences drift apart.
+
+// Plate-appearance events. Run-scoring plays log the outcome in `meta`
+// ("1 run score" / "single by Nate Brewer") rather than in `main`.
+const _ABFIX_PA_MAIN =
+  /^(FO|GO|LO|PO|Single|Double|Triple|Walk \(BB\)|Strikeout|Called K|Error|Fielder.s Choice|HBP|Double Play|Sac Fly|Sacrifice)/i;
+const _ABFIX_RUNSCORE = /run[s]? score/i;
+const _ABFIX_HIT_WORDS =
+  /\b(single|double|triple|homer|walk|error|sac|groundout|flyout)\b/i;
+
+// name|inning|isTop -> lineup slot, taken from the pitch log. This is what
+// separates two stints by the same player in different slots.
+function _abfixSlotIndex(g) {
+  const idx = {};
+  (g.pitchLog || []).forEach((e) => {
+    if (e.batter && e.batter !== "—")
+      idx[e.batter + "|" + e.inning + "|" + e.isTop] = e.batterIdx;
+  });
+  return idx;
+}
+
+function _abfixKnownNames(g, isAway) {
+  const s = new Set();
+  (g.pitchLog || []).forEach((e) => {
+    if (e.isTop === isAway && e.batter && e.batter !== "—") s.add(e.batter);
+  });
+  return [...s];
+}
+
+// Ordered plate appearances for one side, as the game log recorded them.
+function _abfixGameLogPAs(g, isAway) {
+  const names = _abfixKnownNames(g, isAway);
+  const slotOf = _abfixSlotIndex(g);
+  const out = [];
+  (g.gameLog || [])
+    .slice()
+    .reverse() // stored newest-first
+    .forEach((e) => {
+      if (e.isTop !== isAway) return;
+      const main = String(e.main || "");
+      const meta = String(e.meta || "");
+      const isPA =
+        _ABFIX_PA_MAIN.test(main) ||
+        (_ABFIX_RUNSCORE.test(main) && _ABFIX_HIT_WORDS.test(meta));
+      if (!isPA) return;
+      // Longest match first so one name can't be shadowed by another that
+      // happens to be a substring of it.
+      const hit = names
+        .filter((n) => main.includes(n) || meta.includes(n))
+        .sort((a, b) => b.length - a.length)[0];
+      if (!hit) return;
+      const slot = slotOf[hit + "|" + e.inning + "|" + e.isTop];
+      if (slot === undefined) return;
+      out.push({ name: hit, inning: e.inning, slot: slot });
+    });
+  return out;
+}
+
 function _abfixBuildSide(g, isAway) {
   // Once a game has been corrected, its at-bat ownership is stored on the
   // record. Re-deriving it would be wrong: the rebuilt rows are no longer in
@@ -87,32 +167,81 @@ function _abfixBuildSide(g, isAway) {
 
   const rows = (isAway ? g.awayBatters : g.homeBatters) || [];
   const pitchPAs = _abfixPitchPAs(g, isAway);
+  const glPAs = _abfixGameLogPAs(g, isAway);
   const out = [];
+
+  // Pitches for a given player's stint in one inning, so a reassignment can
+  // carry them along.
+  const pitchIdxsFor = (slot, name, inning) => {
+    const idxs = [];
+    (g.pitchLog || []).forEach((e, i) => {
+      if (
+        e.isTop === isAway &&
+        e.batterIdx === slot &&
+        e.inning === inning &&
+        e.batter === name
+      )
+        idxs.push(i);
+    });
+    return idxs;
+  };
 
   // First pass over an untouched game: rows came straight from the lineup, so
   // here (and only here) the row index IS the lineup slot.
   rows.forEach((row, slot) => {
     const labels = row.results || [];
+    if (!labels.length) return;
+
+    const slotNames = [
+      ...new Set(pitchPAs.filter((p) => p.slot === slot).map((p) => p.name)),
+    ].filter((n) => n && n !== "—");
+    const fromLog = glPAs.filter((p) => p.slot === slot);
+
+    // One name ever batted in this slot — the box score is already right, so
+    // there is nothing to re-derive and nothing that can go wrong.
+    const singleOccupant = slotNames.length <= 1;
+    // Otherwise trust the game log, but only when its count agrees exactly
+    // with the outcomes. A mismatch means something wasn't logged, and a
+    // shifted mapping would be worse than asking.
+    const useLog = !singleOccupant && fromLog.length === labels.length;
+
+    if (!singleOccupant && !useLog) {
+      out._misaligned = (out._misaligned || []).concat([
+        {
+          slot: slot,
+          name: row.name,
+          labels: labels.length,
+          groups: fromLog.length,
+        },
+      ]);
+    }
+
     const mine = pitchPAs.filter((p) => p.slot === slot);
     labels.forEach((label, j) => {
-      const pa = mine[j]; // results and pitch groups are both chronological
+      const lg = useLog ? fromLog[j] : null;
+      const pa = !useLog ? mine[j] : null;
+      const who = lg ? lg.name : pa ? pa.name : null;
+      const inning = lg ? lg.inning : pa ? pa.inning : null;
+      const idxs = lg
+        ? pitchIdxsFor(slot, lg.name, lg.inning)
+        : pa
+        ? pa.idxs
+        : [];
       out.push({
         key: (isAway ? "a" : "h") + ":" + slot + ":" + j,
         isAway: isAway,
         slot: slot,
         idx: j,
         label: label,
-        inning: pa ? pa.inning : null,
-        pitches: pa ? pa.pitches : 0,
-        idxs: pa ? pa.idxs : [],
-        entries: pa
-          ? pa.idxs.map((i) => (g.pitchLog || [])[i]).filter(Boolean)
-          : [],
+        inning: inning,
+        pitches: idxs.length,
+        idxs: idxs,
+        entries: idxs.map((i) => (g.pitchLog || [])[i]).filter(Boolean),
         creditedTo: row.name, // what the box score said before any correction
-        actual: pa ? pa.name : null, // what the pitch log recorded
+        actual: who, // who the game log / pitch log says actually batted
         hand: pa ? pa.hand : row.hand,
-        // Default to the recorded name when we have one, else leave as credited
-        assignedTo: pa && pa.name && pa.name !== "—" ? pa.name : row.name,
+        assignedTo: who && who !== "—" ? who : row.name,
+        source: singleOccupant ? "unchanged" : useLog ? "gamelog" : "pitchlog",
       });
     });
   });
@@ -324,11 +453,33 @@ function _abfixRender() {
       .length +
     _abfixModel.home.filter((p) => p.actual && p.actual !== p.creditedTo)
       .length;
-  document.getElementById("abfix-desc").innerHTML = mismatches
-    ? `<b>${mismatches} at-bat${
-        mismatches !== 1 ? "s are" : " is"
-      } credited to the wrong player.</b> The pitch log recorded who actually batted, and those are pre-selected below. Review and apply.`
-    : "Every at-bat matches the player recorded on its pitches. You can still reassign any of them by hand.";
+  const misaligned = (_abfixModel.away._misaligned || []).concat(
+    _abfixModel.home._misaligned || []
+  );
+  const warn = misaligned.length
+    ? `<div style="margin-top:7px;padding:7px 9px;border-radius:6px;background:rgba(204,26,26,.1);color:#cc1a1a;font-size:11px;line-height:1.45">
+        <b>Heads up:</b> for ${misaligned
+          .map(
+            (m) =>
+              escHtml(m.name || "slot " + m.slot) +
+              " (" +
+              m.labels +
+              " outcomes vs " +
+              m.groups +
+              " at-bats in the pitch log)"
+          )
+          .join(", ")} the outcomes and the pitch log don't line up one-to-one.
+        The innings shown for those may be off. Check them against the game log before applying.
+      </div>`
+    : "";
+
+  document.getElementById("abfix-desc").innerHTML =
+    (mismatches
+      ? `<b>${mismatches} at-bat${
+          mismatches !== 1 ? "s are" : " is"
+        } credited to the wrong player.</b> The pitch log recorded who actually batted, and those are pre-selected below. Review and apply.`
+      : "Every at-bat matches the player recorded on its pitches. You can still reassign any of them by hand.") +
+    warn;
 
   const side = (label, teamName, pas, isAway) => {
     if (!pas.length)
