@@ -114,16 +114,21 @@ async function confirmAssignOpp() {
 
 let _renameTeamOldName = null;
 let _renameTeamGameId = null; // set when invoked from a single game row
+let _renameTeamSide = null; // "away" | "home" — which half of that game
 
 // gameId is optional — when present the dialog offers to rename the team in
 // just that game, which is what you want when one game was logged against the
 // wrong opponent (as opposed to fixing a name everywhere).
-function showRenameTeam(oldName, gameId) {
+// side ("away"/"home") matters when BOTH teams carry the same name — an
+// intrasquad logged as My Team vs My Team — where the name alone can't say
+// which half of the box score is being renamed.
+function showRenameTeam(oldName, gameId, side) {
   _renameTeamOldName = oldName;
   _renameTeamGameId = gameId || null;
-  document.getElementById(
-    "rename-team-from"
-  ).textContent = `Current name: "${oldName}"`;
+  _renameTeamSide = side || null;
+  document.getElementById("rename-team-from").textContent = side
+    ? `Renaming the ${side} team — currently "${oldName}"`
+    : `Current name: "${oldName}"`;
   const input = document.getElementById("rename-team-input");
   input.value = oldName;
 
@@ -133,7 +138,16 @@ function showRenameTeam(oldName, gameId) {
   const total = (allGames || []).filter(
     (g) => g.awayTeam === oldName || g.homeTeam === oldName
   ).length;
-  if (gameId && total > 1) {
+  // Both halves of this game share a name (an intrasquad). "All games" would
+  // rename both sides and re-merge what's being separated, so only the
+  // single-side rename is offered.
+  const thisGame = (allGames || []).find((g) => g.id === gameId);
+  const intrasquad =
+    !!thisGame && thisGame.awayTeam === thisGame.homeTeam && !!side;
+  if (intrasquad) {
+    scopeWrap.style.display = "none";
+    document.getElementById("rename-scope-one").checked = true;
+  } else if (gameId && total > 1) {
     scopeWrap.style.display = "block";
     document.getElementById("rename-scope-all-label").textContent =
       `All ${total} games against "${oldName}"`;
@@ -154,7 +168,10 @@ function showRenameTeam(oldName, gameId) {
 
 // Rename a team in ONE game only. Other games keep the old name, so the name
 // stays in the team index if anything else still uses it.
-async function _renameTeamInOneGame(gameId, fromName, toName) {
+// side: "away" | "home" | null (null = whichever side(s) carry fromName).
+// Naming the side is what makes an intrasquad fixable — with both teams called
+// the same thing, matching on the name alone would rename both halves.
+async function _renameTeamInOneGame(gameId, fromName, toName, side) {
   let g = null;
   try {
     const raw = await window.storage.get(gameId, true);
@@ -164,21 +181,33 @@ async function _renameTeamInOneGame(gameId, fromName, toName) {
   }
   if (!g) return 0;
 
+  const doAway = side === "away" || (!side && g.awayTeam === fromName);
+  const doHome = side === "home" || (!side && g.homeTeam === fromName);
+
   let changed = false;
-  if (g.awayTeam === fromName) {
+  if (doAway && g.awayTeam === fromName) {
     g.awayTeam = toName;
     changed = true;
   }
-  if (g.homeTeam === fromName) {
+  if (doHome && g.homeTeam === fromName) {
     g.homeTeam = toName;
     changed = true;
   }
   if (!changed) return 0;
 
-  // pitchLog entries carry their own snapshot of the pitching team's name;
-  // leave them stale and pitcher scouting views stop matching this game.
+  // pitchLog carries its own snapshot of the pitching team's name. Match on
+  // isTop rather than the old name: the home team pitches in the top half, the
+  // away team in the bottom, and when both sides share a name that structural
+  // test is the only way to tell the two apart.
   (g.pitchLog || []).forEach((p) => {
-    if (p.pitcherTeam === fromName) p.pitcherTeam = toName;
+    if (p.isTop === undefined) {
+      if (p.pitcherTeam === fromName && !side) p.pitcherTeam = toName;
+      return;
+    }
+    const pitchingSideIsHome = p.isTop === true;
+    if ((pitchingSideIsHome && doHome) || (!pitchingSideIsHome && doAway)) {
+      if (p.pitcherTeam === fromName) p.pitcherTeam = toName;
+    }
   });
 
   await window.storage.set(gameId, JSON.stringify(g), true);
@@ -186,10 +215,17 @@ async function _renameTeamInOneGame(gameId, fromName, toName) {
   // Keep the team index in step: add the new name, and drop the old one only
   // if no remaining game uses it.
   try {
-    const stillUsed = (allGames || []).some(
-      (x) =>
-        x.id !== gameId && (x.awayTeam === fromName || x.homeTeam === fromName)
-    );
+    // The other half of THIS game can still carry the old name — renaming one
+    // side of an intrasquad leaves the other side on it — so check the updated
+    // record too, not just the other games.
+    const stillUsed =
+      g.awayTeam === fromName ||
+      g.homeTeam === fromName ||
+      (allGames || []).some(
+        (x) =>
+          x.id !== gameId &&
+          (x.awayTeam === fromName || x.homeTeam === fromName)
+      );
     const raw = await window.storage.get("pitchtrack_teams", true);
     const teams = raw ? JSON.parse(raw.value) : [];
     if (!teams.includes(toName)) teams.push(toName);
@@ -218,21 +254,34 @@ async function confirmRenameTeam() {
   btn.textContent = "Saving…";
   btn.disabled = true;
 
-  const oneOnly =
-    _renameTeamGameId &&
-    document.getElementById("rename-scope-one")?.checked &&
+  // Invoked from a game row, rename just that game unless the user explicitly
+  // chose "all games". When the scope picker is hidden there is no such choice
+  // to read — single-game names and intrasquads both land here — so per-game
+  // stays the default rather than silently falling through to a global rename.
+  const scopeVisible =
     document.getElementById("rename-team-scope")?.style.display !== "none";
+  const oneOnly =
+    !!_renameTeamGameId &&
+    (!scopeVisible ||
+      !!document.getElementById("rename-scope-one")?.checked);
 
   if (oneOnly) {
     const n = await _renameTeamInOneGame(
       _renameTeamGameId,
       _renameTeamOldName,
-      newName
+      newName,
+      _renameTeamSide
     );
     closeRenameTeamModal();
     toast(
       n
-        ? `This game is now against "${newName}". Other games keep "${_renameTeamOldName}".`
+        ? `${
+            _renameTeamSide === "home"
+              ? "Home side"
+              : _renameTeamSide === "away"
+              ? "Away side"
+              : "This game"
+          } is now "${newName}" — their players moved with them.`
         : "Nothing to change in that game."
     );
     await hubRefreshAll();
@@ -4007,9 +4056,9 @@ function _renderGameRows() {
     g.awayTeam
   )}<button onclick="event.stopPropagation();showRenameTeam('${escAttr(
       g.awayTeam
-    )}','${escAttr(g.id)}')" title="Change ${escHtml(
+    )}','${escAttr(g.id)}','away')" title="Change the away team (${escHtml(
       g.awayTeam
-    )} — this game or everywhere" class="game-team-rename-btn">✏</button>
+    )}) — this game or everywhere" class="game-team-rename-btn">✏</button>
 </span>
 <span style="color:var(--text3);font-weight:400"> vs </span>
 <span class="game-team-name-wrap">
@@ -4017,9 +4066,9 @@ function _renderGameRows() {
     g.homeTeam
   )}<button onclick="event.stopPropagation();showRenameTeam('${escAttr(
       g.homeTeam
-    )}','${escAttr(g.id)}')" title="Change ${escHtml(
+    )}','${escAttr(g.id)}','home')" title="Change the home team (${escHtml(
       g.homeTeam
-    )} — this game or everywhere" class="game-team-rename-btn">✏</button>
+    )}) — this game or everywhere" class="game-team-rename-btn">✏</button>
 </span>
       </div>
       <div class="game-meta" style="flex:1;font-size:11px;color:var(--text3)">${
